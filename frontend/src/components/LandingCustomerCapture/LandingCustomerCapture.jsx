@@ -38,12 +38,21 @@ const LandingCustomerCapture = ({
     if (!value) return false;
     if (!isValidPhoneNumber(value)) return false;
     
-    // For India, check 10 digits
+    // Get just the digits
+    const digits = value.replace(/\D/g, '');
+    
+    // For India (+91), check 10 digits after country code
     if (value.startsWith('+91')) {
-      const digits = value.replace(/\D/g, '');
-      return digits.length === 12; // +91 + 10 digits
+      return digits.length === 12; // 91 + 10 digits
     }
-    return true;
+    
+    // For Iran (+98), check 10 digits after country code
+    if (value.startsWith('+98')) {
+      return digits.length === 12; // 98 + 10 digits
+    }
+    
+    // General validation - at least 10 digits total
+    return digits.length >= 10;
   };
 
   const handlePhoneChange = (value) => {

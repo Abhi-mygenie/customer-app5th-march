@@ -304,10 +304,19 @@ async def check_customer(request: CheckCustomerRequest):
     pos_id = request.pos_id or "0001"
     user_id = f"pos_{pos_id}_restaurant_{request.restaurant_id}"
     
-    # Check if customer exists for this restaurant
+    # Normalize phone - remove +91 prefix if present for matching
+    normalized_phone = phone
+    if phone.startswith('+91'):
+        normalized_phone = phone[3:]  # Remove +91
+    elif phone.startswith('91') and len(phone) > 10:
+        normalized_phone = phone[2:]  # Remove 91
+    
+    # Check if customer exists for this restaurant (try both formats)
     customer = await db.customers.find_one({
-        "phone": phone,
-        "user_id": user_id
+        "$or": [
+            {"phone": phone, "user_id": user_id},
+            {"phone": normalized_phone, "user_id": user_id}
+        ]
     }, {"_id": 0, "name": 1, "phone": 1, "id": 1})
     
     if customer:
