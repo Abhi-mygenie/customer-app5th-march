@@ -1,4 +1,6 @@
 .profile-page {
+  max-width: 600px;
+  margin: 0 auto;
   min-height: 100vh;
   background: var(--bg-secondary);
   padding-bottom: var(--spacing-2xl);

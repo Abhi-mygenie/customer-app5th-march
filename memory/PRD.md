@@ -1,83 +1,37 @@
-# Customer App - Product Requirements Document
+# Customer App - PRD
 
 ## Original Problem Statement
-A full-stack restaurant customer-facing web app (React + FastAPI + MongoDB). Customers browse menus and place orders. Restaurant admins control branding, theming, content, and features via Admin Settings.
+Pull the repository from `https://github.com/Abhi-mygenie/customer-app5th-march.git`, set it up, import the database, and build/maintain a full-stack restaurant customer application.
 
-## Core Architecture
-- **Frontend**: React (Vite), React Router, React Context (Auth + RestaurantConfig)
-- **Backend**: FastAPI, Motor (async MongoDB driver)
+## Tech Stack
+- **Frontend**: React, react-router-dom, axios, Tailwind CSS, react-phone-number-input, react-hot-toast, react-icons, tiptap (rich editor), dnd-kit
+- **Backend**: Python, FastAPI, pymongo/motor, passlib, bcrypt, PyJWT
 - **Database**: MongoDB
-- **Rich Text**: Tiptap (@tiptap/react)
-- **Drag & Drop**: @dnd-kit/core + @dnd-kit/sortable
 
-## MyGenie Brand Defaults
-| Property | Value |
-|----------|-------|
-| Primary Color | `#E8531E` (orange) |
-| Secondary Color | `#2E7D32` (green) |
-| Background | `#FFFFFF` |
-| Font | Montserrat |
+## Architecture
+- React frontend (port 3000) + FastAPI backend (port 8001) + MongoDB
+- All backend routes prefixed with `/api`
+- Config-driven UI: restaurant appearance/features controlled via `customer_app_config` collection
 
-## Data Priority
-| Field | Source |
-|-------|--------|
-| Name, Description | POS only |
-| Phone, Logo | Admin config > MyGenie default |
-| Colors, Fonts | Admin config > MyGenie defaults |
-| Content, Social, Nav | Admin config only |
-| Loyalty, Coupon, Menu | POS only |
+## Key DB Schema
+- **customer_app_config**: `{ restaurant_id, show*, primaryColor, extraInfoItems, ... }` — UI and feature configs per restaurant
+- **users**: `{ id, email, restaurant_id, password_hash, ... }` — Admin users
+- **customers**: `{ id, phone, name, user_id, tier, total_points, wallet_balance, ... }` — End customers scoped by `user_id` (e.g., `pos_0001_restaurant_478`)
 
-## Admin Settings (6 Tabs)
-1. **Landing Page** — 10 feature toggles
-2. **Menu Page** — 2 toggles
-3. **Order Page** — 7 toggles
-4. **Branding** — Colors, fonts, radius, logo, phone, social links
-5. **Banners** — Full CRUD with edit, size validation, upload
-6. **Content** — 6 sub-tabs:
-   - About Us: Rich text + opening hours + hero image
-   - Contact: Address, email, Google Maps embed
-   - Footer: Footer text + custom links
-   - Feedback: Enable toggle + intro text
-   - Custom Pages: CRUD with rich text + published toggle
-   - Navigation: Drag-to-reorder + visibility toggles
+## Test Credentials
+- **Admin**: email: `owner@18march.com`, password: `admin123`, restaurant_id: `478`
+- **Customer**: phone: `7505242126` (Abhishek), OTP: `1111` (test OTP)
 
-## Customer-Facing Pages
-- `/` or `/:id` — Landing page
-- `/:id/menu` — Menu page
-- `/:id/about` — About Us (rich content from config)
-- `/:id/contact` — Contact info (phone, email, address, social, hours, map)
-- `/:id/feedback` — Feedback form (name, email, star rating, message)
-
-## Key API Endpoints
-- Config: GET/PUT `/api/config/{id}`
-- Banners: POST/PUT/DELETE `/api/config/banners/*`
-- Pages: POST/PUT/DELETE `/api/config/pages/*`
-- Feedback: POST `/api/config/feedback` (public), GET `/api/config/feedback/{id}` (admin)
-- Upload: POST `/api/upload/image`
-- Auth: POST `/api/auth/login`, GET `/api/auth/me`
-
-## DB Collections
-- `customer_app_config`: All config per restaurant
-- `feedback`: Customer feedback submissions
-- `users`, `customers`, `orders`, etc.
-
-## Seeded Content
-All restaurants (existing + new) get default:
-- About Us: Story, mission, values (rich HTML)
-- Opening hours table
-- Feedback intro text
-- Nav menu: Home, Menu, About Us, Contact, Feedback
-
-## Admin Credentials
-- 18march: `owner@18march.com` / `admin123` (ID: 478)
-- Kunafa Mahal: `owner@kunafamahal.com` / `admin123` (ID: 689)
-
-## Known Issues
-- **P0**: External POS API (`preprod.mygenie.online`) returns 404
-- **MEDIUM**: Config ID mismatch (admin saves to `pos_0001_restaurant_478`, frontend fetches `478`)
+## What's Been Implemented
+- Project setup, DB migration from git repo
+- Bug fix: consistent `restaurant_id` usage between admin/frontend
+- Configurable "Customer Capture" form on landing page
+- Configurable "Extra Info" footer section (up to 5 bullet points)
+- Price Breakdown UI redesign on Review Order page
+- Footer social icons overlap CSS fix
+- **UI width fix**: Added `max-width: 600px` to Profile, Review Order, Order Success pages (2026-03-05)
+- Admin Settings page verified working (all 7 tabs functional)
 
 ## Backlog
-- P1: Wire nav menu order to hamburger menu
-- P1: Add custom page rendering route (`/:id/page/:slug`)
-- P2: Clean up unused SVG assets
-- P2: Split server.py into separate files
+- P2: Auto-create customer on guest order (deferred by user)
+- Verify footer social icons fix with user
