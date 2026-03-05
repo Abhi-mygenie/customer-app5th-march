@@ -114,7 +114,7 @@ const SortableNavItem = ({ item, onToggleVisible }) => {
   );
 };
 
-const ContentTab = ({ config, setConfig, token, uploadImage }) => {
+const ContentTab = ({ config, setConfig, token, uploadImage, ToggleRow, handleChange }) => {
   const [activeSubTab, setActiveSubTab] = useState('aboutUs');
   const [editingPage, setEditingPage] = useState(null);
   const [newPage, setNewPage] = useState({ title: '', slug: '', content: '', published: false });
@@ -131,6 +131,7 @@ const ContentTab = ({ config, setConfig, token, uploadImage }) => {
     { id: 'contact', label: 'Contact', icon: IoCallOutline },
     { id: 'footer', label: 'Footer', icon: IoFootstepsOutline },
     { id: 'feedback', label: 'Feedback', icon: IoChatbubblesOutline },
+    { id: 'extrainfo', label: 'Extra Info', icon: IoInformationCircleOutline },
     { id: 'pages', label: 'Custom Pages', icon: IoDocumentTextOutline },
     { id: 'navigation', label: 'Navigation', icon: IoMenuOutline },
   ];
@@ -440,6 +441,45 @@ const ContentTab = ({ config, setConfig, token, uploadImage }) => {
       )}
 
       {/* Navigation Menu Manager */}
+      {/* Extra Info */}
+      {activeSubTab === 'extrainfo' && (
+        <div className="content-panel" data-testid="panel-extrainfo">
+          <h3 className="section-title">Extra Info (Menu Footer)</h3>
+          <p className="section-description">Configure the extra information section shown at the bottom of the menu</p>
+
+          {ToggleRow && (
+            <div className="toggle-list">
+              <ToggleRow field="showExtraInfo" label="Show Extra Info Section" />
+            </div>
+          )}
+
+          {config.showExtraInfo && (
+            <div className="form-subsection" style={{ marginTop: '1.5rem' }}>
+              <h4 className="form-subsection-title">Info Points (up to 5)</h4>
+              <p className="form-hint" style={{ marginBottom: '1rem' }}>
+                Leave empty to use defaults: "All prices are exclusive of Govt.Tax/GST" and "A single pour is 30ml of alcohol"
+              </p>
+              {[0, 1, 2, 3, 4].map((index) => (
+                <div className="form-group" key={index} style={{ marginBottom: '0.75rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={`Info point ${index + 1}`}
+                    value={config.extraInfoItems?.[index] || ''}
+                    onChange={(e) => {
+                      const newItems = [...(config.extraInfoItems || ['', '', '', '', ''])];
+                      newItems[index] = e.target.value;
+                      if (handleChange) handleChange('extraInfoItems', newItems);
+                    }}
+                    data-testid={`input-extrainfo-${index}`}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {activeSubTab === 'navigation' && (
         <div className="content-panel" data-testid="panel-navigation">
           <h3 className="section-title">Navigation Menu</h3>

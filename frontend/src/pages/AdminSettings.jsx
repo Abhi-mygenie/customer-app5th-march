@@ -7,14 +7,12 @@ import {
   IoAddOutline, 
   IoTrashOutline, 
   IoToggle,
-  IoHomeOutline,
   IoColorPaletteOutline,
   IoImagesOutline,
   IoCloudUploadOutline,
   IoCreateOutline,
   IoCloseOutline,
   IoDocumentOutline,
-  IoInformationCircleOutline,
   IoEyeOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
@@ -112,7 +110,7 @@ const AdminSettings = () => {
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeSection, setActiveSection] = useState('visibility');
+  const [activeSection, setActiveSection] = useState('branding');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState(null);
@@ -422,11 +420,10 @@ const AdminSettings = () => {
 
   // Section navigation tabs
   const sections = [
-    { id: 'visibility', label: 'Visibility', icon: IoEyeOutline },
-    { id: 'extrainfo', label: 'Extra Info', icon: IoInformationCircleOutline },
     { id: 'branding', label: 'Branding', icon: IoColorPaletteOutline },
     { id: 'banners', label: 'Banners', icon: IoImagesOutline },
     { id: 'content', label: 'Content', icon: IoDocumentOutline },
+    { id: 'visibility', label: 'Visibility', icon: IoEyeOutline },
   ];
 
   if (!user || !isRestaurant) {
@@ -476,46 +473,6 @@ const AdminSettings = () => {
       {/* Visibility Section (Landing, Menu, Review Order, Order Status) */}
       {activeSection === 'visibility' && (
         <VisibilityTab ToggleRow={ToggleRow} />
-      )}
-
-      {/* Extra Info Section */}
-      {activeSection === 'extrainfo' && (
-        <div className="settings-section" data-testid="section-extrainfo">
-          <h3 className="section-title">
-            <IoInformationCircleOutline className="section-icon" />
-            Extra Info (Menu Footer)
-          </h3>
-          <p className="section-description">Configure the extra information section shown at the bottom of the menu</p>
-          
-          <div className="toggle-list">
-            <ToggleRow field="showExtraInfo" label="Show Extra Info Section" />
-          </div>
-
-          {config.showExtraInfo && (
-            <div className="form-subsection" style={{ marginTop: '1.5rem' }}>
-              <h4 className="form-subsection-title">Info Points (up to 5)</h4>
-              <p className="form-hint" style={{ marginBottom: '1rem' }}>
-                Leave empty to use defaults: "All prices are exclusive of Govt.Tax/GST" and "A single pour is 30ml of alcohol"
-              </p>
-              {[0, 1, 2, 3, 4].map((index) => (
-                <div className="form-group" key={index} style={{ marginBottom: '0.75rem' }}>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder={`Info point ${index + 1}`}
-                    value={config.extraInfoItems?.[index] || ''}
-                    onChange={(e) => {
-                      const newItems = [...(config.extraInfoItems || ['', '', '', '', ''])];
-                      newItems[index] = e.target.value;
-                      handleChange('extraInfoItems', newItems);
-                    }}
-                    data-testid={`input-extrainfo-${index}`}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       )}
 
       {/* Branding Section */}
@@ -1058,7 +1015,7 @@ const AdminSettings = () => {
 
       {/* Content Section */}
       {activeSection === 'content' && (
-        <ContentTab config={config} setConfig={setConfig} token={token} uploadImage={uploadImage} />
+        <ContentTab config={config} setConfig={setConfig} token={token} uploadImage={uploadImage} ToggleRow={ToggleRow} handleChange={handleChange} />
       )}
 
       {/* Save Button */}

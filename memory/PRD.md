@@ -44,6 +44,7 @@ Full-stack restaurant customer application with React frontend, FastAPI backend,
 - [x] **Browse Menu button branding fix** (2025-03-05) — Removed broken inline style, uses CSS `--color-primary`
 - [x] **`showEstimatedTimes` config toggle** (2025-03-05) — Added to admin settings, default OFF. Awaiting API `prep_time`/`serve_time` fields
 - [x] **Admin Settings tab consolidation** (2025-03-05) — Merged Landing/Menu/Order tabs into single "Visibility" tab with nested sub-tabs (Landing Page, Menu Page, Review Order, Order Status)
+- [x] **Admin Settings tab reorder + Extra Info move** (2025-03-05) — Reordered to Branding → Banners → Content → Visibility. Moved Extra Info into Content tab as a nested sub-tab
 
 ## Backlog
 - P2: Auto-create customer on guest order
