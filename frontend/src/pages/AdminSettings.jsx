@@ -15,7 +15,8 @@ import {
   IoCloudUploadOutline,
   IoCreateOutline,
   IoCloseOutline,
-  IoDocumentOutline
+  IoDocumentOutline,
+  IoInformationCircleOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import ContentTab from '../components/AdminSettings/ContentTab';
@@ -94,7 +95,10 @@ const AdminSettings = () => {
       { id: 'feedback', label: 'Feedback', type: 'builtin', visible: true },
     ],
     // Banners
-    banners: []
+    banners: [],
+    // Extra Info Section
+    showExtraInfo: true,
+    extraInfoItems: ['', '', '', '', '']
   });
   
   const [newBanner, setNewBanner] = useState({
@@ -182,7 +186,10 @@ const AdminSettings = () => {
       const response = await fetch(`${API_URL}/api/config/${configId}`);
       if (response.ok) {
         const data = await response.json();
-        setConfig(prev => ({ ...prev, ...data }));
+        // Ensure extraInfoItems has 5 slots
+        const extraInfoItems = data.extraInfoItems || [];
+        while (extraInfoItems.length < 5) extraInfoItems.push('');
+        setConfig(prev => ({ ...prev, ...data, extraInfoItems }));
       }
     } catch (error) {
       toast.error('Failed to load configuration');
@@ -265,7 +272,10 @@ const AdminSettings = () => {
           mapEmbedUrl: config.mapEmbedUrl,
           feedbackEnabled: config.feedbackEnabled,
           feedbackIntroText: config.feedbackIntroText,
-          navMenuOrder: config.navMenuOrder
+          navMenuOrder: config.navMenuOrder,
+          // Extra Info Section
+          showExtraInfo: config.showExtraInfo,
+          extraInfoItems: config.extraInfoItems.filter(item => item.trim() !== '')
         })
       });
 
@@ -413,6 +423,7 @@ const AdminSettings = () => {
     { id: 'landing', label: 'Landing Page', icon: IoHomeOutline },
     { id: 'menu', label: 'Menu Page', icon: IoRestaurantOutline },
     { id: 'order', label: 'Order Page', icon: IoCartOutline },
+    { id: 'extrainfo', label: 'Extra Info', icon: IoInformationCircleOutline },
     { id: 'branding', label: 'Branding', icon: IoColorPaletteOutline },
     { id: 'banners', label: 'Banners', icon: IoImagesOutline },
     { id: 'content', label: 'Content', icon: IoDocumentOutline },
@@ -518,6 +529,46 @@ const AdminSettings = () => {
             <ToggleRow field="showPriceBreakdown" label="Price Breakdown" />
             <ToggleRow field="showTableInfo" label="Table Information" />
           </div>
+        </div>
+      )}
+
+      {/* Extra Info Section */}
+      {activeSection === 'extrainfo' && (
+        <div className="settings-section" data-testid="section-extrainfo">
+          <h3 className="section-title">
+            <IoInformationCircleOutline className="section-icon" />
+            Extra Info (Menu Footer)
+          </h3>
+          <p className="section-description">Configure the extra information section shown at the bottom of the menu</p>
+          
+          <div className="toggle-list">
+            <ToggleRow field="showExtraInfo" label="Show Extra Info Section" />
+          </div>
+
+          {config.showExtraInfo && (
+            <div className="form-subsection" style={{ marginTop: '1.5rem' }}>
+              <h4 className="form-subsection-title">Info Points (up to 5)</h4>
+              <p className="form-hint" style={{ marginBottom: '1rem' }}>
+                Leave empty to use defaults: "All prices are exclusive of Govt.Tax/GST" and "A single pour is 30ml of alcohol"
+              </p>
+              {[0, 1, 2, 3, 4].map((index) => (
+                <div className="form-group" key={index} style={{ marginBottom: '0.75rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={`Info point ${index + 1}`}
+                    value={config.extraInfoItems?.[index] || ''}
+                    onChange={(e) => {
+                      const newItems = [...(config.extraInfoItems || ['', '', '', '', ''])];
+                      newItems[index] = e.target.value;
+                      handleChange('extraInfoItems', newItems);
+                    }}
+                    data-testid={`input-extrainfo-${index}`}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

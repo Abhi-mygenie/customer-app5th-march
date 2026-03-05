@@ -64,6 +64,9 @@ const DEFAULT_CONFIG = {
   customPages: [],
   navMenuOrder: [],
   banners: [],
+  // Extra Info Section
+  showExtraInfo: true,
+  extraInfoItems: [],
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -270,6 +273,9 @@ export const RestaurantConfigProvider = ({ children }) => {
     customPages: config.customPages || [],
     navMenuOrder: config.navMenuOrder || [],
     banners: (config.banners || []).filter(b => b.bannerEnabled !== false).sort((a, b) => (a.bannerOrder || 0) - (b.bannerOrder || 0)).slice(0, 5),
+    // Extra Info Section
+    showExtraInfo: config.showExtraInfo !== false,
+    extraInfoItems: config.extraInfoItems || [],
   };
 
   return (

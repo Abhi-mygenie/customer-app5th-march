@@ -170,6 +170,9 @@ class AppConfigUpdate(BaseModel):
     customPages: Optional[List[dict]] = None
     # Content - Nav Menu
     navMenuOrder: Optional[List[dict]] = None
+    # Extra Info Section (Footer)
+    showExtraInfo: Optional[bool] = None
+    extraInfoItems: Optional[List[str]] = None  # Up to 5 bullet points
 
 class BannerCreate(BaseModel):
     bannerImage: str
@@ -652,7 +655,10 @@ async def get_app_config(restaurant_id: str):
                 {"id": "contact", "label": "Contact", "type": "builtin", "visible": True},
                 {"id": "feedback", "label": "Feedback", "type": "builtin", "visible": True}
             ],
-            "banners": []
+            "banners": [],
+            # Extra Info Section
+            "showExtraInfo": True,
+            "extraInfoItems": []
         }
     
     return config
