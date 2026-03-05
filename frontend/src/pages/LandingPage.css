@@ -3,6 +3,8 @@
    ============================================ */
 
 .landing-page {
+  max-width: 600px;
+  margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -18,7 +20,7 @@
 
 /* Hamburger Menu - Top Left */
 .landing-hamburger-wrapper {
-  position: fixed;
+  position: absolute;
   top: var(--spacing-md);
   left: var(--spacing-md);
   z-index: 1000;
@@ -26,7 +28,7 @@
 
 /* Login Button Wrapper - Top Right */
 .landing-login-wrapper {
-  position: fixed;
+  position: absolute;
   top: var(--spacing-md);
   right: var(--spacing-md);
   z-index: 1000;

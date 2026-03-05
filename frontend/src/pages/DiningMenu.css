@@ -1,4 +1,6 @@
 .dining-menu-page {
+  max-width: 600px;
+  margin: 0 auto;
   min-height: 100vh;
   background-color: var(--bg-secondary);
   padding-bottom: var(--spacing-lg);

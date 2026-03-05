@@ -1,4 +1,6 @@
 .menu-items-page {
+  max-width: 600px;
+  margin: 0 auto;
   min-height: 100vh;
   background-color: var(--bg-primary);
   position: relative;
@@ -291,7 +293,7 @@
 .menu-fab {
   position: fixed;
   bottom: 20px;
-  right: 20px;
+  right: calc(50% - 300px + 20px);
   background-color: var(--color-primary);
   color: var(--text-white);
   border: none;
@@ -304,6 +306,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1001; /* Higher than cart bar */
   transition: all 0.3s ease;
+}
+
+@media (max-width: 600px) {
+  .menu-fab {
+    right: 20px;
+  }
 }
 
 /* When cart bar is visible, move menu button above it */
