@@ -8,18 +8,18 @@ import {
   IoTrashOutline, 
   IoToggle,
   IoHomeOutline,
-  IoRestaurantOutline,
-  IoCartOutline,
   IoColorPaletteOutline,
   IoImagesOutline,
   IoCloudUploadOutline,
   IoCreateOutline,
   IoCloseOutline,
   IoDocumentOutline,
-  IoInformationCircleOutline
+  IoInformationCircleOutline,
+  IoEyeOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import ContentTab from '../components/AdminSettings/ContentTab';
+import VisibilityTab from '../components/AdminSettings/VisibilityTab';
 import '../components/AdminSettings/ContentTab.css';
 import './AdminSettings.css';
 
@@ -112,7 +112,7 @@ const AdminSettings = () => {
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeSection, setActiveSection] = useState('landing');
+  const [activeSection, setActiveSection] = useState('visibility');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState(null);
@@ -422,9 +422,7 @@ const AdminSettings = () => {
 
   // Section navigation tabs
   const sections = [
-    { id: 'landing', label: 'Landing Page', icon: IoHomeOutline },
-    { id: 'menu', label: 'Menu Page', icon: IoRestaurantOutline },
-    { id: 'order', label: 'Order Page', icon: IoCartOutline },
+    { id: 'visibility', label: 'Visibility', icon: IoEyeOutline },
     { id: 'extrainfo', label: 'Extra Info', icon: IoInformationCircleOutline },
     { id: 'branding', label: 'Branding', icon: IoColorPaletteOutline },
     { id: 'banners', label: 'Banners', icon: IoImagesOutline },
@@ -475,64 +473,9 @@ const AdminSettings = () => {
         ))}
       </div>
 
-      {/* Landing Page Section */}
-      {activeSection === 'landing' && (
-        <div className="settings-section" data-testid="section-landing">
-          <h3 className="section-title">
-            <IoHomeOutline className="section-icon" />
-            Landing Page Visibility
-          </h3>
-          <p className="section-description">Control what elements are visible on the landing page</p>
-          <div className="toggle-list">
-            <ToggleRow field="showLogo" label="Restaurant Logo" />
-            <ToggleRow field="showWelcomeText" label="Welcome Message" />
-            <ToggleRow field="showDescription" label="Restaurant Description" />
-            <ToggleRow field="showTableNumber" label="Table/Room Number Badge" />
-            <ToggleRow field="showCallWaiter" label="Call Waiter Button" />
-            <ToggleRow field="showPayBill" label="Pay Bill Button" />
-            <ToggleRow field="showEstimatedTimes" label="Estimated Times on Order Status" />
-            <ToggleRow field="showSocialIcons" label="Social Media Icons" />
-            <ToggleRow field="showAboutUs" label="About Us Link" />
-            <ToggleRow field="showFooter" label="Footer Section" />
-            <ToggleRow field="showPoweredBy" label="Powered by MyGenie" />
-            <ToggleRow field="showLandingCustomerCapture" label="Capture Customer Details (Name & Phone)" />
-          </div>
-        </div>
-      )}
-
-      {/* Menu Page Section */}
-      {activeSection === 'menu' && (
-        <div className="settings-section" data-testid="section-menu">
-          <h3 className="section-title">
-            <IoRestaurantOutline className="section-icon" />
-            Menu Page Visibility
-          </h3>
-          <p className="section-description">Control what elements are visible on the menu page</p>
-          <div className="toggle-list">
-            <ToggleRow field="showPromotionsOnMenu" label="Promotional Banners" />
-            <ToggleRow field="showCategories" label="Category Navigation" />
-          </div>
-        </div>
-      )}
-
-      {/* Order Page Section */}
-      {activeSection === 'order' && (
-        <div className="settings-section" data-testid="section-order">
-          <h3 className="section-title">
-            <IoCartOutline className="section-icon" />
-            Order Page Visibility
-          </h3>
-          <p className="section-description">Control what elements are visible on the order/checkout page</p>
-          <div className="toggle-list">
-            <ToggleRow field="showCustomerDetails" label="Customer Details Section" />
-            <ToggleRow field="showCustomerName" label="Customer Name Field" />
-            <ToggleRow field="showCustomerPhone" label="Customer Phone Field" />
-            <ToggleRow field="showCookingInstructions" label="Cooking Instructions" />
-            <ToggleRow field="showSpecialInstructions" label="Special Instructions" />
-            <ToggleRow field="showPriceBreakdown" label="Price Breakdown" />
-            <ToggleRow field="showTableInfo" label="Table Information" />
-          </div>
-        </div>
+      {/* Visibility Section (Landing, Menu, Review Order, Order Status) */}
+      {activeSection === 'visibility' && (
+        <VisibilityTab ToggleRow={ToggleRow} />
       )}
 
       {/* Extra Info Section */}
