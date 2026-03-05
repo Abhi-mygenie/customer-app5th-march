@@ -291,7 +291,7 @@
 /* Primary: Browse Menu */
 .order-success-action-primary {
   background: var(--color-primary, #61B4E5);
-  color: #fff;
+  color: var(--button-text-color, #fff);
   box-shadow: 0 3px 12px rgba(0,0,0,0.12);
 }
 

@@ -39,6 +39,7 @@ const AdminSettings = () => {
     showPoweredBy: true,
     showCallWaiter: true,
     showPayBill: true,
+    showEstimatedTimes: false,
     showAboutUs: true,
     showFooter: true,
     showLandingCustomerCapture: false,  // Capture name/phone on landing
@@ -225,6 +226,7 @@ const AdminSettings = () => {
           showPoweredBy: config.showPoweredBy,
           showCallWaiter: config.showCallWaiter,
           showPayBill: config.showPayBill,
+          showEstimatedTimes: config.showEstimatedTimes,
           showAboutUs: config.showAboutUs,
           showFooter: config.showFooter,
           showLandingCustomerCapture: config.showLandingCustomerCapture,
@@ -488,6 +490,7 @@ const AdminSettings = () => {
             <ToggleRow field="showTableNumber" label="Table/Room Number Badge" />
             <ToggleRow field="showCallWaiter" label="Call Waiter Button" />
             <ToggleRow field="showPayBill" label="Pay Bill Button" />
+            <ToggleRow field="showEstimatedTimes" label="Estimated Times on Order Status" />
             <ToggleRow field="showSocialIcons" label="Social Media Icons" />
             <ToggleRow field="showAboutUs" label="About Us Link" />
             <ToggleRow field="showFooter" label="Footer Section" />

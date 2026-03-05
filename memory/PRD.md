@@ -40,6 +40,9 @@ Full-stack restaurant customer application with React frontend, FastAPI backend,
 - CSS managed per-component with responsive breakpoints
 
 - [x] **Header added to Order Success page** (2025-03-05) — Added Header component with hamburger menu, logo, brand text
+- [x] **Order Status: "Ready" → "Served"** (2025-03-05) — Renamed last stage
+- [x] **Browse Menu button branding fix** (2025-03-05) — Removed broken inline style, uses CSS `--color-primary`
+- [x] **`showEstimatedTimes` config toggle** (2025-03-05) — Added to admin settings, default OFF. Awaiting API `prep_time`/`serve_time` fields
 
 ## Backlog
 - P2: Auto-create customer on guest order

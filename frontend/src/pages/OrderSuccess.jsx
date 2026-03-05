@@ -28,7 +28,7 @@ const ORDER_STATUSES = [
   { key: 'placed', label: 'Order Placed' },
   { key: 'confirmed', label: 'Confirmed' },
   { key: 'preparing', label: 'Preparing' },
-  { key: 'ready', label: 'Ready' },
+  { key: 'served', label: 'Served' },
 ];
 
 const OrderSuccess = () => {
@@ -100,9 +100,6 @@ const OrderSuccess = () => {
   const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo;
   const showPrepTime = isConfigEnabled(restaurant, 'show_prep_time');
   const showTokenNumber = isConfigEnabled(restaurant, 'show_token_number');
-
-  const btnColor = restaurant?.theme?.submit_btn_color || 'var(--color-primary)';
-  const btnTextColor = restaurant?.theme?.submit_btn_text_color || 'var(--button-text-color)';
 
   return (
     <div className="order-success-page" data-testid="order-success-page">
@@ -256,7 +253,6 @@ const OrderSuccess = () => {
             <button
               className="order-success-action-btn order-success-action-primary"
               onClick={handleGoToMenu}
-              style={btnColor ? { backgroundColor: btnColor, color: btnTextColor } : {}}
               data-testid="order-success-menu-btn"
             >
               <MdOutlineRestaurantMenu className="order-success-action-icon" />

@@ -15,6 +15,7 @@ const DEFAULT_CONFIG = {
   showPoweredBy: true,
   showCallWaiter: true,
   showPayBill: true,
+  showEstimatedTimes: false,
   showAboutUs: true,
   showFooter: true,
   showLandingCustomerCapture: false,  // Capture name/phone on landing
@@ -224,6 +225,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     showPoweredBy: isOn('showPoweredBy'),
     showCallWaiter: isOn('showCallWaiter'),
     showPayBill: isOn('showPayBill'),
+    showEstimatedTimes: config.showEstimatedTimes === true,
     showAboutUs: isOn('showAboutUs'),
     showFooter: isOn('showFooter'),
     showLandingCustomerCapture: config.showLandingCustomerCapture === true,  // Default OFF
