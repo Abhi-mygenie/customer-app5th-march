@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 class CustomerCaptureAPITester:
-    def __init__(self, base_url="https://settings-renderer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://css-overhaul-v2.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
