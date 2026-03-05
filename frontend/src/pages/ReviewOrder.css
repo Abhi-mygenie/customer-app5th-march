@@ -850,3 +850,147 @@
     text-align: center;
   }
 }
+
+/* ============================================
+   INTEGRATED PRICE BREAKDOWN CARD
+   ============================================ */
+
+.review-order-price-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-container-lg);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-label {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.price-value {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+/* Input rows for coupon & loyalty */
+.price-row-input {
+  background: var(--bg-primary);
+  border-radius: var(--radius-container-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: var(--spacing-xs) 0;
+}
+
+.price-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex: 1;
+}
+
+.price-input-icon {
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.price-inline-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  padding: var(--spacing-xs) 0;
+  outline: none;
+}
+
+.price-inline-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.price-loyalty-text {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.price-inline-btn {
+  background: var(--color-primary);
+  color: var(--text-white);
+  border: none;
+  border-radius: var(--radius-button);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+.price-inline-btn:hover {
+  opacity: 0.9;
+}
+
+/* Divider inside price card */
+.price-divider {
+  height: 1px;
+  background: var(--border-dark);
+  margin: var(--spacing-xs) 0;
+  border-style: dashed;
+}
+
+/* Sub rows for taxes */
+.price-row-sub {
+  padding: 0 var(--spacing-xs);
+}
+
+.price-label-sub {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.price-value-sub {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* Discount row */
+.price-row-discount .price-discount {
+  color: var(--text-success);
+}
+
+/* Total row */
+.price-row-total {
+  padding-top: var(--spacing-xs);
+  border-top: 2px solid var(--border-primary);
+  margin-top: var(--spacing-xs);
+}
+
+.price-label-total {
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.price-value-total {
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+

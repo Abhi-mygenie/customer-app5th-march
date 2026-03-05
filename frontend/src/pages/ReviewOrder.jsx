@@ -791,71 +791,86 @@ const ReviewOrder = () => {
           {/* Divider after Order Items */}
           <div className="review-order-divider"></div>
 
-          {/* Divider after Special Instructions - only if coupon or loyalty will be shown */}
-          {/* {(showCoupon || showLoyalty) && (
-          <div className="review-order-divider"></div>
-        )} */}
-
-          {/* Coupon Code - conditional */}
-          {showCoupon && (
-            <>
-              <div className="review-order-section">
-                <div className="review-order-coupon-loyalty">
-                  <div className="review-order-coupon-loyalty-left">
-                    <h3 className="review-order-coupon-loyalty-title">Coupon Code</h3>
-                  </div>
-                  <div className="review-order-coupon-loyalty-right">
-                    <input
-                      type="text"
-                      className="review-order-coupon-input"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      placeholder="Ex.: ABC123"
-                    />
-                    <button className="review-order-apply-btn">Apply</button>
-                  </div>
-                </div>
-              </div>
-              {/* Divider after Coupon - only if Loyalty will be shown */}
-              {/* {showLoyalty && ( */}
-              <div className="review-order-divider"></div>
-              {/* )} */}
-            </>
-          )}
-
-          {/* Loyalty Points - conditional */}
-          {showLoyalty && (
-            <>
-              <div className="review-order-section">
-                <div className="review-order-coupon-loyalty review-order-loyalty-container">
-                  <h3 className="review-order-coupon-loyalty-title">Loyalty Points</h3>
-                  <div className="review-order-loyalty-row">
-                    <p className="review-order-loyalty-text">You have ₹{loyaltyPoints}...</p>
-                    <button className="review-order-redeem-btn">Redeem</button>
-                  </div>
-                </div>
-              </div>
-              {/* Divider after Loyalty - always show before Price Breakdown */}
-              <div className="review-order-divider"></div>
-            </>
-          )}
-
-          {/* Price Breakdown - configurable */}
+          {/* Price Breakdown - with integrated Coupon & Loyalty */}
           {showPriceBreakdown && (
           <div className="review-order-section">
             <div className="review-order-section-header">
               <div className="review-order-section-title-icon"><RiFileList3Line size={16} /></div>
               <h2 className="review-order-section-title">Price Breakdown</h2>
             </div>
-            <ReviewOrderPriceBreakdown
-              subtotal={subtotal}
-              cgst={cgst}
-              sgst={sgst}
-              totalGst={totalGst}
-              vat={vat}
-              totalToPay={totalToPay}
-              showHeader={false}
-            />
+            
+            <div className="review-order-price-card">
+              {/* Subtotal */}
+              <div className="price-row">
+                <span className="price-label">Subtotal</span>
+                <span className="price-value">₹{subtotal.toFixed(2)}</span>
+              </div>
+
+              {/* Coupon Code - inline */}
+              {showCoupon && (
+                <div className="price-row price-row-input">
+                  <div className="price-input-group">
+                    <span className="price-input-icon">🏷️</span>
+                    <input
+                      type="text"
+                      className="price-inline-input"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      placeholder="Enter coupon code"
+                      data-testid="coupon-input"
+                    />
+                  </div>
+                  <button className="price-inline-btn" data-testid="apply-coupon-btn">Apply</button>
+                </div>
+              )}
+
+              {/* Loyalty Points - inline */}
+              {showLoyalty && (
+                <div className="price-row price-row-input">
+                  <div className="price-input-group">
+                    <span className="price-input-icon">🎁</span>
+                    <span className="price-loyalty-text">₹{loyaltyPoints} points available</span>
+                  </div>
+                  <button className="price-inline-btn" data-testid="redeem-loyalty-btn">Use</button>
+                </div>
+              )}
+
+              {/* Discount lines - show when applied */}
+              {/* {couponDiscount > 0 && (
+                <div className="price-row price-row-discount">
+                  <span className="price-label">Coupon Discount</span>
+                  <span className="price-value price-discount">-₹{couponDiscount.toFixed(2)}</span>
+                </div>
+              )} */}
+
+              <div className="price-divider"></div>
+
+              {/* GST/VAT if applicable */}
+              {totalGst > 0 && (
+                <>
+                  <div className="price-row price-row-sub">
+                    <span className="price-label-sub">CGST</span>
+                    <span className="price-value-sub">₹{cgst.toFixed(2)}</span>
+                  </div>
+                  <div className="price-row price-row-sub">
+                    <span className="price-label-sub">SGST</span>
+                    <span className="price-value-sub">₹{sgst.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+              {vat > 0 && (
+                <div className="price-row price-row-sub">
+                  <span className="price-label-sub">VAT</span>
+                  <span className="price-value-sub">₹{vat.toFixed(2)}</span>
+                </div>
+              )}
+
+              {/* Total */}
+              <div className="price-row price-row-total">
+                <span className="price-label-total">Total</span>
+                <span className="price-value-total">₹{totalToPay.toFixed(2)}</span>
+              </div>
+            </div>
           </div>
           )}
 
