@@ -5,6 +5,7 @@ import { useRestaurantDetails } from '../hooks/useMenuData';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
+import Header from '../components/Header/Header';
 import { IoCheckmarkCircle, IoCallOutline } from 'react-icons/io5';
 import { RiBillLine } from 'react-icons/ri';
 import { MdOutlineEdit, MdOutlineRestaurantMenu, MdOutlineTableRestaurant } from 'react-icons/md';
@@ -35,9 +36,17 @@ const OrderSuccess = () => {
   const location = useLocation();
   const { restaurantId } = useRestaurantId();
   const { restaurant } = useRestaurantDetails(restaurantId);
+  const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig } = useRestaurantConfig();
   const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
 
   const orderData = location.state?.orderData || null;
+
+  // Fetch admin config for this restaurant
+  useEffect(() => {
+    if (restaurantId) {
+      fetchConfig(restaurantId);
+    }
+  }, [restaurantId, fetchConfig]);
 
   // Redirect if no order data
   useEffect(() => {
@@ -97,6 +106,12 @@ const OrderSuccess = () => {
 
   return (
     <div className="order-success-page" data-testid="order-success-page">
+      <Header
+        brandText={restaurant?.name}
+        logoUrl={configLogoUrl || '/assets/images/ic_login_logo.png'}
+        phone={configPhone || restaurant?.phone}
+        onLogoClick={() => navigate(`/${restaurantId}`)}
+      />
       <div className="order-success-container">
 
         {/* Success Icon + Title */}

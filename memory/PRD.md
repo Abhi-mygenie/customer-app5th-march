@@ -39,5 +39,7 @@ Full-stack restaurant customer application with React frontend, FastAPI backend,
 - All pages use max-width: 600px mobile-first layout
 - CSS managed per-component with responsive breakpoints
 
+- [x] **Header added to Order Success page** (2025-03-05) — Added Header component with hamburger menu, logo, brand text
+
 ## Backlog
 - P2: Auto-create customer on guest order
