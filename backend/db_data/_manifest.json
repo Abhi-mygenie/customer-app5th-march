@@ -1,0 +1,15 @@
+{
+  "exported_at": "2026-03-05T16:05:49.944589",
+  "db_name": "test_database",
+  "collections": {
+    "coupons": 3,
+    "customer_app_config": 12,
+    "customers": 1967,
+    "feedback": 25,
+    "loyalty_settings": 7,
+    "points_transactions": 280,
+    "segments": 4,
+    "users": 6,
+    "wallet_transactions": 81
+  }
+}

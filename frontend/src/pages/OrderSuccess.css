@@ -1,0 +1,372 @@
+/* ============================================
+   ORDER SUCCESS PAGE
+   ============================================ */
+
+.order-success-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background-color: var(--bg-secondary, #f7f8fa);
+  padding: var(--spacing-xl) var(--spacing-base);
+  padding-top: 40px;
+}
+
+.order-success-container {
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Hero: Icon + Title ──────────────────── */
+
+.order-success-hero {
+  text-align: center;
+}
+
+.order-success-icon {
+  font-size: 80px;
+  color: #22c55e;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  animation: successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes successPop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.order-success-title {
+  font-family: var(--font-heading, 'Capriola', sans-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.order-success-message {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Order Details Card ──────────────────── */
+
+.order-success-card {
+  background: var(--bg-primary, #fff);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  border: 1px solid var(--border-light, #eee);
+}
+
+.order-success-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.order-success-card-label {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+}
+
+.order-success-card-value {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.order-success-card-total {
+  color: #22c55e;
+  font-size: 1rem;
+}
+
+.order-success-card-divider {
+  height: 1px;
+  background: var(--border-light, #eee);
+  margin: 10px 0;
+}
+
+.order-success-card-label-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  font-size: 1rem;
+  vertical-align: middle;
+  color: var(--text-tertiary);
+}
+
+.order-success-card-token {
+  background: var(--color-primary, #61B4E5);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+}
+
+.order-success-card-prep {
+  color: var(--color-primary, #61B4E5);
+  font-weight: 600;
+}
+
+/* ── Order Status Tracker ────────────────── */
+
+.order-status-tracker {
+  background: var(--bg-primary, #fff);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  border: 1px solid var(--border-light, #eee);
+}
+
+.order-status-heading {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+}
+
+.order-status-steps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+}
+
+.order-status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+/* Dot */
+.order-status-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-secondary, #f0f0f0);
+  border: 2px solid var(--border-medium, #ddd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.order-status-dot svg {
+  width: 14px;
+  height: 14px;
+  color: #fff;
+}
+
+.order-status-step.completed .order-status-dot {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+.order-status-step.current .order-status-dot {
+  background: #22c55e;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+}
+
+/* Line between dots */
+.order-status-line {
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 16px);
+  right: calc(-50% + 16px);
+  height: 2px;
+  background: var(--border-medium, #ddd);
+  z-index: 0;
+}
+
+.order-status-line.filled {
+  background: #22c55e;
+}
+
+/* Label */
+.order-status-label {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.6rem;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 70px;
+}
+
+.order-status-step.completed .order-status-label,
+.order-status-step.current .order-status-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ── Action Buttons ──────────────────────── */
+
+.order-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.order-success-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 14px 20px;
+  text-transform: uppercase;
+}
+
+.order-success-action-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Edit Order */
+.order-success-action-edit {
+  background: var(--bg-primary, #fff);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-medium, #ddd);
+}
+
+.order-success-action-edit:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* Secondary: Call Waiter, Pay Bill (side by side) */
+.order-success-action-row {
+  display: flex;
+  gap: 10px;
+}
+
+.order-success-action-secondary {
+  flex: 1;
+  background: var(--bg-primary, #fff);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-medium, #ddd);
+  padding: 12px 12px;
+  font-size: 0.72rem;
+}
+
+.order-success-action-secondary:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+/* Primary: Browse Menu */
+.order-success-action-primary {
+  background: var(--color-primary, #61B4E5);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+}
+
+.order-success-action-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(0,0,0,0.18);
+}
+
+.order-success-action-primary:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 480px) {
+  .order-success-page {
+    padding: var(--spacing-lg) var(--spacing-sm);
+    padding-top: 30px;
+  }
+
+  .order-success-icon {
+    font-size: 65px;
+  }
+
+  .order-success-title {
+    font-size: 1.3rem;
+  }
+
+  .order-success-action-secondary {
+    font-size: 0.68rem;
+    padding: 11px 10px;
+  }
+
+  .order-status-dot {
+    width: 24px;
+    height: 24px;
+  }
+
+  .order-status-dot svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .order-status-line {
+    top: 12px;
+    left: calc(50% + 14px);
+    right: calc(-50% + 14px);
+  }
+
+  .order-status-label {
+    font-size: 0.55rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .order-success-container {
+    gap: 16px;
+  }
+
+  .order-success-icon {
+    font-size: 55px;
+  }
+
+  .order-success-title {
+    font-size: 1.15rem;
+  }
+
+  .order-success-message {
+    font-size: 0.75rem;
+  }
+
+  .order-success-action-btn {
+    padding: 12px 16px;
+    font-size: 0.75rem;
+  }
+
+  .order-success-action-secondary {
+    font-size: 0.62rem;
+    padding: 10px 8px;
+  }
+}
