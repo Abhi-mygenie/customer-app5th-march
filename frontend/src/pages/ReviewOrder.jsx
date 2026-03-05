@@ -127,6 +127,31 @@ const ReviewOrder = () => {
   const [isLoadingToken, setIsLoadingToken] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
+  // Pre-fill from guest capture (localStorage)
+  useEffect(() => {
+    // Only pre-fill if not authenticated (guest user)
+    if (!isAuthenticated) {
+      try {
+        const savedGuest = localStorage.getItem('guestCustomer');
+        if (savedGuest) {
+          const { name, phone } = JSON.parse(savedGuest);
+          if (name && !customerName) setCustomerName(name);
+          if (phone && !customerPhone) setCustomerPhone(phone);
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }, [isAuthenticated]);
+
+  // Pre-fill from logged in user
+  useEffect(() => {
+    if (isAuthenticated && isCustomer && user) {
+      if (user.name && !customerName) setCustomerName(user.name);
+      if (user.phone && !customerPhone) setCustomerPhone(user.phone);
+    }
+  }, [isAuthenticated, isCustomer, user]);
+
   // Validate phone number (10 digits for India)
   const isPhoneNumberValid = useMemo(() => {
     // if (!customerPhone) return false;

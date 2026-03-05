@@ -40,6 +40,7 @@ const AdminSettings = () => {
     showPayBill: true,
     showAboutUs: true,
     showFooter: true,
+    showLandingCustomerCapture: false,  // Capture name/phone on landing
     // Menu Page Visibility
     showPromotionsOnMenu: true,
     showCategories: true,
@@ -173,9 +174,12 @@ const AdminSettings = () => {
   const fetchConfig = async () => {
     if (!user?.id) return;
     
+    // Use restaurant_id field if available, fallback to user id
+    const configId = user.restaurant_id || user.id;
+    
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/config/${user.id}`);
+      const response = await fetch(`${API_URL}/api/config/${configId}`);
       if (response.ok) {
         const data = await response.json();
         setConfig(prev => ({ ...prev, ...data }));
@@ -216,6 +220,7 @@ const AdminSettings = () => {
           showPayBill: config.showPayBill,
           showAboutUs: config.showAboutUs,
           showFooter: config.showFooter,
+          showLandingCustomerCapture: config.showLandingCustomerCapture,
           // Menu Page Visibility
           showPromotionsOnMenu: config.showPromotionsOnMenu,
           showCategories: config.showCategories,
@@ -476,6 +481,7 @@ const AdminSettings = () => {
             <ToggleRow field="showAboutUs" label="About Us Link" />
             <ToggleRow field="showFooter" label="Footer Section" />
             <ToggleRow field="showPoweredBy" label="Powered by MyGenie" />
+            <ToggleRow field="showLandingCustomerCapture" label="Capture Customer Details (Name & Phone)" />
           </div>
         </div>
       )}

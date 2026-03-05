@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRestaurantDetails } from '../hooks/useMenuData';
 import { useRestaurantId } from '../utils/useRestaurantId';
@@ -9,6 +9,7 @@ import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import HamburgerMenu from '../components/HamburgerMenu/HamburgerMenu';
+import LandingCustomerCapture from '../components/LandingCustomerCapture/LandingCustomerCapture';
 import { MdOutlineTableRestaurant, MdOutlineRestaurantMenu } from 'react-icons/md';
 import { FaDoorOpen } from 'react-icons/fa';
 import { IoCallOutline, IoPersonOutline } from 'react-icons/io5';
@@ -19,11 +20,15 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated } = useAuth();
-  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, logoUrl: configLogoUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone } = useRestaurantConfig();
+  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, logoUrl: configLogoUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
 
   const { restaurant, loading, error } = useRestaurantDetails(restaurantId);
+
+  // State for customer capture flow
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [capturedPhone, setCapturedPhone] = useState('');
 
   // Fetch admin config when restaurantId is available
   useEffect(() => {
@@ -89,10 +94,11 @@ const LandingPage = () => {
   const showDescription = configShowDescription && description;
   const showSocial = configShowSocialIcons && (phone || instagramUrl || facebookUrl || twitterUrl || youtubeUrl || whatsappNumber);
   const showTable = configShowTableNumber && isScanned && scannedTableNo;
-  const showBrowseMenu = true; // Always show Browse Menu button
+  const showBrowseMenu = !configShowLandingCustomerCapture; // Hide if customer capture is ON
   const showCallWaiter = configShowCallWaiter;
   const showPayBill = configShowPayBill;
   const showPoweredBy = configShowPoweredBy;
+  const showCustomerCapture = configShowLandingCustomerCapture && !isAuthenticated;
 
   // Admin config overrides for welcome message
   const displayWelcomeMessage = configWelcomeMessage || `Welcome to ${restaurantName}!`;
@@ -101,6 +107,23 @@ const LandingPage = () => {
   // Button colors from local config only (no POS fallback)
   const btnColor = configPrimaryColor || '#61B4E5';
   const btnTextColor = configButtonTextColor || '#FFFFFF';
+
+  // Handle guest continue - navigate to menu
+  const handleGuestContinue = (guestData) => {
+    const actualRestaurantId = restaurant?.id || restaurantId;
+    if (isMultipleMenu(restaurant, actualRestaurantId)) {
+      navigate(`/${actualRestaurantId}/stations`);
+    } else {
+      navigate(`/${actualRestaurantId}/menu`);
+    }
+  };
+
+  // Handle existing customer found - redirect to login with phone
+  const handleCustomerFound = ({ phone }) => {
+    setCapturedPhone(phone);
+    // Navigate to login page with pre-filled phone
+    navigate('/login', { state: { phone, restaurantId } });
+  };
 
   return (
     <div className="landing-page" data-testid="landing-page">
@@ -190,6 +213,17 @@ const LandingPage = () => {
             </span>
             <span className="table-badge-number">{scannedTableNo}</span>
           </div>
+        )}
+
+        {/* 4.5 Customer Capture Form (when enabled) */}
+        {showCustomerCapture && (
+          <LandingCustomerCapture
+            restaurantId={restaurantId}
+            onContinue={handleGuestContinue}
+            onCustomerFound={handleCustomerFound}
+            primaryColor={btnColor}
+            buttonTextColor={btnTextColor}
+          />
         )}
 
         {/* 5. Action Buttons */}

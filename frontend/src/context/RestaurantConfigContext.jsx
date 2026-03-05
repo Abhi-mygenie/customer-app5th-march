@@ -17,6 +17,7 @@ const DEFAULT_CONFIG = {
   showPayBill: true,
   showAboutUs: true,
   showFooter: true,
+  showLandingCustomerCapture: false,  // Capture name/phone on landing
   // Menu Page
   showPromotionsOnMenu: true,
   showCategories: true,
@@ -222,6 +223,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     showPayBill: isOn('showPayBill'),
     showAboutUs: isOn('showAboutUs'),
     showFooter: isOn('showFooter'),
+    showLandingCustomerCapture: config.showLandingCustomerCapture === true,  // Default OFF
     // Menu Page
     showPromotionsOnMenu: isOn('showPromotionsOnMenu'),
     showCategories: isOn('showCategories'),

@@ -1,261 +1,322 @@
 import requests
 import sys
 from datetime import datetime
-import os
+import json
 
-class CustomerAppAPITester:
-    def __init__(self):
-        # Use the public endpoint from frontend .env
-        self.base_url = "https://multi-tenant-app-22.preview.emergentagent.com"
+class CustomerCaptureAPITester:
+    def __init__(self, base_url="https://customer-preview-5.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.customer_token = None
-        self.restaurant_token = None
-        self.test_phone = "9876543210"
-        self.test_email = "admin@restaurant.com"
-        self.test_otp = None
-
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None, auth_type=None):
-        """Run a single API test"""
-        url = f"{self.base_url}/{endpoint}"
         
-        # Set up headers
-        request_headers = {'Content-Type': 'application/json'}
-        if headers:
-            request_headers.update(headers)
-            
-        # Add auth token if specified
-        if auth_type == 'customer' and self.customer_token:
-            request_headers['Authorization'] = f'Bearer {self.customer_token}'
-        elif auth_type == 'restaurant' and self.restaurant_token:
-            request_headers['Authorization'] = f'Bearer {self.restaurant_token}'
+        # Test credentials from agent context
+        self.admin_email = "owner@18march.com"
+        self.admin_password = "admin123"
+        self.restaurant_id = "478"
+        self.test_otp = "1111"
+        self.test_existing_phone = "123456789000"  # Should exist in DB
+        self.test_new_phone = "987654321000"  # Should not exist
 
+    def log_result(self, test_name, success, details=""):
+        """Log test result"""
         self.tests_run += 1
+        if success:
+            self.tests_passed += 1
+            print(f"✅ {test_name} - PASSED")
+            if details:
+                print(f"   📝 {details}")
+        else:
+            print(f"❌ {test_name} - FAILED")
+            if details:
+                print(f"   📝 {details}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+        """Run a single API test"""
+        url = f"{self.base_url}{endpoint}"
+        default_headers = {'Content-Type': 'application/json'}
+        if headers:
+            default_headers.update(headers)
+
         print(f"\n🔍 Testing {name}...")
-        print(f"URL: {url}")
+        print(f"   URL: {url}")
+        if data:
+            print(f"   Data: {json.dumps(data, indent=2)}")
         
         try:
             if method == 'GET':
-                response = requests.get(url, headers=request_headers, timeout=10)
+                response = requests.get(url, headers=default_headers)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=request_headers, timeout=10)
+                response = requests.post(url, json=data, headers=default_headers)
             elif method == 'PUT':
-                response = requests.put(url, json=data, headers=request_headers, timeout=10)
+                response = requests.put(url, json=data, headers=default_headers)
 
-            # Handle multiple expected status codes
-            expected_statuses = expected_status if isinstance(expected_status, list) else [expected_status]
-            success = response.status_code in expected_statuses
+            print(f"   Status: {response.status_code}")
             
-            if success:
-                self.tests_passed += 1
-                print(f"✅ Passed - Status: {response.status_code}")
-                if response.content:
-                    try:
-                        result = response.json()
-                        print(f"Response: {result}")
-                        return success, result
-                    except:
-                        print(f"Response: {response.text}")
-                        return success, {}
-                return success, {}
-            else:
-                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
-                try:
-                    error_data = response.json()
-                    print(f"Error: {error_data}")
-                    return False, error_data
-                except:
-                    print(f"Error: {response.text}")
-                    return False, {}
+            success = response.status_code == expected_status
+            
+            try:
+                response_data = response.json()
+                print(f"   Response: {json.dumps(response_data, indent=2)}")
+            except:
+                response_data = response.text
+                print(f"   Response: {response_data}")
+
+            return success, response_data
 
         except Exception as e:
-            print(f"❌ Failed - Error: {str(e)}")
-            return False, {}
+            print(f"   Error: {str(e)}")
+            return False, {"error": str(e)}
 
-    def test_api_root(self):
-        """Test the main /api/ endpoint"""
-        success, response = self.run_test(
-            "API Root",
-            "GET",
-            "api/",
-            200
-        )
-        return success
-
-    def test_send_otp_endpoint(self):
-        """Test /api/auth/send-otp endpoint"""
-        # Test with a phone that may not exist
-        success, response = self.run_test(
-            "Send OTP - Test Phone",
-            "POST",
-            "api/auth/send-otp",
-            [200, 404],  # 404 if phone not registered
-            data={"phone": self.test_phone}
-        )
+    def test_admin_login(self):
+        """Test admin login to get token"""
+        print("\n" + "="*50)
+        print("TESTING ADMIN LOGIN")
+        print("="*50)
         
-        if success and response.get('otp_for_testing'):
-            self.test_otp = response['otp_for_testing']
-            print(f"   🔑 OTP for testing: {self.test_otp}")
-        
-        return success
-
-    def test_login_endpoint_invalid_otp(self):
-        """Test /api/auth/login with invalid OTP"""
         success, response = self.run_test(
-            "Login - Invalid OTP",
+            "Admin Login",
             "POST",
-            "api/auth/login",
-            401,
-            data={
-                "phone_or_email": self.test_phone,
-                "otp": "000000"
-            }
-        )
-        return success
-
-    def test_login_endpoint_valid_otp(self):
-        """Test /api/auth/login with valid OTP (if available)"""
-        if not self.test_otp:
-            print("❌ No OTP available for valid login test")
-            return False
-            
-        success, response = self.run_test(
-            "Login - Valid OTP",
-            "POST",
-            "api/auth/login",
+            "/api/auth/login",
             200,
             data={
-                "phone_or_email": self.test_phone,
-                "otp": self.test_otp
+                "phone_or_email": self.admin_email,
+                "password": self.admin_password
             }
         )
         
-        if success and response.get('token'):
-            self.customer_token = response['token']
-            print(f"   ✅ Customer token obtained")
-        
-        return success
+        if success and 'token' in response:
+            self.admin_token = response['token']
+            self.log_result("Admin Login", True, f"Token obtained for user: {response.get('user', {}).get('email')}")
+            return True
+        else:
+            self.log_result("Admin Login", False, "Failed to obtain admin token")
+            return False
 
-    def test_login_endpoint_password(self):
-        """Test /api/auth/login with password (restaurant)"""
+    def test_check_customer_api(self):
+        """Test check-customer endpoint"""
+        print("\n" + "="*50)
+        print("TESTING CHECK-CUSTOMER API")
+        print("="*50)
+        
+        # Test 1: Check existing customer
         success, response = self.run_test(
-            "Login - Restaurant Password",
+            "Check Existing Customer",
             "POST",
-            "api/auth/login",
-            [200, 401, 404],  # May not exist in test DB
+            "/api/auth/check-customer",
+            200,
             data={
-                "phone_or_email": self.test_email,
-                "password": "testpassword"
+                "phone": self.test_existing_phone,
+                "restaurant_id": self.restaurant_id,
+                "pos_id": "0001"
             }
         )
-        return success
-
-    def test_config_endpoint(self):
-        """Test /api/config/{restaurant_id} returns default config"""
+        
+        if success:
+            expected_exists = response.get('exists') == True
+            has_customer_data = 'customer' in response and response['customer'] is not None
+            self.log_result(
+                "Check Existing Customer", 
+                expected_exists and has_customer_data,
+                f"exists={response.get('exists')}, customer_name={response.get('customer', {}).get('name', 'N/A')}"
+            )
+        else:
+            self.log_result("Check Existing Customer", False, "API call failed")
+        
+        # Test 2: Check non-existing customer
         success, response = self.run_test(
-            "Get App Config - Default Restaurant",
+            "Check Non-Existing Customer",
+            "POST",
+            "/api/auth/check-customer",
+            200,
+            data={
+                "phone": self.test_new_phone,
+                "restaurant_id": self.restaurant_id,
+                "pos_id": "0001"
+            }
+        )
+        
+        if success:
+            expected_not_exists = response.get('exists') == False
+            no_customer_data = response.get('customer') is None
+            self.log_result(
+                "Check Non-Existing Customer", 
+                expected_not_exists and no_customer_data,
+                f"exists={response.get('exists')}, customer={response.get('customer')}"
+            )
+        else:
+            self.log_result("Check Non-Existing Customer", False, "API call failed")
+
+        # Test 3: Invalid phone format
+        success, response = self.run_test(
+            "Check Customer Invalid Phone",
+            "POST",
+            "/api/auth/check-customer",
+            200,  # API should handle gracefully
+            data={
+                "phone": "invalid-phone",
+                "restaurant_id": self.restaurant_id,
+                "pos_id": "0001"
+            }
+        )
+        
+        if success:
+            # Should return exists: false for invalid phone
+            self.log_result(
+                "Check Customer Invalid Phone", 
+                response.get('exists') == False,
+                f"Handled invalid phone gracefully: exists={response.get('exists')}"
+            )
+        else:
+            self.log_result("Check Customer Invalid Phone", False, "API call failed")
+
+    def test_config_api(self):
+        """Test config API for showLandingCustomerCapture"""
+        print("\n" + "="*50)
+        print("TESTING CONFIG API")
+        print("="*50)
+        
+        # Test 1: Get current config
+        success, response = self.run_test(
+            "Get Restaurant Config",
             "GET",
-            "api/config/test-restaurant-id",
+            f"/api/config/{self.restaurant_id}",
             200
         )
         
         if success:
-            expected_keys = ["restaurant_id", "showCustomerDetails", "showCallWaiter", "showPayBill"]
-            has_expected = all(key in response for key in expected_keys)
-            if has_expected:
-                print(f"   ✅ Config contains expected default fields")
-            else:
-                print(f"   ⚠️  Config missing some expected fields")
-        
-        return success
-
-    def test_customer_routes_no_auth(self):
-        """Test /api/customer/* routes without authentication"""
-        customer_endpoints = [
-            ("Customer Profile - No Auth", "api/customer/profile"),
-            ("Customer Orders - No Auth", "api/customer/orders"),
-            ("Customer Points - No Auth", "api/customer/points"),
-            ("Customer Wallet - No Auth", "api/customer/wallet")
-        ]
-        
-        all_success = True
-        for name, endpoint in customer_endpoints:
-            success, _ = self.run_test(name, "GET", endpoint, 401)
-            all_success = all_success and success
-        
-        return all_success
-
-    def test_customer_routes_with_auth(self):
-        """Test /api/customer/* routes with authentication"""
-        if not self.customer_token:
-            print("❌ No customer token available for authenticated tests")
-            return False
+            has_landing_capture_config = 'showLandingCustomerCapture' in response
+            self.log_result(
+                "Get Restaurant Config", 
+                has_landing_capture_config,
+                f"showLandingCustomerCapture={response.get('showLandingCustomerCapture')}"
+            )
             
-        customer_endpoints = [
-            ("Customer Profile - With Auth", "api/customer/profile"),
-            ("Customer Orders - With Auth", "api/customer/orders"),
-            ("Customer Points - With Auth", "api/customer/points"),
-            ("Customer Wallet - With Auth", "api/customer/wallet")
-        ]
+            current_config = response
+        else:
+            self.log_result("Get Restaurant Config", False, "Failed to fetch config")
+            current_config = {}
+
+        if not self.admin_token:
+            print("❌ Skipping config update tests - no admin token")
+            return
+
+        # Test 2: Update config to enable customer capture
+        success, response = self.run_test(
+            "Enable Landing Customer Capture",
+            "PUT",
+            "/api/config/",
+            200,
+            data={"showLandingCustomerCapture": True},
+            headers={"Authorization": f"Bearer {self.admin_token}"}
+        )
         
-        all_success = True
-        for name, endpoint in customer_endpoints:
-            success, _ = self.run_test(name, "GET", endpoint, 200, auth_type='customer')
-            all_success = all_success and success
+        if success:
+            self.log_result(
+                "Enable Landing Customer Capture", 
+                True,
+                "Config update successful"
+            )
+        else:
+            self.log_result("Enable Landing Customer Capture", False, "Config update failed")
+
+        # Test 3: Verify config was updated
+        success, response = self.run_test(
+            "Verify Config Update",
+            "GET",
+            f"/api/config/{self.restaurant_id}",
+            200
+        )
         
-        return all_success
+        if success:
+            is_enabled = response.get('showLandingCustomerCapture') == True
+            self.log_result(
+                "Verify Config Update", 
+                is_enabled,
+                f"showLandingCustomerCapture={response.get('showLandingCustomerCapture')}"
+            )
+        else:
+            self.log_result("Verify Config Update", False, "Failed to verify config")
+
+    def test_otp_flow(self):
+        """Test OTP flow for existing customer"""
+        print("\n" + "="*50)
+        print("TESTING OTP FLOW")
+        print("="*50)
+        
+        # Test 1: Send OTP for existing customer
+        success, response = self.run_test(
+            "Send OTP to Existing Customer",
+            "POST",
+            "/api/auth/send-otp",
+            200,
+            data={
+                "phone": self.test_existing_phone,
+                "restaurant_id": self.restaurant_id,
+                "pos_id": "0001"
+            }
+        )
+        
+        if success:
+            otp_sent = response.get('success') == True
+            self.log_result(
+                "Send OTP to Existing Customer", 
+                otp_sent,
+                f"OTP sent successfully: {response.get('message', 'No message')}"
+            )
+        else:
+            self.log_result("Send OTP to Existing Customer", False, "Failed to send OTP")
+
+        # Test 2: Login with OTP
+        success, response = self.run_test(
+            "Login with OTP",
+            "POST",
+            "/api/auth/login",
+            200,
+            data={
+                "phone_or_email": self.test_existing_phone,
+                "otp": self.test_otp,
+                "restaurant_id": self.restaurant_id,
+                "pos_id": "0001"
+            }
+        )
+        
+        if success:
+            login_success = response.get('success') == True and response.get('user_type') == 'customer'
+            self.log_result(
+                "Login with OTP", 
+                login_success,
+                f"Customer logged in: {response.get('user', {}).get('name', 'N/A')}"
+            )
+        else:
+            self.log_result("Login with OTP", False, "OTP login failed")
 
 def main():
-    print("🚀 Starting Customer App Backend API Testing")
-    print("=" * 50)
+    print("🚀 Starting Customer Capture Feature API Tests")
+    print(f"⏰ Test started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
-    # Setup
-    tester = CustomerAppAPITester()
-
-    # Test 1: API root endpoint
-    print("\n📍 Testing Core API Endpoints")
-    api_root_success = tester.test_api_root()
-
-    # Test 2: Auth endpoints
-    print("\n📍 Testing Authentication Endpoints")
-    send_otp_success = tester.test_send_otp_endpoint()
-    login_invalid_success = tester.test_login_endpoint_invalid_otp()
-    login_valid_success = tester.test_login_endpoint_valid_otp()
-    login_password_success = tester.test_login_endpoint_password()
-
-    # Test 3: Config endpoint
-    print("\n📍 Testing Configuration Endpoints")
-    config_success = tester.test_config_endpoint()
-
-    # Test 4: Customer endpoints without auth
-    print("\n📍 Testing Customer Endpoints (No Auth)")
-    customer_no_auth_success = tester.test_customer_routes_no_auth()
-
-    # Test 5: Customer endpoints with auth (if token available)
-    print("\n📍 Testing Customer Endpoints (With Auth)")
-    customer_auth_success = tester.test_customer_routes_with_auth()
-
-    # Print results
-    print("\n" + "=" * 50)
-    print(f"📊 Backend API Tests Summary")
-    print(f"Tests passed: {tester.tests_passed}/{tester.tests_run}")
+    tester = CustomerCaptureAPITester()
     
-    # Print detailed results
-    print("\nDetailed Results:")
-    print(f"- API Root: {'✅' if api_root_success else '❌'}")
-    print(f"- Send OTP: {'✅' if send_otp_success else '❌'}")
-    print(f"- Login Invalid OTP: {'✅' if login_invalid_success else '❌'}")
-    print(f"- Login Valid OTP: {'✅' if login_valid_success else '❌'}")
-    print(f"- Login Password: {'✅' if login_password_success else '❌'}")
-    print(f"- Config Endpoint: {'✅' if config_success else '❌'}")
-    print(f"- Customer No Auth: {'✅' if customer_no_auth_success else '❌'}")
-    print(f"- Customer With Auth: {'✅' if customer_auth_success else '❌'}")
+    # Run all tests
+    admin_login_success = tester.test_admin_login()
+    tester.test_check_customer_api()
+    tester.test_config_api()
+    tester.test_otp_flow()
     
-    if tester.tests_passed >= tester.tests_run * 0.7:  # 70% pass rate
-        print("🎉 Backend tests mostly successful!")
+    # Print summary
+    print("\n" + "="*60)
+    print("📊 TEST SUMMARY")
+    print("="*60)
+    print(f"Tests run: {tester.tests_run}")
+    print(f"Tests passed: {tester.tests_passed}")
+    print(f"Tests failed: {tester.tests_run - tester.tests_passed}")
+    print(f"Success rate: {(tester.tests_passed / tester.tests_run * 100):.1f}%" if tester.tests_run > 0 else "0%")
+    
+    if tester.tests_passed == tester.tests_run:
+        print("🎉 All tests PASSED!")
         return 0
     else:
-        print("⚠️  Many backend tests failed - needs investigation")
+        print("⚠️  Some tests FAILED!")
         return 1
 
 if __name__ == "__main__":

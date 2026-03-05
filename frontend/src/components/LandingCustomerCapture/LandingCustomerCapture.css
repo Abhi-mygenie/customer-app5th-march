@@ -1,0 +1,99 @@
+.landing-customer-capture {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.capture-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.capture-input-group {
+  width: 100%;
+}
+
+.capture-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.capture-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #E8531E);
+}
+
+.capture-input::placeholder {
+  color: #999;
+}
+
+.capture-phone-input {
+  width: 100%;
+}
+
+.capture-phone-input .PhoneInputInput {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.capture-phone-input .PhoneInputInput:focus {
+  outline: none;
+  border-color: var(--color-primary, #E8531E);
+}
+
+.capture-phone-input .PhoneInputCountry {
+  margin-right: 0.5rem;
+}
+
+.capture-phone-input.capture-phone-error .PhoneInputInput {
+  border-color: #e53935;
+}
+
+.capture-error-text {
+  display: block;
+  color: #e53935;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  padding-left: 0.25rem;
+}
+
+.capture-continue-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-button, 8px);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  margin-top: 0.5rem;
+}
+
+.capture-continue-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+.capture-continue-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.capture-btn-icon {
+  font-size: 1.125rem;
+}

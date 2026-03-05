@@ -67,6 +67,11 @@ class OTPRequest(BaseModel):
     restaurant_id: Optional[str] = None  # For scoped OTP sending
     pos_id: Optional[str] = "0001"
 
+class CheckCustomerRequest(BaseModel):
+    phone: str
+    restaurant_id: str
+    pos_id: Optional[str] = "0001"
+
 class CustomerProfile(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
@@ -112,6 +117,7 @@ class AppConfigUpdate(BaseModel):
     showPayBill: Optional[bool] = None
     showAboutUs: Optional[bool] = None
     showFooter: Optional[bool] = None
+    showLandingCustomerCapture: Optional[bool] = None  # Capture name/phone on landing
     # Menu Page Visibility
     showPromotionsOnMenu: Optional[bool] = None
     showCategories: Optional[bool] = None
@@ -291,6 +297,30 @@ async def send_otp(request: OTPRequest):
     
     return {"success": True, "message": "OTP sent successfully", "otp_for_testing": otp}
 
+@auth_router.post("/check-customer")
+async def check_customer(request: CheckCustomerRequest):
+    """Check if customer exists for this restaurant - used for landing page capture flow"""
+    phone = request.phone.strip()
+    pos_id = request.pos_id or "0001"
+    user_id = f"pos_{pos_id}_restaurant_{request.restaurant_id}"
+    
+    # Check if customer exists for this restaurant
+    customer = await db.customers.find_one({
+        "phone": phone,
+        "user_id": user_id
+    }, {"_id": 0, "name": 1, "phone": 1, "id": 1})
+    
+    if customer:
+        return {
+            "exists": True,
+            "customer": {
+                "name": customer.get("name", ""),
+                "phone": customer.get("phone", "")
+            }
+        }
+    
+    return {"exists": False, "customer": None}
+
 @auth_router.post("/login", response_model=LoginResponse)
 async def unified_login(request: LoginRequest):
     """
@@ -381,6 +411,7 @@ async def unified_login(request: LoginRequest):
             token=token,
             user={
                 "id": user["id"],
+                "restaurant_id": user.get("restaurant_id", ""),
                 "email": user.get("email", ""),
                 "restaurant_name": user.get("restaurant_name", ""),
                 "phone": user.get("phone", ""),
@@ -560,6 +591,7 @@ async def get_app_config(restaurant_id: str):
             "showPayBill": True,
             "showAboutUs": True,
             "showFooter": True,
+            "showLandingCustomerCapture": False,  # Default OFF - restaurant opts in
             # Menu Page
             "showPromotionsOnMenu": True,
             "showCategories": True,
@@ -622,7 +654,8 @@ async def update_app_config(
     user: dict = Depends(get_restaurant_user)
 ):
     """Update app configuration (restaurant admin only)"""
-    restaurant_id = user["id"]
+    # Use restaurant_id field if available, fallback to user id
+    restaurant_id = user.get("restaurant_id") or user["id"]
     
     update_dict = {k: v for k, v in config_update.model_dump().items() if v is not None}
     
@@ -646,7 +679,7 @@ async def create_banner(
     user: dict = Depends(get_restaurant_user)
 ):
     """Add a new banner (restaurant admin only)"""
-    restaurant_id = user["id"]
+    restaurant_id = user.get("restaurant_id") or user["id"]
     
     banner_doc = {
         "id": str(uuid.uuid4()),
@@ -672,7 +705,7 @@ async def update_banner(
     user: dict = Depends(get_restaurant_user)
 ):
     """Update a banner (restaurant admin only)"""
-    restaurant_id = user["id"]
+    restaurant_id = user.get("restaurant_id") or user["id"]
     
     update_dict = {f"banners.$.{k}": v for k, v in banner_update.model_dump().items() if v is not None}
     
@@ -695,7 +728,7 @@ async def delete_banner(
     user: dict = Depends(get_restaurant_user)
 ):
     """Delete a banner (restaurant admin only)"""
-    restaurant_id = user["id"]
+    restaurant_id = user.get("restaurant_id") or user["id"]
     
     result = await db.customer_app_config.update_one(
         {"restaurant_id": restaurant_id},
@@ -761,7 +794,7 @@ async def create_custom_page(
     page_data: CustomPageCreate,
     user: dict = Depends(get_restaurant_user)
 ):
-    restaurant_id = user["id"]
+    restaurant_id = user.get("restaurant_id") or user["id"]
     page_doc = {
         "id": str(uuid.uuid4()),
         "title": page_data.title,
@@ -783,7 +816,7 @@ async def update_custom_page(
     page_update: CustomPageUpdate,
     user: dict = Depends(get_restaurant_user)
 ):
-    restaurant_id = user["id"]
+    restaurant_id = user.get("restaurant_id") or user["id"]
     update_dict = {f"customPages.$.{k}": v for k, v in page_update.model_dump().items() if v is not None}
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -800,7 +833,7 @@ async def delete_custom_page(
     page_id: str,
     user: dict = Depends(get_restaurant_user)
 ):
-    restaurant_id = user["id"]
+    restaurant_id = user.get("restaurant_id") or user["id"]
     result = await db.customer_app_config.update_one(
         {"restaurant_id": restaurant_id},
         {"$pull": {"customPages": {"id": page_id}}}
