@@ -987,6 +987,20 @@
   color: var(--text-success);
 }
 
+/* Loyalty applied styling */
+.price-loyalty-applied {
+  color: #16a34a;
+  font-weight: var(--font-weight-semibold);
+}
+
+.price-inline-btn-remove {
+  background: #ef4444;
+}
+
+.price-inline-btn-remove:hover {
+  background: #dc2626;
+}
+
 /* Total row */
 .price-row-total {
   padding-top: var(--spacing-xs);

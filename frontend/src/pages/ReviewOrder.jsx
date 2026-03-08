@@ -166,6 +166,11 @@ const ReviewOrder = () => {
   // Loyalty settings for points calculation
   const [loyaltySettings, setLoyaltySettings] = useState(null);
 
+  // Points redemption state
+  const [isUsingPoints, setIsUsingPoints] = useState(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [pointsDiscount, setPointsDiscount] = useState(0);
+
   // Customer lookup state (phone-based identification)
   const [lookedUpCustomer, setLookedUpCustomer] = useState(null); // { found, name, total_points, tier }
   const [isLookingUp, setIsLookingUp] = useState(false);
@@ -449,9 +454,12 @@ const ReviewOrder = () => {
   const newItemsTotal = parseFloat((subtotal + totalTax).toFixed(2));
   
   // In edit mode, add previous order subtotal to the total
-  const totalToPay = isEditMode 
+  const totalBeforeDiscount = isEditMode 
     ? parseFloat((previousSubtotal + newItemsTotal).toFixed(2))
     : newItemsTotal;
+  
+  // Apply points discount to get final total
+  const totalToPay = Math.max(0, totalBeforeDiscount - pointsDiscount);
 
   // console.log('totalTax', totalTax);
   // console.log('totalGst', totalGst);
@@ -520,6 +528,31 @@ const ReviewOrder = () => {
         navigate(`/${restaurantId}/menu`, { replace: true });
       }
     }
+  };
+
+  // Handle loyalty points redemption
+  const handleUsePoints = () => {
+    const availablePoints = isAuthenticated ? (user?.total_points || 0) : (lookedUpCustomer?.total_points || 0);
+    const redemptionValue = loyaltySettings?.redemption_value || 0;
+    
+    if (!availablePoints || !redemptionValue) return;
+    
+    // Calculate max points that can be used (can't exceed subtotal)
+    const maxPointsValue = subtotal; // Max discount = subtotal (can't go negative)
+    const maxPointsToUse = Math.floor(maxPointsValue / redemptionValue);
+    const pointsToUse = Math.min(availablePoints, maxPointsToUse);
+    const discount = pointsToUse * redemptionValue;
+    
+    setPointsToRedeem(pointsToUse);
+    setPointsDiscount(discount);
+    setIsUsingPoints(true);
+  };
+
+  // Handle remove points redemption
+  const handleRemovePoints = () => {
+    setPointsToRedeem(0);
+    setPointsDiscount(0);
+    setIsUsingPoints(false);
   };
 
   // Handle place order
@@ -622,7 +655,10 @@ const ReviewOrder = () => {
           totalTax,
           orderType: scannedOrderType,
           isMultipleMenuType: isRestaurant716,
-          token
+          token,
+          // Points redemption
+          pointsRedeemed: pointsToRedeem,
+          pointsDiscount: pointsDiscount
         });
       }
 
@@ -711,7 +747,10 @@ const ReviewOrder = () => {
               totalToPay,
               totalTax,
               isMultipleMenuType: isRestaurant716,
-              token: newToken
+              token: newToken,
+              // Points redemption
+              pointsRedeemed: pointsToRedeem,
+              pointsDiscount: pointsDiscount
             });
           }
 
@@ -1054,6 +1093,29 @@ const ReviewOrder = () => {
                 (() => {
                   const pts = isAuthenticated ? (user?.total_points || 0) : (lookedUpCustomer?.total_points || 0);
                   const rdv = loyaltySettings?.redemption_value || 0;
+                  
+                  // If points are being used, show the applied discount
+                  if (isUsingPoints && pointsToRedeem > 0) {
+                    return (
+                      <div className="price-row price-row-input price-row-discount">
+                        <div className="price-input-group">
+                          <span className="price-input-icon">🎁</span>
+                          <span className="price-loyalty-text price-loyalty-applied">
+                            Using {pointsToRedeem} points (-₹{pointsDiscount.toFixed(0)})
+                          </span>
+                        </div>
+                        <button 
+                          className="price-inline-btn price-inline-btn-remove" 
+                          data-testid="remove-loyalty-btn"
+                          onClick={handleRemovePoints}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    );
+                  }
+                  
+                  // Show available points with Use button
                   return (
                     <div className="price-row price-row-input">
                       <div className="price-input-group">
@@ -1062,7 +1124,14 @@ const ReviewOrder = () => {
                           {pts} points{rdv ? ` (Worth ₹${(pts * rdv).toFixed(0)})` : ''}
                         </span>
                       </div>
-                      <button className="price-inline-btn" data-testid="redeem-loyalty-btn" disabled={!pts}>Use</button>
+                      <button 
+                        className="price-inline-btn" 
+                        data-testid="redeem-loyalty-btn" 
+                        disabled={!pts}
+                        onClick={handleUsePoints}
+                      >
+                        Use
+                      </button>
                     </div>
                   );
                 })()

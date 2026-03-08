@@ -555,6 +555,8 @@ const buildNormalPayload = (orderData) => {
     subtotal,
     totalToPay,
     orderType,
+    pointsRedeemed = 0,
+    pointsDiscount = 0,
   } = orderData;
 
   const cart      = transformCartItems(cartItems);
@@ -581,7 +583,7 @@ const buildNormalPayload = (orderData) => {
       distance: 1,
       delivery_charge: '0',
       schedule_at: null,
-      discount_amount: 0,
+      discount_amount: pointsDiscount,
       tax_amount: 0,
       order_sub_total_amount: parseFloat(subtotal.toFixed(2)),
       address: '',
@@ -608,7 +610,10 @@ const buildNormalPayload = (orderData) => {
       cust_name: customerName || '',
       cust_email: '',
       estimatedTime: '',
-      discount_type: ''
+      discount_type: pointsRedeemed > 0 ? 'loyalty_points' : '',
+      // Loyalty points redemption
+      points_redeemed: pointsRedeemed,
+      points_discount: pointsDiscount
     }
   };
 };
@@ -637,6 +642,8 @@ const build716Payload = (orderData) => {
     restaurantId,
     subtotal,
     totalToPay,
+    pointsRedeemed = 0,
+    pointsDiscount = 0,
     // totalTax     // ← pre-calculated in ReviewOrder.jsx and passed in
   } = orderData;
 
@@ -677,7 +684,7 @@ const build716Payload = (orderData) => {
       distance: 1,
       delivery_charge: '0',
       schedule_at: null,
-      discount_amount: 0,
+      discount_amount: pointsDiscount,
       tax_amount: rootTaxAmount,                                    //  sum of gst + vat taxes
       order_sub_total_amount: parseFloat(subtotal.toFixed(2)),
       address: '',
@@ -704,7 +711,10 @@ const build716Payload = (orderData) => {
       cust_name: customerName || '',
       cust_email: '',
       estimatedTime: '',
-      discount_type: '',
+      discount_type: pointsRedeemed > 0 ? 'loyalty_points' : '',
+      // Loyalty points redemption
+      points_redeemed: pointsRedeemed,
+      points_discount: pointsDiscount,
       // ─── 716 specific root fields ────────────────────────────────
       total_gst_tax_amount: totalGstTaxAmount,                    
       total_vat_tax_amount: totalVatTaxAmount,                      
