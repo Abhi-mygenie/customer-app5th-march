@@ -196,8 +196,8 @@ const LandingPage = () => {
           </p>
         )}
 
-        {/* 3. Description - uses tagline from local config */}
-        {showDescription && (
+        {/* 3. Description - uses tagline from local config (skip if tagline section already shows it) */}
+        {showDescription && tagline && !displayTagline && (
           <p className={`description-text ${hasBackgroundImage ? 'on-image' : ''}`} data-testid="landing-description">
             {tagline}
           </p>
