@@ -10,8 +10,9 @@ import { useScannedTable } from '../hooks/useScannedTable';
 import { useAuth } from '../context/AuthContext';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { getAuthToken, isTokenExpired } from '../utils/authToken';
-import { placeOrder } from '../api/services/orderService';
+import { placeOrder, updateCustomerOrder } from '../api/services/orderService';
 import OrderItemCard from '../components/OrderItemCard/OrderItemCard';
+import PreviousOrderItems from '../components/PreviousOrderItems/PreviousOrderItems';
 import { IoArrowBackOutline, IoGiftOutline, IoPersonOutline } from "react-icons/io5";
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { MdOutlineShoppingBag, MdOutlineTableRestaurant  } from "react-icons/md";
@@ -69,7 +70,7 @@ const ReviewOrder = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, user, isCustomer } = useAuth();
-  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, fetchConfig } = useRestaurantConfig();
+  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig } = useRestaurantConfig();
   // console.log('restaurantId', restaurantId);
 
   // Inside ReviewOrder component, add:
@@ -77,20 +78,51 @@ const ReviewOrder = () => {
   const params = useParams();
   const stationId = location.state?.stationId || params.stationId;
 
-  const { cartItems, getTotalItems, getTotalPrice, clearCart } = useCart();
+  const { 
+    cartItems, 
+    getTotalItems, 
+    getTotalPrice, 
+    clearCart,
+    // Edit order mode
+    isEditMode,
+    editingOrderId,
+    previousOrderItems,
+    clearEditMode,
+    getPreviousOrderTotal,
+  } = useCart();
 
-  // Fetch restaurant details
+  // Fetch restaurant details FIRST to get numeric ID
   const { restaurant } = useRestaurantDetails(restaurantId);
+  
+  // Use numeric ID from restaurant-info response, fallback to restaurantId
+  const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
 
   // Fetch admin config
   useEffect(() => {
-    if (restaurantId) {
-      fetchConfig(restaurantId);
+    if (numericRestaurantId) {
+      fetchConfig(numericRestaurantId);
     }
-  }, [restaurantId, fetchConfig]);
+  }, [numericRestaurantId, fetchConfig]);
 
-  // Fetch table/room configuration
-  const { rooms, tables, loading: tablesLoading, error: tablesError, errorMessage: tablesErrorMessage } = useTableConfig(restaurantId);
+  // Fetch loyalty settings for points calculation
+  useEffect(() => {
+    const fetchLoyaltySettings = async () => {
+      if (!numericRestaurantId) return;
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/loyalty-settings/${numericRestaurantId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setLoyaltySettings(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch loyalty settings:', error);
+      }
+    };
+    fetchLoyaltySettings();
+  }, [numericRestaurantId]);
+
+  // Fetch table/room configuration (uses numeric ID)
+  const { rooms, tables, loading: tablesLoading, error: tablesError, errorMessage: tablesErrorMessage } = useTableConfig(numericRestaurantId);
 
   // Scanned table from QR code
   const {
@@ -116,9 +148,32 @@ const ReviewOrder = () => {
   const [tableNumber, setTableNumber] = useState('');
   const [roomOrTable, setRoomOrTable] = useState(null); // 'room' | 'table' | null
   const [specialInstructions, setSpecialInstructions] = useState('');
-  const [couponCode, setCouponCode] = useState('0');
-  const [loyaltyPoints] = useState('1'); // Placeholder: "You have ₹1..."
-  // const [loyaltyPoints, setLoyaltyPoints] = useState('1'); 
+  const [couponCode, setCouponCode] = useState('');
+
+  // Session storage key for customer info persistence during edit order
+  const SESSION_CUSTOMER_KEY = 'sessionCustomerInfo';
+
+  // Save customer info to sessionStorage whenever it changes
+  useEffect(() => {
+    if (customerName || customerPhone) {
+      sessionStorage.setItem(SESSION_CUSTOMER_KEY, JSON.stringify({
+        name: customerName,
+        phone: customerPhone
+      }));
+    }
+  }, [customerName, customerPhone]);
+
+  // Loyalty settings for points calculation
+  const [loyaltySettings, setLoyaltySettings] = useState(null);
+
+  // Points redemption state
+  const [isUsingPoints, setIsUsingPoints] = useState(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [pointsDiscount, setPointsDiscount] = useState(0);
+
+  // Customer lookup state (phone-based identification)
+  const [lookedUpCustomer, setLookedUpCustomer] = useState(null); // { found, name, total_points, tier }
+  const [isLookingUp, setIsLookingUp] = useState(false);
 
   const [showPhoneError, setShowPhoneError] = useState(false);
 
@@ -127,30 +182,108 @@ const ReviewOrder = () => {
   const [isLoadingToken, setIsLoadingToken] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-  // Pre-fill from guest capture (localStorage)
+  // Strip country code prefix from phone for PhoneInput (it handles country code via flag dropdown)
+  const stripCountryCode = (phone) => {
+    if (!phone) return '';
+    if (phone.startsWith('+91')) return phone.slice(3);
+    if (phone.startsWith('91') && phone.length > 10) return phone.slice(2);
+    return phone;
+  };
+
+  // Pre-fill from sessionStorage first (for edit order scenarios)
   useEffect(() => {
-    // Only pre-fill if not authenticated (guest user)
-    if (!isAuthenticated) {
+    try {
+      const savedSession = sessionStorage.getItem(SESSION_CUSTOMER_KEY);
+      if (savedSession) {
+        const { name, phone } = JSON.parse(savedSession);
+        if (name && !customerName) setCustomerName(name);
+        if (phone && !customerPhone) {
+          // Store E.164 format (+91...) so PhoneInput shows India flag correctly
+          const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+          setCustomerPhone(formattedPhone);
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+  }, []);
+
+  // Pre-fill from guest capture (localStorage) - only if sessionStorage didn't have data
+  useEffect(() => {
+    if (!isAuthenticated && !customerName && !customerPhone) {
       try {
         const savedGuest = localStorage.getItem('guestCustomer');
         if (savedGuest) {
           const { name, phone } = JSON.parse(savedGuest);
           if (name && !customerName) setCustomerName(name);
-          if (phone && !customerPhone) setCustomerPhone(phone);
+          if (phone && !customerPhone) {
+            // Store E.164 format (+91...) so PhoneInput shows India flag correctly
+            const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+            setCustomerPhone(formattedPhone);
+          }
         }
       } catch (e) {
         // Ignore parse errors
       }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, customerName, customerPhone]);
 
   // Pre-fill from logged in user
   useEffect(() => {
     if (isAuthenticated && isCustomer && user) {
       if (user.name && !customerName) setCustomerName(user.name);
-      if (user.phone && !customerPhone) setCustomerPhone(user.phone);
+      if (user.phone && !customerPhone) {
+        // Store E.164 format (+91...) so PhoneInput shows India flag correctly
+        const phone = user.phone;
+        const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+        setCustomerPhone(formattedPhone);
+      }
+      // Set looked up customer from auth user data
+      setLookedUpCustomer({
+        found: true,
+        name: user.name || '',
+        total_points: user.total_points || 0,
+        tier: user.tier || 'Bronze',
+      });
     }
   }, [isAuthenticated, isCustomer, user]);
+
+  // Phone-based customer lookup (debounced)
+  useEffect(() => {
+    if (isAuthenticated && isCustomer) return; // Skip if already logged in
+    if (!customerPhone || !numericRestaurantId) return;
+
+    // Extract bare digits from phone value
+    const digits = customerPhone.replace(/\D/g, '');
+    // Check for 10 digits (or 12 with country code)
+    const bareDigits = digits.startsWith('91') && digits.length === 12 ? digits.slice(2) : digits;
+    if (bareDigits.length !== 10) {
+      setLookedUpCustomer(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsLookingUp(true);
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/api/customer-lookup/${numericRestaurantId}?phone=${bareDigits}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setLookedUpCustomer(data);
+          if (data.found && data.name) {
+            setCustomerName(data.name);
+          }
+        }
+      } catch (error) {
+        console.error('Customer lookup failed:', error);
+      } finally {
+        setIsLookingUp(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [customerPhone, numericRestaurantId, isAuthenticated, isCustomer]);
 
   // Validate phone number (10 digits for India)
   const isPhoneNumberValid = useMemo(() => {
@@ -197,9 +330,9 @@ const ReviewOrder = () => {
       restaurant.is_coupon === 'Yes';
 
 
-    // Both conditions must be true
-    return couponEnabled && isCustomerDetailsFilled;
-  }, [restaurant, isCustomerDetailsFilled]);
+    // Both conditions must be true + admin config toggle
+    return couponEnabled && isCustomerDetailsFilled && configShowCouponCode;
+  }, [restaurant, isCustomerDetailsFilled, configShowCouponCode]);
 
   const showLoyalty = useMemo(() => {
     if (!restaurant) return false;
@@ -209,9 +342,9 @@ const ReviewOrder = () => {
       restaurant.is_loyalty === 'Yes';
 
 
-    // Both conditions must be true
-    return loyaltyEnabled && isCustomerDetailsFilled;
-  }, [restaurant, isCustomerDetailsFilled]);
+    // Both conditions must be true + admin config toggle
+    return loyaltyEnabled && isCustomerDetailsFilled && configShowLoyaltyPoints;
+  }, [restaurant, isCustomerDetailsFilled, configShowLoyaltyPoints]);
 
   // Check if restaurant is 716 (table number required)
   const isRestaurant716 = isMultipleMenu(restaurant, restaurantId);
@@ -269,6 +402,9 @@ const ReviewOrder = () => {
 
   const totalItems = getTotalItems();
   const subtotal = getTotalPrice();
+  
+  // Previous order subtotal (for edit mode)
+  const previousSubtotal = isEditMode ? getPreviousOrderTotal() : 0;
 
   // Calculate totals (GST, VAT will be added in future)
   // ─── Tax Calculation (from cart items) ────────────────────────
@@ -276,7 +412,13 @@ const ReviewOrder = () => {
     let totalGst = 0;
     let totalVat = 0;
 
-    cartItems.forEach(cartItem => {
+    // Debug: Log cart items and their tax info
+    console.log('=== TAX DEBUG START ===');
+    console.log('Cart items (new):', cartItems.length);
+    console.log('Previous order items:', previousOrderItems?.length || 0);
+
+    // Calculate tax for NEW items (cartItems)
+    cartItems.forEach((cartItem, index) => {
       const itemPrice = (() => {
         const base = parseFloat(cartItem.item.price) || 0;
         const varTotal = (cartItem.variations || []).reduce(
@@ -287,18 +429,41 @@ const ReviewOrder = () => {
         );
         return base + varTotal + addonTotal;
       })();
-      // console.log('tax', cartItem.item.tax);
-      // console.log('tax_type', cartItem.item.tax_type);
+      
       const taxPercent = parseFloat(cartItem.item.tax) || 0;
       const taxType = cartItem.item.tax_type || 'GST';
       const taxAmountPerUnit = parseFloat(((itemPrice * taxPercent) / 100).toFixed(2));
-
-      //  Multiply by quantity to get total tax for this item
       const totalTaxForItem = taxAmountPerUnit * cartItem.quantity;
+
+      // Debug: Log each item's tax info
+      console.log(`New Item ${index + 1}: ${cartItem.item.name?.substring(0, 20)}`);
+      console.log(`  - Price: ₹${itemPrice}, Qty: ${cartItem.quantity}`);
+      console.log(`  - Tax: ${taxPercent}% (${taxType})`);
+      console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
 
       if (taxType === 'GST') totalGst += totalTaxForItem;
       if (taxType === 'VAT') totalVat += totalTaxForItem;
     });
+
+    // Calculate tax for PREVIOUS items (in edit mode)
+    if (previousOrderItems && previousOrderItems.length > 0) {
+      previousOrderItems.forEach((prevItem, index) => {
+        const itemPrice = parseFloat(prevItem.unitPrice || prevItem.price) || 0;
+        const quantity = prevItem.quantity || 1;
+        const taxPercent = parseFloat(prevItem.item?.tax) || 0;
+        const taxType = prevItem.item?.tax_type || 'GST';
+        const totalTaxForItem = parseFloat(((itemPrice * quantity * taxPercent) / 100).toFixed(2));
+
+        // Debug: Log each previous item's tax info
+        console.log(`Previous Item ${index + 1}: ${prevItem.item?.name?.substring(0, 20)}`);
+        console.log(`  - Price: ₹${itemPrice}, Qty: ${quantity}`);
+        console.log(`  - Tax: ${taxPercent}% (${taxType})`);
+        console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
+
+        if (taxType === 'GST') totalGst += totalTaxForItem;
+        if (taxType === 'VAT') totalVat += totalTaxForItem;
+      });
+    }
 
     totalGst = parseFloat(totalGst.toFixed(2));
     totalVat = parseFloat(totalVat.toFixed(2));
@@ -308,14 +473,32 @@ const ReviewOrder = () => {
     const sgst = parseFloat((totalGst / 2).toFixed(2));
     const totalTax = parseFloat((totalGst + totalVat).toFixed(2));
 
+    console.log('=== TAX DEBUG SUMMARY ===');
+    console.log(`Total GST: ₹${totalGst} (CGST: ₹${cgst}, SGST: ₹${sgst})`);
+    console.log(`Total VAT: ₹${totalVat}`);
+    console.log('=== TAX DEBUG END ===');
+
     return { cgst, sgst, totalGst, vat: totalVat, totalTax };
-  }, [cartItems]);
+  }, [cartItems, previousOrderItems]);
 
   const { cgst, sgst, totalGst, vat, totalTax } = taxBreakdown;
 
   // ─── Final totals ──────────────────────────────────────────────
-  // const subtotal   = getTotalPrice();
-  const totalToPay = parseFloat((subtotal + totalTax).toFixed(2));
+  // Item Total = sum of all item prices (before tax, before discounts)
+  const itemTotal = previousSubtotal + subtotal;
+  
+  // Subtotal after discounts (this is the base for tax calculation)
+  const subtotalAfterDiscount = Math.max(0, itemTotal - pointsDiscount);
+  
+  // Recalculate tax on discounted amount (proportional reduction)
+  const discountRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
+  const adjustedCgst = parseFloat((cgst * discountRatio).toFixed(2));
+  const adjustedSgst = parseFloat((sgst * discountRatio).toFixed(2));
+  const adjustedVat = parseFloat((vat * discountRatio).toFixed(2));
+  const adjustedTotalTax = parseFloat((adjustedCgst + adjustedSgst + adjustedVat).toFixed(2));
+  
+  // Grand Total = Subtotal after discounts + Adjusted Tax
+  const totalToPay = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
 
   // console.log('totalTax', totalTax);
   // console.log('totalGst', totalGst);
@@ -386,6 +569,31 @@ const ReviewOrder = () => {
     }
   };
 
+  // Handle loyalty points redemption
+  const handleUsePoints = () => {
+    const availablePoints = isAuthenticated ? (user?.total_points || 0) : (lookedUpCustomer?.total_points || 0);
+    const redemptionValue = loyaltySettings?.redemption_value || 0;
+    
+    if (!availablePoints || !redemptionValue) return;
+    
+    // Calculate max points that can be used (can't exceed subtotal)
+    const maxPointsValue = subtotal; // Max discount = subtotal (can't go negative)
+    const maxPointsToUse = Math.floor(maxPointsValue / redemptionValue);
+    const pointsToUse = Math.min(availablePoints, maxPointsToUse);
+    const discount = pointsToUse * redemptionValue;
+    
+    setPointsToRedeem(pointsToUse);
+    setPointsDiscount(discount);
+    setIsUsingPoints(true);
+  };
+
+  // Handle remove points redemption
+  const handleRemovePoints = () => {
+    setPointsToRedeem(0);
+    setPointsDiscount(0);
+    setIsUsingPoints(false);
+  };
+
   // Handle place order
   const handlePlaceOrder = async () => {
     // Validate room/table selection and number for restaurant 716
@@ -441,52 +649,100 @@ const ReviewOrder = () => {
       }
     }
 
-    // Place order
+    // Place order or Update order (if in edit mode)
     setIsPlacingOrder(true);
     try {
-      // Format table number for API: R#table_no or T#table_no
-      // let formattedTableNumber = tableNumber;
-      // if (isRestaurant716 && roomOrTable && tableNumber) {
-      //   const source = roomOrTable === 'room' ? rooms : tables;
-      //   const selectedItem = source.find(item => item.id.toString() === tableNumber);
-      //   if (selectedItem) {
-      //     formattedTableNumber = `${roomOrTable === 'table' ? 'T' : 'R'}#${selectedItem.table_no}`;
-      //   }
-      // }
       // Use scanned table if available, otherwise use manual selection
       const finalTableId = (isScanned && scannedOrderType === 'dinein' && scannedTableId)
         ? scannedTableId
         : (isRestaurant716 && tableNumber ? tableNumber : '');
 
-      // console.log('tableId (for table_id field):', finalTableId);
+      let response;
 
-      // console.log('formattedTableNumber', tableNumber);
+      // Check if we're in edit mode
+      if (isEditMode && editingOrderId) {
+        // Update existing order with new items
+        response = await updateCustomerOrder({
+          orderId: editingOrderId,
+          cartItems,
+          restaurantId,
+          tableId: finalTableId,
+          orderType: scannedOrderType || 'dinein',
+          paymentType: 'postpaid',
+          orderNote: specialInstructions,
+          authToken: token,
+          customerName,
+          customerPhone: customerPhone || '',
+        });
 
-      const response = await placeOrder({
-        cartItems,
-        customerName,
-        customerPhone: customerPhone || '',
-        tableNumber: finalTableId,
-        specialInstructions,
-        couponCode,
-        restaurantId,
-        subtotal,
-        totalToPay,
-        totalTax,
-        orderType: scannedOrderType,
-        isMultipleMenuType: isRestaurant716,
-        token
-      });
+        // Clear edit mode after successful update
+        clearEditMode();
+        
+        toast.success('Order updated successfully!');
+      } else {
+        // Place new order
+        response = await placeOrder({
+          cartItems,
+          customerName,
+          customerPhone: customerPhone || '',
+          tableNumber: finalTableId,
+          specialInstructions,
+          couponCode,
+          restaurantId,
+          subtotal,
+          totalToPay,
+          totalTax,
+          orderType: scannedOrderType,
+          isMultipleMenuType: isRestaurant716,
+          token,
+          // Points redemption
+          pointsRedeemed: pointsToRedeem,
+          pointsDiscount: pointsDiscount
+        });
+      }
 
       // Clear cart after successful order
       clearCart();
+
+      // Prepare new items for order success page
+      const newOrderItems = cartItems.map(item => ({
+        name: item.item?.name || 'Item',
+        quantity: item.quantity,
+        price: item.item?.price || item.totalPrice / item.quantity,
+        totalPrice: item.totalPrice,
+        veg: item.item?.veg === 1 || item.item?.veg === true
+      }));
+
+      // Prepare previous items if in edit mode
+      const prevItems = isEditMode ? previousOrderItems.map(item => ({
+        name: item.item?.name || 'Item',
+        quantity: item.quantity,
+        price: item.unitPrice || item.price || 0,
+        totalPrice: (item.unitPrice || item.price || 0) * item.quantity,
+        veg: item.item?.veg === true || item.item?.veg === 1
+      })) : [];
 
       // Navigate to success page with order data
       navigate(`/${restaurantId}/order-success`, {
         state: {
           orderData: {
-            orderId: response?.order_id || null,
-            totalToPay: response?.total_amount || totalToPay.toFixed(2)
+            orderId: response?.order_id || editingOrderId || null,
+            totalToPay: response?.total_amount || totalToPay.toFixed(2),
+            isEditedOrder: isEditMode,
+            items: newOrderItems,
+            previousItems: prevItems,
+            // Bill breakdown calculated locally
+            billSummary: {
+              itemTotal: itemTotal,
+              pointsDiscount: pointsDiscount,
+              pointsRedeemed: pointsToRedeem,
+              subtotal: subtotalAfterDiscount,
+              cgst: adjustedCgst,
+              sgst: adjustedSgst,
+              vat: adjustedVat,
+              totalTax: adjustedTotalTax,
+              grandTotal: totalToPay
+            }
           }
         }
       });
@@ -506,32 +762,91 @@ const ReviewOrder = () => {
             ? scannedTableId
             : (isRestaurant716 && tableNumber ? tableNumber : '');
 
-          // Retry order placement
-          const retryResponse = await placeOrder({
-            cartItems,
-            customerName,
-            customerPhone: customerPhone || '',
-            tableNumber: retryTableId,
-            specialInstructions,
-            couponCode,
-            restaurantId,
-            orderType: scannedOrderType,
-            subtotal,
-            totalToPay,
-            totalTax,
-            isMultipleMenuType: isRestaurant716,
-            token: newToken
-          });
+          let retryResponse;
+
+          // Check if we're in edit mode for retry
+          if (isEditMode && editingOrderId) {
+            retryResponse = await updateCustomerOrder({
+              orderId: editingOrderId,
+              cartItems,
+              restaurantId,
+              tableId: retryTableId,
+              orderType: scannedOrderType || 'dinein',
+              paymentType: 'postpaid',
+              orderNote: specialInstructions,
+              authToken: newToken,
+              customerName,
+              customerPhone: customerPhone || '',
+            });
+
+            // Clear edit mode after successful update
+            clearEditMode();
+            
+            toast.success('Order updated successfully!');
+          } else {
+            // Retry order placement
+            retryResponse = await placeOrder({
+              cartItems,
+              customerName,
+              customerPhone: customerPhone || '',
+              tableNumber: retryTableId,
+              specialInstructions,
+              couponCode,
+              restaurantId,
+              orderType: scannedOrderType,
+              subtotal,
+              totalToPay,
+              totalTax,
+              isMultipleMenuType: isRestaurant716,
+              token: newToken,
+              // Points redemption
+              pointsRedeemed: pointsToRedeem,
+              pointsDiscount: pointsDiscount
+            });
+          }
 
           // Clear cart after successful order
           clearCart();
+
+          // Prepare new items for order success page
+          const retryOrderItems = cartItems.map(item => ({
+            name: item.item?.name || 'Item',
+            quantity: item.quantity,
+            price: item.item?.price || item.totalPrice / item.quantity,
+            totalPrice: item.totalPrice,
+            veg: item.item?.veg === 1 || item.item?.veg === true
+          }));
+
+          // Prepare previous items if in edit mode
+          const retryPrevItems = isEditMode ? previousOrderItems.map(item => ({
+            name: item.item?.name || 'Item',
+            quantity: item.quantity,
+            price: item.unitPrice || item.price || 0,
+            totalPrice: (item.unitPrice || item.price || 0) * item.quantity,
+            veg: item.item?.veg === true || item.item?.veg === 1
+          })) : [];
 
           // Navigate to success page
           navigate(`/${restaurantId}/order-success`, {
             state: {
               orderData: {
-                orderId: retryResponse?.order_id || null,
-                totalToPay: retryResponse?.total_amount || totalToPay.toFixed(2)
+                orderId: retryResponse?.order_id || editingOrderId || null,
+                totalToPay: retryResponse?.total_amount || totalToPay.toFixed(2),
+                isEditedOrder: isEditMode,
+                items: retryOrderItems,
+                previousItems: retryPrevItems,
+                // Bill breakdown calculated locally
+                billSummary: {
+                  itemTotal: itemTotal,
+                  pointsDiscount: pointsDiscount,
+                  pointsRedeemed: pointsToRedeem,
+                  subtotal: subtotalAfterDiscount,
+                  cgst: adjustedCgst,
+                  sgst: adjustedSgst,
+                  vat: adjustedVat,
+                  totalTax: adjustedTotalTax,
+                  grandTotal: totalToPay
+                }
               }
             }
           });
@@ -544,7 +859,7 @@ const ReviewOrder = () => {
         // Other errors
         const errorMessage = error.response?.data?.message ||
           error.response?.data?.errors?.message ||
-          'Failed to place order. Please try again.';
+          (isEditMode ? 'Failed to update order. Please try again.' : 'Failed to place order. Please try again.');
         toast.error(errorMessage);
       }
     } finally {
@@ -759,12 +1074,24 @@ const ReviewOrder = () => {
           {/* Divider after Customer Details */}
           {/* <div className="review-order-divider"></div> */}
 
+          {/* Previous Order Items - Show only in edit mode */}
+          {isEditMode && previousOrderItems && previousOrderItems.length > 0 && (
+            <>
+              <PreviousOrderItems 
+                items={previousOrderItems} 
+                orderId={editingOrderId}
+              />
+              <div className="review-order-divider"></div>
+            </>
+          )}
 
-          {/* Order Items */}
+          {/* Order Items - New items (editable) */}
           <div className="review-order-section">
             <div className="review-order-section-header">
               <div className="review-order-section-title-icon"><MdOutlineShoppingBag size={16} /></div>
-              <h2 className="review-order-section-title">Order Items</h2>
+              <h2 className="review-order-section-title">
+                {isEditMode ? 'New Items' : 'Order Items'}
+              </h2>
               <div className="review-order-items-badge">
                 <span className="review-order-items-count">{totalItems} items</span>
               </div>
@@ -800,10 +1127,10 @@ const ReviewOrder = () => {
             </div>
             
             <div className="review-order-price-card">
-              {/* Subtotal */}
+              {/* Item Total */}
               <div className="price-row">
-                <span className="price-label">Subtotal</span>
-                <span className="price-value">₹{subtotal.toFixed(2)}</span>
+                <span className="price-label">Item Total</span>
+                <span className="price-value">₹{itemTotal.toFixed(2)}</span>
               </div>
 
               {/* Coupon Code - inline */}
@@ -826,85 +1153,187 @@ const ReviewOrder = () => {
 
               {/* Loyalty Points - inline */}
               {showLoyalty && (
-                <div className="price-row price-row-input">
-                  <div className="price-input-group">
-                    <span className="price-input-icon">🎁</span>
-                    <span className="price-loyalty-text">₹{loyaltyPoints} points available</span>
-                  </div>
-                  <button className="price-inline-btn" data-testid="redeem-loyalty-btn">Use</button>
-                </div>
+                (() => {
+                  const pts = isAuthenticated ? (user?.total_points || 0) : (lookedUpCustomer?.total_points || 0);
+                  const rdv = loyaltySettings?.redemption_value || 0;
+                  
+                  // If points are being used, show the applied discount
+                  if (isUsingPoints && pointsToRedeem > 0) {
+                    return (
+                      <div className="price-row price-row-input price-row-discount">
+                        <div className="price-input-group">
+                          <span className="price-input-icon">🎁</span>
+                          <span className="price-loyalty-text price-loyalty-applied">
+                            Using {pointsToRedeem} points (-₹{pointsDiscount.toFixed(0)})
+                          </span>
+                        </div>
+                        <button 
+                          className="price-inline-btn price-inline-btn-remove" 
+                          data-testid="remove-loyalty-btn"
+                          onClick={handleRemovePoints}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    );
+                  }
+                  
+                  // Show available points with Use button
+                  return (
+                    <div className="price-row price-row-input">
+                      <div className="price-input-group">
+                        <span className="price-input-icon">🎁</span>
+                        <span className="price-loyalty-text">
+                          {pts} points{rdv ? ` (Worth ₹${(pts * rdv).toFixed(0)})` : ''}
+                        </span>
+                      </div>
+                      <button 
+                        className="price-inline-btn" 
+                        data-testid="redeem-loyalty-btn" 
+                        disabled={!pts}
+                        onClick={handleUsePoints}
+                      >
+                        Use
+                      </button>
+                    </div>
+                  );
+                })()
               )}
 
-              {/* Discount lines - show when applied */}
-              {/* {couponDiscount > 0 && (
-                <div className="price-row price-row-discount">
-                  <span className="price-label">Coupon Discount</span>
-                  <span className="price-value price-discount">-₹{couponDiscount.toFixed(2)}</span>
-                </div>
-              )} */}
-
-              <div className="price-divider"></div>
+              {/* Subtotal (before taxes) */}
+              <div className="price-row price-row-subtotal">
+                <span className="price-label">Subtotal</span>
+                <span className="price-value">₹{subtotalAfterDiscount.toFixed(2)}</span>
+              </div>
 
               {/* GST/VAT if applicable */}
               {totalGst > 0 && (
                 <>
                   <div className="price-row price-row-sub">
                     <span className="price-label-sub">CGST</span>
-                    <span className="price-value-sub">₹{cgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{adjustedCgst.toFixed(2)}</span>
                   </div>
                   <div className="price-row price-row-sub">
                     <span className="price-label-sub">SGST</span>
-                    <span className="price-value-sub">₹{sgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{adjustedSgst.toFixed(2)}</span>
                   </div>
                 </>
               )}
               {vat > 0 && (
                 <div className="price-row price-row-sub">
                   <span className="price-label-sub">VAT</span>
-                  <span className="price-value-sub">₹{vat.toFixed(2)}</span>
+                  <span className="price-value-sub">₹{adjustedVat.toFixed(2)}</span>
                 </div>
               )}
 
               {/* Total */}
               <div className="price-row price-row-total">
-                <span className="price-label-total">Total</span>
+                <span className="price-label-total">Grand Total</span>
                 <span className="price-value-total">₹{totalToPay.toFixed(2)}</span>
               </div>
             </div>
           </div>
           )}
 
-          {/* Login for Rewards Prompt - Show only if not logged in */}
-          {!isAuthenticated && (
-            <div className="review-order-login-prompt" data-testid="login-rewards-prompt">
-              <div className="login-prompt-content">
-                <IoGiftOutline className="login-prompt-icon" />
-                <div className="login-prompt-text">
-                  <span className="login-prompt-title">Earn rewards on this order!</span>
-                  <span className="login-prompt-subtitle">Login to collect points & unlock offers</span>
+          {/* Customer Rewards Info — shown for any identified customer (via login or phone lookup) */}
+          {configShowLoyaltyPoints && (isAuthenticated || lookedUpCustomer) && loyaltySettings && (
+            (() => {
+              const custTier = isAuthenticated ? (user?.tier || 'Bronze') : (lookedUpCustomer?.tier || 'Bronze');
+              const tier = custTier.toLowerCase();
+              const earnPercent = loyaltySettings[`${tier}_earn_percent`] || loyaltySettings.bronze_earn_percent || 5;
+              const billAmount = totalToPay;
+              const minOrderValue = loyaltySettings.min_order_value || 100;
+              const isEligible = billAmount >= minOrderValue;
+              const pointsToEarn = Math.round(billAmount * (earnPercent / 100));
+              const redemptionValue = loyaltySettings.redemption_value || 0.25;
+              const pointsWorth = (pointsToEarn * redemptionValue).toFixed(0);
+              const isNewCustomer = lookedUpCustomer && !lookedUpCustomer.found;
+              const firstVisitBonus = isNewCustomer && loyaltySettings.first_visit_bonus_enabled ? loyaltySettings.first_visit_bonus_points : 0;
+
+              return (
+                <div className="review-order-user-info" data-testid="logged-in-user-info">
+                  <div className="user-info-content">
+                    <IoGiftOutline className="user-info-icon" />
+                    <div className="user-info-text">
+                      {isEligible ? (
+                        <>
+                          <span className="user-info-name">
+                            You will earn {pointsToEarn} points on this order!
+                          </span>
+                          <span className="user-info-points">
+                            Worth ₹{pointsWorth}{firstVisitBonus > 0 ? ` + ${firstVisitBonus} bonus points for first visit` : ''}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="user-info-name">Almost there!</span>
+                          <span className="user-info-points">
+                            Add ₹{(minOrderValue - billAmount).toFixed(0)} more to earn points
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <button 
-                className="login-prompt-btn"
-                onClick={() => navigate('/login')}
-                data-testid="login-rewards-btn"
-              >
-                Login
-              </button>
-            </div>
+              );
+            })()
           )}
 
-          {/* Logged In User Info */}
-          {isAuthenticated && isCustomer && user && (
+          {/* No loyalty settings fallback */}
+          {configShowLoyaltyPoints && (isAuthenticated || lookedUpCustomer) && !loyaltySettings && (
             <div className="review-order-user-info" data-testid="logged-in-user-info">
               <div className="user-info-content">
                 <IoGiftOutline className="user-info-icon" />
                 <div className="user-info-text">
-                  <span className="user-info-name">Hi, {user.name?.split(' ')[0] || 'there'}!</span>
-                  <span className="user-info-points">{user.total_points || 0} points available</span>
+                  <span className="user-info-name">
+                    Hi, {(isAuthenticated ? user?.name?.split(' ')[0] : lookedUpCustomer?.name?.split(' ')[0]) || 'there'}!
+                  </span>
+                  <span className="user-info-points">
+                    {(isAuthenticated ? user?.total_points : lookedUpCustomer?.total_points) || 0} points available
+                  </span>
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Guest prompt — only if no phone entered and not logged in */}
+          {configShowLoyaltyPoints && !isAuthenticated && !lookedUpCustomer && loyaltySettings && (
+            (() => {
+              const earnPercent = loyaltySettings.bronze_earn_percent || 5;
+              const billAmount = totalToPay;
+              const pointsToEarn = Math.round(billAmount * (earnPercent / 100));
+              const redemptionValue = loyaltySettings.redemption_value || 0.25;
+              const pointsWorth = (pointsToEarn * redemptionValue).toFixed(0);
+              const minOrderValue = loyaltySettings.min_order_value || 100;
+              const isEligible = billAmount >= minOrderValue;
+
+              return (
+                <div className="review-order-login-prompt" data-testid="login-rewards-prompt">
+                  <div className="login-prompt-content">
+                    <IoGiftOutline className="login-prompt-icon" />
+                    <div className="login-prompt-text">
+                      {isEligible ? (
+                        <>
+                          <span className="login-prompt-title">
+                            Earn {pointsToEarn} points on this order!
+                          </span>
+                          <span className="login-prompt-subtitle">
+                            Worth ₹{pointsWorth} — enter your phone number above
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="login-prompt-title">Earn rewards on this order!</span>
+                          <span className="login-prompt-subtitle">
+                            Add ₹{(minOrderValue - billAmount).toFixed(0)} more to earn points
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
           )}
         </div>
 
@@ -914,8 +1343,15 @@ const ReviewOrder = () => {
             className="review-order-place-btn"
             onClick={handlePlaceOrder}
             disabled={totalItems === 0 || isPlacingOrder || isLoadingToken}
+            data-testid="place-order-btn"
           >
-            {isPlacingOrder ? 'Placing Order...' : `Place Order ₹${totalToPay.toFixed(2)}`}
+            {isPlacingOrder 
+              ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
+              : (isEditMode 
+                  ? `Update Order ₹${totalToPay.toFixed(2)}` 
+                  : `Place Order ₹${totalToPay.toFixed(2)}`
+                )
+            }
           </button>
         </div>
       </div>

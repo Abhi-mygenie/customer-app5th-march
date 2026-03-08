@@ -1,14 +1,11 @@
 [
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a5ebd"
-    },
     "id": "pos_0001_restaurant_478",
     "pos_id": "0001",
     "restaurant_id": "478",
     "api_key": "dp_live_s_TCbTH656aFRXp5GfhQ0JiSGOUV3-qRl3f1ctxmC9s",
     "email": "owner@18march.com",
-    "password_hash": "$2b$12$quIRfCkaBYJGeNW/T1k0V.fcfxl3C8JXMIn44T9KGUxRmgcXKEB/C",
+    "password_hash": "$2b$12$ZiICOUXW6ztjhBidSTrb7OIlSPl0KhAfi5Y6egngOobX4n2z3HbnG",
     "restaurant_name": "18march",
     "phone": "9823905119",
     "first_name": "Owner",
@@ -20,15 +17,12 @@
     "authkey_api_key": "d70e42b590e7fed7"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a5ebe"
-    },
     "id": "pos_0001_restaurant_689",
     "pos_id": "0001",
     "restaurant_id": "689",
     "api_key": "dp_live_olQz-cxPX4ECt5sMxd5ZCYmdylXLasder8A_oxUNg3U",
     "email": "owner@kunafamahal.com",
-    "password_hash": "$2b$12$PwzFP3vnHWoQBQ7log3gxeFg.b5XLpkOFInP4Ia8Xh8.yjtBCDlZi",
+    "password_hash": "$2b$12$7pCfV.4aqriGftDyRM8v/O.6ZYTpWdQ2hghMlg0XhpIXQARBeJbaK",
     "restaurant_name": "Kunafa Mahal",
     "phone": "7307097771",
     "first_name": "Owner",
@@ -40,9 +34,6 @@
     "authkey_api_key": "d70e42b590e7fed7"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a5ebf"
-    },
     "id": "pos_0001_restaurant_634",
     "pos_id": "0001",
     "restaurant_id": "634",
@@ -59,9 +50,6 @@
     "last_login": "2026-02-25T05:28:35.560855+00:00"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a5ec0"
-    },
     "id": "demo-user-restaurant",
     "email": "demo@restaurant.com",
     "password_hash": "$2b$12$Ghm4ooAy3tg4GCEeRowlQeLrSFh/JQhRXy32E0y7XwCjsiig8iL3O",
@@ -70,9 +58,6 @@
     "created_at": "2026-02-25T06:08:00.604397"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a5ec1"
-    },
     "id": "pos_0001_restaurant_621",
     "pos_id": "0001",
     "restaurant_id": "621",
@@ -89,9 +74,6 @@
     "last_login": "2026-02-25T06:17:45.829658+00:00"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a5ec2"
-    },
     "id": "pos_0001_restaurant_703",
     "pos_id": "0001",
     "restaurant_id": "703",

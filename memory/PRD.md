@@ -1,50 +1,30 @@
-# Restaurant App PRD
+# Customer Ordering App - PRD
 
 ## Original Problem Statement
-Full-stack restaurant customer application with React frontend, FastAPI backend, and MongoDB. Features include menu browsing, cart, ordering, admin panel, and configurable landing page.
+Build a full-stack customer ordering application for restaurants, cloned from `https://github.com/Abhi-mygenie/Customer-app-6-march.git`. Connected to remote MongoDB: `mongodb://mygenie_admin:QplazmMzalpq@52.66.232.149:27017/mygenie`. Multiple bug fixes and features were implemented across sessions.
 
-## Tech Stack
-- **Frontend**: React, Tailwind CSS, component-based architecture
-- **Backend**: Python, FastAPI
-- **Database**: MongoDB
-- **Layout**: Mobile-first, max-width 600px
-
-## Core Requirements
-- Menu browsing with categories, stations, search, filters
-- Cart & ordering flow
-- Admin panel with settings
-- Configurable customer capture form on landing page
-- Configurable "Extra Info" section in footer
-- Price breakdown on review order page
+## Architecture
+- **Frontend:** React (port 3000)
+- **Backend:** FastAPI (port 8001)
+- **Database:** Remote MongoDB
+- **State Management:** React Context + sessionStorage + localStorage
 
 ## What's Been Implemented
-- [x] Full app setup from GitHub repo
-- [x] Content mismatch fix (admin ↔ frontend)
-- [x] Customer capture form (configurable)
-- [x] Extra Info footer section (configurable)
-- [x] Price breakdown redesign on review order
-- [x] Footer social icons overlap fix
-- [x] UI consistency overhaul — max-width 600px across all pages
-- [x] Fixed/sticky elements alignment (Place Order, Cart Bar, Menu FAB)
-- [x] Category names truncation fix & CSS refactor (CategoryBox.css)
-- [x] **Category section spacing reduction** (2025-03-05) — Reduced excessive vertical gaps around category headers across all breakpoints
 
-## Credentials
-- **Admin**: owner@18march.com / admin123
-- **Customer**: 7505242126 / OTP: 1111
-- **Restaurant ID**: 478
+### Session 1 (Completed)
+- Cloned repo, installed dependencies, connected to remote MongoDB
+- Fixed: Incorrect item status display, admin settings sync, customer info persistence, phone input UI
+- Implemented: Loyalty points redemption, price breakdown refactor, bill summary on order success
+- Fixed: GST calculation for edit order flow
 
-## Key Architecture Notes
-- CategoryBox styling centralized in `components/CategoryBox/CategoryBox.css`
-- All pages use max-width: 600px mobile-first layout
-- CSS managed per-component with responsive breakpoints
+### Session 2 (2026-03-08)
+- Added 3 new visibility toggles in Admin Settings > Visibility > Review Order:
+  - **Show Loyalty Points** (ON/OFF) - controls loyalty section + rewards banner visibility
+  - **Show Coupon Code** (ON/OFF) - controls coupon input visibility  
+  - **Show Wallet** (ON/OFF) - placeholder toggle for future wallet feature
+- Files modified: `VisibilityTab.jsx`, `AdminSettings.jsx`, `RestaurantConfigContext.jsx`, `ReviewOrder.jsx`
 
-- [x] **Header added to Order Success page** (2025-03-05) — Added Header component with hamburger menu, logo, brand text
-- [x] **Order Status: "Ready" → "Served"** (2025-03-05) — Renamed last stage
-- [x] **Browse Menu button branding fix** (2025-03-05) — Removed broken inline style, uses CSS `--color-primary`
-- [x] **`showEstimatedTimes` config toggle** (2025-03-05) — Added to admin settings, default OFF. Awaiting API `prep_time`/`serve_time` fields
-- [x] **Admin Settings tab consolidation** (2025-03-05) — Merged Landing/Menu/Order tabs into single "Visibility" tab with nested sub-tabs (Landing Page, Menu Page, Review Order, Order Status)
-- [x] **Admin Settings tab reorder + Extra Info move** (2025-03-05) — Reordered to Branding → Banners → Content → Visibility. Moved Extra Info into Content tab as a nested sub-tab
-
-## Backlog
-- P2: Auto-create customer on guest order
+## Prioritized Backlog
+- P0: None
+- P1: Wallet functionality (to be discussed)
+- P2: Tax calculation logic refactor (consolidate complex useMemo hooks)

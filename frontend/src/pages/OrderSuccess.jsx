@@ -1,18 +1,95 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantDetails } from '../hooks/useMenuData';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useScannedTable } from '../hooks/useScannedTable';
+import { useCart } from '../context/CartContext';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
+import { getOrderDetails } from '../api/services/orderService';
 import Header from '../components/Header/Header';
-import { IoCheckmarkCircle, IoCallOutline } from 'react-icons/io5';
+import { IoCheckmarkCircle, IoCallOutline, IoChevronDownOutline, IoChevronUpOutline, IoTimeOutline, IoCheckmarkOutline, IoCheckmarkDoneOutline, IoCloseOutline } from 'react-icons/io5';
 import { RiBillLine } from 'react-icons/ri';
 import { MdOutlineEdit, MdOutlineRestaurantMenu, MdOutlineTableRestaurant } from 'react-icons/md';
 import { FaDoorOpen } from 'react-icons/fa';
-import { IoTimeOutline } from 'react-icons/io5';
-import { RiHashtag } from 'react-icons/ri';
 import './OrderSuccess.css';
+
+/**
+ * Maps f_order_status numeric value to status string
+ * 1 → Preparing, 2 → Ready, 3 → Cancelled, 5 → Served, 6 → Paid, 7 → Yet to be confirmed
+ * Status always comes from API - no defaults needed
+ */
+const mapFoodOrderStatus = (item) => {
+  // Check for f_order_status (numeric) from API
+  const fStatus = item?.f_order_status;
+  if (fStatus !== undefined && fStatus !== null) {
+    const statusMap = {
+      1: 'preparing',
+      2: 'ready',
+      3: 'cancelled',
+      5: 'served',
+      6: 'paid',
+      7: 'pending'
+    };
+    return statusMap[fStatus] || 'pending';
+  }
+  
+  // Fallback to food_status or status (string) from API
+  const stringStatus = item?.food_status || item?.status;
+  if (stringStatus) {
+    return stringStatus.toLowerCase();
+  }
+  
+  return 'pending';
+};
+
+/**
+ * Item Status Badge Component
+ * Status: 'preparing' | 'ready' | 'served' | 'cancelled' | 'paid' | 'pending'
+ */
+const ItemStatusBadge = ({ status }) => {
+  const statusConfig = {
+    pending: {
+      label: 'Yet to be confirmed',
+      icon: <IoTimeOutline />,
+      className: 'status-pending'
+    },
+    preparing: {
+      label: 'Preparing',
+      icon: <IoTimeOutline />,
+      className: 'status-preparing'
+    },
+    ready: {
+      label: 'Ready',
+      icon: <IoCheckmarkOutline />,
+      className: 'status-ready'
+    },
+    served: {
+      label: 'Served',
+      icon: <IoCheckmarkDoneOutline />,
+      className: 'status-served'
+    },
+    cancelled: {
+      label: 'Cancelled',
+      icon: <IoCloseOutline />,
+      className: 'status-cancelled'
+    },
+    paid: {
+      label: 'Paid',
+      icon: <IoCheckmarkDoneOutline />,
+      className: 'status-paid'
+    }
+  };
+
+  const config = statusConfig[status] || statusConfig.preparing;
+
+  return (
+    <span className={`item-status-badge ${config.className}`} data-testid={`status-${status}`}>
+      {config.icon}
+      <span className="item-status-label">{config.label}</span>
+    </span>
+  );
+};
 
 // Helper: check if a success_config flag is enabled (defaults to Y)
 const isConfigEnabled = (restaurant, key) => {
@@ -36,10 +113,79 @@ const OrderSuccess = () => {
   const location = useLocation();
   const { restaurantId } = useRestaurantId();
   const { restaurant } = useRestaurantDetails(restaurantId);
-  const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig } = useRestaurantConfig();
+  const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus } = useRestaurantConfig();
   const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
+  const { startEditOrder } = useCart();
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false);
+  const [showItems, setShowItems] = useState(true);
+  const [showBillSummary, setShowBillSummary] = useState(true);
+  const [liveOrderItems, setLiveOrderItems] = useState([]);
+  const [billSummary, setBillSummary] = useState(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
   const orderData = location.state?.orderData || null;
+  const orderId = orderData?.orderId;
+  
+  // Use billSummary from location.state (passed from ReviewOrder) as primary source
+  const passedBillSummary = orderData?.billSummary || null;
+  
+  // Use ONLY items from API (single source of truth)
+  const allItems = liveOrderItems;
+  const totalItemsCount = allItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+  // Initialize billSummary from passed data
+  useEffect(() => {
+    if (passedBillSummary && !billSummary) {
+      setBillSummary(passedBillSummary);
+    }
+  }, [passedBillSummary, billSummary]);
+
+  // Fetch order details and update item statuses
+  const fetchOrderStatus = async (isInitial = false) => {
+    if (!orderId) return;
+    
+    try {
+      if (isInitial) setIsLoadingStatus(true);
+      const orderDetails = await getOrderDetails(orderId);
+      
+      if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
+        const updatedItems = orderDetails.previousItems.map(item => ({
+          id: item.id,
+          name: item.item?.name || 'Item',
+          price: item.unitPrice || item.price || 0,
+          quantity: item.quantity || 1,
+          veg: item.item?.veg === true || item.item?.veg === 1,
+          f_order_status: item.f_order_status,
+        }));
+        setLiveOrderItems(updatedItems);
+        
+        // Only use API billSummary if we don't have passed data (fallback for page refresh)
+        if (!passedBillSummary && orderDetails.billSummary) {
+          setBillSummary(orderDetails.billSummary);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch order status:', error);
+    } finally {
+      if (isInitial) setIsLoadingStatus(false);
+    }
+  };
+
+  // Fetch order status on mount and poll every 1 minute
+  useEffect(() => {
+    if (!orderId) return;
+
+    // Initial fetch (shows loading state)
+    fetchOrderStatus(true);
+
+    // Poll every 60 seconds (silent update, no loading flash)
+    const pollInterval = setInterval(() => {
+      fetchOrderStatus(false);
+    }, 60000);
+
+    // Cleanup on unmount
+    return () => clearInterval(pollInterval);
+  }, [orderId]);
 
   // Fetch admin config for this restaurant
   useEffect(() => {
@@ -77,8 +223,41 @@ const OrderSuccess = () => {
     }
   };
 
-  const handleEditOrder = () => {
-    navigate(`/${restaurantId}/review-order`, { replace: true });
+  const handleEditOrder = async () => {
+    if (!orderData?.orderId) {
+      console.error('No order ID available for editing');
+      return;
+    }
+
+    setIsLoadingEdit(true);
+    try {
+      // Fetch order details from API
+      const orderDetails = await getOrderDetails(orderData.orderId);
+      
+      // Start edit mode with previous items
+      startEditOrder(
+        orderData.orderId,
+        orderDetails.previousItems,
+        {
+          tableId: orderDetails.tableId,
+          tableNo: orderDetails.tableNo,
+          restaurant: orderDetails.restaurant,
+        }
+      );
+
+      // Navigate to menu to add more items
+      if (isMultipleMenu(restaurant, restaurantId)) {
+        navigate(`/${restaurantId}/stations`, { replace: true });
+      } else {
+        navigate(`/${restaurantId}/menu`, { replace: true });
+      }
+    } catch (error) {
+      console.error('Failed to fetch order details for editing:', error);
+      // Still allow navigation even if API fails
+      navigate(`/${restaurantId}/review-order`, { replace: true });
+    } finally {
+      setIsLoadingEdit(false);
+    }
   };
 
   const handleCallWaiter = () => {
@@ -98,8 +277,6 @@ const OrderSuccess = () => {
   const showEditOrder = isConfigEnabled(restaurant, 'show_edit_order');
   const showGoToMenu = isConfigEnabled(restaurant, 'show_go_to_menu');
   const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo;
-  const showPrepTime = isConfigEnabled(restaurant, 'show_prep_time');
-  const showTokenNumber = isConfigEnabled(restaurant, 'show_token_number');
 
   return (
     <div className="order-success-page" data-testid="order-success-page">
@@ -111,85 +288,159 @@ const OrderSuccess = () => {
       />
       <div className="order-success-container">
 
-        {/* Success Icon + Title */}
-        <div className="order-success-hero">
-          <div className="order-success-icon" data-testid="order-success-icon">
+        {/* Compact Hero: Icon + Title inline */}
+        <div className="order-success-hero-compact">
+          <div className="order-success-icon-small" data-testid="order-success-icon">
             <IoCheckmarkCircle />
           </div>
-          <h1 className="order-success-title">Order Placed!</h1>
-          <p className="order-success-message">
-            Your order has been received and is being processed.
-          </p>
+          <div className="order-success-hero-text">
+            <h1 className="order-success-title-compact">Order Placed!</h1>
+            <p className="order-success-message-compact">
+              Your order is being processed
+            </p>
+          </div>
         </div>
 
-        {/* Order Details Card */}
-        <div className="order-success-card" data-testid="order-success-card">
-          <div className="order-success-card-row">
-            <span className="order-success-card-label">Order ID</span>
-            <span className="order-success-card-value">#{orderData.orderId || 'N/A'}</span>
-          </div>
-          <div className="order-success-card-divider"></div>
-          <div className="order-success-card-row">
-            <span className="order-success-card-label">Total</span>
-            <span className="order-success-card-value order-success-card-total">₹{orderData.totalToPay || '0.00'}</span>
+        {/* Order Details Card - Compact */}
+        <div className="order-success-card-compact" data-testid="order-success-card">
+          {/* Order ID + Total in one row */}
+          <div className="order-success-main-row">
+            <div className="order-success-order-info">
+              <span className="order-success-order-label">Order</span>
+              <span className="order-success-order-id">#{orderData.orderId || 'N/A'}</span>
+            </div>
+            <span className="order-success-total">₹{orderData.totalToPay || '0.00'}</span>
           </div>
 
-          {/* Table Number */}
+          {/* Table Number - inline */}
           {showTableNumber && (
-            <>
-              <div className="order-success-card-divider"></div>
-              <div className="order-success-card-row" data-testid="order-success-table">
-                <span className="order-success-card-label">
-                  <span className="order-success-card-label-icon">
-                    {scannedRoomOrTable === 'room' ? <FaDoorOpen /> : <MdOutlineTableRestaurant />}
-                  </span>
-                  {scannedRoomOrTable === 'room' ? 'Room' : 'Table'}
-                </span>
-                <span className="order-success-card-value">{scannedTableNo}</span>
-              </div>
-            </>
-          )}
-
-          {/* Token Number */}
-          {showTokenNumber && orderData.tokenNumber && (
-            <>
-              <div className="order-success-card-divider"></div>
-              <div className="order-success-card-row" data-testid="order-success-token">
-                <span className="order-success-card-label">
-                  <span className="order-success-card-label-icon"><RiHashtag /></span>
-                  Token
-                </span>
-                <span className="order-success-card-value order-success-card-token">{orderData.tokenNumber}</span>
-              </div>
-            </>
-          )}
-
-          {/* Preparation Time */}
-          {showPrepTime && orderData.prepTime && (
-            <>
-              <div className="order-success-card-divider"></div>
-              <div className="order-success-card-row" data-testid="order-success-prep-time">
-                <span className="order-success-card-label">
-                  <span className="order-success-card-label-icon"><IoTimeOutline /></span>
-                  Prep Time
-                </span>
-                <span className="order-success-card-value order-success-card-prep">{orderData.prepTime}</span>
-              </div>
-            </>
+            <div className="order-success-table-row">
+              <span className="order-success-table-icon">
+                {scannedRoomOrTable === 'room' ? <FaDoorOpen /> : <MdOutlineTableRestaurant />}
+              </span>
+              <span className="order-success-table-label">
+                {scannedRoomOrTable === 'room' ? 'Room' : 'Table'}
+              </span>
+              <span className="order-success-table-value">{scannedTableNo}</span>
+            </div>
           )}
         </div>
 
-        {/* Order Status Tracker */}
+        {/* Items Ordered - Collapsible */}
+        {(isLoadingStatus || allItems.length > 0) && (
+          <div className="order-success-items-card">
+            <div 
+              className="order-success-items-header"
+              onClick={() => setShowItems(!showItems)}
+              data-testid="toggle-items-btn"
+            >
+              <span className="order-success-items-title">
+                {isLoadingStatus ? 'Loading Items...' : `Items Ordered (${totalItemsCount})`}
+              </span>
+              <span className="order-success-items-toggle">
+                {showItems ? <IoChevronUpOutline /> : <IoChevronDownOutline />}
+              </span>
+            </div>
+            {showItems && (
+              <div className="order-success-items-list">
+                {/* Loading State */}
+                {isLoadingStatus && (
+                  <div className="order-success-items-loading">
+                    <span>Fetching order details...</span>
+                  </div>
+                )}
+                
+                {/* All Items - Single flat list from API */}
+                {!isLoadingStatus && allItems.map((item, index) => (
+                  <div key={`item-${index}`} className="order-success-item-row">
+                    <div className="order-success-item-info">
+                      <span className={`order-success-item-veg ${item.veg ? 'veg' : 'non-veg'}`}>
+                        <span className="veg-dot"></span>
+                      </span>
+                      <span className="order-success-item-name">{item.name || 'Item'}</span>
+                      <span className="order-success-item-qty">x{item.quantity || 1}</span>
+                    </div>
+                    <div className="order-success-item-right">
+                      <span className="order-success-item-price">
+                        ₹{((item.price || item.totalPrice || 0) * (item.quantity || 1)).toFixed(0)}
+                      </span>
+                      {showFoodStatus && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bill Summary - Collapsible */}
+        {billSummary && (
+          <div className="order-success-bill-card">
+            <div 
+              className="order-success-bill-header"
+              onClick={() => setShowBillSummary(!showBillSummary)}
+              data-testid="toggle-bill-btn"
+            >
+              <span className="order-success-bill-title">
+                <RiBillLine /> Bill Summary
+              </span>
+              <span className="order-success-bill-toggle">
+                {showBillSummary ? <IoChevronUpOutline /> : <IoChevronDownOutline />}
+              </span>
+            </div>
+            {showBillSummary && (
+              <div className="order-success-bill-content">
+                <div className="bill-row">
+                  <span className="bill-label">Item Total</span>
+                  <span className="bill-value">₹{billSummary.itemTotal.toFixed(2)}</span>
+                </div>
+                {billSummary.pointsDiscount > 0 && (
+                  <div className="bill-row bill-row-discount">
+                    <span className="bill-label">Loyalty Points ({billSummary.pointsRedeemed || 0} pts)</span>
+                    <span className="bill-value bill-discount">-₹{billSummary.pointsDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="bill-row bill-row-subtotal">
+                  <span className="bill-label">Subtotal</span>
+                  <span className="bill-value">₹{billSummary.subtotal.toFixed(2)}</span>
+                </div>
+                {billSummary.cgst > 0 && (
+                  <div className="bill-row bill-row-tax">
+                    <span className="bill-label-sub">CGST</span>
+                    <span className="bill-value-sub">₹{billSummary.cgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {billSummary.sgst > 0 && (
+                  <div className="bill-row bill-row-tax">
+                    <span className="bill-label-sub">SGST</span>
+                    <span className="bill-value-sub">₹{billSummary.sgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {billSummary.vat > 0 && (
+                  <div className="bill-row bill-row-tax">
+                    <span className="bill-label-sub">VAT</span>
+                    <span className="bill-value-sub">₹{billSummary.vat.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="bill-row bill-row-total">
+                  <span className="bill-label-total">Grand Total</span>
+                  <span className="bill-value-total">₹{billSummary.grandTotal.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Order Status Tracker - Compact */}
         {showOrderStatus && (
-          <div className="order-status-tracker" data-testid="order-status-tracker">
-            <h3 className="order-status-heading">Order Status</h3>
-            <div className="order-status-steps">
+          <div className="order-status-tracker-compact" data-testid="order-status-tracker">
+            <div className="order-status-steps-compact">
               {ORDER_STATUSES.map((step, idx) => {
                 const isCompleted = idx <= currentStepIndex;
                 const isCurrent = idx === currentStepIndex;
                 return (
-                  <div key={step.key} className={`order-status-step ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
-                    <div className="order-status-dot">
+                  <div key={step.key} className={`order-status-step-compact ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
+                    <div className="order-status-dot-compact">
                       {isCompleted && (
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                           <path d="M5 13l4 4L19 7" />
@@ -197,9 +448,9 @@ const OrderSuccess = () => {
                       )}
                     </div>
                     {idx < ORDER_STATUSES.length - 1 && (
-                      <div className={`order-status-line ${isCompleted && idx < currentStepIndex ? 'filled' : ''}`}></div>
+                      <div className={`order-status-line-compact ${isCompleted && idx < currentStepIndex ? 'filled' : ''}`}></div>
                     )}
-                    <span className="order-status-label">{step.label}</span>
+                    <span className="order-status-label-compact">{step.label}</span>
                   </div>
                 );
               })}
@@ -207,58 +458,44 @@ const OrderSuccess = () => {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="order-success-actions" data-testid="order-success-actions">
-
-          {/* Edit Order */}
+        {/* Action Buttons - Landing Page Style */}
+        <div className="order-success-actions-compact" data-testid="order-success-actions">
+          {/* Top: Edit Order - Primary full width */}
           {showEditOrder && (
             <button
-              className="order-success-action-btn order-success-action-edit"
+              className="order-success-btn order-success-btn-primary"
               onClick={handleEditOrder}
+              disabled={isLoadingEdit}
               data-testid="order-success-edit-btn"
             >
-              <MdOutlineEdit className="order-success-action-icon" />
-              Edit Order
+              <MdOutlineEdit />
+              {isLoadingEdit ? 'Loading...' : 'EDIT ORDER'}
             </button>
           )}
 
-          {/* Call Waiter + Pay Bill Row */}
-          {(showCallWaiter || showPayBill) && (
-            <div className="order-success-action-row">
-              {showCallWaiter && (
-                <button
-                  className="order-success-action-btn order-success-action-secondary"
-                  onClick={handleCallWaiter}
-                  data-testid="order-success-call-waiter-btn"
-                >
-                  <IoCallOutline className="order-success-action-icon" />
-                  Call Waiter
-                </button>
-              )}
-              {showPayBill && (
-                <button
-                  className="order-success-action-btn order-success-action-secondary"
-                  onClick={handlePayBill}
-                  data-testid="order-success-pay-bill-btn"
-                >
-                  <RiBillLine className="order-success-action-icon" />
-                  Pay Bill
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Go to Menu */}
-          {showGoToMenu && (
-            <button
-              className="order-success-action-btn order-success-action-primary"
-              onClick={handleGoToMenu}
-              data-testid="order-success-menu-btn"
-            >
-              <MdOutlineRestaurantMenu className="order-success-action-icon" />
-              Browse Menu
-            </button>
-          )}
+          {/* Bottom row: Call Waiter + Pay Bill */}
+          <div className="order-success-btn-row">
+            {showCallWaiter && (
+              <button
+                className="order-success-btn order-success-btn-outline"
+                onClick={handleCallWaiter}
+                data-testid="order-success-call-waiter-btn"
+              >
+                <IoCallOutline />
+                <span>CALL WAITER</span>
+              </button>
+            )}
+            {showPayBill && (
+              <button
+                className="order-success-btn order-success-btn-outline"
+                onClick={handlePayBill}
+                data-testid="order-success-pay-bill-btn"
+              >
+                <RiBillLine />
+                <span>PAY BILL</span>
+              </button>
+            )}
+          </div>
         </div>
 
       </div>

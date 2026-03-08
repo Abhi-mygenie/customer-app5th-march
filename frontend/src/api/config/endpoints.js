@@ -12,6 +12,7 @@ export const ENDPOINTS = {
   // Order endpoints
   PLACE_ORDER: () => `${API_BASE_URL}/customer/order/place`,
   PLACE_ORDER_AUTOPAID: () => `${API_BASE_URL}/customer/order/autopaid-place-prepaid-order`,
+  GET_ORDER_DETAILS: (orderId) => `${API_BASE_URL}/air-bnb/get-order-details/${orderId}`,
   
   // Restaurant endpoints
   // RESTAURANT_DETAILS: (restaurantId) => `${API_BASE_URL}/restaurants/details/${restaurantId}`,

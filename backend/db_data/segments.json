@@ -1,8 +1,5 @@
 [
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a5"
-    },
     "id": "4ffdf06d-1b58-4ee9-8e46-ca8695ae91c1",
     "user_id": "pos_0001_restaurant_634",
     "name": "test seg",
@@ -14,9 +11,6 @@
     "updated_at": "2026-02-25T05:29:19.124726+00:00"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a6"
-    },
     "id": "segment-demo-1",
     "user_id": "demo-user-restaurant",
     "name": "VIP Gold Members",
@@ -29,9 +23,6 @@
     "updated_at": "2026-01-11T06:08:00.614849"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a7"
-    },
     "id": "segment-demo-2",
     "user_id": "demo-user-restaurant",
     "name": "Inactive Customers (30+ days)",
@@ -44,9 +35,6 @@
     "updated_at": "2026-01-26T06:08:00.614849"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a8"
-    },
     "id": "segment-demo-3",
     "user_id": "demo-user-restaurant",
     "name": "Corporate Clients",

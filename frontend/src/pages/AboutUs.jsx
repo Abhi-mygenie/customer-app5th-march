@@ -46,8 +46,8 @@ const AboutUs = () => {
         <div className="about-us-branding">
           <img src={logoUrl} alt={restaurant?.name || 'Restaurant Logo'} className="about-us-logo" onError={(e) => { e.target.src = '/assets/images/ic_login_logo.png'; }} />
           <h2 className="about-us-restaurant-name">{restaurant?.name || 'Restaurant'}</h2>
-          {restaurant?.description && (
-            <p className="about-us-tagline">{restaurant.description}</p>
+          {config.tagline && (
+            <p className="about-us-tagline">{config.tagline}</p>
           )}
         </div>
 

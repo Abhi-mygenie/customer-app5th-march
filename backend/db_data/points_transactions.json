@@ -1,8 +1,5 @@
 [
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a668d"
-    },
     "id": "points-customer-demo-1-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -14,9 +11,6 @@
     "created_at": "2026-01-05T06:08:00.606355"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a668e"
-    },
     "id": "points-customer-demo-1-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -28,9 +22,6 @@
     "created_at": "2025-09-30T06:08:00.606361"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a668f"
-    },
     "id": "points-customer-demo-1-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -42,9 +33,6 @@
     "created_at": "2026-02-23T06:08:00.606365"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6690"
-    },
     "id": "points-customer-demo-1-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -56,9 +44,6 @@
     "created_at": "2025-11-06T06:08:00.606368"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6691"
-    },
     "id": "points-customer-demo-1-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -70,9 +55,6 @@
     "created_at": "2025-12-21T06:08:00.606372"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6692"
-    },
     "id": "points-customer-demo-1-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -84,9 +66,6 @@
     "created_at": "2025-10-07T06:08:00.606375"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6693"
-    },
     "id": "points-customer-demo-1-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -98,9 +77,6 @@
     "created_at": "2025-12-01T06:08:00.606378"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6694"
-    },
     "id": "points-customer-demo-1-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -112,9 +88,6 @@
     "created_at": "2025-10-11T06:08:00.606381"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6695"
-    },
     "id": "points-customer-demo-1-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -126,9 +99,6 @@
     "created_at": "2026-02-21T06:08:00.606384"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6696"
-    },
     "id": "points-customer-demo-1-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -140,9 +110,6 @@
     "created_at": "2025-10-28T06:08:00.606388"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6697"
-    },
     "id": "points-customer-demo-1-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -154,9 +121,6 @@
     "created_at": "2026-01-30T06:08:00.606391"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6698"
-    },
     "id": "points-customer-demo-1-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -168,9 +132,6 @@
     "created_at": "2026-01-21T06:08:00.606394"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6699"
-    },
     "id": "points-customer-demo-2-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -182,9 +143,6 @@
     "created_at": "2025-11-14T06:08:00.606398"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a669a"
-    },
     "id": "points-customer-demo-2-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -196,9 +154,6 @@
     "created_at": "2025-10-27T06:08:00.606401"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a669b"
-    },
     "id": "points-customer-demo-2-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -210,9 +165,6 @@
     "created_at": "2025-09-05T06:08:00.606405"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a669c"
-    },
     "id": "points-customer-demo-2-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -224,9 +176,6 @@
     "created_at": "2026-02-22T06:08:00.606408"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a669d"
-    },
     "id": "points-customer-demo-2-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -238,9 +187,6 @@
     "created_at": "2025-12-02T06:08:00.606411"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a669e"
-    },
     "id": "points-customer-demo-2-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -252,9 +198,6 @@
     "created_at": "2025-12-22T06:08:00.606414"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a669f"
-    },
     "id": "points-customer-demo-2-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -266,9 +209,6 @@
     "created_at": "2025-11-17T06:08:00.606417"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a0"
-    },
     "id": "points-customer-demo-2-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -280,9 +220,6 @@
     "created_at": "2026-01-23T06:08:00.606420"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a1"
-    },
     "id": "points-customer-demo-2-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -294,9 +231,6 @@
     "created_at": "2026-02-15T06:08:00.606423"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a2"
-    },
     "id": "points-customer-demo-2-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -308,9 +242,6 @@
     "created_at": "2025-09-03T06:08:00.606426"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a3"
-    },
     "id": "points-customer-demo-2-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-2",
@@ -322,9 +253,6 @@
     "created_at": "2025-11-23T06:08:00.606429"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a4"
-    },
     "id": "points-customer-demo-3-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -336,9 +264,6 @@
     "created_at": "2025-12-26T06:08:00.606432"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a5"
-    },
     "id": "points-customer-demo-3-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -350,9 +275,6 @@
     "created_at": "2026-02-12T06:08:00.606435"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a6"
-    },
     "id": "points-customer-demo-3-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -364,9 +286,6 @@
     "created_at": "2026-01-12T06:08:00.606439"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a7"
-    },
     "id": "points-customer-demo-3-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -378,9 +297,6 @@
     "created_at": "2025-11-27T06:08:00.606442"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a8"
-    },
     "id": "points-customer-demo-3-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -392,9 +308,6 @@
     "created_at": "2025-10-08T06:08:00.606445"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66a9"
-    },
     "id": "points-customer-demo-3-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -406,9 +319,6 @@
     "created_at": "2026-01-23T06:08:00.606448"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66aa"
-    },
     "id": "points-customer-demo-4-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -420,9 +330,6 @@
     "created_at": "2025-12-21T06:08:00.606452"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ab"
-    },
     "id": "points-customer-demo-4-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -434,9 +341,6 @@
     "created_at": "2025-12-25T06:08:00.606455"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ac"
-    },
     "id": "points-customer-demo-4-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -448,9 +352,6 @@
     "created_at": "2026-01-31T06:08:00.606457"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ad"
-    },
     "id": "points-customer-demo-4-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -462,9 +363,6 @@
     "created_at": "2025-09-25T06:08:00.606460"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ae"
-    },
     "id": "points-customer-demo-4-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -476,9 +374,6 @@
     "created_at": "2025-09-18T06:08:00.606463"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66af"
-    },
     "id": "points-customer-demo-4-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -490,9 +385,6 @@
     "created_at": "2025-11-29T06:08:00.606467"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b0"
-    },
     "id": "points-customer-demo-4-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -504,9 +396,6 @@
     "created_at": "2025-11-20T06:08:00.606471"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b1"
-    },
     "id": "points-customer-demo-4-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -518,9 +407,6 @@
     "created_at": "2025-12-19T06:08:00.606474"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b2"
-    },
     "id": "points-customer-demo-5-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -532,9 +418,6 @@
     "created_at": "2025-12-10T06:08:00.606478"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b3"
-    },
     "id": "points-customer-demo-5-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -546,9 +429,6 @@
     "created_at": "2025-09-14T06:08:00.606480"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b4"
-    },
     "id": "points-customer-demo-5-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -560,9 +440,6 @@
     "created_at": "2026-02-15T06:08:00.606483"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b5"
-    },
     "id": "points-customer-demo-5-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -574,9 +451,6 @@
     "created_at": "2026-01-12T06:08:00.606486"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b6"
-    },
     "id": "points-customer-demo-5-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -588,9 +462,6 @@
     "created_at": "2025-12-19T06:08:00.606489"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b7"
-    },
     "id": "points-customer-demo-6-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -602,9 +473,6 @@
     "created_at": "2025-12-21T06:08:00.606493"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b8"
-    },
     "id": "points-customer-demo-6-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -616,9 +484,6 @@
     "created_at": "2025-11-22T06:08:00.606496"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66b9"
-    },
     "id": "points-customer-demo-6-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -630,9 +495,6 @@
     "created_at": "2026-01-01T06:08:00.606498"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ba"
-    },
     "id": "points-customer-demo-6-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -644,9 +506,6 @@
     "created_at": "2026-02-03T06:08:00.606502"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66bb"
-    },
     "id": "points-customer-demo-6-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -658,9 +517,6 @@
     "created_at": "2026-02-01T06:08:00.606504"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66bc"
-    },
     "id": "points-customer-demo-6-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -672,9 +528,6 @@
     "created_at": "2026-02-02T06:08:00.606507"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66bd"
-    },
     "id": "points-customer-demo-6-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -686,9 +539,6 @@
     "created_at": "2025-09-07T06:08:00.606510"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66be"
-    },
     "id": "points-customer-demo-6-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -700,9 +550,6 @@
     "created_at": "2026-02-11T06:08:00.606513"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66bf"
-    },
     "id": "points-customer-demo-7-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -714,9 +561,6 @@
     "created_at": "2025-12-14T06:08:00.606516"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c0"
-    },
     "id": "points-customer-demo-7-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -728,9 +572,6 @@
     "created_at": "2025-09-22T06:08:00.606519"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c1"
-    },
     "id": "points-customer-demo-7-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -742,9 +583,6 @@
     "created_at": "2026-01-16T06:08:00.606522"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c2"
-    },
     "id": "points-customer-demo-7-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -756,9 +594,6 @@
     "created_at": "2025-11-03T06:08:00.606526"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c3"
-    },
     "id": "points-customer-demo-7-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -770,9 +605,6 @@
     "created_at": "2025-09-26T06:08:00.606529"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c4"
-    },
     "id": "points-customer-demo-7-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -784,9 +616,6 @@
     "created_at": "2026-02-20T06:08:00.606532"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c5"
-    },
     "id": "points-customer-demo-7-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -798,9 +627,6 @@
     "created_at": "2026-01-19T06:08:00.606535"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c6"
-    },
     "id": "points-customer-demo-7-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -812,9 +638,6 @@
     "created_at": "2026-01-31T06:08:00.606538"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c7"
-    },
     "id": "points-customer-demo-7-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -826,9 +649,6 @@
     "created_at": "2025-12-12T06:08:00.606541"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c8"
-    },
     "id": "points-customer-demo-7-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -840,9 +660,6 @@
     "created_at": "2025-11-14T06:08:00.606544"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66c9"
-    },
     "id": "points-customer-demo-7-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -854,9 +671,6 @@
     "created_at": "2025-08-30T06:08:00.606549"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ca"
-    },
     "id": "points-customer-demo-8-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -868,9 +682,6 @@
     "created_at": "2026-01-30T06:08:00.606553"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66cb"
-    },
     "id": "points-customer-demo-8-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -882,9 +693,6 @@
     "created_at": "2026-01-01T06:08:00.606556"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66cc"
-    },
     "id": "points-customer-demo-8-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -896,9 +704,6 @@
     "created_at": "2025-09-28T06:08:00.606559"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66cd"
-    },
     "id": "points-customer-demo-8-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -910,9 +715,6 @@
     "created_at": "2026-02-01T06:08:00.606562"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ce"
-    },
     "id": "points-customer-demo-8-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -924,9 +726,6 @@
     "created_at": "2025-12-26T06:08:00.606565"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66cf"
-    },
     "id": "points-customer-demo-8-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -938,9 +737,6 @@
     "created_at": "2025-10-29T06:08:00.606568"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d0"
-    },
     "id": "points-customer-demo-8-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -952,9 +748,6 @@
     "created_at": "2025-09-11T06:08:00.606571"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d1"
-    },
     "id": "points-customer-demo-9-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -966,9 +759,6 @@
     "created_at": "2025-10-27T06:08:00.606574"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d2"
-    },
     "id": "points-customer-demo-9-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -980,9 +770,6 @@
     "created_at": "2026-01-09T06:08:00.606577"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d3"
-    },
     "id": "points-customer-demo-9-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -994,9 +781,6 @@
     "created_at": "2026-01-07T06:08:00.606581"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d4"
-    },
     "id": "points-customer-demo-9-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -1008,9 +792,6 @@
     "created_at": "2025-11-30T06:08:00.606583"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d5"
-    },
     "id": "points-customer-demo-9-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -1022,9 +803,6 @@
     "created_at": "2026-01-18T06:08:00.606586"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d6"
-    },
     "id": "points-customer-demo-9-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -1036,9 +814,6 @@
     "created_at": "2025-12-10T06:08:00.606590"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d7"
-    },
     "id": "points-customer-demo-10-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1050,9 +825,6 @@
     "created_at": "2025-11-15T06:08:00.606594"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d8"
-    },
     "id": "points-customer-demo-10-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1064,9 +836,6 @@
     "created_at": "2026-02-23T06:08:00.606597"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66d9"
-    },
     "id": "points-customer-demo-10-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1078,9 +847,6 @@
     "created_at": "2025-09-07T06:08:00.606601"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66da"
-    },
     "id": "points-customer-demo-10-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1092,9 +858,6 @@
     "created_at": "2026-01-09T06:08:00.606604"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66db"
-    },
     "id": "points-customer-demo-10-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1106,9 +869,6 @@
     "created_at": "2025-11-05T06:08:00.606607"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66dc"
-    },
     "id": "points-customer-demo-10-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1120,9 +880,6 @@
     "created_at": "2025-11-18T06:08:00.606610"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66dd"
-    },
     "id": "points-customer-demo-10-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1134,9 +891,6 @@
     "created_at": "2025-10-08T06:08:00.606613"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66de"
-    },
     "id": "points-customer-demo-10-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1148,9 +902,6 @@
     "created_at": "2026-01-19T06:08:00.606616"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66df"
-    },
     "id": "points-customer-demo-10-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1162,9 +913,6 @@
     "created_at": "2025-10-04T06:08:00.606619"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e0"
-    },
     "id": "points-customer-demo-10-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1176,9 +924,6 @@
     "created_at": "2025-12-05T06:08:00.606622"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e1"
-    },
     "id": "points-customer-demo-10-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1190,9 +935,6 @@
     "created_at": "2025-09-13T06:08:00.606625"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e2"
-    },
     "id": "points-customer-demo-10-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1204,9 +946,6 @@
     "created_at": "2026-01-10T06:08:00.606628"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e3"
-    },
     "id": "points-customer-demo-10-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -1218,9 +957,6 @@
     "created_at": "2026-01-21T06:08:00.606632"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e4"
-    },
     "id": "points-customer-demo-11-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -1232,9 +968,6 @@
     "created_at": "2026-01-19T06:08:00.606641"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e5"
-    },
     "id": "points-customer-demo-11-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -1246,9 +979,6 @@
     "created_at": "2025-11-20T06:08:00.606644"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e6"
-    },
     "id": "points-customer-demo-11-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -1260,9 +990,6 @@
     "created_at": "2026-01-21T06:08:00.606646"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e7"
-    },
     "id": "points-customer-demo-11-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -1274,9 +1001,6 @@
     "created_at": "2025-11-06T06:08:00.606649"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e8"
-    },
     "id": "points-customer-demo-11-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -1288,9 +1012,6 @@
     "created_at": "2025-08-31T06:08:00.606652"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66e9"
-    },
     "id": "points-customer-demo-11-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -1302,9 +1023,6 @@
     "created_at": "2026-01-02T06:08:00.606656"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ea"
-    },
     "id": "points-customer-demo-11-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -1316,9 +1034,6 @@
     "created_at": "2025-12-05T06:08:00.606659"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66eb"
-    },
     "id": "points-customer-demo-11-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -1330,9 +1045,6 @@
     "created_at": "2026-01-29T06:08:00.606662"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ec"
-    },
     "id": "points-customer-demo-12-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -1344,9 +1056,6 @@
     "created_at": "2026-02-10T06:08:00.606665"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ed"
-    },
     "id": "points-customer-demo-12-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -1358,9 +1067,6 @@
     "created_at": "2025-11-20T06:08:00.606668"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ee"
-    },
     "id": "points-customer-demo-12-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -1372,9 +1078,6 @@
     "created_at": "2025-09-26T06:08:00.606671"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ef"
-    },
     "id": "points-customer-demo-12-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -1386,9 +1089,6 @@
     "created_at": "2025-12-15T06:08:00.606674"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f0"
-    },
     "id": "points-customer-demo-12-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -1400,9 +1100,6 @@
     "created_at": "2025-09-08T06:08:00.606676"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f1"
-    },
     "id": "points-customer-demo-12-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -1414,9 +1111,6 @@
     "created_at": "2025-09-19T06:08:00.606679"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f2"
-    },
     "id": "points-customer-demo-12-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -1428,9 +1122,6 @@
     "created_at": "2026-01-29T06:08:00.606682"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f3"
-    },
     "id": "points-customer-demo-12-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -1442,9 +1133,6 @@
     "created_at": "2025-10-17T06:08:00.606685"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f4"
-    },
     "id": "points-customer-demo-13-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1456,9 +1144,6 @@
     "created_at": "2025-08-31T06:08:00.606688"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f5"
-    },
     "id": "points-customer-demo-13-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1470,9 +1155,6 @@
     "created_at": "2025-09-02T06:08:00.606690"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f6"
-    },
     "id": "points-customer-demo-13-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1484,9 +1166,6 @@
     "created_at": "2025-10-20T06:08:00.606693"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f7"
-    },
     "id": "points-customer-demo-13-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1498,9 +1177,6 @@
     "created_at": "2025-08-29T06:08:00.606696"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f8"
-    },
     "id": "points-customer-demo-13-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1512,9 +1188,6 @@
     "created_at": "2026-01-22T06:08:00.606698"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66f9"
-    },
     "id": "points-customer-demo-13-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1526,9 +1199,6 @@
     "created_at": "2026-01-06T06:08:00.606701"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66fa"
-    },
     "id": "points-customer-demo-13-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1540,9 +1210,6 @@
     "created_at": "2026-02-21T06:08:00.606704"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66fb"
-    },
     "id": "points-customer-demo-13-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1554,9 +1221,6 @@
     "created_at": "2025-12-09T06:08:00.606707"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66fc"
-    },
     "id": "points-customer-demo-13-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1568,9 +1232,6 @@
     "created_at": "2025-10-29T06:08:00.606711"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66fd"
-    },
     "id": "points-customer-demo-13-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1582,9 +1243,6 @@
     "created_at": "2025-12-08T06:08:00.606716"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66fe"
-    },
     "id": "points-customer-demo-13-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1596,9 +1254,6 @@
     "created_at": "2025-10-24T06:08:00.606719"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a66ff"
-    },
     "id": "points-customer-demo-14-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-14",
@@ -1610,9 +1265,6 @@
     "created_at": "2025-11-01T06:08:00.606722"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6700"
-    },
     "id": "points-customer-demo-14-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-14",
@@ -1624,9 +1276,6 @@
     "created_at": "2026-01-25T06:08:00.606725"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6701"
-    },
     "id": "points-customer-demo-14-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-14",
@@ -1638,9 +1287,6 @@
     "created_at": "2025-09-21T06:08:00.606728"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6702"
-    },
     "id": "points-customer-demo-14-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-14",
@@ -1652,9 +1298,6 @@
     "created_at": "2025-09-24T06:08:00.606731"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6703"
-    },
     "id": "points-customer-demo-14-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-14",
@@ -1666,9 +1309,6 @@
     "created_at": "2025-12-04T06:08:00.606734"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6704"
-    },
     "id": "points-customer-demo-15-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1680,9 +1320,6 @@
     "created_at": "2025-12-29T06:08:00.606737"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6705"
-    },
     "id": "points-customer-demo-15-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1694,9 +1331,6 @@
     "created_at": "2025-09-05T06:08:00.606740"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6706"
-    },
     "id": "points-customer-demo-15-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1708,9 +1342,6 @@
     "created_at": "2025-12-18T06:08:00.606743"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6707"
-    },
     "id": "points-customer-demo-15-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1722,9 +1353,6 @@
     "created_at": "2025-10-14T06:08:00.606746"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6708"
-    },
     "id": "points-customer-demo-15-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1736,9 +1364,6 @@
     "created_at": "2025-12-19T06:08:00.606749"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6709"
-    },
     "id": "points-customer-demo-15-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1750,9 +1375,6 @@
     "created_at": "2025-10-06T06:08:00.606752"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a670a"
-    },
     "id": "points-customer-demo-15-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1764,9 +1386,6 @@
     "created_at": "2025-09-21T06:08:00.606755"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a670b"
-    },
     "id": "points-customer-demo-16-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-16",
@@ -1778,9 +1397,6 @@
     "created_at": "2025-09-05T06:08:00.606758"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a670c"
-    },
     "id": "points-customer-demo-16-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-16",
@@ -1792,9 +1408,6 @@
     "created_at": "2026-02-18T06:08:00.606761"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a670d"
-    },
     "id": "points-customer-demo-16-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-16",
@@ -1806,9 +1419,6 @@
     "created_at": "2026-02-06T06:08:00.606764"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a670e"
-    },
     "id": "points-customer-demo-16-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-16",
@@ -1820,9 +1430,6 @@
     "created_at": "2025-11-01T06:08:00.606767"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a670f"
-    },
     "id": "points-customer-demo-16-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-16",
@@ -1834,9 +1441,6 @@
     "created_at": "2025-09-16T06:08:00.606770"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6710"
-    },
     "id": "points-customer-demo-16-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-16",
@@ -1848,9 +1452,6 @@
     "created_at": "2025-09-02T06:08:00.606774"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6711"
-    },
     "id": "points-customer-demo-16-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-16",
@@ -1862,9 +1463,6 @@
     "created_at": "2026-01-07T06:08:00.606777"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6712"
-    },
     "id": "points-customer-demo-17-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-17",
@@ -1876,9 +1474,6 @@
     "created_at": "2025-11-09T06:08:00.606780"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6713"
-    },
     "id": "points-customer-demo-17-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-17",
@@ -1890,9 +1485,6 @@
     "created_at": "2025-10-01T06:08:00.606783"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6714"
-    },
     "id": "points-customer-demo-17-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-17",
@@ -1904,9 +1496,6 @@
     "created_at": "2025-10-21T06:08:00.606786"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6715"
-    },
     "id": "points-customer-demo-17-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-17",
@@ -1918,9 +1507,6 @@
     "created_at": "2025-10-19T06:08:00.606799"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6716"
-    },
     "id": "points-customer-demo-17-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-17",
@@ -1932,9 +1518,6 @@
     "created_at": "2026-01-28T06:08:00.606803"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6717"
-    },
     "id": "points-customer-demo-17-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-17",
@@ -1946,9 +1529,6 @@
     "created_at": "2025-12-03T06:08:00.606805"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6718"
-    },
     "id": "points-customer-demo-17-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-17",
@@ -1960,9 +1540,6 @@
     "created_at": "2025-11-10T06:08:00.606810"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6719"
-    },
     "id": "points-customer-demo-18-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-18",
@@ -1974,9 +1551,6 @@
     "created_at": "2026-01-17T06:08:00.606813"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a671a"
-    },
     "id": "points-customer-demo-18-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-18",
@@ -1988,9 +1562,6 @@
     "created_at": "2025-09-28T06:08:00.606816"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a671b"
-    },
     "id": "points-customer-demo-18-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-18",
@@ -2002,9 +1573,6 @@
     "created_at": "2025-12-28T06:08:00.606819"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a671c"
-    },
     "id": "points-customer-demo-18-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-18",
@@ -2016,9 +1584,6 @@
     "created_at": "2025-10-18T06:08:00.606822"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a671d"
-    },
     "id": "points-customer-demo-18-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-18",
@@ -2030,9 +1595,6 @@
     "created_at": "2026-02-04T06:08:00.606825"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a671e"
-    },
     "id": "points-customer-demo-18-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-18",
@@ -2044,9 +1606,6 @@
     "created_at": "2025-11-14T06:08:00.606827"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a671f"
-    },
     "id": "points-customer-demo-19-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -2058,9 +1617,6 @@
     "created_at": "2025-10-20T06:08:00.606831"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6720"
-    },
     "id": "points-customer-demo-19-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -2072,9 +1628,6 @@
     "created_at": "2025-09-20T06:08:00.606833"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6721"
-    },
     "id": "points-customer-demo-19-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -2086,9 +1639,6 @@
     "created_at": "2025-09-09T06:08:00.606836"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6722"
-    },
     "id": "points-customer-demo-19-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -2100,9 +1650,6 @@
     "created_at": "2026-01-19T06:08:00.606839"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6723"
-    },
     "id": "points-customer-demo-19-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -2114,9 +1661,6 @@
     "created_at": "2025-09-07T06:08:00.606842"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6724"
-    },
     "id": "points-customer-demo-19-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -2128,9 +1672,6 @@
     "created_at": "2026-01-29T06:08:00.606845"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6725"
-    },
     "id": "points-customer-demo-19-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -2142,9 +1683,6 @@
     "created_at": "2025-08-29T06:08:00.606848"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6726"
-    },
     "id": "points-customer-demo-19-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -2156,9 +1694,6 @@
     "created_at": "2026-01-17T06:08:00.606851"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6727"
-    },
     "id": "points-customer-demo-20-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2170,9 +1705,6 @@
     "created_at": "2025-11-20T06:08:00.606854"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6728"
-    },
     "id": "points-customer-demo-20-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2184,9 +1716,6 @@
     "created_at": "2025-09-17T06:08:00.606857"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6729"
-    },
     "id": "points-customer-demo-20-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2198,9 +1727,6 @@
     "created_at": "2026-01-09T06:08:00.606860"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a672a"
-    },
     "id": "points-customer-demo-20-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2212,9 +1738,6 @@
     "created_at": "2026-01-30T06:08:00.606863"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a672b"
-    },
     "id": "points-customer-demo-20-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2226,9 +1749,6 @@
     "created_at": "2025-09-22T06:08:00.606866"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a672c"
-    },
     "id": "points-customer-demo-20-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2240,9 +1760,6 @@
     "created_at": "2026-01-27T06:08:00.606868"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a672d"
-    },
     "id": "points-customer-demo-20-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2254,9 +1771,6 @@
     "created_at": "2025-10-03T06:08:00.606871"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a672e"
-    },
     "id": "points-customer-demo-20-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2268,9 +1782,6 @@
     "created_at": "2026-01-22T06:08:00.606874"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a672f"
-    },
     "id": "points-customer-demo-20-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2282,9 +1793,6 @@
     "created_at": "2025-10-08T06:08:00.606878"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6730"
-    },
     "id": "points-customer-demo-20-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2296,9 +1804,6 @@
     "created_at": "2025-11-28T06:08:00.606881"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6731"
-    },
     "id": "points-customer-demo-20-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2310,9 +1815,6 @@
     "created_at": "2025-09-20T06:08:00.606883"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6732"
-    },
     "id": "points-customer-demo-20-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2324,9 +1826,6 @@
     "created_at": "2025-09-12T06:08:00.606886"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6733"
-    },
     "id": "points-customer-demo-20-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2338,9 +1837,6 @@
     "created_at": "2025-12-23T06:08:00.606889"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6734"
-    },
     "id": "points-customer-demo-20-13",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -2352,9 +1848,6 @@
     "created_at": "2026-01-18T06:08:00.606891"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6735"
-    },
     "id": "points-customer-demo-21-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -2366,9 +1859,6 @@
     "created_at": "2026-01-12T06:08:00.606895"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6736"
-    },
     "id": "points-customer-demo-21-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -2380,9 +1870,6 @@
     "created_at": "2025-11-13T06:08:00.606898"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6737"
-    },
     "id": "points-customer-demo-21-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -2394,9 +1881,6 @@
     "created_at": "2026-01-16T06:08:00.606902"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6738"
-    },
     "id": "points-customer-demo-21-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -2408,9 +1892,6 @@
     "created_at": "2025-12-30T06:08:00.606904"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6739"
-    },
     "id": "points-customer-demo-21-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -2422,9 +1903,6 @@
     "created_at": "2025-09-15T06:08:00.606907"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a673a"
-    },
     "id": "points-customer-demo-21-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -2436,9 +1914,6 @@
     "created_at": "2025-08-30T06:08:00.606910"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a673b"
-    },
     "id": "points-customer-demo-21-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -2450,9 +1925,6 @@
     "created_at": "2025-11-21T06:08:00.606913"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a673c"
-    },
     "id": "points-customer-demo-21-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -2464,9 +1936,6 @@
     "created_at": "2025-11-06T06:08:00.606916"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a673d"
-    },
     "id": "points-customer-demo-22-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2478,9 +1947,6 @@
     "created_at": "2025-11-12T06:08:00.606920"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a673e"
-    },
     "id": "points-customer-demo-22-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2492,9 +1958,6 @@
     "created_at": "2025-08-29T06:08:00.606923"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a673f"
-    },
     "id": "points-customer-demo-22-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2506,9 +1969,6 @@
     "created_at": "2025-10-27T06:08:00.606926"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6740"
-    },
     "id": "points-customer-demo-22-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2520,9 +1980,6 @@
     "created_at": "2025-12-22T06:08:00.606929"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6741"
-    },
     "id": "points-customer-demo-22-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2534,9 +1991,6 @@
     "created_at": "2025-09-22T06:08:00.606932"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6742"
-    },
     "id": "points-customer-demo-22-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2548,9 +2002,6 @@
     "created_at": "2025-11-06T06:08:00.606934"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6743"
-    },
     "id": "points-customer-demo-22-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2562,9 +2013,6 @@
     "created_at": "2026-01-30T06:08:00.606937"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6744"
-    },
     "id": "points-customer-demo-22-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2576,9 +2024,6 @@
     "created_at": "2026-02-07T06:08:00.606941"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6745"
-    },
     "id": "points-customer-demo-22-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2590,9 +2035,6 @@
     "created_at": "2025-12-15T06:08:00.606943"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6746"
-    },
     "id": "points-customer-demo-22-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2604,9 +2046,6 @@
     "created_at": "2025-10-11T06:08:00.606946"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6747"
-    },
     "id": "points-customer-demo-22-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2618,9 +2057,6 @@
     "created_at": "2025-11-04T06:08:00.606949"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6748"
-    },
     "id": "points-customer-demo-22-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2632,9 +2068,6 @@
     "created_at": "2025-11-29T06:08:00.606952"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6749"
-    },
     "id": "points-customer-demo-22-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2646,9 +2079,6 @@
     "created_at": "2026-02-16T06:08:00.606956"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a674a"
-    },
     "id": "points-customer-demo-22-13",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-22",
@@ -2660,9 +2090,6 @@
     "created_at": "2025-09-29T06:08:00.606958"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a674b"
-    },
     "id": "points-customer-demo-23-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2674,9 +2101,6 @@
     "created_at": "2026-01-07T06:08:00.606963"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a674c"
-    },
     "id": "points-customer-demo-23-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2688,9 +2112,6 @@
     "created_at": "2025-11-14T06:08:00.606966"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a674d"
-    },
     "id": "points-customer-demo-23-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2702,9 +2123,6 @@
     "created_at": "2026-01-29T06:08:00.606969"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a674e"
-    },
     "id": "points-customer-demo-23-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2716,9 +2134,6 @@
     "created_at": "2025-11-08T06:08:00.606972"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a674f"
-    },
     "id": "points-customer-demo-23-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2730,9 +2145,6 @@
     "created_at": "2026-01-11T06:08:00.606974"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6750"
-    },
     "id": "points-customer-demo-23-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2744,9 +2156,6 @@
     "created_at": "2025-09-20T06:08:00.606977"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6751"
-    },
     "id": "points-customer-demo-23-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2758,9 +2167,6 @@
     "created_at": "2025-10-01T06:08:00.606980"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6752"
-    },
     "id": "points-customer-demo-23-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2772,9 +2178,6 @@
     "created_at": "2025-09-30T06:08:00.606983"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6753"
-    },
     "id": "points-customer-demo-23-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2786,9 +2189,6 @@
     "created_at": "2025-10-04T06:08:00.606986"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6754"
-    },
     "id": "points-customer-demo-23-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2800,9 +2200,6 @@
     "created_at": "2026-02-12T06:08:00.606989"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6755"
-    },
     "id": "points-customer-demo-23-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2814,9 +2211,6 @@
     "created_at": "2026-02-10T06:08:00.606991"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6756"
-    },
     "id": "points-customer-demo-23-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2828,9 +2222,6 @@
     "created_at": "2025-12-05T06:08:00.606994"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6757"
-    },
     "id": "points-customer-demo-23-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -2842,9 +2233,6 @@
     "created_at": "2025-11-02T06:08:00.606997"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6758"
-    },
     "id": "points-customer-demo-24-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2856,9 +2244,6 @@
     "created_at": "2025-10-08T06:08:00.607001"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6759"
-    },
     "id": "points-customer-demo-24-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2870,9 +2255,6 @@
     "created_at": "2025-12-29T06:08:00.607004"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a675a"
-    },
     "id": "points-customer-demo-24-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2884,9 +2266,6 @@
     "created_at": "2025-12-03T06:08:00.607007"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a675b"
-    },
     "id": "points-customer-demo-24-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2898,9 +2277,6 @@
     "created_at": "2025-09-15T06:08:00.607010"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a675c"
-    },
     "id": "points-customer-demo-24-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2912,9 +2288,6 @@
     "created_at": "2025-09-12T06:08:00.607012"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a675d"
-    },
     "id": "points-customer-demo-24-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2926,9 +2299,6 @@
     "created_at": "2026-02-20T06:08:00.607015"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a675e"
-    },
     "id": "points-customer-demo-24-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2940,9 +2310,6 @@
     "created_at": "2025-12-17T06:08:00.607019"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a675f"
-    },
     "id": "points-customer-demo-24-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2954,9 +2321,6 @@
     "created_at": "2025-10-29T06:08:00.607022"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6760"
-    },
     "id": "points-customer-demo-24-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2968,9 +2332,6 @@
     "created_at": "2025-09-24T06:08:00.607025"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6761"
-    },
     "id": "points-customer-demo-24-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2982,9 +2343,6 @@
     "created_at": "2025-11-30T06:08:00.607027"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6762"
-    },
     "id": "points-customer-demo-24-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -2996,9 +2354,6 @@
     "created_at": "2026-01-16T06:08:00.607031"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6763"
-    },
     "id": "points-customer-demo-24-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -3010,9 +2365,6 @@
     "created_at": "2025-11-27T06:08:00.607034"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6764"
-    },
     "id": "points-customer-demo-24-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -3024,9 +2376,6 @@
     "created_at": "2025-09-20T06:08:00.607037"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6765"
-    },
     "id": "points-customer-demo-25-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3038,9 +2387,6 @@
     "created_at": "2025-08-31T06:08:00.607041"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6766"
-    },
     "id": "points-customer-demo-25-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3052,9 +2398,6 @@
     "created_at": "2025-12-01T06:08:00.607044"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6767"
-    },
     "id": "points-customer-demo-25-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3066,9 +2409,6 @@
     "created_at": "2025-10-21T06:08:00.607047"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6768"
-    },
     "id": "points-customer-demo-25-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3080,9 +2420,6 @@
     "created_at": "2026-01-06T06:08:00.607050"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6769"
-    },
     "id": "points-customer-demo-25-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3094,9 +2431,6 @@
     "created_at": "2025-12-27T06:08:00.607053"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a676a"
-    },
     "id": "points-customer-demo-25-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3108,9 +2442,6 @@
     "created_at": "2025-10-17T06:08:00.607056"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a676b"
-    },
     "id": "points-customer-demo-25-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3122,9 +2453,6 @@
     "created_at": "2025-10-28T06:08:00.607058"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a676c"
-    },
     "id": "points-customer-demo-25-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3136,9 +2464,6 @@
     "created_at": "2025-09-07T06:08:00.607061"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a676d"
-    },
     "id": "points-customer-demo-25-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3150,9 +2475,6 @@
     "created_at": "2025-12-10T06:08:00.607064"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a676e"
-    },
     "id": "points-customer-demo-25-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3164,9 +2486,6 @@
     "created_at": "2025-09-21T06:08:00.607067"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a676f"
-    },
     "id": "points-customer-demo-25-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3178,9 +2497,6 @@
     "created_at": "2025-10-31T06:08:00.607070"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6770"
-    },
     "id": "points-customer-demo-25-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3192,9 +2508,6 @@
     "created_at": "2025-10-03T06:08:00.607073"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6771"
-    },
     "id": "points-customer-demo-25-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3206,9 +2519,6 @@
     "created_at": "2025-10-09T06:08:00.607076"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6772"
-    },
     "id": "points-customer-demo-25-13",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-25",
@@ -3220,9 +2530,6 @@
     "created_at": "2025-10-29T06:08:00.607079"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6773"
-    },
     "id": "points-customer-demo-26-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-26",
@@ -3234,9 +2541,6 @@
     "created_at": "2025-10-22T06:08:00.607083"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6774"
-    },
     "id": "points-customer-demo-26-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-26",
@@ -3248,9 +2552,6 @@
     "created_at": "2026-02-24T06:08:00.607086"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6775"
-    },
     "id": "points-customer-demo-26-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-26",
@@ -3262,9 +2563,6 @@
     "created_at": "2026-02-15T06:08:00.607089"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6776"
-    },
     "id": "points-customer-demo-26-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-26",
@@ -3276,9 +2574,6 @@
     "created_at": "2025-10-24T06:08:00.607092"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6777"
-    },
     "id": "points-customer-demo-26-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-26",
@@ -3290,9 +2585,6 @@
     "created_at": "2025-11-09T06:08:00.607094"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6778"
-    },
     "id": "points-customer-demo-26-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-26",
@@ -3304,9 +2596,6 @@
     "created_at": "2025-09-24T06:08:00.607097"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6779"
-    },
     "id": "points-customer-demo-26-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-26",
@@ -3318,9 +2607,6 @@
     "created_at": "2026-01-06T06:08:00.607100"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a677a"
-    },
     "id": "points-customer-demo-26-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-26",
@@ -3332,9 +2618,6 @@
     "created_at": "2025-11-27T06:08:00.607103"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a677b"
-    },
     "id": "points-customer-demo-27-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-27",
@@ -3346,9 +2629,6 @@
     "created_at": "2025-12-14T06:08:00.607106"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a677c"
-    },
     "id": "points-customer-demo-27-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-27",
@@ -3360,9 +2640,6 @@
     "created_at": "2025-11-21T06:08:00.607111"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a677d"
-    },
     "id": "points-customer-demo-27-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-27",
@@ -3374,9 +2651,6 @@
     "created_at": "2026-02-13T06:08:00.607113"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a677e"
-    },
     "id": "points-customer-demo-27-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-27",
@@ -3388,9 +2662,6 @@
     "created_at": "2026-01-11T06:08:00.607116"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a677f"
-    },
     "id": "points-customer-demo-27-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-27",
@@ -3402,9 +2673,6 @@
     "created_at": "2026-02-07T06:08:00.607119"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6780"
-    },
     "id": "points-customer-demo-27-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-27",
@@ -3416,9 +2684,6 @@
     "created_at": "2025-10-18T06:08:00.607122"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6781"
-    },
     "id": "points-customer-demo-27-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-27",
@@ -3430,9 +2695,6 @@
     "created_at": "2025-09-02T06:08:00.607125"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6782"
-    },
     "id": "points-customer-demo-28-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3444,9 +2706,6 @@
     "created_at": "2025-12-26T06:08:00.607128"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6783"
-    },
     "id": "points-customer-demo-28-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3458,9 +2717,6 @@
     "created_at": "2025-12-17T06:08:00.607131"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6784"
-    },
     "id": "points-customer-demo-28-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3472,9 +2728,6 @@
     "created_at": "2026-01-16T06:08:00.607133"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6785"
-    },
     "id": "points-customer-demo-28-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3486,9 +2739,6 @@
     "created_at": "2025-10-28T06:08:00.607138"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6786"
-    },
     "id": "points-customer-demo-28-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3500,9 +2750,6 @@
     "created_at": "2026-02-23T06:08:00.607141"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6787"
-    },
     "id": "points-customer-demo-28-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3514,9 +2761,6 @@
     "created_at": "2025-09-29T06:08:00.607144"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6788"
-    },
     "id": "points-customer-demo-28-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3528,9 +2772,6 @@
     "created_at": "2025-12-01T06:08:00.607146"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6789"
-    },
     "id": "points-customer-demo-28-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3542,9 +2783,6 @@
     "created_at": "2025-10-02T06:08:00.607149"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a678a"
-    },
     "id": "points-customer-demo-28-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3556,9 +2794,6 @@
     "created_at": "2025-10-18T06:08:00.607152"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a678b"
-    },
     "id": "points-customer-demo-28-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3570,9 +2805,6 @@
     "created_at": "2026-01-15T06:08:00.607155"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a678c"
-    },
     "id": "points-customer-demo-28-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3584,9 +2816,6 @@
     "created_at": "2025-12-07T06:08:00.607158"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a678d"
-    },
     "id": "points-customer-demo-28-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3598,9 +2827,6 @@
     "created_at": "2026-02-09T06:08:00.607160"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a678e"
-    },
     "id": "points-customer-demo-28-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3612,9 +2838,6 @@
     "created_at": "2026-01-02T06:08:00.607163"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a678f"
-    },
     "id": "points-customer-demo-28-13",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3626,9 +2849,6 @@
     "created_at": "2025-11-03T06:08:00.607166"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6790"
-    },
     "id": "points-customer-demo-28-14",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-28",
@@ -3640,9 +2860,6 @@
     "created_at": "2026-01-13T06:08:00.607169"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6791"
-    },
     "id": "points-customer-demo-29-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-29",
@@ -3654,9 +2871,6 @@
     "created_at": "2025-11-18T06:08:00.607172"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6792"
-    },
     "id": "points-customer-demo-29-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-29",
@@ -3668,9 +2882,6 @@
     "created_at": "2026-01-19T06:08:00.607175"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6793"
-    },
     "id": "points-customer-demo-29-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-29",
@@ -3682,9 +2893,6 @@
     "created_at": "2025-12-25T06:08:00.607178"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6794"
-    },
     "id": "points-customer-demo-29-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-29",
@@ -3696,9 +2904,6 @@
     "created_at": "2025-10-24T06:08:00.607181"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6795"
-    },
     "id": "points-customer-demo-29-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-29",
@@ -3710,9 +2915,6 @@
     "created_at": "2025-11-21T06:08:00.607185"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6796"
-    },
     "id": "points-customer-demo-30-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3724,9 +2926,6 @@
     "created_at": "2025-12-08T06:08:00.607188"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6797"
-    },
     "id": "points-customer-demo-30-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3738,9 +2937,6 @@
     "created_at": "2025-10-29T06:08:00.607191"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6798"
-    },
     "id": "points-customer-demo-30-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3752,9 +2948,6 @@
     "created_at": "2025-10-24T06:08:00.607194"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6799"
-    },
     "id": "points-customer-demo-30-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3766,9 +2959,6 @@
     "created_at": "2025-09-30T06:08:00.607198"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a679a"
-    },
     "id": "points-customer-demo-30-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3780,9 +2970,6 @@
     "created_at": "2025-10-03T06:08:00.607201"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a679b"
-    },
     "id": "points-customer-demo-30-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3794,9 +2981,6 @@
     "created_at": "2025-12-01T06:08:00.607204"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a679c"
-    },
     "id": "points-customer-demo-30-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3808,9 +2992,6 @@
     "created_at": "2025-09-05T06:08:00.607207"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a679d"
-    },
     "id": "points-customer-demo-30-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3822,9 +3003,6 @@
     "created_at": "2025-12-01T06:08:00.607210"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a679e"
-    },
     "id": "points-customer-demo-30-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3836,9 +3014,6 @@
     "created_at": "2025-12-10T06:08:00.607212"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a679f"
-    },
     "id": "points-customer-demo-30-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3850,9 +3025,6 @@
     "created_at": "2025-10-09T06:08:00.607215"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a0"
-    },
     "id": "points-customer-demo-30-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3864,9 +3036,6 @@
     "created_at": "2026-02-05T06:08:00.607218"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a1"
-    },
     "id": "points-customer-demo-30-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3878,9 +3047,6 @@
     "created_at": "2025-10-13T06:08:00.607221"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a2"
-    },
     "id": "points-customer-demo-30-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3892,9 +3058,6 @@
     "created_at": "2025-09-16T06:08:00.607224"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a3"
-    },
     "id": "points-customer-demo-30-13",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",
@@ -3906,9 +3069,6 @@
     "created_at": "2026-02-13T06:08:00.607227"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a4"
-    },
     "id": "points-customer-demo-30-14",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-30",

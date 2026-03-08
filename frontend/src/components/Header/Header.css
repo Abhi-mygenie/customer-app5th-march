@@ -51,6 +51,36 @@
   gap: 15px;
 }
 
+/* Admin Settings Button */
+.admin-settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-white);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-base);
+}
+
+.admin-settings-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.admin-settings-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-btn-text {
+  font-family: var(--font-body);
+}
+
 .header-icon-btn {
   background: none;
   border: none;
@@ -140,6 +170,16 @@
     width: 22px;
     height: 22px;
   }
+
+  .admin-settings-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .admin-settings-btn svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -167,5 +207,13 @@
   .hamburger-btn svg {
     width: 20px;
     height: 20px;
+  }
+
+  .admin-settings-btn {
+    padding: 6px 8px;
+  }
+
+  .admin-btn-text {
+    display: none;
   }
 }

@@ -555,6 +555,8 @@ const buildNormalPayload = (orderData) => {
     subtotal,
     totalToPay,
     orderType,
+    pointsRedeemed = 0,
+    pointsDiscount = 0,
   } = orderData;
 
   const cart      = transformCartItems(cartItems);
@@ -581,7 +583,7 @@ const buildNormalPayload = (orderData) => {
       distance: 1,
       delivery_charge: '0',
       schedule_at: null,
-      discount_amount: 0,
+      discount_amount: pointsDiscount,
       tax_amount: 0,
       order_sub_total_amount: parseFloat(subtotal.toFixed(2)),
       address: '',
@@ -608,7 +610,10 @@ const buildNormalPayload = (orderData) => {
       cust_name: customerName || '',
       cust_email: '',
       estimatedTime: '',
-      discount_type: ''
+      discount_type: pointsRedeemed > 0 ? 'loyalty_points' : '',
+      // Loyalty points redemption
+      points_redeemed: pointsRedeemed,
+      points_discount: pointsDiscount
     }
   };
 };
@@ -637,6 +642,8 @@ const build716Payload = (orderData) => {
     restaurantId,
     subtotal,
     totalToPay,
+    pointsRedeemed = 0,
+    pointsDiscount = 0,
     // totalTax     // ← pre-calculated in ReviewOrder.jsx and passed in
   } = orderData;
 
@@ -677,7 +684,7 @@ const build716Payload = (orderData) => {
       distance: 1,
       delivery_charge: '0',
       schedule_at: null,
-      discount_amount: 0,
+      discount_amount: pointsDiscount,
       tax_amount: rootTaxAmount,                                    //  sum of gst + vat taxes
       order_sub_total_amount: parseFloat(subtotal.toFixed(2)),
       address: '',
@@ -704,7 +711,10 @@ const build716Payload = (orderData) => {
       cust_name: customerName || '',
       cust_email: '',
       estimatedTime: '',
-      discount_type: '',
+      discount_type: pointsRedeemed > 0 ? 'loyalty_points' : '',
+      // Loyalty points redemption
+      points_redeemed: pointsRedeemed,
+      points_discount: pointsDiscount,
       // ─── 716 specific root fields ────────────────────────────────
       total_gst_tax_amount: totalGstTaxAmount,                    
       total_vat_tax_amount: totalVatTaxAmount,                      
@@ -782,3 +792,251 @@ const orderService = {
 };
 
 export default orderService;
+
+/**
+ * Fetch order details for editing
+ * @param {string|number} orderId - Order ID to fetch
+ * @returns {Promise<Object>} Order details with items
+ */
+export const getOrderDetails = async (orderId) => {
+  try {
+    const response = await apiClient.get(ENDPOINTS.GET_ORDER_DETAILS(orderId), {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    // Transform API response to cart-friendly format
+    const orderData = response.data;
+    
+    // Calculate bill summary from items
+    let itemTotal = 0;
+    let totalGst = 0;
+    let totalVat = 0;
+    
+    const previousItems = (orderData.details || []).map(detail => {
+      const unitPrice = parseFloat(detail.unit_price) || 0;
+      const quantity = detail.quantity || 1;
+      const itemPrice = unitPrice * quantity;
+      itemTotal += itemPrice;
+      
+      // Get tax info
+      const taxPercent = parseFloat(detail.food_details?.tax) || 0;
+      const taxType = detail.food_details?.tax_type || 'GST';
+      const itemTax = (itemPrice * taxPercent) / 100;
+      
+      if (taxType === 'GST') totalGst += itemTax;
+      if (taxType === 'VAT') totalVat += itemTax;
+      
+      return {
+        id: detail.id,
+        foodId: detail.food_id,
+        orderId: detail.order_id,
+        quantity: quantity,
+        unitPrice: unitPrice,
+        price: detail.price,
+        item: {
+          id: detail.food_details?.id,
+          name: detail.food_details?.name || 'Unknown Item',
+          description: detail.food_details?.description || '',
+          image: detail.food_details?.image || '',
+          price: detail.food_details?.price || detail.price,
+          veg: detail.food_details?.veg === 1,
+          tax: detail.food_details?.tax || 0,
+          tax_type: detail.food_details?.tax_type || 'GST',
+        },
+        variations: detail.variation || [],
+        add_ons: detail.add_ons || [],
+        foodLevelNotes: detail.food_level_notes || '',
+        foodStatus: detail.food_status,
+        f_order_status: detail.food_status,
+      };
+    });
+
+    // Calculate bill breakdown
+    const cgst = parseFloat((totalGst / 2).toFixed(2));
+    const sgst = parseFloat((totalGst / 2).toFixed(2));
+    const vat = parseFloat(totalVat.toFixed(2));
+    const totalTax = parseFloat((totalGst + totalVat).toFixed(2));
+    const grandTotal = parseFloat((itemTotal + totalTax).toFixed(2));
+
+    return {
+      orderId: orderId,
+      previousItems,
+      tableId: orderData.table_id,
+      tableNo: orderData.table_no,
+      restaurant: orderData.restaurant,
+      deliveryCharge: orderData.delivery_charge,
+      // Bill summary
+      billSummary: {
+        itemTotal: parseFloat(itemTotal.toFixed(2)),
+        discount: 0, // TODO: Get from order if available
+        subtotal: parseFloat(itemTotal.toFixed(2)),
+        cgst,
+        sgst,
+        vat,
+        totalTax,
+        grandTotal,
+      }
+    };
+  } catch (error) {
+    console.error('[OrderService] Failed to fetch order details:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing order with new items (Edit Order feature)
+ * @param {Object} params - Order update parameters
+ * @param {string} params.orderId - Existing order ID
+ * @param {Array} params.cartItems - New items to add to the order
+ * @param {string} params.restaurantId - Restaurant ID
+ * @param {string} params.tableId - Table ID (optional)
+ * @param {string} params.orderType - Order type (dinein/takeaway/delivery)
+ * @param {string} params.paymentType - Payment type (postpaid/prepaid)
+ * @param {string} params.orderNote - Special instructions
+ * @param {string} params.authToken - Authorization token
+ * @returns {Promise<Object>} Updated order response
+ */
+export const updateCustomerOrder = async ({
+  orderId,
+  cartItems,
+  restaurantId,
+  tableId = '0',
+  orderType = 'dinein',
+  paymentType = 'postpaid',
+  orderNote = '',
+  authToken,
+  customerName = '',
+  customerPhone = '',
+  dialCode = '+91',
+}) => {
+  try {
+    // Transform cart items to API format
+    const cart = cartItems.map(cartItem => {
+      // Transform variations
+      let variations = [];
+      if (cartItem.variations && cartItem.variations.length > 0) {
+        // Group variations by name
+        const variationGroups = {};
+        cartItem.variations.forEach(v => {
+          const name = v.variationName || v.name || 'CHOICE OF';
+          if (!variationGroups[name]) {
+            variationGroups[name] = [];
+          }
+          variationGroups[name].push(v.label || v.value);
+        });
+        
+        variations = Object.entries(variationGroups).map(([name, labels]) => ({
+          name: name,
+          values: { label: labels }
+        }));
+      }
+
+      // Transform add-ons
+      const add_on_ids = [];
+      const add_ons = [];
+      const add_on_qtys = [];
+      
+      if (cartItem.add_ons && cartItem.add_ons.length > 0) {
+        cartItem.add_ons.forEach(addon => {
+          if (addon.quantity > 0) {
+            add_on_ids.push(addon.id);
+            add_ons.push({
+              id: addon.id,
+              name: addon.name,
+              price: addon.price
+            });
+            add_on_qtys.push(addon.quantity);
+          }
+        });
+      }
+
+      return {
+        food_id: cartItem.item?.id || cartItem.itemId,
+        food_level_notes: cartItem.cookingInstructions || '',
+        station: cartItem.item?.station || 'KDS',
+        item_campaign_id: null,
+        price: String(cartItem.item?.price || cartItem.totalPrice / cartItem.quantity),
+        variant: '',
+        variations: variations,
+        quantity: cartItem.quantity,
+        add_on_ids: add_on_ids,
+        add_ons: add_ons,
+        add_on_qtys: add_on_qtys
+      };
+    });
+
+    // Build the order data payload
+    const orderData = {
+      order_id: String(orderId),
+      address_id: '',
+      dial_code: dialCode,
+      payment_id: '',
+      payment_type: paymentType,
+      delivery_charge: '0',
+      fcm_token: '',
+      otp: '',
+      pincode: '',
+      cust_email: '',
+      table_id: String(tableId),
+      cart: cart,
+      coupon_discount_amount: 0,
+      distance: 1,
+      coupon_discount_title: '',
+      cust_name: customerName,
+      cust_phone: customerPhone,
+      schedule_at: null,
+      order_amount: 0,
+      order_note: orderNote,
+      order_type: orderType,
+      payment_method: 'cash_on_delivery',
+      coupon_code: '',
+      restaurant_id: String(restaurantId),
+      address: '',
+      latitude: '',
+      longitude: '',
+      address_type: '',
+      contact_person_name: '',
+      contact_person_number: '',
+      discount_amount: 0,
+      tax_amount: 0,
+      order_sub_total_amount: 0,
+      road: '',
+      house: '',
+      floor: '',
+      dm_tips: '',
+      estimatedTime: '',
+      subscription_order: '0',
+      subscription_type: 'daily',
+      subscription_quantity: '1',
+      subscription_days: [],
+      subscription_start_at: '',
+      subscription_end_at: '',
+      discount_type: ''
+    };
+
+    // Create FormData with 'data' field as JSON string
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(orderData));
+
+    // Make API call
+    const response = await apiClient.post(
+      `${process.env.REACT_APP_API_BASE_URL || 'https://preprod.mygenie.online/api/v1'}/customer/order/update-customer-order`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'X-localization': 'en',
+          'zoneId': '3',
+          'Content-Type': 'multipart/form-data',
+        }
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('[OrderService] Failed to update customer order:', error);
+    throw error;
+  }
+};

@@ -15,7 +15,8 @@ const MenuItem = ({
   onAddToCart,
   onIncrement,
   onDecrement,
-  currentTimeInSeconds = 0
+  currentTimeInSeconds = 0,
+  isOnlineOrderEnabled = true
 }) => {
   const shouldTruncate = item.description && item.description.length > descriptionLimit;
   const displayDescription = isExpanded || !shouldTruncate
@@ -193,14 +194,14 @@ const MenuItem = ({
             </div>
           )}
 
-          {/* Show Quantity Selector if item is in cart, otherwise show ADD button (only if available) */}
+          {/* Show Quantity Selector if item is in cart, otherwise show ADD button (only if available and online order enabled) */}
           {isInCart ? (
             <QuantitySelector
               quantity={quantity}
               onIncrement={onIncrement}
               onDecrement={onDecrement}
             />
-          ) : isAvailable ? (
+          ) : isAvailable && isOnlineOrderEnabled ? (
             <button className="add-btn" onClick={onAddToCart}>
               ADD
             </button>

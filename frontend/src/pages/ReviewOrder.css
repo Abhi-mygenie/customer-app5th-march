@@ -873,6 +873,21 @@
   align-items: center;
 }
 
+/* Previous order row in edit mode */
+.price-row-previous {
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed var(--border-light, #ddd);
+}
+
+.price-row-previous .price-label {
+  color: var(--text-tertiary, #888);
+}
+
+.price-row-previous .price-value {
+  color: var(--text-tertiary, #888);
+}
+
 .price-label {
   font-family: var(--font-body);
   font-size: var(--font-size-sm);
@@ -945,12 +960,9 @@
   opacity: 0.9;
 }
 
-/* Divider inside price card */
+/* Divider inside price card - using orange line */
 .price-divider {
-  height: 1px;
-  background: var(--border-dark);
-  margin: var(--spacing-xs) 0;
-  border-style: dashed;
+  display: none; /* Hidden - using orange line from total row border */
 }
 
 /* Sub rows for taxes */
@@ -975,6 +987,27 @@
   color: var(--text-success);
 }
 
+/* Loyalty applied styling */
+.price-loyalty-applied {
+  color: #16a34a;
+  font-weight: var(--font-weight-semibold);
+}
+
+.price-inline-btn-remove {
+  background: #ef4444;
+}
+
+.price-inline-btn-remove:hover {
+  background: #dc2626;
+}
+
+/* Subtotal row after discounts */
+.price-row-subtotal {
+  padding-top: var(--spacing-xs);
+  border-top: 1px dashed var(--border-secondary);
+  margin-top: var(--spacing-xs);
+}
+
 /* Total row */
 .price-row-total {
   padding-top: var(--spacing-xs);
@@ -996,3 +1029,20 @@
   color: var(--color-primary);
 }
 
+
+/* Online Order Disabled Message */
+.online-order-disabled-message {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+.online-order-disabled-message p {
+  margin: 0;
+  color: #856404;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}

@@ -1,8 +1,5 @@
 [
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6686"
-    },
     "id": "settings-demo-user-restaurant",
     "user_id": "demo-user-restaurant",
     "points_per_rupee": 1,
@@ -26,9 +23,6 @@
     "updated_at": "2026-02-25T06:08:00.614849"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6687"
-    },
     "id": "1b502362-4a55-42de-98b9-f5e6597693b4",
     "user_id": "pos_0001_restaurant_478",
     "min_order_value": 100.0,
@@ -64,9 +58,6 @@
     "feedback_bonus_points": 25
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6688"
-    },
     "id": "c80413ef-8b5e-4dea-996a-086f180ccd8c",
     "user_id": "pos_0001_restaurant_689",
     "min_order_value": 100.0,
@@ -102,9 +93,6 @@
     "feedback_bonus_points": 25
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6689"
-    },
     "id": "c03030a6-7256-4643-9fe2-685f9d21c5fd",
     "user_id": "pos_0001_restaurant_634",
     "min_order_value": 100.0,
@@ -140,9 +128,6 @@
     "feedback_bonus_points": 25
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a668a"
-    },
     "id": "89bb4002-d854-4954-8a61-0ebcd8a8b4f4",
     "user_id": "f945aca7-d44a-4da5-afb5-99826e57eda1",
     "min_order_value": 100.0,
@@ -178,9 +163,6 @@
     "feedback_bonus_points": 25
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a668b"
-    },
     "id": "7e36c136-de17-41e2-b97a-f50af43274f9",
     "user_id": "pos_0001_restaurant_621",
     "min_order_value": 100.0,
@@ -216,9 +198,6 @@
     "feedback_bonus_points": 25
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a668c"
-    },
     "id": "33dbe1b8-d6f4-48f0-9263-85e0d25a64dc",
     "user_id": "pos_0001_restaurant_703",
     "min_order_value": 100.0,

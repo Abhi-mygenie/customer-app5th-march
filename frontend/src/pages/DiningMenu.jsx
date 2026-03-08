@@ -13,12 +13,15 @@ const DiningMenu = () => {
   const {restaurantId }= useRestaurantId();
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Fetch stations from API
-  const { stations, loading, error, errorMessage } = useStations(restaurantId);
-  
-  // Fetch restaurant details for dynamic header
+  // Fetch restaurant details FIRST to get numeric ID
   const { restaurant, loading: restaurantLoading, isFetching: restaurantFetching } = useRestaurantDetails(restaurantId);
   const { logoUrl: configLogoUrl, phone: configPhone } = useRestaurantConfig();
+  
+  // Use numeric ID from restaurant-info response, fallback to restaurantId
+  const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
+  
+  // Fetch stations from API (uses numeric ID)
+  const { stations, loading, error, errorMessage } = useStations(numericRestaurantId);
 
   // Update current time every minute for real-time availability
   useEffect(() => {

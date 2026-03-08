@@ -1,8 +1,5 @@
 [
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6675"
-    },
     "id": "feedback-demo-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -13,9 +10,6 @@
     "created_at": "2026-01-12T06:08:00.615396"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6676"
-    },
     "id": "feedback-demo-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -26,9 +20,6 @@
     "created_at": "2026-02-17T06:08:00.615401"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6677"
-    },
     "id": "feedback-demo-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -39,9 +30,6 @@
     "created_at": "2026-02-03T06:08:00.615405"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6678"
-    },
     "id": "feedback-demo-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -52,9 +40,6 @@
     "created_at": "2025-12-30T06:08:00.615407"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6679"
-    },
     "id": "feedback-demo-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-7",
@@ -65,9 +50,6 @@
     "created_at": "2026-02-18T06:08:00.615410"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a667a"
-    },
     "id": "feedback-demo-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -78,9 +60,6 @@
     "created_at": "2026-01-12T06:08:00.615413"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a667b"
-    },
     "id": "feedback-demo-10",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -91,9 +70,6 @@
     "created_at": "2026-01-14T06:08:00.615416"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a667c"
-    },
     "id": "feedback-demo-11",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-11",
@@ -104,9 +80,6 @@
     "created_at": "2026-01-25T06:08:00.615418"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a667d"
-    },
     "id": "feedback-demo-12",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -117,9 +90,6 @@
     "created_at": "2026-02-13T06:08:00.615421"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a667e"
-    },
     "id": "feedback-demo-13",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -130,9 +100,6 @@
     "created_at": "2026-02-01T06:08:00.615423"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a667f"
-    },
     "id": "feedback-demo-14",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-14",
@@ -143,9 +110,6 @@
     "created_at": "2026-02-17T06:08:00.615426"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6680"
-    },
     "id": "feedback-demo-15",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -156,9 +120,6 @@
     "created_at": "2026-01-26T06:08:00.615428"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6681"
-    },
     "id": "feedback-demo-16",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-16",
@@ -169,9 +130,6 @@
     "created_at": "2026-01-06T06:08:00.615431"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6682"
-    },
     "id": "feedback-demo-20",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-20",
@@ -182,9 +140,6 @@
     "created_at": "2026-02-09T06:08:00.615433"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6683"
-    },
     "id": "feedback-demo-21",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-21",
@@ -195,9 +150,6 @@
     "created_at": "2026-01-16T06:08:00.615436"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6684"
-    },
     "id": "feedback-demo-23",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-23",
@@ -208,9 +160,6 @@
     "created_at": "2026-01-06T06:08:00.615438"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6685"
-    },
     "id": "feedback-demo-24",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-24",
@@ -219,101 +168,5 @@
     "rating": 3,
     "comments": "Excellent ambiance, loved the experience",
     "created_at": "2026-01-06T06:08:00.615441"
-  },
-  {
-    "_id": {
-      "$oid": "69a99a81becb2be454839cf2"
-    },
-    "id": "a5565e49-7948-45da-955c-a9b69d08365d",
-    "restaurant_id": "478",
-    "name": "Test User",
-    "email": "test@example.com",
-    "rating": 5,
-    "message": "Excellent food and service!",
-    "created_at": "2026-03-05T15:00:17.658316+00:00"
-  },
-  {
-    "_id": {
-      "$oid": "69a99aab232973be46233c79"
-    },
-    "id": "8bfc1358-201e-45b6-91c9-9aed58a84ff2",
-    "restaurant_id": "478",
-    "name": "TEST_Feedback User",
-    "email": "test_feedback@example.com",
-    "rating": 5,
-    "message": "TEST_Great experience!",
-    "created_at": "2026-03-05T15:00:59.372202+00:00"
-  },
-  {
-    "_id": {
-      "$oid": "69a99aab232973be46233c7a"
-    },
-    "id": "239f2c1e-9837-4bbb-8151-d17c1a8240d5",
-    "restaurant_id": "478",
-    "name": "TEST_Anonymous User",
-    "email": null,
-    "rating": 4,
-    "message": "TEST_Good food!",
-    "created_at": "2026-03-05T15:00:59.490108+00:00"
-  },
-  {
-    "_id": {
-      "$oid": "69a99aab232973be46233c7b"
-    },
-    "id": "0acd1474-87db-484d-add8-a853b7daab10",
-    "restaurant_id": "689",
-    "name": "TEST_Kunafa Lover",
-    "email": "kunafa@test.com",
-    "rating": 5,
-    "message": "TEST_Best kunafa ever!",
-    "created_at": "2026-03-05T15:00:59.827953+00:00"
-  },
-  {
-    "_id": {
-      "$oid": "69a99ac44b743003d97e47ee"
-    },
-    "id": "5c4764b7-215b-4fcc-86bd-c0ef54f74461",
-    "restaurant_id": "478",
-    "name": "TEST_Feedback User",
-    "email": "test_feedback@example.com",
-    "rating": 5,
-    "message": "TEST_Great experience!",
-    "created_at": "2026-03-05T15:01:24.057915+00:00"
-  },
-  {
-    "_id": {
-      "$oid": "69a99ac44b743003d97e47ef"
-    },
-    "id": "a4325a6f-5e1f-457b-af60-29f12f70500f",
-    "restaurant_id": "478",
-    "name": "TEST_Anonymous User",
-    "email": null,
-    "rating": 4,
-    "message": "TEST_Good food!",
-    "created_at": "2026-03-05T15:01:24.178911+00:00"
-  },
-  {
-    "_id": {
-      "$oid": "69a99ac44b743003d97e47f0"
-    },
-    "id": "48d8596a-9b9e-4db3-946b-fdb6b0f377ce",
-    "restaurant_id": "689",
-    "name": "TEST_Kunafa Lover",
-    "email": "kunafa@test.com",
-    "rating": 5,
-    "message": "TEST_Best kunafa ever!",
-    "created_at": "2026-03-05T15:01:24.541644+00:00"
-  },
-  {
-    "_id": {
-      "$oid": "69a99aff4b743003d97e47f1"
-    },
-    "id": "d676d853-64df-4744-a74c-b98988dc3401",
-    "restaurant_id": "478",
-    "name": "Playwright Test User",
-    "email": "playwright@test.com",
-    "rating": 4,
-    "message": "This is a test feedback from Playwright automation. Great experience!",
-    "created_at": "2026-03-05T15:02:23.213572+00:00"
   }
 ]

@@ -11,7 +11,7 @@
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
   animation: slideUp 0.3s ease-out;
   border-top: 2px solid var(--color-primary-dark);
-  border-radius: 20px 20px 0 0; /* Rounded top corners */
+  border-radius: var(--radius-container-xl, 20px) var(--radius-container-xl, 20px) 0 0; /* Rounded top corners */
   box-sizing: border-box;
 }
 
@@ -65,7 +65,7 @@
   background-color: var(--text-white);
   color: var(--color-primary);
   border: 2px solid var(--text-white);
-  border-radius: 20px; /* Match cart bar border radius */
+  border-radius: var(--radius-button, 20px); /* Match cart bar border radius */
   font-family: var(--font-body);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
@@ -101,7 +101,7 @@ body.cart-bar-visible {
 /* Responsive Design */
 @media (max-width: 480px) {
   .cart-bar {
-    border-radius: 20px 20px 0 0; /* Maintain border radius on mobile */
+    border-radius: var(--radius-container-xl, 20px) var(--radius-container-xl, 20px) 0 0; /* Maintain border radius on mobile */
   }
 
   .cart-bar-content {
@@ -121,7 +121,7 @@ body.cart-bar-visible {
   .cart-bar-view-btn {
     padding: var(--spacing-xs) var(--spacing-lg);
     font-size: var(--font-size-sm);
-    border-radius: 20px; /* Match cart bar border radius */
+    border-radius: var(--radius-button, 20px); /* Match cart bar border radius */
     min-height: 35px; /* Smaller on mobile */
   }
 
@@ -132,7 +132,7 @@ body.cart-bar-visible {
 
 @media (max-width: 375px) {
   .cart-bar {
-    border-radius: 20px 20px 0 0; /* Maintain border radius on smaller mobile */
+    border-radius: var(--radius-container-xl, 20px) var(--radius-container-xl, 20px) 0 0; /* Maintain border radius on smaller mobile */
   }
 
   .cart-bar-content {
@@ -151,7 +151,7 @@ body.cart-bar-visible {
   .cart-bar-view-btn {
     padding: var(--spacing-xs) var(--spacing-md);
     font-size: var(--font-size-xs);
-    border-radius: 20px; /* Match cart bar border radius */
+    border-radius: var(--radius-button, 20px); /* Match cart bar border radius */
     min-height: 32px; /* Smaller on very small screens */
   }
 

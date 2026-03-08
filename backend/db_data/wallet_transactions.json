@@ -1,8 +1,5 @@
 [
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67a9"
-    },
     "id": "wallet-customer-demo-1-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -14,9 +11,6 @@
     "created_at": "2026-01-09T06:08:00.609174"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67aa"
-    },
     "id": "wallet-customer-demo-1-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -28,9 +22,6 @@
     "created_at": "2026-02-06T06:08:00.609181"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ab"
-    },
     "id": "wallet-customer-demo-1-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -42,9 +33,6 @@
     "created_at": "2026-01-04T06:08:00.609184"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ac"
-    },
     "id": "wallet-customer-demo-1-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -56,9 +44,6 @@
     "created_at": "2025-12-19T06:08:00.609188"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ad"
-    },
     "id": "wallet-customer-demo-1-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -70,9 +55,6 @@
     "created_at": "2026-02-16T06:08:00.609191"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ae"
-    },
     "id": "wallet-customer-demo-1-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -84,9 +66,6 @@
     "created_at": "2026-02-09T06:08:00.609194"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67af"
-    },
     "id": "wallet-customer-demo-1-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -98,9 +77,6 @@
     "created_at": "2025-12-23T06:08:00.609197"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b0"
-    },
     "id": "wallet-customer-demo-1-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-1",
@@ -112,9 +88,6 @@
     "created_at": "2026-01-10T06:08:00.609201"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b1"
-    },
     "id": "wallet-customer-demo-3-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -126,9 +99,6 @@
     "created_at": "2025-12-10T06:08:00.609206"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b2"
-    },
     "id": "wallet-customer-demo-3-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -140,9 +110,6 @@
     "created_at": "2026-02-24T06:08:00.609209"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b3"
-    },
     "id": "wallet-customer-demo-3-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -154,9 +121,6 @@
     "created_at": "2025-12-22T06:08:00.609212"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b4"
-    },
     "id": "wallet-customer-demo-3-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -168,9 +132,6 @@
     "created_at": "2025-11-07T06:08:00.609215"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b5"
-    },
     "id": "wallet-customer-demo-3-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -182,9 +143,6 @@
     "created_at": "2025-11-15T06:08:00.609220"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b6"
-    },
     "id": "wallet-customer-demo-3-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -196,9 +154,6 @@
     "created_at": "2026-01-14T06:08:00.609223"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b7"
-    },
     "id": "wallet-customer-demo-3-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -210,9 +165,6 @@
     "created_at": "2025-11-13T06:08:00.609226"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b8"
-    },
     "id": "wallet-customer-demo-3-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -224,9 +176,6 @@
     "created_at": "2026-01-03T06:08:00.609229"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67b9"
-    },
     "id": "wallet-customer-demo-3-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-3",
@@ -238,9 +187,6 @@
     "created_at": "2025-11-21T06:08:00.609232"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ba"
-    },
     "id": "wallet-customer-demo-4-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -252,9 +198,6 @@
     "created_at": "2025-12-15T06:08:00.609235"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67bb"
-    },
     "id": "wallet-customer-demo-4-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -266,9 +209,6 @@
     "created_at": "2026-02-12T06:08:00.609238"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67bc"
-    },
     "id": "wallet-customer-demo-4-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-4",
@@ -280,9 +220,6 @@
     "created_at": "2025-11-21T06:08:00.609241"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67bd"
-    },
     "id": "wallet-customer-demo-5-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -294,9 +231,6 @@
     "created_at": "2026-01-30T06:08:00.609245"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67be"
-    },
     "id": "wallet-customer-demo-5-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -308,9 +242,6 @@
     "created_at": "2025-11-25T06:08:00.609248"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67bf"
-    },
     "id": "wallet-customer-demo-5-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -322,9 +253,6 @@
     "created_at": "2025-11-25T06:08:00.609250"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c0"
-    },
     "id": "wallet-customer-demo-5-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -336,9 +264,6 @@
     "created_at": "2025-11-19T06:08:00.609253"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c1"
-    },
     "id": "wallet-customer-demo-5-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -350,9 +275,6 @@
     "created_at": "2025-12-16T06:08:00.609256"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c2"
-    },
     "id": "wallet-customer-demo-5-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -364,9 +286,6 @@
     "created_at": "2026-02-12T06:08:00.609259"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c3"
-    },
     "id": "wallet-customer-demo-5-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -378,9 +297,6 @@
     "created_at": "2026-01-14T06:08:00.609262"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c4"
-    },
     "id": "wallet-customer-demo-5-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -392,9 +308,6 @@
     "created_at": "2026-02-08T06:08:00.609266"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c5"
-    },
     "id": "wallet-customer-demo-5-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -406,9 +319,6 @@
     "created_at": "2026-02-21T06:08:00.609269"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c6"
-    },
     "id": "wallet-customer-demo-5-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-5",
@@ -420,9 +330,6 @@
     "created_at": "2026-01-10T06:08:00.609272"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c7"
-    },
     "id": "wallet-customer-demo-6-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -434,9 +341,6 @@
     "created_at": "2026-01-23T06:08:00.609276"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c8"
-    },
     "id": "wallet-customer-demo-6-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -448,9 +352,6 @@
     "created_at": "2026-02-07T06:08:00.609279"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67c9"
-    },
     "id": "wallet-customer-demo-6-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -462,9 +363,6 @@
     "created_at": "2025-12-07T06:08:00.609282"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ca"
-    },
     "id": "wallet-customer-demo-6-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -476,9 +374,6 @@
     "created_at": "2026-02-02T06:08:00.609285"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67cb"
-    },
     "id": "wallet-customer-demo-6-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -490,9 +385,6 @@
     "created_at": "2026-01-30T06:08:00.609287"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67cc"
-    },
     "id": "wallet-customer-demo-6-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -504,9 +396,6 @@
     "created_at": "2025-12-21T06:08:00.609290"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67cd"
-    },
     "id": "wallet-customer-demo-6-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -518,9 +407,6 @@
     "created_at": "2026-02-01T06:08:00.609293"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ce"
-    },
     "id": "wallet-customer-demo-6-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-6",
@@ -532,9 +418,6 @@
     "created_at": "2026-02-01T06:08:00.609297"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67cf"
-    },
     "id": "wallet-customer-demo-8-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -546,9 +429,6 @@
     "created_at": "2025-11-24T06:08:00.609300"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d0"
-    },
     "id": "wallet-customer-demo-8-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -560,9 +440,6 @@
     "created_at": "2026-01-29T06:08:00.609303"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d1"
-    },
     "id": "wallet-customer-demo-8-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -574,9 +451,6 @@
     "created_at": "2026-01-04T06:08:00.609306"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d2"
-    },
     "id": "wallet-customer-demo-8-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-8",
@@ -588,9 +462,6 @@
     "created_at": "2026-01-12T06:08:00.609309"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d3"
-    },
     "id": "wallet-customer-demo-9-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -602,9 +473,6 @@
     "created_at": "2026-01-02T06:08:00.609313"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d4"
-    },
     "id": "wallet-customer-demo-9-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -616,9 +484,6 @@
     "created_at": "2025-12-03T06:08:00.609315"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d5"
-    },
     "id": "wallet-customer-demo-9-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -630,9 +495,6 @@
     "created_at": "2025-11-03T06:08:00.609318"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d6"
-    },
     "id": "wallet-customer-demo-9-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -644,9 +506,6 @@
     "created_at": "2026-02-14T06:08:00.609321"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d7"
-    },
     "id": "wallet-customer-demo-9-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -658,9 +517,6 @@
     "created_at": "2025-11-30T06:08:00.609325"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d8"
-    },
     "id": "wallet-customer-demo-9-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -672,9 +528,6 @@
     "created_at": "2025-12-03T06:08:00.609328"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67d9"
-    },
     "id": "wallet-customer-demo-9-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -686,9 +539,6 @@
     "created_at": "2026-02-04T06:08:00.609331"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67da"
-    },
     "id": "wallet-customer-demo-9-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -700,9 +550,6 @@
     "created_at": "2025-12-29T06:08:00.609333"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67db"
-    },
     "id": "wallet-customer-demo-9-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -714,9 +561,6 @@
     "created_at": "2026-02-24T06:08:00.609336"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67dc"
-    },
     "id": "wallet-customer-demo-9-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-9",
@@ -728,9 +572,6 @@
     "created_at": "2026-01-25T06:08:00.609339"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67dd"
-    },
     "id": "wallet-customer-demo-10-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -742,9 +583,6 @@
     "created_at": "2025-11-13T06:08:00.609343"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67de"
-    },
     "id": "wallet-customer-demo-10-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -756,9 +594,6 @@
     "created_at": "2025-10-28T06:08:00.609346"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67df"
-    },
     "id": "wallet-customer-demo-10-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -770,9 +605,6 @@
     "created_at": "2025-11-25T06:08:00.609349"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e0"
-    },
     "id": "wallet-customer-demo-10-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -784,9 +616,6 @@
     "created_at": "2025-11-28T06:08:00.609351"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e1"
-    },
     "id": "wallet-customer-demo-10-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -798,9 +627,6 @@
     "created_at": "2026-01-22T06:08:00.609354"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e2"
-    },
     "id": "wallet-customer-demo-10-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -812,9 +638,6 @@
     "created_at": "2026-01-19T06:08:00.609357"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e3"
-    },
     "id": "wallet-customer-demo-10-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -826,9 +649,6 @@
     "created_at": "2026-01-18T06:08:00.609360"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e4"
-    },
     "id": "wallet-customer-demo-10-7",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -840,9 +660,6 @@
     "created_at": "2026-02-09T06:08:00.609363"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e5"
-    },
     "id": "wallet-customer-demo-10-8",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -854,9 +671,6 @@
     "created_at": "2026-01-15T06:08:00.609366"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e6"
-    },
     "id": "wallet-customer-demo-10-9",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-10",
@@ -868,9 +682,6 @@
     "created_at": "2025-12-04T06:08:00.609369"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e7"
-    },
     "id": "wallet-customer-demo-12-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -882,9 +693,6 @@
     "created_at": "2026-02-21T06:08:00.609372"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e8"
-    },
     "id": "wallet-customer-demo-12-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -896,9 +704,6 @@
     "created_at": "2026-01-21T06:08:00.609376"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67e9"
-    },
     "id": "wallet-customer-demo-12-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -910,9 +715,6 @@
     "created_at": "2025-11-02T06:08:00.609379"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ea"
-    },
     "id": "wallet-customer-demo-12-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -924,9 +726,6 @@
     "created_at": "2025-11-01T06:08:00.609382"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67eb"
-    },
     "id": "wallet-customer-demo-12-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -938,9 +737,6 @@
     "created_at": "2026-02-20T06:08:00.609386"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ec"
-    },
     "id": "wallet-customer-demo-12-5",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -952,9 +748,6 @@
     "created_at": "2026-02-07T06:08:00.609389"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ed"
-    },
     "id": "wallet-customer-demo-12-6",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-12",
@@ -966,9 +759,6 @@
     "created_at": "2025-11-17T06:08:00.609392"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ee"
-    },
     "id": "wallet-customer-demo-13-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -980,9 +770,6 @@
     "created_at": "2026-01-04T06:08:00.609395"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67ef"
-    },
     "id": "wallet-customer-demo-13-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -994,9 +781,6 @@
     "created_at": "2025-11-28T06:08:00.609398"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f0"
-    },
     "id": "wallet-customer-demo-13-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-13",
@@ -1008,9 +792,6 @@
     "created_at": "2026-01-23T06:08:00.609401"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f1"
-    },
     "id": "wallet-customer-demo-15-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1022,9 +803,6 @@
     "created_at": "2025-11-19T06:08:00.609404"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f2"
-    },
     "id": "wallet-customer-demo-15-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1036,9 +814,6 @@
     "created_at": "2025-11-18T06:08:00.609407"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f3"
-    },
     "id": "wallet-customer-demo-15-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1050,9 +825,6 @@
     "created_at": "2025-12-07T06:08:00.609410"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f4"
-    },
     "id": "wallet-customer-demo-15-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-15",
@@ -1064,9 +836,6 @@
     "created_at": "2026-02-11T06:08:00.609413"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f5"
-    },
     "id": "wallet-customer-demo-19-0",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -1078,9 +847,6 @@
     "created_at": "2026-01-24T06:08:00.609416"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f6"
-    },
     "id": "wallet-customer-demo-19-1",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -1092,9 +858,6 @@
     "created_at": "2025-11-07T06:08:00.609419"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f7"
-    },
     "id": "wallet-customer-demo-19-2",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -1106,9 +869,6 @@
     "created_at": "2026-02-22T06:08:00.609422"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f8"
-    },
     "id": "wallet-customer-demo-19-3",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",
@@ -1120,9 +880,6 @@
     "created_at": "2026-02-07T06:08:00.609425"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a67f9"
-    },
     "id": "wallet-customer-demo-19-4",
     "user_id": "demo-user-restaurant",
     "customer_id": "customer-demo-19",

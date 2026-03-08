@@ -1,60 +1,94 @@
 <analysis>**original_problem_statement:**
-The user's initial request was to set up a restaurant application. Throughout the project, the user requested several features, bug fixes, and UI/UX improvements, including:
-1.  Fixing content mismatch and various CSS/layout issues (overlapping icons, inconsistent page widths, broken sticky elements, truncated text).
-2.  Implementing configurable forms and sections (customer capture, footer info).
-3.  Redesigning UI elements (price breakdown, order status page).
-4.  Adding a header to the order success page for better navigation.
-5.  Refactoring the Admin Settings page for better organization by grouping related settings into nested tabs.
-6.  Implementing a feature to show estimated preparation and serving times on the order status page.
-7.  Verifying that the database export script correctly captures all configuration changes.
+1.  Pull the repository from .
+2.  Connect to the remote MongoDB instance: .
+3.  Fix incorrect item status display on the order details page.
+4.  Fix admin panel settings not reflecting on the customer-facing app.
+5.  Fix customer phone number not persisting when editing an order.
+6.  Fix UI issues with the phone number input field.
+7.  Implement a loyalty points redemption feature.
+8.  Fix incorrect price breakdown and tax calculation on the review and order success pages.
+9.  Add visibility settings in the admin panel for Loyalty, Coupon, and Wallet features.
+10. Change the default visibility of the Hamburger Menu to OFF.
+11. Add a new Custom Text tab in admin settings to allow customization of UI text, starting with the Browse Menu button on the landing page.
+12. Fix a bug where the custom Browse Menu button text was not saving to the database.
+13. Fix a UI bug where the tagline was appearing twice on the landing page.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The project is a full-stack restaurant customer application with a React frontend, FastAPI backend, and MongoDB database.
-
-The agent has recently completed a major refactoring of the Admin Settings page. Previously separate tabs for Landing Page, Menu, and Review Order visibility settings have been consolidated into a single Visibility tab with nested sub-tabs. The Extra Info settings were also moved from a top-level tab into a sub-tab under the Content section.
-
-Additionally, the Order Success page has been improved by adding a navigation header, correcting button colors to match brand settings, and adding a placeholder UI for displaying estimated order times, which is dependent on a future backend update.
+A full-stack customer ordering application for restaurants, connected to a remote MongoDB. The frontend (React) and backend (FastAPI) are functional. The application features user-facing order flows and an admin panel for configuration. In this session, the admin panel was extended with more granular UI control, including toggles for major features (Loyalty, Coupons, Wallet) and a new system for customizing UI text labels.
 
 **Last working item**:
--   Last item agent was working: The user asked to confirm if the database export script () was up-to-date to include all the recent configuration changes (like the new visibility toggles). The agent analyzed the script, confirmed it dynamically exports all collections, and successfully ran it to verify its function.
--   Status: USER VERIFICATION PENDING
--   Agent Testing Done: Y
--   Which testing method agent to use? manual testing by curl
--   User Testing Done: N
+- **Last item agent was working:** Investigating and answering a user query about the origin of the Welcome to 18march! text on the landing page. The agent correctly identified it comes from the Welcome Message field in the Admin Settings (Branding tab). This was a query, not an implementation task. The last *implementation* was fixing a bug where the tagline appeared twice on the landing page.
+- **Status:** USER VERIFICATION PENDING
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** frontend testing agent. The agent should be instructed to take a screenshot of the landing page for restaurant ID  to confirm the Fine Dining Experience text appears only once.
+- **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-None.
+- **Issue 1 (P0):** Verify the fix for the duplicate tagline on the landing page.
+  - **Issue Detail:**
+    - **Attempted fixes:** The agent modified  to conditionally render the second instance of the tagline only if its content differs from the first instance, preventing duplication.
+    - **Next debug checklist:**
+      1. Navigate to the landing page for restaurant ID .
+      2. Verify that the text Fine Dining Experience appears only once.
+    - **Why fix this issue and what will be achieved with the fix?** To correct a visual bug and improve the professionalism of the landing page.
+    - **Status:** USER VERIFICATION PENDING
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend
+    - **Blocked on other issue:** None
+
+- **Issue 2 (P1):** Confirm the custom Browse Menu button text saves correctly.
+  - **Issue Detail:**
+    - **Attempted fixes:** The user reported that the custom text wasn't saving. The agent diagnosed the issue as a missing field in the backend Pydantic model ( in ) and added . The agent then instructed the user to try saving again.
+    - **Next debug checklist:**
+      1. Ask the user to confirm they have saved the setting again from the admin panel for restaurant ID .
+      2. Query the  collection in MongoDB for  and check if the  field has the new value (e.g., order now).
+      3. If saved, check the landing page for restaurant 689 to see if the button text has updated.
+    - **Why fix this issue and what will be achieved with the fix?** To ensure the new custom text feature is fully functional from UI to database.
+    - **Status:** USER VERIFICATION PENDING
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Both
+    - **Blocked on other issue:** None
+
+- **Issue 3 (P2):** Verify GST calculation for Edit Order flow.
+  - **Issue Detail:**
+    - **Attempted fixes:** (From previous session) The agent modified  to combine  (new items) and  (existing items) before calculating the total tax.
+    - **Next debug checklist:** Ask the user to perform the following steps and confirm the result:
+      1. Go to an order success page.
+      2. Click EDIT ORDER.
+      3. Add a new item to the cart.
+      4. Navigate to the Review Order page.
+      5. Check if the GST amount is calculated based on the total value of ALL items (previous + new).
+    - **Why fix this issue and what will be achieved with the fix?** To ensure accurate billing when customers modify their orders.
+    - **Status:** USER VERIFICATION PENDING
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend
+    - **Blocked on other issue:** None
 
 **In progress Task List**:
 None.
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks:**
-    - **P0 - Implement Order Time Estimation Logic**: The UI and admin toggle () for displaying estimated order times have been created. The next step is to implement the backend logic. This is currently **BLOCKED** until the menu items API provides  and  for each item. Once available, the agent needs to:
-        - Calculate the max  for an order.
-        - Calculate .
-        - Display these times on the Order Status page when the  config is enabled.
-    - **P1 - Verify UI/CSS Overhaul**: The user has not yet explicitly confirmed that the comprehensive CSS fixes from the previous session (consistent 600px width, fixed sticky elements, non-truncated category names) are resolved on their end. This should be verified.
-
-- **Future Tasks:**
-    - **P2 - Auto-create customer on guest order**: When a guest user places their first order, automatically create a new customer record for them in the database. This was previously deferred by the user.
+- **Future Task (P1):** Implement wallet functionality. The user requested a visibility toggle for it but stated, wallet functionality we discuss later.
 
 **Completed work in this session**
--   **Admin UI Refactoring:**
-    -   Created a new Visibility tab in Admin Settings and moved the Landing Page, Menu Page, Review Order, and Order Status visibility toggles into it as nested sub-tabs.
-    -   Reordered the main admin tabs to: .
-    -   Moved the Extra Info settings from a top-level tab into a new Extra Info sub-tab within the Content tab.
--   **Order Success Page Enhancements:**
-    -   Added the main  component to the page, including the hamburger menu for navigation.
-    -   Fixed the Browse Menu button to correctly use the primary brand color from the configuration, resolving a bug where it appeared black.
-    -   Changed the final order status label from Ready to Served for clarity.
-    -   Added a new Show Estimated Times toggle to the Admin Settings (under ) and added placeholder logic to the  component to display these times (pending backend data).
--   **Menu Page UI Tweak:**
-    -   Reduced excessive vertical spacing between category headers and menu items on the menu pages for a tighter, cleaner UI.
--   **DB Script Verification:**
-    -   Analyzed and confirmed that the  script is dynamic and correctly exports all data, including the newly added configuration fields.
+- **Feature: Granular UI Visibility Controls**
+  - Added toggles for , , and  to the Admin Visibility tab ().
+  - Updated  to conditionally render the loyalty and coupon sections based on these new config flags.
+  - Changed the default value for  to  in .
+- **Feature: Custom UI Text**
+  - Created a new Custom Text tab in the admin panel ().
+  - Implemented functionality for a customizable Browse Menu button text on the landing page, controlled via the new admin tab.
+  - Updated  to use the new config value.
+- **Bug Fix: Custom Text Not Saving**
+  - Diagnosed that the backend was dropping the new field.
+  - Fixed the issue by adding  to the  Pydantic model in .
+- **Bug Fix: Duplicate Tagline**
+  - Fixed a UI bug in  that caused the restaurant tagline to be rendered twice.
+- **User Support:**
+  - Investigated and confirmed for the user that the Order Online status is driven by the restaurant API, not admin settings.
+  - Investigated and located the source of the Welcome to... text in the admin branding settings.
 
 **Earlier issues found/mentioned but not fixed**
 None.
@@ -66,78 +100,77 @@ None.
 
 
 **Key Technical Concepts**
--   **Frontend**: React (Hooks, Context API), Tailwind CSS, CSS Flexbox. The session involved significant component refactoring, state management via Context, and dynamic UI rendering based on configuration.
--   **Backend**: Python, FastAPI.
--   **Database**: MongoDB.
+- **Frontend:** React, React Hooks, Context API, React Router.
+- **Backend:** FastAPI, Pydantic for data validation.
+- **Database:** MongoDB.
+- **Admin Configuration:** App behavior is heavily controlled by a configuration object fetched from the backend, which is managed via a multi-tab admin panel.
 
 **key DB schema**
--   **customer_app_config**: A new boolean field  was added to this collection's document structure.
+- **customer_app_config:** Stores restaurant-specific UI configurations.
+  - 
+  - 
+  - 
+  - 
+  - (and many other existing fields)
 
 **changes in tech stack**
 None.
 
 **All files of reference**
-**Created Files:**
--   : A new component to house all visibility-related settings in nested tabs.
-
-**Modified Files:**
--   : Reduced margins and padding for category headers.
--   : Added Header, fixed button color, changed status text, added logic for estimated times.
--   : Added styles to position the new Header correctly.
--   : Major refactoring to introduce , move , and reorder tabs.
--   : Refactored to include Extra Info as a new sub-tab.
--   : Added  to the context provider.
--   : Added  to the config save/load endpoints.
+- : Modified to add  to the  Pydantic model.
+- : Modified to include the new Custom Text tab and manage state for it.
+- : Modified to add , ,  toggles.
+- : **New file** created for the custom text input fields.
+- : Modified to provide the new configuration flags (, , , ) and to change the  default.
+- : Modified to conditionally render components based on the new visibility flags.
+- : Modified to fix the duplicate tagline bug and to use the  from context.
 
 **Areas that need refactoring**:
-The Admin Settings page (, ) has undergone significant refactoring and is now much more organized. No other areas have been identified as needing immediate refactoring.
+- The tax and total calculation logic in  remains complex and could be consolidated.
+-  is growing. The pattern of breaking settings into tabbed components (, ) is good and should be continued to maintain readability.
 
 **key api endpoints**
--   : This endpoint was updated in  to handle the new  field.
+- : Updates the UI configuration. This was the endpoint affected by the Pydantic model bug.
+- : Fetches the UI configuration.
 
 **Critical Info for New Agent**
--   **Order Time Estimation is BLOCKED**: The front-end work for displaying estimated order times is complete (UI, admin toggle). However, it is non-functional and hidden by default. The implementation is blocked waiting for the backend menu items API to be updated with  and  fields. Do not attempt to finish this feature until the API provides this data.
--   **Admin Settings Refactored**: Be aware that the Admin Settings page has a new structure. Visibility settings are now grouped under a Visibility tab with sub-tabs. Extra Info settings are now a sub-tab within the Content tab.
--   **DB Export is Dynamic**: The database export script () does not need manual updates for new config fields. It dynamically exports all collections and their current data.
+- The application is connected to a live, user-provided MongoDB database. Be cautious with any database write operations.
+- The user prefers to manually verify changes. The next agent should always propose a verification plan and wait for user confirmation.
+- The agent does not have credentials for the admin panel. Verifying changes within the admin UI requires asking the user to perform actions and confirm results or provide screenshots.
+- Backend models () must be kept in sync with frontend save payloads (), otherwise data will be silently dropped.
 
 **documents and test reports created in this job**
 None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **user**: Asks to combine visibility settings from different admin pages into one tab.
-2.  **agent**: Proposes creating a Visibility tab with nested sub-tabs for each section.
-3.  **user**: Approves the plan.
-4.  **agent**: Implements the Visibility tab.
-5.  **user**: Asks to re-organize the top-level tabs and move Extra Info into the Content tab.
-6.  **agent**: Summarizes the new proposed tab structure.
-7.  **user**: Approves the new structure.
-8.  **agent**: Implements the tab re-organization.
-9.  **user**: Asks if the DB save/export script is updated.
-10. **agent**: Confirms the save function in  is updated.
-11. **user**: Clarifies they mean the full DB export script for import/export purposes.
-12. **agent**: Analyzes the script, confirms it's dynamic, and verifies it works correctly.
+1.  **user:**  - Reports duplicate text bug. (Handled)
+2.  **agent:** Fixes the duplicate text bug.
+3.  **agent:** Informs the user the fix is complete.
+4.  **user:**  - Asks about the source of another text string. (Handled)
+5.  **agent:** Investigates and identifies the source in Admin Settings.
+6.  **agent:** Confirms the source to the user.
+7.  **agent:**  - Following up on the custom text not saving.
+8.  **user:**  (sends image) - Provides proof they entered the text in the UI.
+9.  **agent:**  - Starts debugging the save issue.
+10. **agent:**  - Informs the user of the backend fix and instructs them to save again. (Pending user action).
 
 **Project Health Check:**
--   **Broken**: None.
--   **Mocked**: The estimated order time display is mocked on the frontend, pending backend data.
+- **Broken:** None.
+- **Mocked:** None.
+- **Functional but Brittle:** The application is running, but the heavy reliance on a complex frontend state and configuration object has led to several bugs. Changes require careful, multi-file updates (backend model, frontend state, context, and consumer component).
 
 **3rd Party Integrations**
-None.
+- **MyGenie API:** A proprietary external API for all backend operations.
+- **MongoDB:** The primary database.
 
 **Testing status**
--   Testing agent used after significant changes: NO (Agent used screenshots for UI verification and manual checks).
--   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: None.
--   Known regressions: None.
+- **Testing agent used after significant changes:** NO.
+- **Troubleshoot agent used after agent stuck in loop:** NO.
+- **Test files created:** None.
+- **Known regressions:** None.
 
 **Credentials to test flow:**
--   **Admin**:
-    -   email: 
-    -   password: 
--   **Customer**:
-    -   phone: 
-    -   OTP: 
--   **Restaurant ID**: 
+The remote MongoDB connection string is in . No credentials are available for the admin UI login.
 
 **What agent forgot to execute**
-The agent has not explicitly asked for user verification on the major UI/CSS overhaul (consistent page width, sticky element fixes, category name truncation fix) that was completed in the *previous* session. It would be good to bundle this verification request along with the next interaction.</analysis>
+- The agent did not circle back to the pending GST calculation verification from the previous session. The user immediately provided new tasks, and the agent followed the user's lead, leaving the old task unresolved.</analysis>

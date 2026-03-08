@@ -42,14 +42,20 @@ const MenuItems = () => {
   const categoryHeaderRef = useRef(null);
 
 
-  // Fetch menu sections from API
-  const { menuSections, loading: menuLoading, error: menuError, errorMessage: menuErrorMessage } = useMenuSections(stationId, restaurantId);
+  // Fetch restaurant details FIRST to get numeric ID
+  const { restaurant, loading: restaurantLoading, isFetching: restaurantFetching } = useRestaurantDetails(restaurantId);
+  
+  // Use numeric ID from restaurant-info response, fallback to restaurantId
+  const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
+
+  // Fetch menu sections from API (wait for numeric ID)
+  const { menuSections, loading: menuLoading, error: menuError, errorMessage: menuErrorMessage } = useMenuSections(stationId, numericRestaurantId);
 
   // Fetch stations for menu panel
-  const { stations: stationsData } = useStations(restaurantId);
+  const { stations: stationsData } = useStations(numericRestaurantId);
 
-  // Fetch restaurant details for dynamic brand text
-  const { restaurant, loading: restaurantLoading, isFetching: restaurantFetching } = useRestaurantDetails(restaurantId, stationsData);
+  // Check if online ordering is enabled
+  const isOnlineOrderEnabled = restaurant?.online_order === 'Yes' || restaurant?.online_order === undefined;
 
   // Fetch admin config for this restaurant
   useEffect(() => {
@@ -59,7 +65,7 @@ const MenuItems = () => {
   }, [restaurantId, fetchConfig]);
 
   // Cart functionality
-  const { addToCart, updateQuantity, getTotalQuantityForItem, cartItems } = useCart();
+  const { addToCart, updateQuantity, getTotalQuantityForItem, cartItems, isEditMode, editingOrderId, clearEditMode } = useCart();
 
   // Get current time in seconds since midnight (updates every 60 seconds) - for item availability
   const currentTimeInSeconds = useCurrentTime();
@@ -494,6 +500,24 @@ const MenuItems = () => {
             onFilterChange={handleFilterChange}
           />
 
+          {/* Edit Order Mode Banner */}
+          {isEditMode && (
+            <div className="edit-mode-banner" data-testid="edit-mode-banner">
+              <div className="edit-mode-banner-content">
+                <span className="edit-mode-banner-text">
+                  Adding items to Order #{editingOrderId}
+                </span>
+                <button 
+                  className="edit-mode-banner-cancel"
+                  onClick={clearEditMode}
+                  data-testid="cancel-edit-mode-btn"
+                >
+                  Clear Cart
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Promo Banner - controlled by admin config */}
           {configShowPromotionsOnMenu && <PromoBanner promotions={restaurant?.promotions || []} compact />}
 
@@ -620,6 +644,7 @@ const MenuItems = () => {
                                     onIncrement={() => handleIncrement(item)}
                                     onDecrement={() => handleDecrement(item)}
                                     currentTimeInSeconds={currentTimeInSeconds}
+                                    isOnlineOrderEnabled={isOnlineOrderEnabled}
                                   />
                                 );
                               })}

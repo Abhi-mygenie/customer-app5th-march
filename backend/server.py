@@ -129,8 +129,15 @@ class AppConfigUpdate(BaseModel):
     showSpecialInstructions: Optional[bool] = None
     showPriceBreakdown: Optional[bool] = None
     showTableInfo: Optional[bool] = None
+    # Visibility toggles (missing from original model)
+    showHamburgerMenu: Optional[bool] = None
+    showLoginButton: Optional[bool] = None
+    showEstimatedTimes: Optional[bool] = None
+    showFoodStatus: Optional[bool] = None  # Food Item Status (Preparing/Ready/Served)
     # Branding - Colors
     logoUrl: Optional[str] = None
+    backgroundImageUrl: Optional[str] = None
+    mobileBackgroundImageUrl: Optional[str] = None
     primaryColor: Optional[str] = None
     secondaryColor: Optional[str] = None
     buttonTextColor: Optional[str] = None
@@ -173,6 +180,12 @@ class AppConfigUpdate(BaseModel):
     # Extra Info Section (Footer)
     showExtraInfo: Optional[bool] = None
     extraInfoItems: Optional[List[str]] = None  # Up to 5 bullet points
+    # Order Page - Loyalty/Coupon/Wallet visibility
+    showLoyaltyPoints: Optional[bool] = None
+    showCouponCode: Optional[bool] = None
+    showWallet: Optional[bool] = None
+    # Custom Text
+    browseMenuButtonText: Optional[str] = None
 
 class BannerCreate(BaseModel):
     bannerImage: str
@@ -491,6 +504,33 @@ async def get_customer_orders(
         items=o.get("items", [])
     ) for o in orders]
 
+# Air BnB router for order details (Edit Order feature)
+air_bnb_router = APIRouter(prefix="/air-bnb", tags=["Air BnB"])
+
+# MyGenie API base URL
+MYGENIE_API_URL = "https://preprod.mygenie.online/api/v1"
+
+@air_bnb_router.get("/get-order-details/{order_id}")
+async def get_order_details(order_id: str):
+    """Get order details from MyGenie API"""
+    import httpx
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"{MYGENIE_API_URL}/air-bnb/get-order-details/{order_id}",
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 404:
+                raise HTTPException(status_code=404, detail=f"Order {order_id} not found")
+            else:
+                raise HTTPException(status_code=response.status_code, detail="Failed to fetch order details from MyGenie")
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=503, detail=f"MyGenie API unavailable: {str(e)}")
+
 @customer_router.get("/points", response_model=List[PointsTransaction])
 async def get_customer_points(
     limit: int = 50,
@@ -604,6 +644,10 @@ async def get_app_config(restaurant_id: str):
             "showAboutUs": True,
             "showFooter": True,
             "showLandingCustomerCapture": False,  # Default OFF - restaurant opts in
+            "showHamburgerMenu": True,
+            "showLoginButton": True,
+            "showEstimatedTimes": False,  # Default OFF
+            "showFoodStatus": True,  # Default ON - show Preparing/Ready/Served
             # Menu Page
             "showPromotionsOnMenu": True,
             "showCategories": True,
@@ -669,8 +713,9 @@ async def update_app_config(
     user: dict = Depends(get_restaurant_user)
 ):
     """Update app configuration (restaurant admin only)"""
-    # Use restaurant_id field if available, fallback to user id
-    restaurant_id = user.get("restaurant_id") or user["id"]
+    # Use restaurant_id as the primary key for config
+    # This matches what the frontend uses to fetch config (from URL)
+    config_key = user.get("restaurant_id") or user["id"]
     
     update_dict = {k: v for k, v in config_update.model_dump().items() if v is not None}
     
@@ -680,12 +725,12 @@ async def update_app_config(
     update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.customer_app_config.update_one(
-        {"restaurant_id": restaurant_id},
-        {"$set": update_dict, "$setOnInsert": {"restaurant_id": restaurant_id, "banners": []}},
+        {"restaurant_id": config_key},
+        {"$set": update_dict, "$setOnInsert": {"restaurant_id": config_key, "banners": []}},
         upsert=True
     )
     
-    config = await db.customer_app_config.find_one({"restaurant_id": restaurant_id}, {"_id": 0})
+    config = await db.customer_app_config.find_one({"restaurant_id": config_key}, {"_id": 0})
     return {"success": True, "config": config}
 
 @config_router.post("/banners")
@@ -922,6 +967,82 @@ async def get_status_checks():
     return status_checks
 
 # ============================================
+# Loyalty Settings Endpoint
+# ============================================
+
+@api_router.get("/loyalty-settings/{restaurant_id}")
+async def get_loyalty_settings(restaurant_id: str):
+    """Get loyalty settings for a restaurant to calculate points"""
+    user_id = f"pos_0001_restaurant_{restaurant_id}"
+    settings = await db.loyalty_settings.find_one(
+        {"user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not settings:
+        # Return default settings if not found
+        return {
+            "found": False,
+            "bronze_earn_percent": 5.0,
+            "silver_earn_percent": 7.0,
+            "gold_earn_percent": 10.0,
+            "platinum_earn_percent": 15.0,
+            "redemption_value": 0.25,
+            "min_order_value": 100.0,
+            "first_visit_bonus_enabled": True,
+            "first_visit_bonus_points": 50
+        }
+    
+    return {
+        "found": True,
+        "bronze_earn_percent": settings.get("bronze_earn_percent", 5.0),
+        "silver_earn_percent": settings.get("silver_earn_percent", 7.0),
+        "gold_earn_percent": settings.get("gold_earn_percent", 10.0),
+        "platinum_earn_percent": settings.get("platinum_earn_percent", 15.0),
+        "redemption_value": settings.get("redemption_value", 0.25),
+        "min_order_value": settings.get("min_order_value", 100.0),
+        "first_visit_bonus_enabled": settings.get("first_visit_bonus_enabled", True),
+        "first_visit_bonus_points": settings.get("first_visit_bonus_points", 50)
+    }
+
+@api_router.get("/customer-lookup/{restaurant_id}")
+async def customer_lookup(restaurant_id: str, phone: str):
+    """Look up customer by phone number for a restaurant — returns name, points, tier"""
+    user_id = f"pos_0001_restaurant_{restaurant_id}"
+    
+    # Normalize phone
+    normalized = phone.strip()
+    if normalized.startswith('+91'):
+        normalized = normalized[3:]
+    elif normalized.startswith('91') and len(normalized) > 10:
+        normalized = normalized[2:]
+    
+    customer = await db.customers.find_one(
+        {"$or": [{"phone": phone.strip(), "user_id": user_id}, {"phone": normalized, "user_id": user_id}]},
+        {"_id": 0, "name": 1, "phone": 1, "total_points": 1, "tier": 1, "wallet_balance": 1, "country_code": 1}
+    )
+    
+    if customer:
+        return {
+            "found": True,
+            "name": customer.get("name", ""),
+            "phone": customer.get("phone", ""),
+            "country_code": customer.get("country_code", "+91"),
+            "total_points": customer.get("total_points", 0),
+            "tier": customer.get("tier", "Bronze"),
+            "wallet_balance": customer.get("wallet_balance", 0.0),
+        }
+    
+    return {
+        "found": False,
+        "name": "",
+        "phone": normalized,
+        "total_points": 0,
+        "tier": "Bronze",
+        "wallet_balance": 0.0,
+    }
+
+# ============================================
 # Include all routers
 # ============================================
 
@@ -929,6 +1050,7 @@ api_router.include_router(auth_router)
 api_router.include_router(customer_router)
 api_router.include_router(config_router)
 api_router.include_router(upload_router)
+api_router.include_router(air_bnb_router)  # Add air-bnb router
 app.include_router(api_router)
 
 # CORS Middleware

@@ -13,7 +13,9 @@ import {
   IoCreateOutline,
   IoCloseOutline,
   IoDocumentOutline,
-  IoEyeOutline
+  IoEyeOutline,
+  IoRestaurantOutline,
+  IoTextOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import ContentTab from '../components/AdminSettings/ContentTab';
@@ -41,6 +43,8 @@ const AdminSettings = () => {
     showAboutUs: true,
     showFooter: true,
     showLandingCustomerCapture: false,  // Capture name/phone on landing
+    showHamburgerMenu: false,  // Show hamburger menu
+    showLoginButton: true,    // Show login button on landing
     // Menu Page Visibility
     showPromotionsOnMenu: true,
     showCategories: true,
@@ -52,8 +56,13 @@ const AdminSettings = () => {
     showSpecialInstructions: true,
     showPriceBreakdown: true,
     showTableInfo: true,
+    showLoyaltyPoints: true,
+    showCouponCode: true,
+    showWallet: true,
     // Branding - Colors
     logoUrl: '',
+    backgroundImageUrl: '',          // Desktop background image
+    mobileBackgroundImageUrl: '',    // Mobile background image (portrait 9:16)
     primaryColor: '#61B4E5',
     secondaryColor: '#4fa3d1',
     buttonTextColor: '#ffffff',
@@ -97,7 +106,9 @@ const AdminSettings = () => {
     banners: [],
     // Extra Info Section
     showExtraInfo: true,
-    extraInfoItems: ['', '', '', '', '']
+    extraInfoItems: ['', '', '', '', ''],
+    // Custom Text
+    browseMenuButtonText: 'Browse Menu',
   });
   
   const [newBanner, setNewBanner] = useState({
@@ -113,10 +124,14 @@ const AdminSettings = () => {
   const [activeSection, setActiveSection] = useState('branding');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingBackgroundImage, setUploadingBackgroundImage] = useState(false);
+  const [uploadingMobileBackgroundImage, setUploadingMobileBackgroundImage] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState(null);
   const [bannerSizeWarning, setBannerSizeWarning] = useState('');
   const logoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
+  const backgroundImageInputRef = useRef(null);
+  const mobileBackgroundImageInputRef = useRef(null);
 
   const validateImageDimensions = (src) => {
     setBannerSizeWarning('');
@@ -177,7 +192,7 @@ const AdminSettings = () => {
   const fetchConfig = async () => {
     if (!user?.id) return;
     
-    // Use restaurant_id field if available, fallback to user id
+    // Use restaurant_id for config - matches what customers use (from URL)
     const configId = user.restaurant_id || user.id;
     
     setLoading(true);
@@ -228,7 +243,8 @@ const AdminSettings = () => {
           showAboutUs: config.showAboutUs,
           showFooter: config.showFooter,
           showLandingCustomerCapture: config.showLandingCustomerCapture,
-          // Menu Page Visibility
+          showHamburgerMenu: config.showHamburgerMenu,
+          showLoginButton: config.showLoginButton,
           showPromotionsOnMenu: config.showPromotionsOnMenu,
           showCategories: config.showCategories,
           // Order Page Visibility
@@ -239,8 +255,15 @@ const AdminSettings = () => {
           showSpecialInstructions: config.showSpecialInstructions,
           showPriceBreakdown: config.showPriceBreakdown,
           showTableInfo: config.showTableInfo,
+          showLoyaltyPoints: config.showLoyaltyPoints,
+          showCouponCode: config.showCouponCode,
+          showWallet: config.showWallet,
+          // Order Status Page Visibility
+          showFoodStatus: config.showFoodStatus,
           // Branding - Colors
           logoUrl: config.logoUrl,
+          backgroundImageUrl: config.backgroundImageUrl,
+          mobileBackgroundImageUrl: config.mobileBackgroundImageUrl,
           primaryColor: config.primaryColor,
           secondaryColor: config.secondaryColor,
           buttonTextColor: config.buttonTextColor,
@@ -275,7 +298,9 @@ const AdminSettings = () => {
           navMenuOrder: config.navMenuOrder,
           // Extra Info Section
           showExtraInfo: config.showExtraInfo,
-          extraInfoItems: config.extraInfoItems.filter(item => item.trim() !== '')
+          extraInfoItems: config.extraInfoItems.filter(item => item.trim() !== ''),
+          // Custom Text
+          browseMenuButtonText: config.browseMenuButtonText,
         })
       });
 
@@ -424,6 +449,8 @@ const AdminSettings = () => {
     { id: 'banners', label: 'Banners', icon: IoImagesOutline },
     { id: 'content', label: 'Content', icon: IoDocumentOutline },
     { id: 'visibility', label: 'Visibility', icon: IoEyeOutline },
+    { id: 'customText', label: 'Custom Text', icon: IoTextOutline },
+    { id: 'menu', label: 'Menu', icon: IoRestaurantOutline, navigateTo: 'menu' },
   ];
 
   if (!user || !isRestaurant) {
@@ -457,11 +484,18 @@ const AdminSettings = () => {
 
       {/* Section Navigation Tabs */}
       <div className="section-tabs" data-testid="section-tabs">
-        {sections.map(({ id, label, icon: Icon }) => (
+        {sections.map(({ id, label, icon: Icon, navigateTo }) => (
           <button
             key={id}
             className={`section-tab ${activeSection === id ? 'active' : ''}`}
-            onClick={() => setActiveSection(id)}
+            onClick={() => {
+              if (navigateTo) {
+                const restaurantId = user.restaurant_id || user.id;
+                navigate(`/${restaurantId}/${navigateTo}`);
+              } else {
+                setActiveSection(id);
+              }
+            }}
             data-testid={`tab-${id}`}
           >
             <Icon className="tab-icon" />
@@ -525,6 +559,115 @@ const AdminSettings = () => {
               {config.logoUrl && (
                 <div className="image-preview-box" data-testid="logo-preview">
                   <img src={config.logoUrl} alt="Logo preview" className="image-preview-img" onError={(e) => e.target.style.display = 'none'} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Background Image */}
+          <div className="form-group">
+            <label className="form-label">Background Image</label>
+            <span className="form-hint" style={{marginBottom: '8px', display: 'block'}}>Full-screen restaurant ambiance photo for landing page</span>
+            <div className="image-upload-field">
+              <div className="image-url-row">
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="https://example.com/restaurant-interior.jpg"
+                  value={config.backgroundImageUrl || ''}
+                  onChange={(e) => handleChange('backgroundImageUrl', e.target.value)}
+                  data-testid="input-backgroundImageUrl"
+                />
+                <input
+                  type="file"
+                  ref={backgroundImageInputRef}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const url = await uploadImage(file, setUploadingBackgroundImage);
+                    if (url) handleChange('backgroundImageUrl', url);
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  className="upload-btn"
+                  onClick={() => backgroundImageInputRef.current?.click()}
+                  disabled={uploadingBackgroundImage}
+                  data-testid="upload-background-btn"
+                >
+                  <IoCloudUploadOutline />
+                  {uploadingBackgroundImage ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+              {config.backgroundImageUrl && (
+                <div className="image-preview-box" data-testid="background-preview" style={{marginTop: '12px'}}>
+                  <img src={config.backgroundImageUrl} alt="Background preview" className="image-preview-img" style={{maxHeight: '200px'}} onError={(e) => e.target.style.display = 'none'} />
+                  <button
+                    type="button"
+                    className="remove-image-btn"
+                    onClick={() => handleChange('backgroundImageUrl', '')}
+                    style={{marginTop: '8px', padding: '4px 12px', fontSize: '12px'}}
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Background Image */}
+          <div className="form-group">
+            <label className="form-label">Mobile Background Image <span style={{fontSize:'11px', color:'#888', fontWeight:400}}>(portrait, 9:16 ratio)</span></label>
+            <span className="form-hint" style={{marginBottom: '8px', display: 'block'}}>Shown on phones (&lt;480px wide). Falls back to desktop image if not set.</span>
+            <div className="image-upload-field">
+              <div className="image-url-row">
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="https://example.com/restaurant-mobile.jpg"
+                  value={config.mobileBackgroundImageUrl || ''}
+                  onChange={(e) => handleChange('mobileBackgroundImageUrl', e.target.value)}
+                  data-testid="input-mobileBackgroundImageUrl"
+                />
+                <input
+                  type="file"
+                  ref={mobileBackgroundImageInputRef}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const url = await uploadImage(file, setUploadingMobileBackgroundImage);
+                    if (url) handleChange('mobileBackgroundImageUrl', url);
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  className="upload-btn"
+                  onClick={() => mobileBackgroundImageInputRef.current?.click()}
+                  disabled={uploadingMobileBackgroundImage}
+                  data-testid="upload-mobile-background-btn"
+                >
+                  <IoCloudUploadOutline />
+                  {uploadingMobileBackgroundImage ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+              <span className="form-hint">Recommended: 1080 x 1920px (9:16 ratio). Max 5MB.</span>
+              {config.mobileBackgroundImageUrl && (
+                <div className="image-preview-box" data-testid="mobile-background-preview" style={{marginTop: '12px'}}>
+                  <img src={config.mobileBackgroundImageUrl} alt="Mobile background preview" className="image-preview-img" style={{maxHeight: '200px'}} onError={(e) => e.target.style.display = 'none'} />
+                  <button
+                    type="button"
+                    className="remove-image-btn"
+                    onClick={() => handleChange('mobileBackgroundImageUrl', '')}
+                    style={{marginTop: '8px', padding: '4px 12px', fontSize: '12px'}}
+                  >
+                    Remove
+                  </button>
                 </div>
               )}
             </div>
@@ -1016,6 +1159,30 @@ const AdminSettings = () => {
       {/* Content Section */}
       {activeSection === 'content' && (
         <ContentTab config={config} setConfig={setConfig} token={token} uploadImage={uploadImage} ToggleRow={ToggleRow} handleChange={handleChange} />
+      )}
+
+      {/* Custom Text Section */}
+      {activeSection === 'customText' && (
+        <div className="settings-section" data-testid="section-custom-text">
+          <h3 className="section-title">
+            <IoTextOutline className="section-icon" />
+            Custom Text
+          </h3>
+          <p className="section-description">Customize button labels and text shown in the app</p>
+
+          <div className="form-group">
+            <label className="form-label">Browse Menu Button Text</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Browse Menu"
+              value={config.browseMenuButtonText || ''}
+              onChange={(e) => handleChange('browseMenuButtonText', e.target.value)}
+              data-testid="input-browseMenuButtonText"
+            />
+            <span className="form-hint">Label for the main button on the landing page (default: "Browse Menu")</span>
+          </div>
+        </div>
       )}
 
       {/* Save Button */}

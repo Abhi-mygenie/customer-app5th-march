@@ -42,6 +42,8 @@ const VisibilityTab = ({ ToggleRow }) => {
           </h3>
           <p className="section-description">Control what elements are visible on the landing page</p>
           <div className="toggle-list">
+            <ToggleRow field="showHamburgerMenu" label="Hamburger Menu" />
+            <ToggleRow field="showLoginButton" label="Login Button" />
             <ToggleRow field="showLogo" label="Restaurant Logo" />
             <ToggleRow field="showWelcomeText" label="Welcome Message" />
             <ToggleRow field="showDescription" label="Restaurant Description" />
@@ -85,6 +87,9 @@ const VisibilityTab = ({ ToggleRow }) => {
             <ToggleRow field="showSpecialInstructions" label="Special Instructions" />
             <ToggleRow field="showPriceBreakdown" label="Price Breakdown" />
             <ToggleRow field="showTableInfo" label="Table Information" />
+            <ToggleRow field="showLoyaltyPoints" label="Loyalty Points" />
+            <ToggleRow field="showCouponCode" label="Coupon Code" />
+            <ToggleRow field="showWallet" label="Wallet" />
           </div>
         </div>
       )}
@@ -102,6 +107,7 @@ const VisibilityTab = ({ ToggleRow }) => {
             <ToggleRow field="showCallWaiter" label="Call Waiter Button" />
             <ToggleRow field="showPayBill" label="Pay Bill Button" />
             <ToggleRow field="showEstimatedTimes" label="Estimated Times on Order Status" />
+            <ToggleRow field="showFoodStatus" label="Food Item Status (Preparing/Ready/Served)" />
           </div>
         </div>
       )}

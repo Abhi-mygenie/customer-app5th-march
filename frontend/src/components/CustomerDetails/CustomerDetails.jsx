@@ -76,6 +76,21 @@ const CustomerDetails = ({
         <h2 className="customer-details-title">Customer Details</h2>
       )}
       <div className="customer-details-form">
+        {showPhone && (
+        <div className="customer-details-input-group">
+          {/* <label className="customer-details-label">Phone Number</label> */}
+          <PhoneInput
+            defaultCountry="IN"
+            value={phoneValue}
+            onChange={handlePhoneChange}
+            placeholder="Enter phone number"
+            className={`customer-details-phone-input ${phoneError ? 'customer-details-phone-input-error' : ''}`}
+          />
+          {phoneError && (
+            <div className="customer-details-error">{phoneError}</div>
+          )}
+        </div>
+        )}
         {showName && (
         <div className="customer-details-input-group">
           {/* <label className="customer-details-label">Name</label> */}
@@ -86,22 +101,6 @@ const CustomerDetails = ({
             onChange={(e) => onNameChange?.(e.target.value)}
             placeholder="Enter your name"
           />
-        </div>
-        )}
-        {showPhone && (
-        <div className="customer-details-input-group">
-          {/* <label className="customer-details-label">Phone Number</label> */}
-          <PhoneInput
-            international
-            defaultCountry="IN"
-            value={phoneValue}
-            onChange={handlePhoneChange}
-            placeholder="Enter phone number"
-            className={`customer-details-phone-input ${phoneError ? 'customer-details-phone-input-error' : ''}`}
-          />
-          {phoneError && (
-            <div className="customer-details-error">{phoneError}</div>
-          )}
         </div>
         )}
       </div>

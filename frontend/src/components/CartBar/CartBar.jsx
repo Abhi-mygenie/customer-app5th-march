@@ -4,7 +4,14 @@ import { useCart } from '../../context/CartContext';
 import './CartBar.css';
 
 const CartBar = () => {
-  const { getTotalItems, getTotalPrice, restaurantId: cartRestaurantId } = useCart();
+  const { 
+    getTotalItems, 
+    getTotalPrice, 
+    restaurantId: cartRestaurantId,
+    isEditMode,
+    previousOrderItems,
+    getPreviousOrderTotal
+  } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -83,14 +90,30 @@ const CartBar = () => {
     }
   };
 
-  const itemText = totalItems === 1 ? 'Item Added' : 'Items Added';
+  // Calculate counts and totals
+  const newItemsCount = totalItems;
+  const newItemsPrice = totalPrice;
+  const previousItemsCount = isEditMode ? previousOrderItems.reduce((sum, item) => sum + (item.quantity || 1), 0) : 0;
+  const previousItemsPrice = isEditMode ? getPreviousOrderTotal() : 0;
+  const totalItemsCount = newItemsCount + previousItemsCount;
+  const grandTotal = newItemsPrice + previousItemsPrice;
+
+  // Text for display
+  const itemText = isEditMode 
+    ? `${newItemsCount} New + ${previousItemsCount} Previous (${totalItemsCount} Total)`
+    : (totalItems === 1 ? '1 Item Added' : `${totalItems} Items Added`);
 
   return (
     <div className="cart-bar">
       <div className="cart-bar-content">
         <div className="cart-bar-info">
-          <div className="cart-bar-item-count">{totalItems} {itemText}</div>
-          <div className="cart-bar-total-price">₹{totalPrice.toFixed(2)}</div>
+          <div className="cart-bar-item-count">{itemText}</div>
+          <div className="cart-bar-total-price">
+            {isEditMode 
+              ? `₹${newItemsPrice.toFixed(0)} + ₹${previousItemsPrice.toFixed(0)} = ₹${grandTotal.toFixed(0)}`
+              : `₹${totalPrice.toFixed(2)}`
+            }
+          </div>
         </div>
         <button className="cart-bar-view-btn" onClick={handleViewCart}>
           View Cart

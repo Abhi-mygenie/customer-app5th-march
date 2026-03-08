@@ -195,7 +195,7 @@
   background: none;
   border: 2px solid var(--border-primary);
   color: white;
-  border-radius: 25px;
+  border-radius: var(--radius-button, 25px);
   padding: 12px 30px;
   font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
@@ -265,7 +265,7 @@
   background-color: white;
   color: var(--text-primary);
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-button, 20px);
   padding: 8px 20px;
   font-family: 'Montserrat', sans-serif;
   font-size: 0.9rem;

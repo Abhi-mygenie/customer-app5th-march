@@ -19,6 +19,8 @@ const DEFAULT_CONFIG = {
   showAboutUs: true,
   showFooter: true,
   showLandingCustomerCapture: false,  // Capture name/phone on landing
+  showHamburgerMenu: false,  // Show hamburger menu
+  showLoginButton: true,    // Show login button on landing
   // Menu Page
   showPromotionsOnMenu: true,
   showCategories: true,
@@ -30,8 +32,15 @@ const DEFAULT_CONFIG = {
   showSpecialInstructions: true,
   showPriceBreakdown: true,
   showTableInfo: true,
+  showLoyaltyPoints: true,
+  showCouponCode: true,
+  showWallet: true,
+  // Order Status Page
+  showFoodStatus: true,  // Show food item status (Preparing/Ready/Served)
   // Branding - Colors
   logoUrl: null,
+  backgroundImageUrl: null,          // Desktop landing page background image
+  mobileBackgroundImageUrl: null,    // Mobile landing page background image (9:16)
   primaryColor: null,
   secondaryColor: null,
   buttonTextColor: null,
@@ -68,6 +77,8 @@ const DEFAULT_CONFIG = {
   // Extra Info Section
   showExtraInfo: true,
   extraInfoItems: [],
+  // Custom Text
+  browseMenuButtonText: 'Browse Menu',
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -166,19 +177,24 @@ export const RestaurantConfigProvider = ({ children }) => {
       root.style.setProperty('--font-body', fontMap[font] || font);
     }
     
-    // Border Radius - Only affects buttons and badges, NOT containers/inputs
+    // Border Radius - affects buttons, badges AND containers proportionally
     if (config.borderRadius) {
       const radiusMap = {
-        'sharp': { button: '0px', badge: '0px' },
-        'slightly-rounded': { button: '4px', badge: '6px' },
-        'rounded': { button: '8px', badge: '12px' },
-        'very-rounded': { button: '12px', badge: '16px' },
-        'pill': { button: '9999px', badge: '9999px' },
+        //                   button    badge   sm    md     lg     xl
+        'sharp':          { button: '0px',    badge: '0px',    sm: '0px',  md: '0px',  lg: '0px',  xl: '0px'  },
+        'slightly-rounded':{ button: '4px',   badge: '6px',    sm: '2px',  md: '4px',  lg: '6px',  xl: '8px'  },
+        'rounded':         { button: '8px',   badge: '12px',   sm: '4px',  md: '8px',  lg: '12px', xl: '16px' },
+        'very-rounded':    { button: '12px',  badge: '16px',   sm: '6px',  md: '12px', lg: '16px', xl: '20px' },
+        'pill':            { button: '9999px',badge: '9999px', sm: '8px',  md: '14px', lg: '18px', xl: '24px' },
       };
       const radii = radiusMap[config.borderRadius];
       if (radii) {
         root.style.setProperty('--radius-button', radii.button);
         root.style.setProperty('--radius-badge', radii.badge);
+        root.style.setProperty('--radius-container-sm', radii.sm);
+        root.style.setProperty('--radius-container-md', radii.md);
+        root.style.setProperty('--radius-container-lg', radii.lg);
+        root.style.setProperty('--radius-container-xl', radii.xl);
       }
     }
     
@@ -201,6 +217,10 @@ export const RestaurantConfigProvider = ({ children }) => {
       root.style.removeProperty('--font-body');
       root.style.removeProperty('--radius-button');
       root.style.removeProperty('--radius-badge');
+      root.style.removeProperty('--radius-container-sm');
+      root.style.removeProperty('--radius-container-md');
+      root.style.removeProperty('--radius-container-lg');
+      root.style.removeProperty('--radius-container-xl');
       root.style.removeProperty('--text-blue-hero');
       root.style.removeProperty('--text-blue-dark');
       root.style.removeProperty('--text-blue-medium');
@@ -229,6 +249,8 @@ export const RestaurantConfigProvider = ({ children }) => {
     showAboutUs: isOn('showAboutUs'),
     showFooter: isOn('showFooter'),
     showLandingCustomerCapture: config.showLandingCustomerCapture === true,  // Default OFF
+    showHamburgerMenu: config.showHamburgerMenu === true,  // Default OFF
+    showLoginButton: isOn('showLoginButton'),      // Default ON
     // Menu Page
     showPromotionsOnMenu: isOn('showPromotionsOnMenu'),
     showCategories: isOn('showCategories'),
@@ -240,8 +262,15 @@ export const RestaurantConfigProvider = ({ children }) => {
     showSpecialInstructions: isOn('showSpecialInstructions'),
     showPriceBreakdown: isOn('showPriceBreakdown'),
     showTableInfo: isOn('showTableInfo'),
+    showLoyaltyPoints: isOn('showLoyaltyPoints'),
+    showCouponCode: isOn('showCouponCode'),
+    showWallet: isOn('showWallet'),
+    // Order Status Page
+    showFoodStatus: isOn('showFoodStatus'),
     // Branding - Colors
     logoUrl: config.logoUrl,
+    backgroundImageUrl: config.backgroundImageUrl,
+    mobileBackgroundImageUrl: config.mobileBackgroundImageUrl,
     primaryColor: config.primaryColor,
     secondaryColor: config.secondaryColor,
     buttonTextColor: config.buttonTextColor,
@@ -278,6 +307,8 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Extra Info Section
     showExtraInfo: config.showExtraInfo !== false,
     extraInfoItems: config.extraInfoItems || [],
+    // Custom Text
+    browseMenuButtonText: config.browseMenuButtonText || 'Browse Menu',
   };
 
   return (

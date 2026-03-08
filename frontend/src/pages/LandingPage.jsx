@@ -20,7 +20,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated } = useAuth();
-  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, logoUrl: configLogoUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone } = useRestaurantConfig();
+  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
 
@@ -75,9 +75,8 @@ const LandingPage = () => {
   }
 
   const restaurantName = restaurant?.name || 'MyGenie';
-  const description = restaurant?.description
-    ? restaurant.description.replace(/'/g, '')
-    : '';
+  // Tagline from local config only (not from MyGenie API)
+  const tagline = configTagline || '';
   // Logo from local config only (no POS fallback)
   const logoUrl = configLogoUrl || '/assets/images/ic_login_logo.png';
   const phone = configPhone || restaurant?.phone || '';
@@ -91,7 +90,7 @@ const LandingPage = () => {
   // All visibility controlled by admin config (defaults to true)
   const showLogo = configShowLogo;
   const showWelcome = configShowWelcomeText;
-  const showDescription = configShowDescription && description;
+  const showDescription = configShowDescription && tagline;
   const showSocial = configShowSocialIcons && (phone || instagramUrl || facebookUrl || twitterUrl || youtubeUrl || whatsappNumber);
   const showTable = configShowTableNumber && isScanned && scannedTableNo;
   const showBrowseMenu = !configShowLandingCustomerCapture; // Hide if customer capture is ON
@@ -125,20 +124,37 @@ const LandingPage = () => {
     navigate('/login', { state: { phone, restaurantId } });
   };
 
-  return (
-    <div className="landing-page" data-testid="landing-page">
-      {/* Hamburger Menu - Always on top left */}
-      <div className="landing-hamburger-wrapper">
-        <HamburgerMenu restaurantName={restaurant?.name} phone={phone} />
-      </div>
+  // Check if we have a background image
+  const hasBackgroundImage = !!configBackgroundImageUrl;
+  // Mobile image falls back to desktop if not set
+  const mobileImg = configMobileBackgroundImageUrl || configBackgroundImageUrl;
 
-      {/* Login Button - Top right only if not logged in */}
-      {!isAuthenticated && (
+  return (
+    <div 
+      className={`landing-page ${hasBackgroundImage ? 'has-background-image' : ''}`} 
+      data-testid="landing-page"
+      style={hasBackgroundImage ? {
+        '--landing-bg-desktop': `url(${configBackgroundImageUrl})`,
+        '--landing-bg-mobile': `url(${mobileImg})`,
+      } : {}}
+    >
+      {/* Hamburger Menu - Controlled by config */}
+      {configShowHamburgerMenu !== false && (
+        <div className="landing-hamburger-wrapper">
+          <HamburgerMenu restaurantName={restaurant?.name} phone={phone} />
+        </div>
+      )}
+
+      {/* Login Button - Top right only if not logged in and config allows */}
+      {!isAuthenticated && configShowLoginButton !== false && (
         <div className="landing-login-wrapper">
           <button 
-            className="landing-login-btn" 
+            className={`landing-login-btn ${hasBackgroundImage ? 'on-image' : ''}`}
             onClick={() => navigate('/login')}
-            style={{ 
+            style={hasBackgroundImage ? {
+              borderColor: '#ffffff',
+              color: '#ffffff'
+            } : { 
               borderColor: btnColor,
               color: btnColor 
             }}
@@ -180,15 +196,15 @@ const LandingPage = () => {
           </p>
         )}
 
-        {/* 3. Description */}
-        {showDescription && (
-          <p className="description-text" data-testid="landing-description">
-            {description}
+        {/* 3. Description - uses tagline from local config (skip if tagline section already shows it) */}
+        {showDescription && tagline && !displayTagline && (
+          <p className={`description-text ${hasBackgroundImage ? 'on-image' : ''}`} data-testid="landing-description">
+            {tagline}
           </p>
         )}
 
-        {/* 3.2 Admin Config Banners (Local only - POS promotions ignored) */}
-        {configBanners.length > 0 && (
+        {/* 3.2 Admin Config Banners - Show only when NO background image */}
+        {!hasBackgroundImage && configBanners.length > 0 && (
           <div className="config-banner-carousel" data-testid="config-banner-carousel">
             <PromoBanner
               promotions={configBanners.map((b, i) => ({
@@ -237,7 +253,7 @@ const LandingPage = () => {
               data-testid="landing-browse-menu-btn"
             >
               <MdOutlineRestaurantMenu className="landing-btn-icon" />
-              Browse Menu
+              {browseMenuButtonText}
             </button>
           )}
 

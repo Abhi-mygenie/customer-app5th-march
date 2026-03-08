@@ -1,8 +1,5 @@
 [
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6672"
-    },
     "id": "coupon-demo-1",
     "user_id": "demo-user-restaurant",
     "code": "WELCOME20",
@@ -24,9 +21,6 @@
     "created_at": "2026-01-26T06:08:00.614849"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6673"
-    },
     "id": "coupon-demo-2",
     "user_id": "demo-user-restaurant",
     "code": "GOLD50",
@@ -47,9 +41,6 @@
     "created_at": "2026-02-10T06:08:00.614849"
   },
   {
-    "_id": {
-      "$oid": "69a96c3a387031a0b29a6674"
-    },
     "id": "coupon-demo-3",
     "user_id": "demo-user-restaurant",
     "code": "WEEKEND15",

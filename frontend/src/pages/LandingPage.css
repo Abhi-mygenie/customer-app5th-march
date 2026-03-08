@@ -18,6 +18,95 @@
   position: relative;
 }
 
+/* ============================================
+   BACKGROUND IMAGE MODE
+   ============================================ */
+.landing-page.has-background-image {
+  justify-content: center;
+  padding-top: 60px;
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%), var(--landing-bg-desktop);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Mobile: use portrait image, no fixed attachment (causes issues on iOS) */
+@media (max-width: 480px) {
+  .landing-page.has-background-image {
+    background-image: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%), var(--landing-bg-mobile);
+    background-attachment: scroll;
+    background-position: center top;
+  }
+}
+
+.landing-page.has-background-image .landing-container {
+  background: transparent;
+}
+
+.landing-page.has-background-image .welcome-text {
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.landing-page.has-background-image .tagline-text {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+}
+
+.landing-page.has-background-image .description-text.on-image {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+.landing-page.has-background-image .brand-logo {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.landing-page.has-background-image .menu-btn {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.landing-page.has-background-image .menu-btn:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.landing-page.has-background-image .social-icons {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-button, 20px);
+}
+
+.landing-page.has-background-image .social-icon {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.landing-page.has-background-image .social-icon:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.landing-page.has-background-image .powered-by {
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Login button on background image */
+.landing-login-btn.on-image {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  color: #ffffff !important;
+}
+
+.landing-login-btn.on-image:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 /* Hamburger Menu - Top Left */
 .landing-hamburger-wrapper {
   position: absolute;

@@ -11,6 +11,11 @@ const CART_EXPIRY_TIME = 3 * 60 * 60 * 1000; // 3 hours
 const getCartKey = (restaurantId) => `cart_${restaurantId}`;
 
 /**
+ * Get edit order key for localStorage based on restaurant ID
+ */
+const getEditOrderKey = (restaurantId) => `editOrder_${restaurantId}`;
+
+/**
  * Load cart from localStorage for a specific restaurant
  */
 const loadCartFromStorage = (restaurantId) => {
@@ -36,6 +41,30 @@ const loadCartFromStorage = (restaurantId) => {
 };
 
 /**
+ * Load edit order data from localStorage
+ */
+const loadEditOrderFromStorage = (restaurantId) => {
+  try {
+    const editOrderKey = getEditOrderKey(restaurantId);
+    const stored = localStorage.getItem(editOrderKey);
+    if (!stored) return null;
+
+    const editData = JSON.parse(stored);
+    
+    // Check if edit session has expired (same expiry as cart)
+    if (editData.expiresAt && Date.now() > editData.expiresAt) {
+      localStorage.removeItem(editOrderKey);
+      return null;
+    }
+
+    return editData;
+  } catch (error) {
+    console.error('Error loading edit order from storage:', error);
+    return null;
+  }
+};
+
+/**
  * Save cart to localStorage for a specific restaurant
  */
 const saveCartToStorage = (restaurantId, cartData) => {
@@ -54,6 +83,22 @@ const saveCartToStorage = (restaurantId, cartData) => {
 };
 
 /**
+ * Save edit order data to localStorage
+ */
+const saveEditOrderToStorage = (restaurantId, editData) => {
+  try {
+    const editOrderKey = getEditOrderKey(restaurantId);
+    if (editData) {
+      localStorage.setItem(editOrderKey, JSON.stringify(editData));
+    } else {
+      localStorage.removeItem(editOrderKey);
+    }
+  } catch (error) {
+    console.error('Error saving edit order to storage:', error);
+  }
+};
+
+/**
  * Generate unique cart ID for an item
  */
 export const generateCartId = (itemId, variations = [], add_ons = []) => {
@@ -65,7 +110,13 @@ export const generateCartId = (itemId, variations = [], add_ons = []) => {
 
 export const CartProvider = ({ children, restaurantId }) => {
   const [cart, setCart] = useState(() => loadCartFromStorage(restaurantId));
+  const [editOrder, setEditOrder] = useState(() => loadEditOrderFromStorage(restaurantId));
   const isUpdatingFromStorage = useRef(false);
+
+  // Computed values for edit mode
+  const isEditMode = editOrder !== null;
+  const editingOrderId = editOrder?.orderId || null;
+  const previousOrderItems = editOrder?.previousItems || [];
 
   // Listen for storage events from other tabs
   useEffect(() => {
@@ -105,6 +156,10 @@ export const CartProvider = ({ children, restaurantId }) => {
   useEffect(() => {
     const newCart = loadCartFromStorage(restaurantId);
     setCart(newCart);
+    
+    // Also load edit order data for the new restaurant
+    const newEditOrder = loadEditOrderFromStorage(restaurantId);
+    setEditOrder(newEditOrder);
   }, [restaurantId]);
 
   // Save cart to localStorage whenever it changes (but not when updating from storage)
@@ -113,6 +168,13 @@ export const CartProvider = ({ children, restaurantId }) => {
       saveCartToStorage(restaurantId, cart);
     }
   }, [cart, restaurantId]);
+
+  // Save edit order to localStorage whenever it changes
+  useEffect(() => {
+    if (restaurantId) {
+      saveEditOrderToStorage(restaurantId, editOrder);
+    }
+  }, [editOrder, restaurantId]);
 
   /**
    * Add item to cart
@@ -315,7 +377,78 @@ export const CartProvider = ({ children, restaurantId }) => {
     });
   }, []);
 
+  /**
+   * Start edit order mode
+   * @param {string|number} orderId - The order ID being edited
+   * @param {Array} previousItems - Items from the previous order (read-only)
+   * @param {Object} orderMeta - Additional order metadata (tableId, tableNo, etc.)
+   */
+  const startEditOrder = useCallback((orderId, previousItems, orderMeta = {}) => {
+    setEditOrder({
+      orderId,
+      previousItems,
+      tableId: orderMeta.tableId || null,
+      tableNo: orderMeta.tableNo || null,
+      restaurant: orderMeta.restaurant || null,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + CART_EXPIRY_TIME
+    });
+  }, []);
+
+  /**
+   * Clear edit order mode and reset to normal ordering
+   */
+  const clearEditMode = useCallback(() => {
+    setEditOrder(null);
+    // Optionally clear the cart when exiting edit mode
+    // clearCart();
+  }, []);
+
+  /**
+   * Get combined payload for order submission in edit mode
+   * Returns both previous items (for reference) and new items
+   */
+  const getEditOrderPayload = useCallback(() => {
+    if (!isEditMode) return null;
+    
+    return {
+      orderId: editingOrderId,
+      previousItems: previousOrderItems,
+      newItems: cart.items,
+      tableId: editOrder?.tableId,
+      tableNo: editOrder?.tableNo,
+    };
+  }, [isEditMode, editingOrderId, previousOrderItems, cart.items, editOrder]);
+
+  /**
+   * Calculate total price including previous order items (for display)
+   */
+  const getPreviousOrderTotal = useCallback(() => {
+    if (!previousOrderItems || previousOrderItems.length === 0) return 0;
+    
+    return previousOrderItems.reduce((total, item) => {
+      const price = parseFloat(item.unitPrice) || parseFloat(item.price) || 0;
+      return total + (price * item.quantity);
+    }, 0);
+  }, [previousOrderItems]);
+
+  /**
+   * Get combined total (previous + new items)
+   */
+  const getCombinedTotal = useCallback(() => {
+    return getPreviousOrderTotal() + getTotalPrice();
+  }, [getPreviousOrderTotal, getTotalPrice]);
+
+  /**
+   * Get total item count including previous order items
+   */
+  const getCombinedItemCount = useCallback(() => {
+    const previousCount = previousOrderItems.reduce((total, item) => total + item.quantity, 0);
+    return previousCount + getTotalItems();
+  }, [previousOrderItems, getTotalItems]);
+
   const value = {
+    // Cart items and basic operations
     cartItems: cart.items,
     addToCart,
     updateQuantity,
@@ -327,7 +460,18 @@ export const CartProvider = ({ children, restaurantId }) => {
     getTotalItems,
     getTotalPrice,
     updateCookingInstructions,
-    restaurantId
+    restaurantId,
+    
+    // Edit order mode
+    isEditMode,
+    editingOrderId,
+    previousOrderItems,
+    startEditOrder,
+    clearEditMode,
+    getEditOrderPayload,
+    getPreviousOrderTotal,
+    getCombinedTotal,
+    getCombinedItemCount,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
