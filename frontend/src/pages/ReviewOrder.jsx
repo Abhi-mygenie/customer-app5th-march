@@ -193,9 +193,8 @@ const ReviewOrder = () => {
         const { name, phone } = JSON.parse(savedSession);
         if (name && !customerName) setCustomerName(name);
         if (phone && !customerPhone) {
-          // Ensure phone has country code for PhoneInput to show flag correctly
-          const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
-          setCustomerPhone(formattedPhone);
+          // Store national number only (without country code) - PhoneInput handles flag via defaultCountry
+          setCustomerPhone(stripCountryCode(phone));
         }
       }
     } catch (e) {
@@ -212,9 +211,8 @@ const ReviewOrder = () => {
           const { name, phone } = JSON.parse(savedGuest);
           if (name && !customerName) setCustomerName(name);
           if (phone && !customerPhone) {
-            // Ensure phone has country code for PhoneInput to show flag correctly
-            const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
-            setCustomerPhone(formattedPhone);
+            // Store national number only - PhoneInput handles flag via defaultCountry
+            setCustomerPhone(stripCountryCode(phone));
           }
         }
       } catch (e) {
@@ -228,10 +226,8 @@ const ReviewOrder = () => {
     if (isAuthenticated && isCustomer && user) {
       if (user.name && !customerName) setCustomerName(user.name);
       if (user.phone && !customerPhone) {
-        // Ensure phone has country code for PhoneInput to show flag correctly
-        const phone = user.phone;
-        const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
-        setCustomerPhone(formattedPhone);
+        // Store national number only - PhoneInput handles flag via defaultCountry
+        setCustomerPhone(stripCountryCode(user.phone));
       }
       // Set looked up customer from auth user data
       setLookedUpCustomer({
