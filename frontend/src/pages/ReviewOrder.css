@@ -1001,6 +1001,13 @@
   background: #dc2626;
 }
 
+/* Subtotal row after discounts */
+.price-row-subtotal {
+  padding-top: var(--spacing-xs);
+  border-top: 1px dashed var(--border-secondary);
+  margin-top: var(--spacing-xs);
+}
+
 /* Total row */
 .price-row-total {
   padding-top: var(--spacing-xs);

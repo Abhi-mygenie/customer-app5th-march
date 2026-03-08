@@ -450,16 +450,21 @@ const ReviewOrder = () => {
   const { cgst, sgst, totalGst, vat, totalTax } = taxBreakdown;
 
   // ─── Final totals ──────────────────────────────────────────────
-  // const subtotal   = getTotalPrice();
-  const newItemsTotal = parseFloat((subtotal + totalTax).toFixed(2));
+  // Item Total = sum of all item prices (before tax, before discounts)
+  const itemTotal = previousSubtotal + subtotal;
   
-  // In edit mode, add previous order subtotal to the total
-  const totalBeforeDiscount = isEditMode 
-    ? parseFloat((previousSubtotal + newItemsTotal).toFixed(2))
-    : newItemsTotal;
+  // Subtotal after discounts (this is the base for tax calculation)
+  const subtotalAfterDiscount = Math.max(0, itemTotal - pointsDiscount);
   
-  // Apply points discount to get final total
-  const totalToPay = Math.max(0, totalBeforeDiscount - pointsDiscount);
+  // Recalculate tax on discounted amount (proportional reduction)
+  const discountRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
+  const adjustedCgst = parseFloat((cgst * discountRatio).toFixed(2));
+  const adjustedSgst = parseFloat((sgst * discountRatio).toFixed(2));
+  const adjustedVat = parseFloat((vat * discountRatio).toFixed(2));
+  const adjustedTotalTax = parseFloat((adjustedCgst + adjustedSgst + adjustedVat).toFixed(2));
+  
+  // Grand Total = Subtotal after discounts + Adjusted Tax
+  const totalToPay = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
 
   // console.log('totalTax', totalTax);
   // console.log('totalGst', totalGst);
@@ -1064,10 +1069,10 @@ const ReviewOrder = () => {
             </div>
             
             <div className="review-order-price-card">
-              {/* Combined Subtotal */}
+              {/* Item Total */}
               <div className="price-row">
-                <span className="price-label">Subtotal</span>
-                <span className="price-value">₹{(previousSubtotal + subtotal).toFixed(2)}</span>
+                <span className="price-label">Item Total</span>
+                <span className="price-value">₹{itemTotal.toFixed(2)}</span>
               </div>
 
               {/* Coupon Code - inline */}
@@ -1137,23 +1142,31 @@ const ReviewOrder = () => {
                 })()
               )}
 
+              {/* Subtotal after discounts (if any discount applied) */}
+              {pointsDiscount > 0 && (
+                <div className="price-row price-row-subtotal">
+                  <span className="price-label">Subtotal</span>
+                  <span className="price-value">₹{subtotalAfterDiscount.toFixed(2)}</span>
+                </div>
+              )}
+
               {/* GST/VAT if applicable */}
               {totalGst > 0 && (
                 <>
                   <div className="price-row price-row-sub">
                     <span className="price-label-sub">CGST</span>
-                    <span className="price-value-sub">₹{cgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{adjustedCgst.toFixed(2)}</span>
                   </div>
                   <div className="price-row price-row-sub">
                     <span className="price-label-sub">SGST</span>
-                    <span className="price-value-sub">₹{sgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{adjustedSgst.toFixed(2)}</span>
                   </div>
                 </>
               )}
               {vat > 0 && (
                 <div className="price-row price-row-sub">
                   <span className="price-label-sub">VAT</span>
-                  <span className="price-value-sub">₹{vat.toFixed(2)}</span>
+                  <span className="price-value-sub">₹{adjustedVat.toFixed(2)}</span>
                 </div>
               )}
 
