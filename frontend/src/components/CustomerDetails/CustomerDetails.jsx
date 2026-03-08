@@ -76,18 +76,6 @@ const CustomerDetails = ({
         <h2 className="customer-details-title">Customer Details</h2>
       )}
       <div className="customer-details-form">
-        {showName && (
-        <div className="customer-details-input-group">
-          {/* <label className="customer-details-label">Name</label> */}
-          <input
-            type="text"
-            className="customer-details-input"
-            value={name}
-            onChange={(e) => onNameChange?.(e.target.value)}
-            placeholder="Enter your name"
-          />
-        </div>
-        )}
         {showPhone && (
         <div className="customer-details-input-group">
           {/* <label className="customer-details-label">Phone Number</label> */}
@@ -101,6 +89,18 @@ const CustomerDetails = ({
           {phoneError && (
             <div className="customer-details-error">{phoneError}</div>
           )}
+        </div>
+        )}
+        {showName && (
+        <div className="customer-details-input-group">
+          {/* <label className="customer-details-label">Name</label> */}
+          <input
+            type="text"
+            className="customer-details-input"
+            value={name}
+            onChange={(e) => onNameChange?.(e.target.value)}
+            placeholder="Enter your name"
+          />
         </div>
         )}
       </div>

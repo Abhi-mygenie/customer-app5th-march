@@ -150,6 +150,19 @@ const ReviewOrder = () => {
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [couponCode, setCouponCode] = useState('');
 
+  // Session storage key for customer info persistence during edit order
+  const SESSION_CUSTOMER_KEY = 'sessionCustomerInfo';
+
+  // Save customer info to sessionStorage whenever it changes
+  useEffect(() => {
+    if (customerName || customerPhone) {
+      sessionStorage.setItem(SESSION_CUSTOMER_KEY, JSON.stringify({
+        name: customerName,
+        phone: customerPhone
+      }));
+    }
+  }, [customerName, customerPhone]);
+
   // Loyalty settings for points calculation
   const [loyaltySettings, setLoyaltySettings] = useState(null);
 
@@ -172,9 +185,23 @@ const ReviewOrder = () => {
     return phone;
   };
 
-  // Pre-fill from guest capture (localStorage)
+  // Pre-fill from sessionStorage first (for edit order scenarios)
   useEffect(() => {
-    if (!isAuthenticated) {
+    try {
+      const savedSession = sessionStorage.getItem(SESSION_CUSTOMER_KEY);
+      if (savedSession) {
+        const { name, phone } = JSON.parse(savedSession);
+        if (name && !customerName) setCustomerName(name);
+        if (phone && !customerPhone) setCustomerPhone(stripCountryCode(phone));
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+  }, []);
+
+  // Pre-fill from guest capture (localStorage) - only if sessionStorage didn't have data
+  useEffect(() => {
+    if (!isAuthenticated && !customerName && !customerPhone) {
       try {
         const savedGuest = localStorage.getItem('guestCustomer');
         if (savedGuest) {
@@ -186,7 +213,7 @@ const ReviewOrder = () => {
         // Ignore parse errors
       }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, customerName, customerPhone]);
 
   // Pre-fill from logged in user
   useEffect(() => {
