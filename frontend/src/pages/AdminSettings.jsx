@@ -14,7 +14,8 @@ import {
   IoCloseOutline,
   IoDocumentOutline,
   IoEyeOutline,
-  IoRestaurantOutline
+  IoRestaurantOutline,
+  IoTextOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import ContentTab from '../components/AdminSettings/ContentTab';
@@ -105,7 +106,9 @@ const AdminSettings = () => {
     banners: [],
     // Extra Info Section
     showExtraInfo: true,
-    extraInfoItems: ['', '', '', '', '']
+    extraInfoItems: ['', '', '', '', ''],
+    // Custom Text
+    browseMenuButtonText: 'Browse Menu',
   });
   
   const [newBanner, setNewBanner] = useState({
@@ -295,7 +298,9 @@ const AdminSettings = () => {
           navMenuOrder: config.navMenuOrder,
           // Extra Info Section
           showExtraInfo: config.showExtraInfo,
-          extraInfoItems: config.extraInfoItems.filter(item => item.trim() !== '')
+          extraInfoItems: config.extraInfoItems.filter(item => item.trim() !== ''),
+          // Custom Text
+          browseMenuButtonText: config.browseMenuButtonText,
         })
       });
 
@@ -444,6 +449,7 @@ const AdminSettings = () => {
     { id: 'banners', label: 'Banners', icon: IoImagesOutline },
     { id: 'content', label: 'Content', icon: IoDocumentOutline },
     { id: 'visibility', label: 'Visibility', icon: IoEyeOutline },
+    { id: 'customText', label: 'Custom Text', icon: IoTextOutline },
     { id: 'menu', label: 'Menu', icon: IoRestaurantOutline, navigateTo: 'menu' },
   ];
 
@@ -1153,6 +1159,30 @@ const AdminSettings = () => {
       {/* Content Section */}
       {activeSection === 'content' && (
         <ContentTab config={config} setConfig={setConfig} token={token} uploadImage={uploadImage} ToggleRow={ToggleRow} handleChange={handleChange} />
+      )}
+
+      {/* Custom Text Section */}
+      {activeSection === 'customText' && (
+        <div className="settings-section" data-testid="section-custom-text">
+          <h3 className="section-title">
+            <IoTextOutline className="section-icon" />
+            Custom Text
+          </h3>
+          <p className="section-description">Customize button labels and text shown in the app</p>
+
+          <div className="form-group">
+            <label className="form-label">Browse Menu Button Text</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Browse Menu"
+              value={config.browseMenuButtonText || ''}
+              onChange={(e) => handleChange('browseMenuButtonText', e.target.value)}
+              data-testid="input-browseMenuButtonText"
+            />
+            <span className="form-hint">Label for the main button on the landing page (default: "Browse Menu")</span>
+          </div>
+        </div>
       )}
 
       {/* Save Button */}

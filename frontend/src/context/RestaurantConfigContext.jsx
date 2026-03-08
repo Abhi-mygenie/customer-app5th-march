@@ -77,6 +77,8 @@ const DEFAULT_CONFIG = {
   // Extra Info Section
   showExtraInfo: true,
   extraInfoItems: [],
+  // Custom Text
+  browseMenuButtonText: 'Browse Menu',
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -305,6 +307,8 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Extra Info Section
     showExtraInfo: config.showExtraInfo !== false,
     extraInfoItems: config.extraInfoItems || [],
+    // Custom Text
+    browseMenuButtonText: config.browseMenuButtonText || 'Browse Menu',
   };
 
   return (
