@@ -1200,7 +1200,7 @@ const ReviewOrder = () => {
                       {isEligible ? (
                         <>
                           <span className="user-info-name">
-                            Earn {pointsToEarn} points on this order!
+                            You will earn {pointsToEarn} points on this order!
                           </span>
                           <span className="user-info-points">
                             Worth ₹{pointsWorth}{firstVisitBonus > 0 ? ` + ${firstVisitBonus} bonus points for first visit` : ''}
