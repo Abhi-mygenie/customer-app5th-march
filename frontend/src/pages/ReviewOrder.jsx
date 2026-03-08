@@ -192,7 +192,11 @@ const ReviewOrder = () => {
       if (savedSession) {
         const { name, phone } = JSON.parse(savedSession);
         if (name && !customerName) setCustomerName(name);
-        if (phone && !customerPhone) setCustomerPhone(stripCountryCode(phone));
+        if (phone && !customerPhone) {
+          // Ensure phone has country code for PhoneInput to show flag correctly
+          const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+          setCustomerPhone(formattedPhone);
+        }
       }
     } catch (e) {
       // Ignore parse errors
@@ -207,7 +211,11 @@ const ReviewOrder = () => {
         if (savedGuest) {
           const { name, phone } = JSON.parse(savedGuest);
           if (name && !customerName) setCustomerName(name);
-          if (phone && !customerPhone) setCustomerPhone(stripCountryCode(phone));
+          if (phone && !customerPhone) {
+            // Ensure phone has country code for PhoneInput to show flag correctly
+            const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+            setCustomerPhone(formattedPhone);
+          }
         }
       } catch (e) {
         // Ignore parse errors
@@ -219,7 +227,12 @@ const ReviewOrder = () => {
   useEffect(() => {
     if (isAuthenticated && isCustomer && user) {
       if (user.name && !customerName) setCustomerName(user.name);
-      if (user.phone && !customerPhone) setCustomerPhone(stripCountryCode(user.phone));
+      if (user.phone && !customerPhone) {
+        // Ensure phone has country code for PhoneInput to show flag correctly
+        const phone = user.phone;
+        const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+        setCustomerPhone(formattedPhone);
+      }
       // Set looked up customer from auth user data
       setLookedUpCustomer({
         found: true,
