@@ -707,13 +707,9 @@ async def update_app_config(
     user: dict = Depends(get_restaurant_user)
 ):
     """Update app configuration (restaurant admin only)"""
-    # Use restaurant_name (URL slug) as the primary key for config
-    # This matches what the frontend uses to fetch config
-    restaurant_name = user.get("restaurant_name", "").lower()
-    restaurant_id = user.get("restaurant_id") or user["id"]
-    
-    # If no restaurant_name, fall back to restaurant_id
-    config_key = restaurant_name if restaurant_name else restaurant_id
+    # Use restaurant_id as the primary key for config
+    # This matches what the frontend uses to fetch config (from URL)
+    config_key = user.get("restaurant_id") or user["id"]
     
     update_dict = {k: v for k, v in config_update.model_dump().items() if v is not None}
     

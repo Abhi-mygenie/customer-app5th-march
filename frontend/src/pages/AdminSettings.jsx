@@ -186,8 +186,8 @@ const AdminSettings = () => {
   const fetchConfig = async () => {
     if (!user?.id) return;
     
-    // Use restaurant_name (URL slug) for config - matches what customers use
-    const configId = user.restaurant_name?.toLowerCase() || user.restaurant_id || user.id;
+    // Use restaurant_id for config - matches what customers use (from URL)
+    const configId = user.restaurant_id || user.id;
     
     setLoading(true);
     try {
