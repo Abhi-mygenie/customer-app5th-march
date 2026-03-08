@@ -696,7 +696,19 @@ const ReviewOrder = () => {
             totalToPay: response?.total_amount || totalToPay.toFixed(2),
             isEditedOrder: isEditMode,
             items: newOrderItems,
-            previousItems: prevItems
+            previousItems: prevItems,
+            // Bill breakdown calculated locally
+            billSummary: {
+              itemTotal: itemTotal,
+              pointsDiscount: pointsDiscount,
+              pointsRedeemed: pointsToRedeem,
+              subtotal: subtotalAfterDiscount,
+              cgst: adjustedCgst,
+              sgst: adjustedSgst,
+              vat: adjustedVat,
+              totalTax: adjustedTotalTax,
+              grandTotal: totalToPay
+            }
           }
         }
       });
@@ -788,7 +800,19 @@ const ReviewOrder = () => {
                 totalToPay: retryResponse?.total_amount || totalToPay.toFixed(2),
                 isEditedOrder: isEditMode,
                 items: retryOrderItems,
-                previousItems: retryPrevItems
+                previousItems: retryPrevItems,
+                // Bill breakdown calculated locally
+                billSummary: {
+                  itemTotal: itemTotal,
+                  pointsDiscount: pointsDiscount,
+                  pointsRedeemed: pointsToRedeem,
+                  subtotal: subtotalAfterDiscount,
+                  cgst: adjustedCgst,
+                  sgst: adjustedSgst,
+                  vat: adjustedVat,
+                  totalTax: adjustedTotalTax,
+                  grandTotal: totalToPay
+                }
               }
             }
           });

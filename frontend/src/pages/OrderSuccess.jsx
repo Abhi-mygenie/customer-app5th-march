@@ -126,9 +126,19 @@ const OrderSuccess = () => {
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
   
+  // Use billSummary from location.state (passed from ReviewOrder) as primary source
+  const passedBillSummary = orderData?.billSummary || null;
+  
   // Use ONLY items from API (single source of truth)
   const allItems = liveOrderItems;
   const totalItemsCount = allItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+  // Initialize billSummary from passed data
+  useEffect(() => {
+    if (passedBillSummary && !billSummary) {
+      setBillSummary(passedBillSummary);
+    }
+  }, [passedBillSummary, billSummary]);
 
   // Fetch order details and update item statuses
   const fetchOrderStatus = async (isInitial = false) => {
@@ -149,8 +159,8 @@ const OrderSuccess = () => {
         }));
         setLiveOrderItems(updatedItems);
         
-        // Set bill summary
-        if (orderDetails.billSummary) {
+        // Only use API billSummary if we don't have passed data (fallback for page refresh)
+        if (!passedBillSummary && orderDetails.billSummary) {
           setBillSummary(orderDetails.billSummary);
         }
       }
@@ -384,10 +394,10 @@ const OrderSuccess = () => {
                   <span className="bill-label">Item Total</span>
                   <span className="bill-value">₹{billSummary.itemTotal.toFixed(2)}</span>
                 </div>
-                {billSummary.discount > 0 && (
+                {billSummary.pointsDiscount > 0 && (
                   <div className="bill-row bill-row-discount">
-                    <span className="bill-label">Discount</span>
-                    <span className="bill-value bill-discount">-₹{billSummary.discount.toFixed(2)}</span>
+                    <span className="bill-label">Loyalty Points ({billSummary.pointsRedeemed || 0} pts)</span>
+                    <span className="bill-value bill-discount">-₹{billSummary.pointsDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="bill-row bill-row-subtotal">
