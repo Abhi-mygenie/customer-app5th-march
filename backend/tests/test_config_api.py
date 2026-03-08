@@ -7,7 +7,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://customer-dining-app.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://gst-billing-app-14.preview.emergentagent.com').rstrip('/')
 
 # All config fields that should be present in API response
 ALL_CONFIG_FIELDS = [
