@@ -808,29 +808,57 @@ export const getOrderDetails = async (orderId) => {
 
     // Transform API response to cart-friendly format
     const orderData = response.data;
-    const previousItems = (orderData.details || []).map(detail => ({
-      id: detail.id,
-      foodId: detail.food_id,
-      orderId: detail.order_id,
-      quantity: detail.quantity,
-      unitPrice: parseFloat(detail.unit_price) || 0,
-      price: detail.price,
-      item: {
-        id: detail.food_details?.id,
-        name: detail.food_details?.name || 'Unknown Item',
-        description: detail.food_details?.description || '',
-        image: detail.food_details?.image || '',
-        price: detail.food_details?.price || detail.price,
-        veg: detail.food_details?.veg === 1,
-        tax: detail.food_details?.tax || 0,
-        tax_type: detail.food_details?.tax_type || 'GST',
-      },
-      variations: detail.variation || [],
-      add_ons: detail.add_ons || [],
-      foodLevelNotes: detail.food_level_notes || '',
-      foodStatus: detail.food_status,
-      f_order_status: detail.food_status,
-    }));
+    
+    // Calculate bill summary from items
+    let itemTotal = 0;
+    let totalGst = 0;
+    let totalVat = 0;
+    
+    const previousItems = (orderData.details || []).map(detail => {
+      const unitPrice = parseFloat(detail.unit_price) || 0;
+      const quantity = detail.quantity || 1;
+      const itemPrice = unitPrice * quantity;
+      itemTotal += itemPrice;
+      
+      // Get tax info
+      const taxPercent = parseFloat(detail.food_details?.tax) || 0;
+      const taxType = detail.food_details?.tax_type || 'GST';
+      const itemTax = (itemPrice * taxPercent) / 100;
+      
+      if (taxType === 'GST') totalGst += itemTax;
+      if (taxType === 'VAT') totalVat += itemTax;
+      
+      return {
+        id: detail.id,
+        foodId: detail.food_id,
+        orderId: detail.order_id,
+        quantity: quantity,
+        unitPrice: unitPrice,
+        price: detail.price,
+        item: {
+          id: detail.food_details?.id,
+          name: detail.food_details?.name || 'Unknown Item',
+          description: detail.food_details?.description || '',
+          image: detail.food_details?.image || '',
+          price: detail.food_details?.price || detail.price,
+          veg: detail.food_details?.veg === 1,
+          tax: detail.food_details?.tax || 0,
+          tax_type: detail.food_details?.tax_type || 'GST',
+        },
+        variations: detail.variation || [],
+        add_ons: detail.add_ons || [],
+        foodLevelNotes: detail.food_level_notes || '',
+        foodStatus: detail.food_status,
+        f_order_status: detail.food_status,
+      };
+    });
+
+    // Calculate bill breakdown
+    const cgst = parseFloat((totalGst / 2).toFixed(2));
+    const sgst = parseFloat((totalGst / 2).toFixed(2));
+    const vat = parseFloat(totalVat.toFixed(2));
+    const totalTax = parseFloat((totalGst + totalVat).toFixed(2));
+    const grandTotal = parseFloat((itemTotal + totalTax).toFixed(2));
 
     return {
       orderId: orderId,
@@ -839,6 +867,17 @@ export const getOrderDetails = async (orderId) => {
       tableNo: orderData.table_no,
       restaurant: orderData.restaurant,
       deliveryCharge: orderData.delivery_charge,
+      // Bill summary
+      billSummary: {
+        itemTotal: parseFloat(itemTotal.toFixed(2)),
+        discount: 0, // TODO: Get from order if available
+        subtotal: parseFloat(itemTotal.toFixed(2)),
+        cgst,
+        sgst,
+        vat,
+        totalTax,
+        grandTotal,
+      }
     };
   } catch (error) {
     console.error('[OrderService] Failed to fetch order details:', error);

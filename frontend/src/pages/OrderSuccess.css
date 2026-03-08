@@ -658,3 +658,110 @@
   color: #666;
   font-size: 14px;
 }
+
+
+/* ── Bill Summary Card ────── */
+.order-success-bill-card {
+  background: var(--bg-primary, #fff);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.order-success-bill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.order-success-bill-title {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.order-success-bill-toggle {
+  color: var(--text-secondary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.order-success-bill-content {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bill-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.bill-value {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.bill-row-discount .bill-discount {
+  color: #16a34a;
+}
+
+.bill-row-subtotal {
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-secondary, #e5e5e5);
+  margin-top: 4px;
+}
+
+.bill-row-tax {
+  padding-left: 8px;
+}
+
+.bill-label-sub {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-tertiary, #999);
+}
+
+.bill-value-sub {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-tertiary, #999);
+}
+
+.bill-row-total {
+  padding-top: 8px;
+  border-top: 2px solid var(--color-primary, #f97316);
+  margin-top: 8px;
+}
+
+.bill-label-total {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bill-value-total {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary, #f97316);
+}

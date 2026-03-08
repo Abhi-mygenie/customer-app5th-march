@@ -118,7 +118,9 @@ const OrderSuccess = () => {
   const { startEditOrder } = useCart();
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [showItems, setShowItems] = useState(true);
+  const [showBillSummary, setShowBillSummary] = useState(true);
   const [liveOrderItems, setLiveOrderItems] = useState([]);
+  const [billSummary, setBillSummary] = useState(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
   const orderData = location.state?.orderData || null;
@@ -146,6 +148,11 @@ const OrderSuccess = () => {
           f_order_status: item.f_order_status,
         }));
         setLiveOrderItems(updatedItems);
+        
+        // Set bill summary
+        if (orderDetails.billSummary) {
+          setBillSummary(orderDetails.billSummary);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch order status:', error);
@@ -351,6 +358,64 @@ const OrderSuccess = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bill Summary - Collapsible */}
+        {billSummary && (
+          <div className="order-success-bill-card">
+            <div 
+              className="order-success-bill-header"
+              onClick={() => setShowBillSummary(!showBillSummary)}
+              data-testid="toggle-bill-btn"
+            >
+              <span className="order-success-bill-title">
+                <RiBillLine /> Bill Summary
+              </span>
+              <span className="order-success-bill-toggle">
+                {showBillSummary ? <IoChevronUpOutline /> : <IoChevronDownOutline />}
+              </span>
+            </div>
+            {showBillSummary && (
+              <div className="order-success-bill-content">
+                <div className="bill-row">
+                  <span className="bill-label">Item Total</span>
+                  <span className="bill-value">₹{billSummary.itemTotal.toFixed(2)}</span>
+                </div>
+                {billSummary.discount > 0 && (
+                  <div className="bill-row bill-row-discount">
+                    <span className="bill-label">Discount</span>
+                    <span className="bill-value bill-discount">-₹{billSummary.discount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="bill-row bill-row-subtotal">
+                  <span className="bill-label">Subtotal</span>
+                  <span className="bill-value">₹{billSummary.subtotal.toFixed(2)}</span>
+                </div>
+                {billSummary.cgst > 0 && (
+                  <div className="bill-row bill-row-tax">
+                    <span className="bill-label-sub">CGST</span>
+                    <span className="bill-value-sub">₹{billSummary.cgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {billSummary.sgst > 0 && (
+                  <div className="bill-row bill-row-tax">
+                    <span className="bill-label-sub">SGST</span>
+                    <span className="bill-value-sub">₹{billSummary.sgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {billSummary.vat > 0 && (
+                  <div className="bill-row bill-row-tax">
+                    <span className="bill-label-sub">VAT</span>
+                    <span className="bill-value-sub">₹{billSummary.vat.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="bill-row bill-row-total">
+                  <span className="bill-label-total">Grand Total</span>
+                  <span className="bill-value-total">₹{billSummary.grandTotal.toFixed(2)}</span>
+                </div>
               </div>
             )}
           </div>
