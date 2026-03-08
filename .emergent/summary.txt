@@ -1,39 +1,66 @@
 <analysis>**original_problem_statement:**
 1.  Pull the repository from .
-2.  Build the application as is.
-3.  Initially, the user asked to run  for DB import but later requested to connect to a specific remote MongoDB instance instead: .
-4.  Do not run the testing agent after building.
-5.  The user then reported and requested fixes for several bugs and new features, including:
-    *   Incorrect item status display on the order details page.
-    *   Admin panel settings not reflecting on the customer-facing app.
-    *   Customer phone number not persisting when editing an order in the same session.
-    *   UI issues with the phone number input field.
-    *   Implementation of a loyalty points redemption feature.
-    *   Incorrect price breakdown and tax calculation on the review and order success pages.
+2.  Connect to the remote MongoDB instance: .
+3.  Fix incorrect item status display on the order details page.
+4.  Fix admin panel settings not reflecting on the customer-facing app.
+5.  Fix customer phone number not persisting when editing an order.
+6.  Fix UI issues with the phone number input field.
+7.  Implement a loyalty points redemption feature.
+8.  Fix incorrect price breakdown and tax calculation on the review and order success pages.
+9.  Add visibility settings in the admin panel for Loyalty, Coupon, and Wallet features.
+10. Change the default visibility of the Hamburger Menu to OFF.
+11. Add a new Custom Text tab in admin settings to allow customization of UI text, starting with the Browse Menu button on the landing page.
+12. Fix a bug where the custom Browse Menu button text was not saving to the database.
+13. Fix a UI bug where the tagline was appearing twice on the landing page.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack customer ordering application for restaurants. The application is cloned from a GitHub repository. The frontend is built with React, and the backend is a FastAPI server. It is connected to a user-provided remote MongoDB database. The application allows users to view menus, place orders, edit existing orders, and view order status. It also includes a loyalty points system for customers.
+A full-stack customer ordering application for restaurants, connected to a remote MongoDB. The frontend (React) and backend (FastAPI) are functional. The application features user-facing order flows and an admin panel for configuration. In this session, the admin panel was extended with more granular UI control, including toggles for major features (Loyalty, Coupons, Wallet) and a new system for customizing UI text labels.
 
 **Last working item**:
-- **Last item agent was working:** The agent just fixed a bug in the GST calculation on the  page. The issue was that when editing an order, GST was only calculated for newly added items, not for items that were already part of the order. The agent updated the logic to include both new and previous items in the tax calculation.
+- **Last item agent was working:** Investigating and answering a user query about the origin of the Welcome to 18march! text on the landing page. The agent correctly identified it comes from the Welcome Message field in the Admin Settings (Branding tab). This was a query, not an implementation task. The last *implementation* was fixing a bug where the tagline appeared twice on the landing page.
 - **Status:** USER VERIFICATION PENDING
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** The user has requested manual verification. The next agent should ask the user to test the edit order flow by adding new items to an existing order and verifying that the GST is calculated correctly on the total amount.
+- **Which testing method agent to use?** frontend testing agent. The agent should be instructed to take a screenshot of the landing page for restaurant ID  to confirm the Fine Dining Experience text appears only once.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1 (P0):** Verify GST calculation for Edit Order flow.
+- **Issue 1 (P0):** Verify the fix for the duplicate tagline on the landing page.
   - **Issue Detail:**
-    - **Attempted fixes:** The agent modified  to combine  (new items) and  (existing items from the order being edited) before calculating the total tax.
+    - **Attempted fixes:** The agent modified  to conditionally render the second instance of the tagline only if its content differs from the first instance, preventing duplication.
+    - **Next debug checklist:**
+      1. Navigate to the landing page for restaurant ID .
+      2. Verify that the text Fine Dining Experience appears only once.
+    - **Why fix this issue and what will be achieved with the fix?** To correct a visual bug and improve the professionalism of the landing page.
+    - **Status:** USER VERIFICATION PENDING
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend
+    - **Blocked on other issue:** None
+
+- **Issue 2 (P1):** Confirm the custom Browse Menu button text saves correctly.
+  - **Issue Detail:**
+    - **Attempted fixes:** The user reported that the custom text wasn't saving. The agent diagnosed the issue as a missing field in the backend Pydantic model ( in ) and added . The agent then instructed the user to try saving again.
+    - **Next debug checklist:**
+      1. Ask the user to confirm they have saved the setting again from the admin panel for restaurant ID .
+      2. Query the  collection in MongoDB for  and check if the  field has the new value (e.g., order now).
+      3. If saved, check the landing page for restaurant 689 to see if the button text has updated.
+    - **Why fix this issue and what will be achieved with the fix?** To ensure the new custom text feature is fully functional from UI to database.
+    - **Status:** USER VERIFICATION PENDING
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Both
+    - **Blocked on other issue:** None
+
+- **Issue 3 (P2):** Verify GST calculation for Edit Order flow.
+  - **Issue Detail:**
+    - **Attempted fixes:** (From previous session) The agent modified  to combine  (new items) and  (existing items) before calculating the total tax.
     - **Next debug checklist:** Ask the user to perform the following steps and confirm the result:
-        1. Go to an order success page for an order with multiple items.
-        2. Click EDIT ORDER.
-        3. Add a new item to the cart.
-        4. Navigate to the Review Order page.
-        5. Check if the GST amount is calculated based on the total value of ALL items (previous + new).
-    - **Why fix this issue and what will be achieved with the fix?** To ensure accurate billing and tax calculation when customers modify their orders, preventing undercharging or overcharging taxes.
+      1. Go to an order success page.
+      2. Click EDIT ORDER.
+      3. Add a new item to the cart.
+      4. Navigate to the Review Order page.
+      5. Check if the GST amount is calculated based on the total value of ALL items (previous + new).
+    - **Why fix this issue and what will be achieved with the fix?** To ensure accurate billing when customers modify their orders.
     - **Status:** USER VERIFICATION PENDING
     - **Is recurring issue?** N
     - **Should Test frontend/backend/both after fix?** Frontend
@@ -43,113 +70,107 @@ A full-stack customer ordering application for restaurants. The application is c
 None.
 
 **Upcoming and Future Tasks**
-None. All user-requested tasks have been addressed.
+- **Future Task (P1):** Implement wallet functionality. The user requested a visibility toggle for it but stated, wallet functionality we discuss later.
 
 **Completed work in this session**
-- **Initial Setup:**
-    - Cloned the repository and installed dependencies for both frontend and backend.
-    - Connected the application to the user-specified remote MongoDB database.
-- **Bug Fixes:**
-    - **Incorrect Item Status:** Fixed a bug where all order items were displayed as Preparing. The code was updated in  to use the correct  field from the API response instead of .
-    - **Admin Settings Sync Issue:** Resolved an issue where settings updated in the admin panel did not reflect on the customer app. This was due to inconsistent keys ( vs. ). The fix involved updating  and  to consistently use . An orphaned config document in the database was also deleted.
-    - **Customer Info Persistence in Edit Order:** Fixed a bug where the customer's name and phone number disappeared when editing an order. Implemented  in  to persist this information within the same user session.
-    - **Phone Input UI:** Addressed multiple UI issues with the phone number input component (), finally settling on storing the number in E.164 format () to ensure the country flag displays correctly, accepting the library's default behavior of showing the country code in the input field.
-    - **Discount Not Showing on Order Success:** Fixed a bug where loyalty/coupon discounts were not displayed on the  page. The fix involved passing the entire  object from  to  via .
-    - **GST Calculation in Edit Order:** Fixed a bug where GST was only calculated for new items when editing an order. The logic in  was updated to compute tax on both previous and newly added items.
-- **Feature Implementation:**
-    - **Loyalty Points Redemption:** Implemented the frontend functionality for customers to redeem their loyalty points on the  page. This included adding state management, UI changes to show the discount, and updating the order payload.
-    - **Price Breakdown Refactor:** Restructured the price summary on  to follow the user's desired flow:  ->  ->  ->  -> .
-    - **Bill Summary on Order Success:** Added a collapsible Bill Summary section on the  page to provide customers with a transparent breakdown of their bill, mirroring the  page.
-- **UX Improvements:**
-    - **UI Field Order:** Swapped the Phone Number and Name fields on the  component as requested.
-    - **Personalized Text:** Changed the loyalty points text on  to a more personalized You will earn... when the customer is identified.
+- **Feature: Granular UI Visibility Controls**
+  - Added toggles for , , and  to the Admin Visibility tab ().
+  - Updated  to conditionally render the loyalty and coupon sections based on these new config flags.
+  - Changed the default value for  to  in .
+- **Feature: Custom UI Text**
+  - Created a new Custom Text tab in the admin panel ().
+  - Implemented functionality for a customizable Browse Menu button text on the landing page, controlled via the new admin tab.
+  - Updated  to use the new config value.
+- **Bug Fix: Custom Text Not Saving**
+  - Diagnosed that the backend was dropping the new field.
+  - Fixed the issue by adding  to the  Pydantic model in .
+- **Bug Fix: Duplicate Tagline**
+  - Fixed a UI bug in  that caused the restaurant tagline to be rendered twice.
+- **User Support:**
+  - Investigated and confirmed for the user that the Order Online status is driven by the restaurant API, not admin settings.
+  - Investigated and located the source of the Welcome to... text in the admin branding settings.
 
 **Earlier issues found/mentioned but not fixed**
 None.
 
 **Known issue recurrence from previous fork**
-None. This is the first session on this codebase.
+None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Frontend:** React, React Hooks (, , ), React Router (, ), Context API.
-- **Backend:** FastAPI (Python).
+- **Frontend:** React, React Hooks, Context API, React Router.
+- **Backend:** FastAPI, Pydantic for data validation.
 - **Database:** MongoDB.
-- **State Management:** A mix of component state (), React Context (), and browser storage (, ).
-- **Data Flow:** Data is passed between pages/components via props, context, and React Router's .
+- **Admin Configuration:** App behavior is heavily controlled by a configuration object fetched from the backend, which is managed via a multi-tab admin panel.
 
 **key DB schema**
-- **users:** Contains restaurant admin user details (e.g., , ).
-- **customer_app_config:** Stores restaurant-specific UI configurations (e.g., , ). Prone to data duplication if accessed by different keys ( vs. ).
-- **customers:** Stores end-customer details, including loyalty information (e.g., , ).
-- **orders:** Contains details of orders placed by customers.
+- **customer_app_config:** Stores restaurant-specific UI configurations.
+  - 
+  - 
+  - 
+  - 
+  - (and many other existing fields)
 
 **changes in tech stack**
 None.
 
 **All files of reference**
-- : Modified to fix the admin settings sync issue by consistently using .
-- : Heavily modified to fix the item status display, calculate the bill summary for the order success page, and include loyalty points data in the order payload.
-- : The most modified file. Changes include:
-    - Implementing  for customer details.
-    - Building the loyalty points redemption logic.
-    - Restructuring the price breakdown UI and calculation logic.
-    - Fixing the GST calculation for the edit order flow.
-    - Passing the full bill summary to the order success page.
-- : Modified to add the Bill Summary section and to consume the  object passed from .
-- : Modified to fetch config using .
-- : Modified to change the order of phone and name fields.
-- : Minor changes to support the customer info persistence fix.
+- : Modified to add  to the  Pydantic model.
+- : Modified to include the new Custom Text tab and manage state for it.
+- : Modified to add , ,  toggles.
+- : **New file** created for the custom text input fields.
+- : Modified to provide the new configuration flags (, , , ) and to change the  default.
+- : Modified to conditionally render components based on the new visibility flags.
+- : Modified to fix the duplicate tagline bug and to use the  from context.
 
 **Areas that need refactoring**:
-The tax and total calculation logic in  is complex and spread across multiple  hooks (, , , , etc.). This could be consolidated into a single, more robust custom hook or utility function to improve readability and maintainability.
+- The tax and total calculation logic in  remains complex and could be consolidated.
+-  is growing. The pattern of breaking settings into tabbed components (, ) is good and should be continued to maintain readability.
 
 **key api endpoints**
-- : Fetches details for a specific order.
-- : Fetches UI configuration for a restaurant.
-- : Updates the UI configuration (used by the admin panel).
-- : Submits a new order.
-- : Looks up a customer by phone number to retrieve loyalty info.
+- : Updates the UI configuration. This was the endpoint affected by the Pydantic model bug.
+- : Fetches the UI configuration.
 
 **Critical Info for New Agent**
 - The application is connected to a live, user-provided MongoDB database. Be cautious with any database write operations.
-- The user prefers to manually verify changes and has explicitly requested not to use the automated testing agent.
-- The core logic for pricing, discounts, and taxes resides entirely on the frontend (). The backend API () is treated as a data store and order processor, but does not seem to return calculated totals or discounts.
-- State management is a recurring source of bugs. Pay close attention to how data is passed between components (), pages (), and stored locally () to avoid regressions.
+- The user prefers to manually verify changes. The next agent should always propose a verification plan and wait for user confirmation.
+- The agent does not have credentials for the admin panel. Verifying changes within the admin UI requires asking the user to perform actions and confirm results or provide screenshots.
+- Backend models () must be kept in sync with frontend save payloads (), otherwise data will be silently dropped.
 
 **documents and test reports created in this job**
 None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **user:** Asks for the customer with the highest points in junaga mahal (typo).
-2.  **agent:** States kunafa mahal was found, not junaga mahal.
-3.  **user:** Corrects to kunafa mahal.
-4.  **agent:** Provides the top customer for Kunafa Mahal. (Completed)
-5.  **user:** Asks about GST calculation logic, noticing it's very low. (New Issue)
-6.  **agent:** Summarizes the current logic (proportional reduction) and asks if it's correct.
-7.  **user:** Clarifies that GST config can be item-level or restaurant-level.
-8.  **agent:** Summarizes the understanding of the two GST modes.
-9.  **user:** Believes the proportional reduction logic is already implemented on the review page and asks the agent to verify.
-10. **agent:** Verifies the logic in  and confirms it follows the discount first, then proportional GST model.
+1.  **user:**  - Reports duplicate text bug. (Handled)
+2.  **agent:** Fixes the duplicate text bug.
+3.  **agent:** Informs the user the fix is complete.
+4.  **user:**  - Asks about the source of another text string. (Handled)
+5.  **agent:** Investigates and identifies the source in Admin Settings.
+6.  **agent:** Confirms the source to the user.
+7.  **agent:**  - Following up on the custom text not saving.
+8.  **user:**  (sends image) - Provides proof they entered the text in the UI.
+9.  **agent:**  - Starts debugging the save issue.
+10. **agent:**  - Informs the user of the backend fix and instructs them to save again. (Pending user action).
 
 **Project Health Check:**
-- **Functional:** The application is running and the primary user flows are working.
-- **Brittle:** The project has shown multiple bugs related to state management and data consistency between pages. The frontend calculation logic is complex and has required several rounds of fixes. Caution is advised when making changes to avoid introducing new regressions.
+- **Broken:** None.
+- **Mocked:** None.
+- **Functional but Brittle:** The application is running, but the heavy reliance on a complex frontend state and configuration object has led to several bugs. Changes require careful, multi-file updates (backend model, frontend state, context, and consumer component).
 
 **3rd Party Integrations**
-- **MyGenie API:** The application is tightly coupled with a proprietary external API (referred to as MyGenie) for all backend operations, including fetching menu/order data and placing orders.
-- **MongoDB:** Used as the primary database, accessed via the MyGenie API and directly by the agent for debugging queries.
+- **MyGenie API:** A proprietary external API for all backend operations.
+- **MongoDB:** The primary database.
 
 **Testing status**
-- **Testing agent used after significant changes:** NO (User explicitly requested not to).
+- **Testing agent used after significant changes:** NO.
 - **Troubleshoot agent used after agent stuck in loop:** NO.
 - **Test files created:** None.
-- **Known regressions:** None currently, but the complex frontend logic is prone to them.
+- **Known regressions:** None.
 
 **Credentials to test flow:**
-The remote MongoDB connection string is stored in .
+The remote MongoDB connection string is in . No credentials are available for the admin UI login.
 
 **What agent forgot to execute**
-The agent has addressed all explicit requests from the user up to this point.</analysis>
+- The agent did not circle back to the pending GST calculation verification from the previous session. The user immediately provided new tasks, and the agent followed the user's lead, leaving the old task unresolved.</analysis>
