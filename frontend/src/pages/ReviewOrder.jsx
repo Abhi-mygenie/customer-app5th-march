@@ -70,7 +70,7 @@ const ReviewOrder = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, user, isCustomer } = useAuth();
-  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, fetchConfig } = useRestaurantConfig();
+  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig } = useRestaurantConfig();
   // console.log('restaurantId', restaurantId);
 
   // Inside ReviewOrder component, add:
@@ -330,9 +330,9 @@ const ReviewOrder = () => {
       restaurant.is_coupon === 'Yes';
 
 
-    // Both conditions must be true
-    return couponEnabled && isCustomerDetailsFilled;
-  }, [restaurant, isCustomerDetailsFilled]);
+    // Both conditions must be true + admin config toggle
+    return couponEnabled && isCustomerDetailsFilled && configShowCouponCode;
+  }, [restaurant, isCustomerDetailsFilled, configShowCouponCode]);
 
   const showLoyalty = useMemo(() => {
     if (!restaurant) return false;
@@ -342,9 +342,9 @@ const ReviewOrder = () => {
       restaurant.is_loyalty === 'Yes';
 
 
-    // Both conditions must be true
-    return loyaltyEnabled && isCustomerDetailsFilled;
-  }, [restaurant, isCustomerDetailsFilled]);
+    // Both conditions must be true + admin config toggle
+    return loyaltyEnabled && isCustomerDetailsFilled && configShowLoyaltyPoints;
+  }, [restaurant, isCustomerDetailsFilled, configShowLoyaltyPoints]);
 
   // Check if restaurant is 716 (table number required)
   const isRestaurant716 = isMultipleMenu(restaurant, restaurantId);
@@ -1236,7 +1236,7 @@ const ReviewOrder = () => {
           )}
 
           {/* Customer Rewards Info — shown for any identified customer (via login or phone lookup) */}
-          {(isAuthenticated || lookedUpCustomer) && loyaltySettings && (
+          {configShowLoyaltyPoints && (isAuthenticated || lookedUpCustomer) && loyaltySettings && (
             (() => {
               const custTier = isAuthenticated ? (user?.tier || 'Bronze') : (lookedUpCustomer?.tier || 'Bronze');
               const tier = custTier.toLowerCase();
@@ -1280,7 +1280,7 @@ const ReviewOrder = () => {
           )}
 
           {/* No loyalty settings fallback */}
-          {(isAuthenticated || lookedUpCustomer) && !loyaltySettings && (
+          {configShowLoyaltyPoints && (isAuthenticated || lookedUpCustomer) && !loyaltySettings && (
             <div className="review-order-user-info" data-testid="logged-in-user-info">
               <div className="user-info-content">
                 <IoGiftOutline className="user-info-icon" />
@@ -1297,7 +1297,7 @@ const ReviewOrder = () => {
           )}
 
           {/* Guest prompt — only if no phone entered and not logged in */}
-          {!isAuthenticated && !lookedUpCustomer && loyaltySettings && (
+          {configShowLoyaltyPoints && !isAuthenticated && !lookedUpCustomer && loyaltySettings && (
             (() => {
               const earnPercent = loyaltySettings.bronze_earn_percent || 5;
               const billAmount = totalToPay;

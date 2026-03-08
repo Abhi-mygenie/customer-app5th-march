@@ -87,6 +87,9 @@ const VisibilityTab = ({ ToggleRow }) => {
             <ToggleRow field="showSpecialInstructions" label="Special Instructions" />
             <ToggleRow field="showPriceBreakdown" label="Price Breakdown" />
             <ToggleRow field="showTableInfo" label="Table Information" />
+            <ToggleRow field="showLoyaltyPoints" label="Loyalty Points" />
+            <ToggleRow field="showCouponCode" label="Coupon Code" />
+            <ToggleRow field="showWallet" label="Wallet" />
           </div>
         </div>
       )}

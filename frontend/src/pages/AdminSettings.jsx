@@ -55,6 +55,9 @@ const AdminSettings = () => {
     showSpecialInstructions: true,
     showPriceBreakdown: true,
     showTableInfo: true,
+    showLoyaltyPoints: true,
+    showCouponCode: true,
+    showWallet: true,
     // Branding - Colors
     logoUrl: '',
     backgroundImageUrl: '',          // Desktop background image
@@ -249,6 +252,9 @@ const AdminSettings = () => {
           showSpecialInstructions: config.showSpecialInstructions,
           showPriceBreakdown: config.showPriceBreakdown,
           showTableInfo: config.showTableInfo,
+          showLoyaltyPoints: config.showLoyaltyPoints,
+          showCouponCode: config.showCouponCode,
+          showWallet: config.showWallet,
           // Order Status Page Visibility
           showFoodStatus: config.showFoodStatus,
           // Branding - Colors

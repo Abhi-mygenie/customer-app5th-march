@@ -32,6 +32,9 @@ const DEFAULT_CONFIG = {
   showSpecialInstructions: true,
   showPriceBreakdown: true,
   showTableInfo: true,
+  showLoyaltyPoints: true,
+  showCouponCode: true,
+  showWallet: true,
   // Order Status Page
   showFoodStatus: true,  // Show food item status (Preparing/Ready/Served)
   // Branding - Colors
@@ -257,6 +260,9 @@ export const RestaurantConfigProvider = ({ children }) => {
     showSpecialInstructions: isOn('showSpecialInstructions'),
     showPriceBreakdown: isOn('showPriceBreakdown'),
     showTableInfo: isOn('showTableInfo'),
+    showLoyaltyPoints: isOn('showLoyaltyPoints'),
+    showCouponCode: isOn('showCouponCode'),
+    showWallet: isOn('showWallet'),
     // Order Status Page
     showFoodStatus: isOn('showFoodStatus'),
     // Branding - Colors

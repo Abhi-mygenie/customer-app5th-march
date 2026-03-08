@@ -1,59 +1,30 @@
-# Customer App PRD
+# Customer Ordering App - PRD
 
 ## Original Problem Statement
-Pull and build the app from https://github.com/Abhi-mygenie/Customer-app-6-march.git
+Build a full-stack customer ordering application for restaurants, cloned from `https://github.com/Abhi-mygenie/Customer-app-6-march.git`. Connected to remote MongoDB: `mongodb://mygenie_admin:QplazmMzalpq@52.66.232.149:27017/mygenie`. Multiple bug fixes and features were implemented across sessions.
 
 ## Architecture
-- **Frontend**: React 19 with TailwindCSS, React Query, React Router
-- **Backend**: FastAPI with MongoDB (Motor async driver)
-- **External API**: preprod.mygenie.online (MyGenie API)
-- **Auth**: JWT-based with OTP support
+- **Frontend:** React (port 3000)
+- **Backend:** FastAPI (port 8001)
+- **Database:** Remote MongoDB
+- **State Management:** React Context + sessionStorage + localStorage
 
-## User Personas
-1. **Restaurant Customers**: Browse menu, place orders, view profile/points/wallet
-2. **Restaurant Admins**: Configure app settings, manage banners, view feedback
+## What's Been Implemented
 
-## Core Features (Implemented)
-- Landing page with restaurant branding
-- Menu browsing by stations/categories
-- Cart and order placement
-- Customer login via OTP
-- Profile with points & wallet
-- Order Success with item status tracking
-- Edit Order functionality
-- Admin visibility settings
+### Session 1 (Completed)
+- Cloned repo, installed dependencies, connected to remote MongoDB
+- Fixed: Incorrect item status display, admin settings sync, customer info persistence, phone input UI
+- Implemented: Loyalty points redemption, price breakdown refactor, bill summary on order success
+- Fixed: GST calculation for edit order flow
 
-## What's Been Implemented (Jan 2026)
-- [x] Full app clone from GitHub
-- [x] Backend dependencies installed
-- [x] Frontend dependencies installed
-- [x] Demo data seeded (55 customers, 314 orders)
-- [x] DB import (1,967 customers, 6 users)
-- [x] Order Success page - items from API with status
-- [x] Status mapping (f_order_status: 1=Preparing, 2=Ready, 7=Pending, etc)
-- [x] showFoodStatus visibility toggle
-- [x] Edit Order button layout (landing page style)
-- [x] PreviousOrderItems - single row layout with status
-- [x] Removed: subtitle, order ID badge, subtotal row
-- [x] Price Breakdown - combined Subtotal
-- [x] Removed: dotted divider (kept orange line)
-- [x] Coupon & Loyalty placeholders in UI
+### Session 2 (2026-03-08)
+- Added 3 new visibility toggles in Admin Settings > Visibility > Review Order:
+  - **Show Loyalty Points** (ON/OFF) - controls loyalty section + rewards banner visibility
+  - **Show Coupon Code** (ON/OFF) - controls coupon input visibility  
+  - **Show Wallet** (ON/OFF) - placeholder toggle for future wallet feature
+- Files modified: `VisibilityTab.jsx`, `AdminSettings.jsx`, `RestaurantConfigContext.jsx`, `ReviewOrder.jsx`
 
-## Restaurant Users
-| Email | Restaurant | ID |
-|-------|------------|-----|
-| owner@18march.com | 18march | 478 |
-| owner@kunafamahal.com | Kunafa Mahal | 689 |
-| owner@hungry.com | Hungry Keya?? | 634 |
-| demo@restaurant.com | Demo Restaurant | - |
-
-## Environment
-- **MyGenie API**: preprod.mygenie.online (Test/Staging)
-- **DB**: test_database (MongoDB)
-
-## Backlog / Future Enhancements
-- P0: Coupon code validation API integration
-- P0: Loyalty points redemption API integration
-- P1: Push notifications for order status
-- P2: Payment gateway integration
-- P3: Real-time WebSocket for status updates
+## Prioritized Backlog
+- P0: None
+- P1: Wallet functionality (to be discussed)
+- P2: Tax calculation logic refactor (consolidate complex useMemo hooks)
