@@ -42,7 +42,7 @@ const AdminSettings = () => {
     showAboutUs: true,
     showFooter: true,
     showLandingCustomerCapture: false,  // Capture name/phone on landing
-    showHamburgerMenu: true,  // Show hamburger menu
+    showHamburgerMenu: false,  // Show hamburger menu
     showLoginButton: true,    // Show login button on landing
     // Menu Page Visibility
     showPromotionsOnMenu: true,

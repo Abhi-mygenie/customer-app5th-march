@@ -19,7 +19,7 @@ const DEFAULT_CONFIG = {
   showAboutUs: true,
   showFooter: true,
   showLandingCustomerCapture: false,  // Capture name/phone on landing
-  showHamburgerMenu: true,  // Show hamburger menu
+  showHamburgerMenu: false,  // Show hamburger menu
   showLoginButton: true,    // Show login button on landing
   // Menu Page
   showPromotionsOnMenu: true,
@@ -247,7 +247,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     showAboutUs: isOn('showAboutUs'),
     showFooter: isOn('showFooter'),
     showLandingCustomerCapture: config.showLandingCustomerCapture === true,  // Default OFF
-    showHamburgerMenu: isOn('showHamburgerMenu'),  // Default ON
+    showHamburgerMenu: config.showHamburgerMenu === true,  // Default OFF
     showLoginButton: isOn('showLoginButton'),      // Default ON
     // Menu Page
     showPromotionsOnMenu: isOn('showPromotionsOnMenu'),
