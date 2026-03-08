@@ -1,0 +1,47 @@
+{
+  "summary": "Completed comprehensive testing of customer capture on landing page feature. Backend APIs are 100% functional. Frontend implementation is 85% working with minor existing customer flow issue.",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Existing customer redirect to login",
+        "issue": "When existing customer (phone: 123456789000) enters details and clicks Continue, should redirect to login page but stays on landing page",
+        "affected_selectors": ["[data-testid=\"capture-continue-btn\"]"],
+        "fix_priority": "MEDIUM"
+      }
+    ],
+    "design_issues": [
+      {
+        "flow": "Order Review name field visibility",
+        "issue": "Customer name field not consistently visible in Order Review page - may be conditionally hidden by restaurant config",
+        "affected_screen": ["Order Review page"],
+        "fix_priority": "LOW"
+      }
+    ]
+  },
+  "passed_tests": [
+    "Backend: POST /api/auth/check-customer returns exists:true/false correctly",
+    "Backend: Admin login and token generation working",
+    "Backend: Config API GET/PUT operations working", 
+    "Backend: OTP flow working correctly",
+    "Admin Settings: 'Capture Customer Details (Name & Phone)' toggle exists and functions",
+    "Landing Page: Customer capture form shows when config enabled, Browse Menu hidden",
+    "Landing Page: Customer capture form hides when config disabled, Browse Menu shows", 
+    "Guest Flow: New customer data saved to localStorage and navigates to menu",
+    "Guest Flow: Phone validation working with proper format (+919876543210)",
+    "Order Review: Guest phone data pre-fills correctly from localStorage",
+    "Order Review: Guest name data pre-fills correctly from localStorage (when field visible)",
+    "Admin Config: Toggle state changes persist correctly",
+    "Browse Menu Button: Works correctly when customer capture disabled"
+  ],
+  "test_report_links": ["/app/backend_test.py"],
+  "action_item_for_main_agent": "Investigate existing customer flow in LandingCustomerCapture component - API call to check-customer works but redirect to login page is not happening. Check onCustomerFound callback implementation and routing logic.",
+  "updated_files": ["/app/backend_test.py"],
+  "success_percentage": "Backend: 100% (9/9 tests passed), Frontend: 85% (13/15 flows working)",
+  "should_call_test_agent_after_fix": "false", 
+  "should_main_agent_test_itself": "true"
+}

@@ -1,0 +1,63 @@
+{
+  "summary": "Completed testing of optional login features for Customer App. Backend APIs working correctly, core login functionality implemented and working. Critical routing issue found affecting guest checkout flow.",
+  "backend_issues": {
+    "minor_issues": [
+      {
+        "endpoint": "/api/auth/login with invalid OTP",
+        "issue": "Returns 404 instead of 401 for invalid OTP when phone not registered",
+        "impact": "May confuse error handling, but functional",
+        "fix_priority": "LOW"
+      }
+    ],
+    "working_correctly": [
+      "/api/ root endpoint",
+      "/api/auth/send-otp (returns expected 404 for unregistered phone)",
+      "/api/config/{restaurant_id} (returns default configuration)",
+      "Authentication protection on customer endpoints"
+    ]
+  },
+  "frontend_issues": {
+    "critical_bugs": [
+      {
+        "component": "LandingPage routing with restaurant ID",
+        "issue": "Frontend fails to load when restaurant ID in URL path (e.g., /test-restaurant)",
+        "impact": "Blocks guest checkout flow - Browse Menu button only appears with restaurant ID",
+        "affected_selectors": ["[data-testid='landing-browse-menu-btn']"],
+        "fix_priority": "CRITICAL"
+      }
+    ],
+    "ui_bugs": [
+      {
+        "component": "LandingPage at root URL",
+        "issue": "Browse Menu button missing when no restaurant ID in URL",
+        "impact": "Guest checkout not accessible from main landing page",
+        "selector": "[data-testid='landing-browse-menu-btn']",
+        "fix_priority": "HIGH"
+      }
+    ],
+    "working_correctly": [
+      "Login button appears in top-right corner",
+      "Login button shows 'Login' when unauthenticated",
+      "Login button navigation to /login page",
+      "Login page loads with phone input and Send OTP button",
+      "Send OTP functionality (handles unregistered phone appropriately)"
+    ]
+  },
+  "passed_tests": [
+    "Landing page loads at root URL with login button",
+    "Login button navigation to /login page works",
+    "Login page elements present (phone input, Send OTP button)",
+    "Send OTP API integration works (shows expected error for unregistered phone)",
+    "Backend API endpoints responding correctly",
+    "Authentication protection working on protected routes"
+  ],
+  "test_report_links": ["/app/backend_test.py"],
+  "success_percentage": {
+    "backend": "90% (8/9 tests passed - minor auth error handling issue)",
+    "frontend": "60% (core login works, but guest checkout routing broken)"
+  },
+  "updated_files": ["/app/backend_test.py"],
+  "action_item_for_main_agent": "CRITICAL: Fix frontend routing issue where URLs with restaurant ID (e.g., /test-restaurant) fail to load. The Browse Menu button only appears when restaurant ID is present in URL, but such URLs cause the app to error. This breaks the guest checkout flow which is essential for the optional login feature to work properly. Also investigate why Browse Menu button is missing at root URL - users should be able to browse menu without login.",
+  "should_call_test_agent_after_fix": "true",
+  "should_main_agent_test_itself": "false"
+}

@@ -6,7 +6,10 @@ import pytest
 import requests
 import os
 
+
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://admin-logo-palette.preview.emergentagent.com').rstrip('/')
+
+
 
 # Admin credentials
 ADMIN_EMAIL = "owner@18march.com"

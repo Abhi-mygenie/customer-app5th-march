@@ -19,7 +19,7 @@ const DEFAULT_CONFIG = {
   showAboutUs: true,
   showFooter: true,
   showLandingCustomerCapture: false,  // Capture name/phone on landing
-  showHamburgerMenu: true,  // Show hamburger menu
+  showHamburgerMenu: false,  // Show hamburger menu
   showLoginButton: true,    // Show login button on landing
   // Menu Page
   showPromotionsOnMenu: true,
@@ -32,6 +32,9 @@ const DEFAULT_CONFIG = {
   showSpecialInstructions: true,
   showPriceBreakdown: true,
   showTableInfo: true,
+  showLoyaltyPoints: true,
+  showCouponCode: true,
+  showWallet: true,
   // Order Status Page
   showFoodStatus: true,  // Show food item status (Preparing/Ready/Served)
   // Branding - Colors
@@ -74,6 +77,8 @@ const DEFAULT_CONFIG = {
   // Extra Info Section
   showExtraInfo: true,
   extraInfoItems: [],
+  // Custom Text
+  browseMenuButtonText: 'Browse Menu',
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -244,7 +249,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     showAboutUs: isOn('showAboutUs'),
     showFooter: isOn('showFooter'),
     showLandingCustomerCapture: config.showLandingCustomerCapture === true,  // Default OFF
-    showHamburgerMenu: isOn('showHamburgerMenu'),  // Default ON
+    showHamburgerMenu: config.showHamburgerMenu === true,  // Default OFF
     showLoginButton: isOn('showLoginButton'),      // Default ON
     // Menu Page
     showPromotionsOnMenu: isOn('showPromotionsOnMenu'),
@@ -257,6 +262,9 @@ export const RestaurantConfigProvider = ({ children }) => {
     showSpecialInstructions: isOn('showSpecialInstructions'),
     showPriceBreakdown: isOn('showPriceBreakdown'),
     showTableInfo: isOn('showTableInfo'),
+    showLoyaltyPoints: isOn('showLoyaltyPoints'),
+    showCouponCode: isOn('showCouponCode'),
+    showWallet: isOn('showWallet'),
     // Order Status Page
     showFoodStatus: isOn('showFoodStatus'),
     // Branding - Colors
@@ -299,6 +307,8 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Extra Info Section
     showExtraInfo: config.showExtraInfo !== false,
     extraInfoItems: config.extraInfoItems || [],
+    // Custom Text
+    browseMenuButtonText: config.browseMenuButtonText || 'Browse Menu',
   };
 
   return (
