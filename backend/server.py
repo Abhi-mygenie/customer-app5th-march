@@ -180,6 +180,12 @@ class AppConfigUpdate(BaseModel):
     # Extra Info Section (Footer)
     showExtraInfo: Optional[bool] = None
     extraInfoItems: Optional[List[str]] = None  # Up to 5 bullet points
+    # Order Page - Loyalty/Coupon/Wallet visibility
+    showLoyaltyPoints: Optional[bool] = None
+    showCouponCode: Optional[bool] = None
+    showWallet: Optional[bool] = None
+    # Custom Text
+    browseMenuButtonText: Optional[str] = None
 
 class BannerCreate(BaseModel):
     bannerImage: str
