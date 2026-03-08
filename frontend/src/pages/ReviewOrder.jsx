@@ -1142,13 +1142,11 @@ const ReviewOrder = () => {
                 })()
               )}
 
-              {/* Subtotal after discounts (if any discount applied) */}
-              {pointsDiscount > 0 && (
-                <div className="price-row price-row-subtotal">
-                  <span className="price-label">Subtotal</span>
-                  <span className="price-value">₹{subtotalAfterDiscount.toFixed(2)}</span>
-                </div>
-              )}
+              {/* Subtotal (before taxes) */}
+              <div className="price-row price-row-subtotal">
+                <span className="price-label">Subtotal</span>
+                <span className="price-value">₹{subtotalAfterDiscount.toFixed(2)}</span>
+              </div>
 
               {/* GST/VAT if applicable */}
               {totalGst > 0 && (
