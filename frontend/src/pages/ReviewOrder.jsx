@@ -414,8 +414,10 @@ const ReviewOrder = () => {
 
     // Debug: Log cart items and their tax info
     console.log('=== TAX DEBUG START ===');
-    console.log('Total cart items:', cartItems.length);
+    console.log('Cart items (new):', cartItems.length);
+    console.log('Previous order items:', previousOrderItems?.length || 0);
 
+    // Calculate tax for NEW items (cartItems)
     cartItems.forEach((cartItem, index) => {
       const itemPrice = (() => {
         const base = parseFloat(cartItem.item.price) || 0;
@@ -434,7 +436,7 @@ const ReviewOrder = () => {
       const totalTaxForItem = taxAmountPerUnit * cartItem.quantity;
 
       // Debug: Log each item's tax info
-      console.log(`Item ${index + 1}: ${cartItem.item.name?.substring(0, 20)}`);
+      console.log(`New Item ${index + 1}: ${cartItem.item.name?.substring(0, 20)}`);
       console.log(`  - Price: ₹${itemPrice}, Qty: ${cartItem.quantity}`);
       console.log(`  - Tax: ${taxPercent}% (${taxType})`);
       console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
@@ -442,6 +444,26 @@ const ReviewOrder = () => {
       if (taxType === 'GST') totalGst += totalTaxForItem;
       if (taxType === 'VAT') totalVat += totalTaxForItem;
     });
+
+    // Calculate tax for PREVIOUS items (in edit mode)
+    if (previousOrderItems && previousOrderItems.length > 0) {
+      previousOrderItems.forEach((prevItem, index) => {
+        const itemPrice = parseFloat(prevItem.unitPrice || prevItem.price) || 0;
+        const quantity = prevItem.quantity || 1;
+        const taxPercent = parseFloat(prevItem.item?.tax) || 0;
+        const taxType = prevItem.item?.tax_type || 'GST';
+        const totalTaxForItem = parseFloat(((itemPrice * quantity * taxPercent) / 100).toFixed(2));
+
+        // Debug: Log each previous item's tax info
+        console.log(`Previous Item ${index + 1}: ${prevItem.item?.name?.substring(0, 20)}`);
+        console.log(`  - Price: ₹${itemPrice}, Qty: ${quantity}`);
+        console.log(`  - Tax: ${taxPercent}% (${taxType})`);
+        console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
+
+        if (taxType === 'GST') totalGst += totalTaxForItem;
+        if (taxType === 'VAT') totalVat += totalTaxForItem;
+      });
+    }
 
     totalGst = parseFloat(totalGst.toFixed(2));
     totalVat = parseFloat(totalVat.toFixed(2));
@@ -457,7 +479,7 @@ const ReviewOrder = () => {
     console.log('=== TAX DEBUG END ===');
 
     return { cgst, sgst, totalGst, vat: totalVat, totalTax };
-  }, [cartItems]);
+  }, [cartItems, previousOrderItems]);
 
   const { cgst, sgst, totalGst, vat, totalTax } = taxBreakdown;
 
