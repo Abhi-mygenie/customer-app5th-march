@@ -819,7 +819,7 @@ export const getOrderDetails = async (orderId) => {
       add_ons: detail.add_ons || [],
       foodLevelNotes: detail.food_level_notes || '',
       foodStatus: detail.food_status,
-      f_order_status: detail.f_order_status,
+      f_order_status: detail.food_status,
     }));
 
     return {
