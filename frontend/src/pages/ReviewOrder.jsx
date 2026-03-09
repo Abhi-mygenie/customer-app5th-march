@@ -558,13 +558,14 @@ const ReviewOrder = () => {
     }
   };
 
-  // Handle navigate to menu
+  // Handle navigate to menu — routes through LandingPage so business logic
+  // (check table status → Edit Order or Browse Menu) is always applied.
   const handleNavigateToMenu = () => {
     if (restaurantId) {
       if (isRestaurant716) {
         navigate(`/${restaurantId}/stations`, { replace: true });
       } else {
-        navigate(`/${restaurantId}/menu`, { replace: true });
+        navigate(`/${restaurantId}`, { replace: true });
       }
     }
   };
