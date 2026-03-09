@@ -274,9 +274,14 @@ const OrderSuccess = () => {
   const showOrderStatus = isConfigEnabled(restaurant, 'show_order_status');
   const showCallWaiter = isConfigEnabled(restaurant, 'show_call_waiter');
   const showPayBill = isConfigEnabled(restaurant, 'show_pay_bill');
-  const showEditOrder = isConfigEnabled(restaurant, 'show_edit_order');
-  const showGoToMenu = isConfigEnabled(restaurant, 'show_go_to_menu');
   const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo;
+  
+  // Edit Order vs Browse Menu - based on table presence (business logic)
+  // If table exists → Show Edit Order (user can add more items to this table's order)
+  // If no table → Show Browse Menu (no table to edit, start fresh)
+  const hasTable = isScanned && scannedTableNo;
+  const showEditOrder = hasTable;
+  const showBrowseMenu = !hasTable;
 
   return (
     <div className="order-success-page" data-testid="order-success-page">
@@ -460,7 +465,7 @@ const OrderSuccess = () => {
 
         {/* Action Buttons - Landing Page Style */}
         <div className="order-success-actions-compact" data-testid="order-success-actions">
-          {/* Top: Edit Order - Primary full width */}
+          {/* Edit Order - when table exists */}
           {showEditOrder && (
             <button
               className="order-success-btn order-success-btn-primary"
@@ -470,6 +475,18 @@ const OrderSuccess = () => {
             >
               <MdOutlineEdit />
               {isLoadingEdit ? 'Loading...' : 'EDIT ORDER'}
+            </button>
+          )}
+
+          {/* Browse Menu - when no table */}
+          {showBrowseMenu && (
+            <button
+              className="order-success-btn order-success-btn-primary"
+              onClick={handleGoToMenu}
+              data-testid="order-success-browse-menu-btn"
+            >
+              <MdOutlineRestaurantMenu />
+              BROWSE MENU
             </button>
           )}
 
