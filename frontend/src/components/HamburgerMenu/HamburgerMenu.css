@@ -34,6 +34,10 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+.hamburger-btn:hover svg {
+  color: var(--color-primary-dark);
+}
+
 /* Overlay */
 .hamburger-overlay {
   position: fixed;
