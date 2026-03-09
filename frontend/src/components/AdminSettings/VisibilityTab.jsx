@@ -52,6 +52,8 @@ const VisibilityTab = ({ ToggleRow }) => {
             <ToggleRow field="showFooter" label="Footer Section" />
             <ToggleRow field="showPoweredBy" label="Powered by MyGenie" />
             <ToggleRow field="showLandingCustomerCapture" label="Capture Customer Details (Name & Phone)" />
+            <ToggleRow field="showLandingCallWaiter" label="Call Waiter Button" />
+            <ToggleRow field="showLandingPayBill" label="Pay Bill Button" />
           </div>
         </div>
       )}

@@ -115,6 +115,8 @@ class AppConfigUpdate(BaseModel):
     showPoweredBy: Optional[bool] = None
     showCallWaiter: Optional[bool] = None
     showPayBill: Optional[bool] = None
+    showLandingCallWaiter: Optional[bool] = None
+    showLandingPayBill: Optional[bool] = None
     showAboutUs: Optional[bool] = None
     showFooter: Optional[bool] = None
     showLandingCustomerCapture: Optional[bool] = None  # Capture name/phone on landing
@@ -641,6 +643,8 @@ async def get_app_config(restaurant_id: str):
             "showPoweredBy": True,
             "showCallWaiter": True,
             "showPayBill": True,
+            "showLandingCallWaiter": True,
+            "showLandingPayBill": True,
             "showAboutUs": True,
             "showFooter": True,
             "showLandingCustomerCapture": False,  # Default OFF - restaurant opts in

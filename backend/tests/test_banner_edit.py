@@ -7,7 +7,7 @@ import requests
 import os
 
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://dining-qr-editor.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://genie-cart-flow.preview.emergentagent.com').rstrip('/')
 
 
 
