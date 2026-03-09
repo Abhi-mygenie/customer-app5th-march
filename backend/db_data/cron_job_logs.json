@@ -1,0 +1,26 @@
+[
+  {
+    "job_name": "daily_loyalty_jobs",
+    "status": "completed",
+    "started_at": "2026-02-25T06:29:34.761417+00:00",
+    "users_processed": 5,
+    "birthday": {
+      "total_awarded": 0,
+      "total_points": 0
+    },
+    "anniversary": {
+      "total_awarded": 0,
+      "total_points": 0
+    },
+    "expiry_reminders": {
+      "total_reminded": 0
+    },
+    "expiry": {
+      "total_expired": 0,
+      "customers_affected": 0
+    },
+    "errors": [],
+    "finished_at": "2026-02-25T06:29:36.234859+00:00",
+    "duration_seconds": 1.473442
+  }
+]
