@@ -1040,3 +1040,52 @@ export const updateCustomerOrder = async ({
     throw error;
   }
 };
+
+/**
+ * Check table status to determine if there's an existing order
+ * Used to decide between "Edit Order" vs "Browse Menu" flow
+ * @param {string|number} tableId - Table ID from QR scan
+ * @param {string|number} restaurantId - Restaurant ID
+ * @param {string} authToken - Authorization token
+ * @returns {Promise<Object>} { tableStatus, orderId, isOccupied }
+ *   - tableStatus: "Available" | "Not Available" | "Invalid Table ID or QR code"
+ *   - orderId: string (empty if available, order ID if occupied)
+ *   - isOccupied: boolean (true if table has active order)
+ */
+export const checkTableStatus = async (tableId, restaurantId, authToken) => {
+  try {
+    const response = await apiClient.get(
+      ENDPOINTS.CHECK_TABLE_STATUS(tableId, restaurantId),
+      {
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'zoneId': '3',
+          'Authorization': `Bearer ${authToken}`,
+        }
+      }
+    );
+
+    const status = response.data?.status || {};
+    const tableStatus = status.table_status || 'Available';
+    const orderId = status.order_id || '';
+    
+    return {
+      tableStatus,
+      orderId,
+      isOccupied: tableStatus === 'Not Available' && !!orderId,
+      isAvailable: tableStatus === 'Available',
+      isInvalid: tableStatus === 'Invalid Table ID or QR code',
+    };
+  } catch (error) {
+    console.error('[OrderService] Failed to check table status:', error);
+    // Return safe default on error - treat as available (new order flow)
+    return {
+      tableStatus: 'Available',
+      orderId: '',
+      isOccupied: false,
+      isAvailable: true,
+      isInvalid: false,
+      error: error.message,
+    };
+  }
+};

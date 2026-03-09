@@ -35,6 +35,9 @@ export const ENDPOINTS = {
 
   // Restaurant Table/Room endpoints
   RESTAURANT_TABLE_ROOMS: () => `${API_BASE_URL}/web/table-config`,
+  
+  // Table Status Check endpoint (for edit order detection)
+  CHECK_TABLE_STATUS: (tableId, restaurantId) => `${API_BASE_URL}/customer/check-table-status?table_id=${tableId}&restaurant_id=${restaurantId}`,
 };
 
 export default ENDPOINTS;
