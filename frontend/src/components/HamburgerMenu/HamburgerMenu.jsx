@@ -28,7 +28,7 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, user, isCustomer, logout } = useAuth();
-  const { showAboutUs, navMenuOrder, feedbackEnabled } = useRestaurantConfig();
+  const { aboutUsContent, navMenuOrder, feedbackEnabled } = useRestaurantConfig();
   const isRestaurant = user?.type === 'restaurant';
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -138,8 +138,8 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
 
             // Skip feedback if disabled
             if (item.id === 'feedback' && !feedbackEnabled) return null;
-            // Skip about if toggle off
-            if (item.id === 'about' && !showAboutUs) return null;
+            // Skip about if no aboutUs content configured
+            if (item.id === 'about' && !aboutUsContent) return null;
 
             const Icon = iconMap[item.id] || IoDocumentTextOutline;
             const path = pathMap[item.id] || `${menuBasePath}/page/${item.id}`;

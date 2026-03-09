@@ -42,7 +42,6 @@ const AdminSettings = () => {
     showLandingCallWaiter: true,
     showLandingPayBill: true,
     showEstimatedTimes: false,
-    showAboutUs: true,
     showFooter: true,
     showLandingCustomerCapture: false,  // Capture name/phone on landing
     showHamburgerMenu: false,  // Show hamburger menu
@@ -244,7 +243,6 @@ const AdminSettings = () => {
           showLandingCallWaiter: config.showLandingCallWaiter,
           showLandingPayBill: config.showLandingPayBill,
           showEstimatedTimes: config.showEstimatedTimes,
-          showAboutUs: config.showAboutUs,
           showFooter: config.showFooter,
           showLandingCustomerCapture: config.showLandingCustomerCapture,
           showHamburgerMenu: config.showHamburgerMenu,

@@ -48,7 +48,6 @@ const VisibilityTab = ({ ToggleRow }) => {
             <ToggleRow field="showWelcomeText" label="Welcome Message" />
             <ToggleRow field="showDescription" label="Restaurant Description" />
             <ToggleRow field="showSocialIcons" label="Social Media Icons" />
-            <ToggleRow field="showAboutUs" label="About Us Link" />
             <ToggleRow field="showFooter" label="Footer Section" />
             <ToggleRow field="showPoweredBy" label="Powered by MyGenie" />
             <ToggleRow field="showLandingCustomerCapture" label="Capture Customer Details (Name & Phone)" />
