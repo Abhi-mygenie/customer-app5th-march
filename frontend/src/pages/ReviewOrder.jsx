@@ -530,17 +530,22 @@ const ReviewOrder = () => {
     fetchToken();
   }, []); // Only run once on mount
 
-  // Immediately bypass empty review-order page — redirect to LandingPage
-  // so business logic (check table status → Edit Order or Browse Menu) is applied.
+  // Auto-redirect if cart is empty (after 30 sec)
   useEffect(() => {
-    if (totalItems === 0 && restaurantId) {
-      if (isRestaurant716) {
-        navigate(`/${restaurantId}/stations`, { replace: true });
-      } else {
-        navigate(`/${restaurantId}`, { replace: true });
-      }
+    if (totalItems === 0) {
+      const redirectTimer = setTimeout(() => {
+        if (restaurantId) {
+          if (isRestaurant716) {
+            navigate(`/${restaurantId}/stations`, { replace: true });
+          } else {
+            navigate(`/${restaurantId}/menu`, { replace: true });
+          }
+        }
+      }, 30000); // 30 seconds = 30000ms
+
+      return () => clearTimeout(redirectTimer);
     }
-  }, [totalItems, navigate, restaurantId, isRestaurant716]);
+  }, [totalItems, navigate, restaurantId ,isRestaurant716]);
 
   // Handle back button click
   const handleBackClick = () => {
