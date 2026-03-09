@@ -57,25 +57,29 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--button-text-color);
+  background: var(--button-text-color);
+  border: 2px solid var(--button-text-color);
+  color: var(--color-primary);
   padding: 8px 14px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-button, 20px);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
   transition: all var(--transition-base);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .admin-settings-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--bg-tertiary);
+  border-color: var(--bg-tertiary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .admin-settings-btn svg {
   width: 18px;
   height: 18px;
+  color: var(--color-primary);
 }
 
 .admin-btn-text {
