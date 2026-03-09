@@ -113,7 +113,7 @@ const OrderSuccess = () => {
   const location = useLocation();
   const { restaurantId } = useRestaurantId();
   const { restaurant } = useRestaurantDetails(restaurantId);
-  const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus } = useRestaurantConfig();
+  const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill } = useRestaurantConfig();
   const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
   const { startEditOrder } = useCart();
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
@@ -272,8 +272,8 @@ const OrderSuccess = () => {
 
   // Config flags
   const showOrderStatus = isConfigEnabled(restaurant, 'show_order_status');
-  const showCallWaiter = isConfigEnabled(restaurant, 'show_call_waiter');
-  const showPayBill = isConfigEnabled(restaurant, 'show_pay_bill');
+  const showCallWaiter = configShowCallWaiter;
+  const showPayBill = configShowPayBill;
   const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo;
   
   // Edit Order vs Browse Menu - based on table presence (business logic)
