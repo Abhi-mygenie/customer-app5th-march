@@ -306,6 +306,18 @@
   color: var(--color-primary);
 }
 
+.hamburger-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--bg-tertiary);
+  color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.hamburger-btn:hover svg {
+  color: var(--color-primary-dark);
+}
+
 .header-icons {
   display: flex;
   align-items: center;
