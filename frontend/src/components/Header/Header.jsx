@@ -22,7 +22,6 @@ const Header = ({ brandText, logoUrl, phone, onLogoClick }) => {
               e.target.src = '/assets/images/mygenie_logo.png';
             }}
           />
-          <span className="brand-text">{brandText}</span>
         </div>
       </div>
       
