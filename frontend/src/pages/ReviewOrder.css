@@ -664,7 +664,29 @@
   font-size: var(--font-size-xxs);
   padding: var(--spacing-xs) var(--spacing-md);
   color: var(--text-light);
-  margin: 0;
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.review-order-countdown {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  color: var(--color-primary);
+  margin-left: 4px;
+}
+
+.review-order-progress-track {
+  width: 200px;
+  height: 4px;
+  background-color: var(--border-light, #e0e0e0);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.review-order-progress-bar {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: 999px;
+  transition: width 1s linear;
 }
 
 /* Responsive Design */

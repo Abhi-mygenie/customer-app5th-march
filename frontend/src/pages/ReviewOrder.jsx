@@ -182,6 +182,9 @@ const ReviewOrder = () => {
   const [isLoadingToken, setIsLoadingToken] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
+  // Countdown state for empty-cart redirect
+  const [countdown, setCountdown] = useState(10);
+
   // Strip country code prefix from phone for PhoneInput (it handles country code via flag dropdown)
   const stripCountryCode = (phone) => {
     if (!phone) return '';
@@ -530,9 +533,15 @@ const ReviewOrder = () => {
     fetchToken();
   }, []); // Only run once on mount
 
-  // Auto-redirect if cart is empty (after 30 sec)
+  // Auto-redirect if cart is empty — counts down 10→0 then goes to LandingPage
   useEffect(() => {
     if (totalItems === 0) {
+      setCountdown(10);
+
+      const tickInterval = setInterval(() => {
+        setCountdown(prev => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+
       const redirectTimer = setTimeout(() => {
         if (restaurantId) {
           if (isRestaurant716) {
@@ -543,9 +552,12 @@ const ReviewOrder = () => {
         }
       }, 10000); // 10 seconds = 10000ms
 
-      return () => clearTimeout(redirectTimer);
+      return () => {
+        clearInterval(tickInterval);
+        clearTimeout(redirectTimer);
+      };
     }
-  }, [totalItems, navigate, restaurantId ,isRestaurant716]);
+  }, [totalItems, navigate, restaurantId, isRestaurant716]);
 
   // Handle back button click
   const handleBackClick = () => {
@@ -904,8 +916,14 @@ const ReviewOrder = () => {
             Browse Menu
           </button>
           <p className="review-order-empty-redirect">
-            Returning to menu in 10 seconds...
+            Redirecting in <span className="review-order-countdown">{countdown}</span>
           </p>
+          <div className="review-order-progress-track">
+            <div
+              className="review-order-progress-bar"
+              style={{ width: `${(countdown / 10) * 100}%` }}
+            />
+          </div>
         </div>
       </div>
     );
