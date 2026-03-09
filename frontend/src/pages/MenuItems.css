@@ -253,9 +253,9 @@
 }
 
 .menu-items-header {
-  background-color: var(--bg-dark);
+  background-color: var(--color-primary);
   border-bottom: 3px solid var(--border-primary);
-  color: var(--text-white);
+  color: var(--button-text-color);
   padding: 15px var(--spacing-lg);
   display: flex;
   justify-content: space-between;
