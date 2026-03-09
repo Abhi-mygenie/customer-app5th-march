@@ -6,6 +6,8 @@ import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useAuth } from '../context/AuthContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
+import { checkTableStatus } from '../api/services/orderService';
+import { getAuthToken } from '../utils/authToken';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import HamburgerMenu from '../components/HamburgerMenu/HamburgerMenu';
@@ -22,7 +24,7 @@ const LandingPage = () => {
   const { isAuthenticated } = useAuth();
   const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText } = useRestaurantConfig();
 
-  const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
+  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
 
   const { restaurant, loading, error } = useRestaurantDetails(restaurantId);
 
@@ -30,12 +32,58 @@ const LandingPage = () => {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [capturedPhone, setCapturedPhone] = useState('');
 
+  // State for table status check (edit order detection)
+  const [tableStatusCheck, setTableStatusCheck] = useState({
+    isLoading: false,
+    isOccupied: false,
+    existingOrderId: null,
+    isChecked: false,
+    error: null,
+  });
+
   // Fetch admin config when restaurantId is available
   useEffect(() => {
     if (restaurantId) {
       fetchConfig(restaurantId);
     }
   }, [restaurantId, fetchConfig]);
+
+  // Check table status on load (only for non-716/739 restaurants with scanned table)
+  useEffect(() => {
+    const checkTable = async () => {
+      // Skip if: no table scanned, or is 716/739 restaurant, or already checked
+      if (!isScanned || !scannedTableId || !restaurantId) return;
+      if (isMultipleMenu(restaurant, restaurantId)) return;
+      if (tableStatusCheck.isChecked) return;
+
+      setTableStatusCheck(prev => ({ ...prev, isLoading: true }));
+
+      try {
+        const token = await getAuthToken();
+        const numericRestaurantId = restaurant?.id || restaurantId;
+        const result = await checkTableStatus(scannedTableId, numericRestaurantId, token);
+
+        setTableStatusCheck({
+          isLoading: false,
+          isOccupied: result.isOccupied,
+          existingOrderId: result.orderId || null,
+          isChecked: true,
+          error: result.error || null,
+        });
+      } catch (err) {
+        console.error('Table status check failed:', err);
+        setTableStatusCheck({
+          isLoading: false,
+          isOccupied: false,
+          existingOrderId: null,
+          isChecked: true,
+          error: err.message,
+        });
+      }
+    };
+
+    checkTable();
+  }, [isScanned, scannedTableId, restaurantId, restaurant, tableStatusCheck.isChecked]);
 
   // Theme colors now controlled by local admin config only (not POS)
 
