@@ -901,7 +901,7 @@ const ReviewOrder = () => {
             className="review-order-empty-btn"
             onClick={handleNavigateToMenu}
           >
-            Go to Menu
+            Browse Menu
           </button>
           <p className="review-order-empty-redirect">
             Returning to menu in 10 seconds...
