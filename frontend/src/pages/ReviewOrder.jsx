@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { isValidPhoneNumber } from 'react-phone-number-input';
@@ -181,6 +181,12 @@ const ReviewOrder = () => {
   const [authToken, setAuthToken] = useState(null);
   const [isLoadingToken, setIsLoadingToken] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  // SECURITY: Synchronous guard to prevent double-fire before React re-render disables the button.
+  // useRef is used (not useState) because ref updates are synchronous and don't cause re-renders.
+  const isPlacingOrderRef = useRef(false);
+  // SECURITY: Tracks whether placeOrder API was dispatched in the current attempt.
+  // Used to detect network-loss scenarios where order may have reached server but no response came back.
+  const orderDispatchedRef = useRef(false);
 
   // Countdown state for empty-cart redirect
   const [countdown, setCountdown] = useState(10);
@@ -609,6 +615,13 @@ const ReviewOrder = () => {
 
   // Handle place order
   const handlePlaceOrder = async () => {
+    // SECURITY FIX 1: Synchronous double-click guard.
+    // React's setState is async — setIsPlacingOrder(true) doesn't disable the button
+    // until the next render cycle. A fast double-click can bypass the disabled check.
+    // This ref check is synchronous and blocks any concurrent invocation immediately.
+    if (isPlacingOrderRef.current) return;
+    isPlacingOrderRef.current = true;
+    orderDispatchedRef.current = false; // Reset dispatch tracker for this attempt
     // Validate room/table selection and number for restaurant 716
     if (isRestaurant716) {
       // Check if scanned table is available
@@ -694,6 +707,10 @@ const ReviewOrder = () => {
         toast.success('Order updated successfully!');
       } else {
         // Place new order
+        // SECURITY: Mark that the API call is about to be dispatched.
+        // If a network error occurs (no response), this flag tells the catch block
+        // that the request may have reached the server even though we got no response.
+        orderDispatchedRef.current = true;
         response = await placeOrder({
           cartItems,
           customerName,
@@ -763,8 +780,20 @@ const ReviewOrder = () => {
     } catch (error) {
       // console.error('[ReviewOrder] Failed to place order:', error);
 
-      // Handle 401 - token expired during request
-      if (error.response?.status === 401) {
+      // SECURITY FIX 2: Network-loss duplicate order prevention.
+      // If error.response is undefined, the request was sent but no response was received
+      // (network drop, timeout, server crash mid-request). The order MAY have been processed
+      // server-side. We must NOT silently retry or show a generic "try again" message —
+      // doing so risks placing a duplicate order.
+      if (!error.response && orderDispatchedRef.current) {
+        toast.error(
+          'Network error: your order request was sent but we lost the connection. ' +
+          'Please check your order history before placing again to avoid duplicates.',
+          { duration: 8000 }
+        );
+      } else if (error.response?.status === 401) {
+        // 401 = server explicitly rejected auth BEFORE processing the order.
+        // Safe to retry — the order was never created.
         try {
           // console.log('[ReviewOrder] Token expired during request, refreshing...');
           const newToken = await getAuthToken(true);
@@ -876,6 +905,8 @@ const ReviewOrder = () => {
         toast.error(errorMessage);
       }
     } finally {
+      isPlacingOrderRef.current = false;
+      orderDispatchedRef.current = false;
       setIsPlacingOrder(false);
     }
   };
