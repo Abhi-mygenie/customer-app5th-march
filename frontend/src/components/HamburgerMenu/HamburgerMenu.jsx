@@ -113,14 +113,14 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
 
         {/* Menu Items */}
         <div className="hamburger-menu-items">
-          {/* Dynamic Nav Items from config */}
+          {/* Dynamic Nav Items from config - Menu hidden to force Landing Page flow */}
           {(navMenuOrder.length > 0 ? navMenuOrder : [
             { id: 'home', label: 'Home', type: 'builtin', visible: true },
-            { id: 'menu', label: 'Menu', type: 'builtin', visible: true },
+            { id: 'menu', label: 'Menu', type: 'builtin', visible: false },
             { id: 'about', label: 'About Us', type: 'builtin', visible: true },
             { id: 'contact', label: 'Contact', type: 'builtin', visible: true },
             { id: 'feedback', label: 'Feedback', type: 'builtin', visible: true },
-          ]).filter(item => item.visible !== false).map((item) => {
+          ]).filter(item => item.visible !== false && item.id !== 'menu').map((item) => {
             const iconMap = {
               home: IoHomeOutline,
               menu: IoRestaurantOutline,
