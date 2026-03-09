@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { useRestaurantDetails } from '../hooks/useMenuData';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
@@ -64,9 +65,31 @@ const LandingPage = () => {
       setTableStatusCheck(prev => ({ ...prev, isLoading: true }));
 
       try {
-        const token = await getAuthToken();
+        // Get auth token (will refresh if expired)
+        let token;
+        try {
+          token = await getAuthToken();
+        } catch (tokenErr) {
+          console.error('Token fetch failed, retrying...', tokenErr);
+          // Retry once with force refresh
+          token = await getAuthToken(true);
+        }
+
         const numericRestaurantId = restaurant?.id || restaurantId;
         const result = await checkTableStatus(scannedTableId, numericRestaurantId, token);
+
+        // Handle invalid table ID
+        if (result.isInvalid) {
+          toast.error('Invalid table. Please scan a valid QR code.');
+          setTableStatusCheck({
+            isLoading: false,
+            isOccupied: false,
+            existingOrderId: null,
+            isChecked: true,
+            error: 'Invalid table',
+          });
+          return;
+        }
 
         setTableStatusCheck({
           isLoading: false,
@@ -77,6 +100,7 @@ const LandingPage = () => {
         });
       } catch (err) {
         console.error('Table status check failed:', err);
+        // Fallback to browse menu on error
         setTableStatusCheck({
           isLoading: false,
           isOccupied: false,
@@ -140,6 +164,7 @@ const LandingPage = () => {
       }
     } catch (err) {
       console.error('Failed to fetch order details for editing:', err);
+      toast.error('Failed to load order. Starting fresh.');
       // On error, fallback to normal menu navigation
       const actualRestaurantId = restaurant?.id || restaurantId;
       navigate(`/${actualRestaurantId}/menu`);
