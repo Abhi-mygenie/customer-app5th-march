@@ -4,9 +4,10 @@ import { useRestaurantDetails } from '../hooks/useMenuData';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
-import { checkTableStatus } from '../api/services/orderService';
+import { checkTableStatus, getOrderDetails } from '../api/services/orderService';
 import { getAuthToken } from '../utils/authToken';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
@@ -22,6 +23,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated } = useAuth();
+  const { startEditOrder } = useCart();
   const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
@@ -40,6 +42,9 @@ const LandingPage = () => {
     isChecked: false,
     error: null,
   });
+
+  // State for edit order loading
+  const [isLoadingEditOrder, setIsLoadingEditOrder] = useState(false);
 
   // Fetch admin config when restaurantId is available
   useEffect(() => {
@@ -104,6 +109,43 @@ const LandingPage = () => {
   const handlePayBill = () => {
     // TODO: Integrate with pay bill flow
     console.log('Pay bill triggered');
+  };
+
+  // Handle Edit Order click - fetch order details and enter edit mode
+  const handleEditOrderClick = async () => {
+    if (!tableStatusCheck.existingOrderId) return;
+
+    setIsLoadingEditOrder(true);
+    try {
+      // Fetch order details from API
+      const orderDetails = await getOrderDetails(tableStatusCheck.existingOrderId);
+
+      // Start edit mode with previous items
+      startEditOrder(
+        tableStatusCheck.existingOrderId,
+        orderDetails.previousItems,
+        {
+          tableId: orderDetails.tableId || scannedTableId,
+          tableNo: orderDetails.tableNo || scannedTableNo,
+          restaurant: orderDetails.restaurant,
+        }
+      );
+
+      // Navigate to menu to add more items
+      const actualRestaurantId = restaurant?.id || restaurantId;
+      if (isMultipleMenu(restaurant, actualRestaurantId)) {
+        navigate(`/${actualRestaurantId}/stations`);
+      } else {
+        navigate(`/${actualRestaurantId}/menu`);
+      }
+    } catch (err) {
+      console.error('Failed to fetch order details for editing:', err);
+      // On error, fallback to normal menu navigation
+      const actualRestaurantId = restaurant?.id || restaurantId;
+      navigate(`/${actualRestaurantId}/menu`);
+    } finally {
+      setIsLoadingEditOrder(false);
+    }
   };
 
   if (loading) {
@@ -313,11 +355,21 @@ const LandingPage = () => {
                 <button
                   className="landing-btn landing-btn-primary"
                   onClick={handleEditOrderClick}
-                  style={{ backgroundColor: btnColor, color: btnTextColor }}
+                  disabled={isLoadingEditOrder}
+                  style={{ backgroundColor: btnColor, color: btnTextColor, opacity: isLoadingEditOrder ? 0.7 : 1 }}
                   data-testid="landing-edit-order-btn"
                 >
-                  <MdOutlineEdit className="landing-btn-icon" />
-                  EDIT ORDER
+                  {isLoadingEditOrder ? (
+                    <>
+                      <span className="landing-btn-spinner"></span>
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <MdOutlineEdit className="landing-btn-icon" />
+                      EDIT ORDER
+                    </>
+                  )}
                 </button>
               )}
 
