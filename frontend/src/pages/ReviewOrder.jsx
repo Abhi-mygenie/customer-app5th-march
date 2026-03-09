@@ -541,7 +541,7 @@ const ReviewOrder = () => {
             navigate(`/${restaurantId}/menu`, { replace: true });
           }
         }
-      }, 30000); // 30 seconds = 30000ms
+      }, 10000); // 10 seconds = 10000ms
 
       return () => clearTimeout(redirectTimer);
     }
