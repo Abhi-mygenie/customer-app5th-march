@@ -897,15 +897,6 @@ const ReviewOrder = () => {
         </div> */}
 
         <div className="review-order-empty">
-          {/* <div className="review-order-empty-icon">🛒</div> */}
-          <div className="review-order-empty-icon">
-            {/* <GiShoppingCart /> */}
-            <img src="/assets/images/empty.webp" alt="Empty Cart" />
-          </div>
-          <h2 className="review-order-empty-title">Ready to order?</h2>
-          <p className="review-order-empty-message">
-            Browse our menu to begin your dining experience.
-          </p>
           <button
             className="review-order-empty-btn"
             onClick={handleNavigateToMenu}
@@ -913,7 +904,7 @@ const ReviewOrder = () => {
             Go to Menu
           </button>
           <p className="review-order-empty-redirect">
-            Returning to menu in 30 seconds...
+            Returning to menu in 10 seconds...
           </p>
         </div>
       </div>
