@@ -12,7 +12,7 @@ import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import HamburgerMenu from '../components/HamburgerMenu/HamburgerMenu';
 import LandingCustomerCapture from '../components/LandingCustomerCapture/LandingCustomerCapture';
-import { MdOutlineTableRestaurant, MdOutlineRestaurantMenu } from 'react-icons/md';
+import { MdOutlineTableRestaurant, MdOutlineRestaurantMenu, MdOutlineEdit } from 'react-icons/md';
 import { FaDoorOpen } from 'react-icons/fa';
 import { IoCallOutline, IoPersonOutline } from 'react-icons/io5';
 import { RiBillLine } from 'react-icons/ri';
@@ -292,17 +292,48 @@ const LandingPage = () => {
 
         {/* 5. Action Buttons */}
         <div className="landing-actions" data-testid="landing-actions">
-          {/* Browse Menu - Primary */}
+          {/* Dynamic Button: Edit Order OR Browse Menu */}
           {showBrowseMenu && (
-            <button
-              className="landing-btn landing-btn-primary"
-              onClick={handleDiningMenuClick}
-              style={{ backgroundColor: btnColor, color: btnTextColor }}
-              data-testid="landing-browse-menu-btn"
-            >
-              <MdOutlineRestaurantMenu className="landing-btn-icon" />
-              {browseMenuButtonText}
-            </button>
+            <>
+              {/* Loading state while checking table status */}
+              {tableStatusCheck.isLoading && (
+                <button
+                  className="landing-btn landing-btn-primary"
+                  disabled
+                  style={{ backgroundColor: btnColor, color: btnTextColor, opacity: 0.7 }}
+                  data-testid="landing-btn-loading"
+                >
+                  <span className="landing-btn-spinner"></span>
+                  Checking...
+                </button>
+              )}
+
+              {/* Edit Order button - when table is occupied */}
+              {!tableStatusCheck.isLoading && tableStatusCheck.isOccupied && tableStatusCheck.existingOrderId && (
+                <button
+                  className="landing-btn landing-btn-primary"
+                  onClick={handleEditOrderClick}
+                  style={{ backgroundColor: btnColor, color: btnTextColor }}
+                  data-testid="landing-edit-order-btn"
+                >
+                  <MdOutlineEdit className="landing-btn-icon" />
+                  EDIT ORDER
+                </button>
+              )}
+
+              {/* Browse Menu button - when table is available or no table scanned */}
+              {!tableStatusCheck.isLoading && (!tableStatusCheck.isOccupied || !tableStatusCheck.existingOrderId) && (
+                <button
+                  className="landing-btn landing-btn-primary"
+                  onClick={handleDiningMenuClick}
+                  style={{ backgroundColor: btnColor, color: btnTextColor }}
+                  data-testid="landing-browse-menu-btn"
+                >
+                  <MdOutlineRestaurantMenu className="landing-btn-icon" />
+                  {browseMenuButtonText}
+                </button>
+              )}
+            </>
           )}
 
           {/* Call Waiter & Pay Bill - Secondary Row */}
