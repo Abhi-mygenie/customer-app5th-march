@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 
 class CustomerCaptureAPITester:
-    def __init__(self, base_url="https://genie-checkout-guard.preview.emergentagent.com"):
+    def __init__(self, base_url="https://order-progress-bar.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

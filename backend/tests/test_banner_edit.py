@@ -7,7 +7,7 @@ import requests
 import os
 
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://genie-checkout-guard.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://order-progress-bar.preview.emergentagent.com').rstrip('/')
 
 
 
