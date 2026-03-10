@@ -859,8 +859,14 @@ export const getOrderDetails = async (orderId) => {
     const totalTax = parseFloat((totalGst + totalVat).toFixed(2));
     const grandTotal = parseFloat((itemTotal + totalTax).toFixed(2));
 
+    // Extract order-level f_order_status from first detail item
+    const fOrderStatus = (orderData.details || [])[0]?.f_order_status ?? null;
+    const restaurantOrderId = (orderData.details || [])[0]?.restaurant_order_id ?? null;
+
     return {
       orderId: orderId,
+      fOrderStatus: fOrderStatus,
+      restaurantOrderId: restaurantOrderId,
       previousItems,
       tableId: orderData.table_id,
       tableNo: orderData.table_no,

@@ -94,12 +94,13 @@ const isConfigEnabled = (restaurant, key) => {
   return val === 'Y' || val === 'y' || val === true || val === '1';
 };
 
-// Order status steps
+// Order status steps mapped to f_order_status values
+// 7 → Order Placed, 1 → Confirmed, 2 → Preparing, 5 → Served
 const ORDER_STATUSES = [
-  { key: 'placed', label: 'Order Placed' },
-  { key: 'confirmed', label: 'Confirmed' },
-  { key: 'preparing', label: 'Preparing' },
-  { key: 'served', label: 'Served' },
+  { key: 7, label: 'Order Placed' },
+  { key: 1, label: 'Confirmed' },
+  { key: 2, label: 'Preparing' },
+  { key: 5, label: 'Served' },
 ];
 
 const OrderSuccess = () => {
@@ -116,6 +117,7 @@ const OrderSuccess = () => {
   const [liveOrderItems, setLiveOrderItems] = useState([]);
   const [billSummary, setBillSummary] = useState(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+  const [fOrderStatus, setFOrderStatus] = useState(null);
 
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
@@ -153,6 +155,11 @@ const OrderSuccess = () => {
         }));
         setLiveOrderItems(updatedItems);
         
+        // Update order-level status from API
+        if (orderDetails.fOrderStatus !== undefined && orderDetails.fOrderStatus !== null) {
+          setFOrderStatus(orderDetails.fOrderStatus);
+        }
+
         // Only use API billSummary if we don't have passed data (fallback for page refresh)
         if (!passedBillSummary && orderDetails.billSummary) {
           setBillSummary(orderDetails.billSummary);
@@ -205,9 +212,8 @@ const OrderSuccess = () => {
 
   if (!orderData) return null;
 
-  // Current order status (from API or default to 'placed')
-  const currentStatus = orderData.status || 'placed';
-  const currentStepIndex = ORDER_STATUSES.findIndex(s => s.key === currentStatus);
+  // Current order status from f_order_status (default to 7 = Order Placed)
+  const currentStepIndex = ORDER_STATUSES.findIndex(s => s.key === (fOrderStatus ?? 7));
 
   const handleGoToMenu = () => {
     if (isMultipleMenu(restaurant, restaurantId)) {
