@@ -15,13 +15,13 @@ import { FaDoorOpen } from 'react-icons/fa';
 import './OrderSuccess.css';
 
 /**
- * Maps f_order_status numeric value to status string
+ * Maps food_status numeric value to status string
  * 1 → Preparing, 2 → Ready, 3 → Cancelled, 5 → Served, 6 → Paid, 7 → Yet to be confirmed
  * Status always comes from API - no defaults needed
  */
 const mapFoodOrderStatus = (item) => {
-  // Check for f_order_status (numeric) from API
-  const fStatus = item?.f_order_status;
+  // Use foodStatus (numeric) from API's food_status field
+  const fStatus = item?.foodStatus;
   if (fStatus !== undefined && fStatus !== null) {
     const statusMap = {
       1: 'preparing',
@@ -32,12 +32,6 @@ const mapFoodOrderStatus = (item) => {
       7: 'pending'
     };
     return statusMap[fStatus] || 'pending';
-  }
-  
-  // Fallback to food_status or status (string) from API
-  const stringStatus = item?.food_status || item?.status;
-  if (stringStatus) {
-    return stringStatus.toLowerCase();
   }
   
   return 'pending';
@@ -155,7 +149,7 @@ const OrderSuccess = () => {
           price: item.unitPrice || item.price || 0,
           quantity: item.quantity || 1,
           veg: item.item?.veg === true || item.item?.veg === 1,
-          f_order_status: item.f_order_status,
+          foodStatus: item.foodStatus,
         }));
         setLiveOrderItems(updatedItems);
         

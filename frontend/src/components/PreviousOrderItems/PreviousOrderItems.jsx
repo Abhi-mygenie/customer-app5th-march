@@ -52,10 +52,10 @@ const ItemStatusBadge = ({ status }) => {
 };
 
 /**
- * Maps f_order_status numeric value to status string
+ * Maps food_status numeric value to status string
  */
 const mapFoodOrderStatus = (item) => {
-  const fStatus = item?.f_order_status;
+  const fStatus = item?.foodStatus;
   if (fStatus !== undefined && fStatus !== null) {
     const statusMap = {
       1: 'preparing',
@@ -67,7 +67,7 @@ const mapFoodOrderStatus = (item) => {
     };
     return statusMap[fStatus] || 'pending';
   }
-  return item?.foodStatus || 'pending';
+  return 'pending';
 };
 
 /**
