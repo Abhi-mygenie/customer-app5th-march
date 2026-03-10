@@ -384,7 +384,7 @@ const OrderSuccess = () => {
                       <span className="order-success-item-price">
                         ₹{((item.price || item.totalPrice || 0) * (item.quantity || 1)).toFixed(0)}
                       </span>
-                      {showFoodStatus && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
+                      {showFoodStatus && fOrderStatus !== 7 && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
                     </div>
                   </div>
                 ))}
