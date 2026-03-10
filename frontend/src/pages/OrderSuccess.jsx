@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantDetails } from '../hooks/useMenuData';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
@@ -109,8 +110,8 @@ const OrderSuccess = () => {
   const { restaurantId } = useRestaurantId();
   const { restaurant } = useRestaurantDetails(restaurantId);
   const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill } = useRestaurantConfig();
-  const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
-  const { startEditOrder } = useCart();
+  const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
+  const { startEditOrder, clearCart, clearEditMode } = useCart();
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [showItems, setShowItems] = useState(true);
   const [showBillSummary, setShowBillSummary] = useState(true);
@@ -158,6 +159,20 @@ const OrderSuccess = () => {
         // Update order-level status from API
         if (orderDetails.fOrderStatus !== undefined && orderDetails.fOrderStatus !== null) {
           setFOrderStatus(orderDetails.fOrderStatus);
+          
+          // Status 3 (Cancelled) or 6 (Paid) → clear state and redirect to landing page
+          if (orderDetails.fOrderStatus === 3 || orderDetails.fOrderStatus === 6) {
+            clearCart();
+            clearEditMode();
+            clearScannedTable();
+            if (orderDetails.fOrderStatus === 3) {
+              toast('Your order has been cancelled.', { icon: '❌', duration: 4000 });
+            } else {
+              toast.success('Payment received. Thank you!', { duration: 4000 });
+            }
+            navigate(`/${restaurantId}`, { replace: true });
+            return;
+          }
         }
 
         // Only use API billSummary if we don't have passed data (fallback for page refresh)
