@@ -312,9 +312,23 @@
 
 .order-success-item-info {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   flex: 1;
+}
+
+.order-success-item-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 2px;
+}
+
+.order-success-item-customization {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.65rem;
+  color: var(--text-tertiary, #777);
+  line-height: 1.3;
 }
 
 .order-success-item-veg {
@@ -325,6 +339,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .order-success-item-veg.veg {
@@ -353,7 +368,6 @@
   font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.75rem;
   color: var(--text-primary);
-  flex: 1;
 }
 
 .order-success-item-qty {

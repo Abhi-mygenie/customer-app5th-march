@@ -47,8 +47,18 @@
 - /app/frontend/src/components/AdminSettings/VisibilityTab.jsx - Added toggles for landing page
 - /app/backend/server.py - Added showLandingCallWaiter/showLandingPayBill fields
 
+## What's Been Implemented (continued)
+- [2026-03-10] Order Success page: Show variants & addons for each food item
+  - Added variations and add_ons to item data mapping in fetchOrderStatus()
+  - Added UI rendering for variant/addon text below item name
+  - Fixed price to include addon costs (base + addons)
+- [2026-03-10] Order Success page: Live status progress bar (f_order_status: 7→1→2→5)
+- [2026-03-10] Order Success page: Terminal status handling (3=Cancelled, 6=Paid → redirect)
+- [2026-03-10] Order Success page: Hide item badges when f_order_status is 7
+
 ## Backlog
-- P0: Verify hamburger button hover style consistency (user verification pending)
-- P1: Real-time order status tracking
+- P0: Handle f_order_status: 8 (Payment pending from PG) — behavior TBD
+- P1: Verify hamburger button hover style consistency (user verification pending)
 - P2: Push notifications
 - P2: Payment integration testing
+- P2: CSS consolidation across fragmented style files

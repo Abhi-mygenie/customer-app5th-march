@@ -146,14 +146,26 @@ const OrderSuccess = () => {
       const orderDetails = await getOrderDetails(orderId);
       
       if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
-        const updatedItems = orderDetails.previousItems.map(item => ({
-          id: item.id,
-          name: item.item?.name || 'Item',
-          price: item.unitPrice || item.price || 0,
-          quantity: item.quantity || 1,
-          veg: item.item?.veg === true || item.item?.veg === 1,
-          foodStatus: item.foodStatus,
-        }));
+        const updatedItems = orderDetails.previousItems.map(item => {
+          // Calculate total unit price including variations and addons
+          const basePrice = parseFloat(item.unitPrice || item.price) || 0;
+          let addonsTotal = 0;
+          if (item.add_ons && item.add_ons.length > 0) {
+            item.add_ons.forEach(a => {
+              addonsTotal += (parseFloat(a.price) || 0) * (a.quantity || 1);
+            });
+          }
+          return {
+            id: item.id,
+            name: item.item?.name || 'Item',
+            price: basePrice + addonsTotal,
+            quantity: item.quantity || 1,
+            veg: item.item?.veg === true || item.item?.veg === 1,
+            foodStatus: item.foodStatus,
+            variations: item.variations || [],
+            add_ons: item.add_ons || [],
+          };
+        });
         setLiveOrderItems(updatedItems);
         
         // Update order-level status from API
@@ -377,12 +389,29 @@ const OrderSuccess = () => {
                       <span className={`order-success-item-veg ${item.veg ? 'veg' : 'non-veg'}`}>
                         <span className="veg-dot"></span>
                       </span>
-                      <span className="order-success-item-name">{item.name || 'Item'}</span>
+                      <div className="order-success-item-details">
+                        <span className="order-success-item-name">{item.name || 'Item'}</span>
+                        {item.variations && item.variations.length > 0 && (
+                          <span className="order-success-item-customization" data-testid={`item-variants-${index}`}>
+                            Variants: {item.variations.map(v => {
+                              if (v.values?.label) {
+                                return Array.isArray(v.values.label) ? v.values.label.join(', ') : v.values.label;
+                              }
+                              return v.label || v.name || '';
+                            }).filter(Boolean).join(', ')}
+                          </span>
+                        )}
+                        {item.add_ons && item.add_ons.length > 0 && (
+                          <span className="order-success-item-customization" data-testid={`item-addons-${index}`}>
+                            Addons: {item.add_ons.map(a => `${a.name} x${a.quantity || 1}`).join(', ')}
+                          </span>
+                        )}
+                      </div>
                       <span className="order-success-item-qty">x{item.quantity || 1}</span>
                     </div>
                     <div className="order-success-item-right">
                       <span className="order-success-item-price">
-                        ₹{((item.price || item.totalPrice || 0) * (item.quantity || 1)).toFixed(0)}
+                        ₹{((item.price || 0) * (item.quantity || 1)).toFixed(0)}
                       </span>
                       {showFoodStatus && fOrderStatus !== 7 && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
                     </div>
