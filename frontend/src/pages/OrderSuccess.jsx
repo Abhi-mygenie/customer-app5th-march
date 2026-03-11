@@ -120,6 +120,7 @@ const OrderSuccess = () => {
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [fOrderStatus, setFOrderStatus] = useState(null);
   const [restaurantOrderId, setRestaurantOrderId] = useState(null);
+  const [liveOrderAmount, setLiveOrderAmount] = useState(null);
 
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
@@ -190,6 +191,11 @@ const OrderSuccess = () => {
           // Store restaurant_order_id from API
           if (orderDetails.restaurantOrderId) {
             setRestaurantOrderId(orderDetails.restaurantOrderId);
+          }
+          
+          // Store live order_amount from API (reflects cancellations)
+          if (orderDetails.orderAmount) {
+            setLiveOrderAmount(orderDetails.orderAmount);
           }
           
           // Status 3 (Cancelled) or 6 (Paid) → clear state and redirect to landing page
@@ -404,7 +410,7 @@ const OrderSuccess = () => {
                 {restaurantOrderId && <span> ({orderData.orderId})</span>}
               </span>
             </div>
-            <span className="order-success-total">₹{orderData.totalToPay || '0.00'}</span>
+            <span className="order-success-total">₹{liveOrderAmount || orderData.totalToPay || '0.00'}</span>
           </div>
 
           {/* Table Number - inline */}

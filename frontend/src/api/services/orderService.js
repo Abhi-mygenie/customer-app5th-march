@@ -934,10 +934,14 @@ export const getOrderDetails = async (orderId) => {
     const fOrderStatus = firstDetail.f_order_status ?? null;
     const restaurantOrderId = firstDetail.restaurant_order_id ?? null;
 
+    // order_amount from API (current total, reflects cancellations)
+    const orderAmount = parseFloat(firstDetail.order_amount) || 0;
+
     return {
       orderId: orderId,
       fOrderStatus: fOrderStatus,
       restaurantOrderId: restaurantOrderId,
+      orderAmount: orderAmount,
       previousItems,
       tableId: orderData.table_id,
       tableNo: orderData.table_no,
