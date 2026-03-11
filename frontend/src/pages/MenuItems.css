@@ -319,7 +319,7 @@
   position: fixed;
   bottom: 20px;
   right: calc(50% - 300px + 20px);
-  background-color: var(--color-primary);
+  background-color: var(--color-primary-dark);
   color: var(--button-text-color);
   border: none;
   border-radius: var(--radius-button, 10px);
@@ -345,7 +345,7 @@ body.cart-bar-visible .menu-fab {
 }
 
 .menu-fab:hover {
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-primary);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
   transform: translateY(-2px);
 }
