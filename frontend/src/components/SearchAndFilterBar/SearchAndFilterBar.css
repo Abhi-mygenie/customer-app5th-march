@@ -76,7 +76,7 @@
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  color: var(--text-tertiary);
+  color: var(--color-primary);
   pointer-events: none;
 }
 
@@ -97,7 +97,7 @@
 }
 
 .search-input::placeholder {
-  color: var(--text-tertiary);
+  color: var(--color-primary);
 }
 
 /* Filter Dropdown */
