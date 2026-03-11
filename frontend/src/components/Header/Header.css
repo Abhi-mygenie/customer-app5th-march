@@ -1,0 +1,243 @@
+/* Menu Items Header */
+.menu-items-header {
+  background-color: var(--color-primary);
+  color: var(--button-text-color);
+  padding: 15px var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: var(--z-dropdown);
+  box-shadow: var(--shadow-md);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.header-left-section {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.header-logo {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brand-text {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+  text-align: left;
+  color: var(--button-text-color);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Admin Settings Button */
+.admin-settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--button-text-color);
+  border: 2px solid var(--button-text-color);
+  color: var(--color-primary);
+  padding: 8px 14px;
+  border-radius: var(--radius-button, 20px);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-settings-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--bg-tertiary);
+  color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.admin-settings-btn svg {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+}
+
+.admin-btn-text {
+  font-family: var(--font-body);
+}
+
+.header-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-white);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: all var(--transition-base);
+}
+
+.header-icon-btn.search-btn {
+  background: none;
+  border: none;
+  color: var(--text-white);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  border-radius: var(--radius-md);
+}
+
+.header-icon-btn.active {
+  background-color: rgba(97, 180, 229, 0.1);
+  border-radius: 4px;
+}
+
+.header-icon-btn svg {
+  width: 30px;
+  height: 30px;
+  transition: stroke var(--transition-base);
+}
+
+.hamburger-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--button-text-color);
+  border: 2px solid var(--button-text-color);
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.hamburger-btn svg {
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary);
+}
+
+.hamburger-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--bg-tertiary);
+  color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.hamburger-btn:hover svg {
+  color: var(--color-primary-dark);
+}
+
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-white);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-toggle-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar-toggle-btn .sidebar-icon {
+  color: var(--color-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-logo {
+    height: 35px;
+  }
+
+  .brand-text {
+    font-size: var(--font-size-base);
+  }
+
+  .header-icon-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .hamburger-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .admin-settings-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .admin-settings-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-items-header {
+    padding: 12px 15px;
+  }
+
+  .header-logo {
+    height: 32px;
+  }
+
+  .brand-text {
+    font-size: var(--font-size-sm);
+  }
+
+  .header-right {
+    gap: 10px;
+  }
+
+  .header-icon-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .hamburger-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .admin-settings-btn {
+    padding: 6px 8px;
+  }
+
+  .admin-btn-text {
+    display: none;
+  }
+}

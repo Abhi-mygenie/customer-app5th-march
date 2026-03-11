@@ -1,0 +1,266 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useRestaurantId } from '../../utils/useRestaurantId';
+import { useRestaurantConfig } from '../../context/RestaurantConfigContext';
+import { 
+  IoMenuOutline, 
+  IoCloseOutline, 
+  IoPersonOutline, 
+  IoReceiptOutline, 
+  IoGiftOutline,
+  IoInformationCircleOutline,
+  IoRestaurantOutline,
+  IoLogInOutline,
+  IoLogOutOutline,
+  IoWalletOutline,
+  IoHomeOutline,
+  IoCallOutline,
+  IoChatbubblesOutline,
+  IoDocumentTextOutline,
+  IoSettingsOutline
+} from 'react-icons/io5';
+import { MdSupportAgent } from 'react-icons/md';
+import toast from 'react-hot-toast';
+import './HamburgerMenu.css';
+
+const HamburgerMenu = ({ restaurantName, phone }) => {
+  const navigate = useNavigate();
+  const { restaurantId } = useRestaurantId();
+  const { isAuthenticated, user, isCustomer, logout } = useAuth();
+  const { aboutUsContent, navMenuOrder, feedbackEnabled } = useRestaurantConfig();
+  const isRestaurant = user?.type === 'restaurant';
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const handleNavigation = (path) => {
+    setIsOpen(false);
+    navigate(path);
+  };
+
+  const handleLogout = () => {
+    setIsOpen(false);
+    logout();
+    toast.success('Logged out successfully');
+    navigate(restaurantId ? `/${restaurantId}` : '/');
+  };
+
+  const menuBasePath = restaurantId ? `/${restaurantId}` : '';
+
+  return (
+    <div className="hamburger-menu-container" ref={menuRef}>
+      {/* Hamburger Icon */}
+      <button 
+        className="hamburger-btn"
+        onClick={() => setIsOpen(!isOpen)}
+        data-testid="hamburger-menu-btn"
+        aria-label="Menu"
+      >
+        {isOpen ? <IoCloseOutline /> : <IoMenuOutline />}
+      </button>
+
+      {/* Overlay */}
+      {isOpen && <div className="hamburger-overlay" onClick={() => setIsOpen(false)} />}
+
+      {/* Slide-out Menu */}
+      <div className={`hamburger-drawer ${isOpen ? 'open' : ''}`}>
+        {/* User Header */}
+        <div className="hamburger-header">
+          {isAuthenticated && isCustomer ? (
+            <div className="hamburger-user-info">
+              <div className="hamburger-user-avatar">
+                <IoPersonOutline />
+              </div>
+              <div className="hamburger-user-details">
+                <span className="hamburger-user-name">Hi, {user?.name?.split(' ')[0] || 'User'}!</span>
+                <span className="hamburger-user-points">{user?.total_points || 0} points</span>
+              </div>
+            </div>
+          ) : (
+            <div className="hamburger-guest-info">
+              <span className="hamburger-guest-text">{restaurantName || 'Welcome'}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Menu Items */}
+        <div className="hamburger-menu-items">
+          {/* Dynamic Nav Items from config - Menu hidden to force Landing Page flow */}
+          {(navMenuOrder.length > 0 ? navMenuOrder : [
+            { id: 'home', label: 'Home', type: 'builtin', visible: true },
+            { id: 'menu', label: 'Menu', type: 'builtin', visible: false },
+            { id: 'about', label: 'About Us', type: 'builtin', visible: true },
+            { id: 'contact', label: 'Contact', type: 'builtin', visible: true },
+            { id: 'feedback', label: 'Feedback', type: 'builtin', visible: true },
+          ]).filter(item => item.visible !== false && item.id !== 'menu').map((item) => {
+            const iconMap = {
+              home: IoHomeOutline,
+              menu: IoRestaurantOutline,
+              about: IoInformationCircleOutline,
+              contact: IoCallOutline,
+              feedback: IoChatbubblesOutline,
+            };
+            const pathMap = {
+              home: menuBasePath || '/',
+              menu: `${menuBasePath}/menu`,
+              about: `${menuBasePath}/about`,
+              contact: `${menuBasePath}/contact`,
+              feedback: `${menuBasePath}/feedback`,
+            };
+
+            // Skip feedback if disabled
+            if (item.id === 'feedback' && !feedbackEnabled) return null;
+            // Skip about if no aboutUs content configured
+            if (item.id === 'about' && !aboutUsContent) return null;
+
+            const Icon = iconMap[item.id] || IoDocumentTextOutline;
+            const path = pathMap[item.id] || `${menuBasePath}/page/${item.id}`;
+
+            return (
+              <button
+                key={item.id}
+                className="hamburger-item"
+                onClick={() => handleNavigation(path)}
+                data-testid={`hamburger-${item.id}`}
+              >
+                <Icon className="hamburger-item-icon" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+
+          {/* Admin Settings Link */}
+          {isAuthenticated && isRestaurant && (
+            <button
+              className="hamburger-item"
+              onClick={() => handleNavigation('/admin/settings')}
+              data-testid="hamburger-settings"
+            >
+              <IoSettingsOutline className="hamburger-item-icon" />
+              <span>Settings</span>
+            </button>
+          )}
+
+          <div className="hamburger-divider" />
+
+          {/* Logged In Items - Customer only */}
+          {isAuthenticated && isCustomer && (
+            <>
+              <button 
+                className="hamburger-item"
+                onClick={() => handleNavigation('/profile')}
+                data-testid="hamburger-my-profile"
+              >
+                <IoPersonOutline className="hamburger-item-icon" />
+                <span>My Profile</span>
+              </button>
+
+              <button 
+                className="hamburger-item"
+                onClick={() => handleNavigation('/profile?tab=orders')}
+                data-testid="hamburger-my-orders"
+              >
+                <IoReceiptOutline className="hamburger-item-icon" />
+                <span>My Orders</span>
+              </button>
+
+              <button 
+                className="hamburger-item"
+                onClick={() => handleNavigation('/profile?tab=points')}
+                data-testid="hamburger-my-points"
+              >
+                <IoGiftOutline className="hamburger-item-icon" />
+                <span>My Points</span>
+              </button>
+
+              <button 
+                className="hamburger-item"
+                onClick={() => handleNavigation('/profile?tab=wallet')}
+                data-testid="hamburger-my-wallet"
+              >
+                <IoWalletOutline className="hamburger-item-icon" />
+                <span>My Wallet</span>
+              </button>
+
+              <div className="hamburger-divider" />
+            </>
+          )}
+
+          {/* Logout - Any authenticated user */}
+          {isAuthenticated && (
+            <button 
+              className="hamburger-item hamburger-item-logout"
+              onClick={handleLogout}
+              data-testid="hamburger-logout"
+            >
+              <IoLogOutOutline className="hamburger-item-icon" />
+              <span>Logout</span>
+            </button>
+          )}
+
+          {/* Guest Items */}
+          {!isAuthenticated && (
+            <button 
+              className="hamburger-item hamburger-item-login"
+              onClick={() => handleNavigation('/login')}
+              data-testid="hamburger-login"
+            >
+              <IoLogInOutline className="hamburger-item-icon" />
+              <span>Login</span>
+              <span className="hamburger-item-badge">Earn Rewards</span>
+            </button>
+          )}
+        </div>
+
+        {/* Footer - Need Help */}
+        {phone && (
+          <div className="hamburger-help-section">
+            <div className="hamburger-help-header">
+              <MdSupportAgent className="hamburger-help-icon" />
+              <span className="hamburger-help-title">Need Help?</span>
+            </div>
+            <a href={`tel:${phone}`} className="hamburger-call-btn">
+              <IoCallOutline className="hamburger-call-icon" />
+              <span>Call us</span>
+            </a>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="hamburger-footer">
+          <span className="hamburger-footer-text">Powered by MyGenie</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HamburgerMenu;

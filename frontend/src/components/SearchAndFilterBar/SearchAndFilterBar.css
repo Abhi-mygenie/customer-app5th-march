@@ -1,0 +1,203 @@
+/* Search and Filter Bar Container */
+.search-filter-bar-container {
+  background-color: white;
+  position: sticky;
+  top: 0px;
+  z-index: 99;
+  border-bottom: none;
+}
+
+/* Header Row: Back + Title */
+.search-filter-header-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: var(--spacing-sm) var(--spacing-base);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.search-filter-back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.search-filter-back-btn:hover {
+  transform: translateX(-3px);
+}
+
+.search-filter-back-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.search-filter-title {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-normal);
+  color: var(--color-primary);
+  margin: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Search + Filter Row */
+.search-filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-base);
+}
+
+/* Search Bar Section */
+.search-bar-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-bar {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-container-lg);
+  font-family: 'Montserrat', sans-serif;
+  font-size: var(--font-size-sm);
+  outline: none;
+  transition: border-color var(--transition-base);
+  background: var(--bg-primary);
+}
+
+.search-input:focus {
+  border-color: var(--border-primary);
+}
+
+.search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Filter Dropdown */
+.filter-dropdown-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.filter-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-container-lg);
+  background: var(--bg-primary);
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.filter-dropdown-btn:hover,
+.filter-dropdown-btn.open {
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.filter-dropdown-btn.has-filter {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.filter-chevron {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.filter-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.filter-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 150px;
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-container-md);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.filter-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  transition: background-color var(--transition-base);
+}
+
+.filter-dropdown-item:hover {
+  background-color: var(--bg-light-blue, #f0f4ff);
+}
+
+.filter-dropdown-item.active {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.filter-item-label {
+  flex: 1;
+  text-align: left;
+}
+
+.filter-check {
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  color: var(--color-primary);
+}
+
+.filter-check.visible {
+  opacity: 1;
+}
+
+.filter-check svg {
+  width: 100%;
+  height: 100%;
+}
