@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   padding: var(--spacing-md);
-  background-color: var(--bg-dark);
+  background-color: var(--color-primary);
   position: sticky;
   top: 0;
   z-index: var(--z-fixed);
