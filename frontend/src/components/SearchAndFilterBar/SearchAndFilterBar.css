@@ -92,6 +92,10 @@
   background: var(--bg-primary);
 }
 
+.search-input:hover {
+  border-color: var(--border-primary);
+}
+
 .search-input:focus {
   border-color: var(--border-primary);
 }
