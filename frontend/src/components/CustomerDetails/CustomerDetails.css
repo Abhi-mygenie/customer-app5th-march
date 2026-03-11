@@ -27,6 +27,13 @@
   gap: var(--spacing-xs);
 }
 
+/* Separator between phone and name */
+.customer-details-input-group:first-child {
+  border-bottom: 1px solid var(--border-dark);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
 .customer-details-label {
   font-family: var(--font-body);
   font-size: var(--font-size-sm);
@@ -37,7 +44,7 @@
 .customer-details-input {
   background-color: transparent;
   border: none;
-  border-bottom: 1px solid var(--border-dark);
+  border-bottom: none;
   border-radius: 0;
   padding: var(--spacing-xs) 0;
   font-family: var(--font-body);
