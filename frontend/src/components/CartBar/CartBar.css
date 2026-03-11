@@ -61,9 +61,9 @@
 
 .cart-bar-view-btn {
   padding: var(--spacing-sm) var(--spacing-lg);
-  background-color: var(--text-white);
+  background-color: var(--button-text-color);
   color: var(--color-primary);
-  border: 2px solid var(--text-white);
+  border: 2px solid var(--button-text-color);
   border-radius: var(--radius-button, 20px); /* Match cart bar border radius */
   font-family: var(--font-body);
   font-size: var(--font-size-base);
@@ -80,8 +80,9 @@
 }
 
 .cart-bar-view-btn:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--color-primary-dark);
+  background-color: var(--button-text-color);
+  color: var(--color-primary);
+  opacity: 0.9;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
