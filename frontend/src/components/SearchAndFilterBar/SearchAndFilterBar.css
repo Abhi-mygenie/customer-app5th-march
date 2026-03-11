@@ -97,7 +97,7 @@
 }
 
 .search-input::placeholder {
-  color: var(--color-primary);
+  color: var(--text-primary);
 }
 
 /* Filter Dropdown */
