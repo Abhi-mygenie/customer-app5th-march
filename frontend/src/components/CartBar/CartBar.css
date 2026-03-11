@@ -83,7 +83,6 @@
 .cart-bar-view-btn:hover {
   background-color: var(--bg-tertiary);
   color: var(--color-primary-dark);
-  border-color: var(--bg-tertiary);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
