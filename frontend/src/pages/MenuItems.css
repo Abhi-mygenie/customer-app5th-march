@@ -285,6 +285,7 @@
   color: white;
 }
 
+/* DUPLICATE - Primary source is HamburgerMenu.css
 .hamburger-btn {
   width: 48px;
   height: 48px;
@@ -317,6 +318,7 @@
 .hamburger-btn:hover svg {
   color: var(--color-primary-dark);
 }
+*/
 
 .header-icons {
   display: flex;

@@ -123,6 +123,7 @@
   transition: stroke var(--transition-base);
 }
 
+/* DUPLICATE - Primary source is HamburgerMenu.css
 .hamburger-btn {
   width: 48px;
   height: 48px;
@@ -155,6 +156,7 @@
 .hamburger-btn:hover svg {
   color: var(--color-primary-dark);
 }
+*/
 
 .sidebar-toggle-btn {
   background: none;
@@ -190,10 +192,12 @@
     height: 26px;
   }
 
+  /* DUPLICATE - Primary source is HamburgerMenu.css
   .hamburger-btn svg {
     width: 22px;
     height: 22px;
   }
+  */
 
   .admin-settings-btn {
     padding: 6px 10px;
@@ -228,10 +232,12 @@
     height: 24px;
   }
 
+  /* DUPLICATE - Primary source is HamburgerMenu.css
   .hamburger-btn svg {
     width: 20px;
     height: 20px;
   }
+  */
 
   .admin-settings-btn {
     padding: 6px 8px;
