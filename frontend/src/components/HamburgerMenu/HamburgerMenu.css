@@ -15,7 +15,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--text-white);
+  color: var(--button-text-color);
   font-size: 28px;
   padding: 0;
 }
@@ -23,19 +23,20 @@
 .hamburger-btn svg {
   width: 28px;
   height: 28px;
-  color: var(--text-white);
+  color: var(--button-text-color);
 }
 
 .hamburger-btn:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--bg-tertiary);
-  color: var(--color-primary-dark);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--button-text-color);
+  opacity: 0.9;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .hamburger-btn:hover svg {
-  color: var(--color-primary-dark);
+  color: var(--button-text-color);
 }
 
 /* Overlay */
