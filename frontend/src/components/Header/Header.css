@@ -1,7 +1,7 @@
 /* Menu Items Header */
 .menu-items-header {
   background-color: var(--color-primary);
-  color: var(--button-text-color);
+  color: var(--text-white);
   padding: 15px var(--spacing-lg);
   display: flex;
   justify-content: space-between;
@@ -43,7 +43,7 @@
   letter-spacing: 0.1em;
   margin: 0;
   text-align: left;
-  color: var(--button-text-color);
+  color: var(--text-white);
 }
 
 .header-right {
@@ -57,8 +57,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--button-text-color);
-  border: 2px solid var(--button-text-color);
+  background: var(--text-white);
+  border: 2px solid var(--text-white);
   color: var(--color-primary);
   padding: 8px 14px;
   border-radius: var(--radius-button, 20px);
@@ -127,9 +127,9 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--button-text-color);
-  border: 2px solid var(--button-text-color);
-  color: var(--color-primary);
+  background: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  color: var(--text-white);
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -141,7 +141,7 @@
 .hamburger-btn svg {
   width: 24px;
   height: 24px;
-  color: var(--color-primary);
+  color: var(--text-white);
 }
 
 .hamburger-btn:hover {

@@ -7,15 +7,15 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 2px solid var(--button-text-color);
-  background: var(--button-text-color);
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: var(--color-primary);
+  color: var(--text-white);
   font-size: 28px;
   padding: 0;
 }
@@ -23,7 +23,7 @@
 .hamburger-btn svg {
   width: 28px;
   height: 28px;
-  color: var(--color-primary);
+  color: var(--text-white);
 }
 
 .hamburger-btn:hover {
