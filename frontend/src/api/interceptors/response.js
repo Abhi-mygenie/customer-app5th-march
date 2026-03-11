@@ -11,6 +11,13 @@ import { getAuthToken, clearStoredToken } from '../../utils/authToken';
  * Transforms response data and handles common response patterns
  */
 export const responseInterceptor = (response) => {
+  // Console logging for debugging
+  console.log('%c[API RESPONSE]', 'color: #4CAF50; font-weight: bold', {
+    url: response.config?.url,
+    status: response.status,
+    data: response.data
+  });
+
   // If API returns data in a nested structure, extract it
   // Modify this based on your API response structure
   if (response.data?.data) {
@@ -27,6 +34,15 @@ export const responseInterceptor = (response) => {
 export const responseErrorInterceptor = async (error) => {
   const originalRequest = error.config;
   const errorType = getErrorType(error);
+
+  // Console logging for errors
+  console.log('%c[API ERROR]', 'color: #F44336; font-weight: bold', {
+    url: error.config?.url,
+    method: error.config?.method,
+    status: error.response?.status,
+    message: error.message,
+    responseData: error.response?.data
+  });
 
   // Handle 401 - Unauthorized (token expired or invalid)
   if (error.response?.status === 401 && !originalRequest._retry) {

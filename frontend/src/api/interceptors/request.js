@@ -35,8 +35,13 @@ export const requestInterceptor = (config) => {
   config.headers['Content-Type'] = config.headers['Content-Type'] || 'application/json; charset=UTF-8';
   config.headers['Accept'] = 'application/json';
 
-  // Add timestamp for cache busting (optional)
-  // config.params = { ...config.params, _t: Date.now() };
+  // Console logging for debugging
+  console.log('%c[API REQUEST]', 'color: #2196F3; font-weight: bold', {
+    method: config.method?.toUpperCase(),
+    url: config.url,
+    payload: config.data || config.params || null,
+    headers: config.headers
+  });
 
   return config;
 };
