@@ -334,13 +334,7 @@ const LandingPage = () => {
           <button 
             className={`landing-login-btn ${hasBackgroundImage ? 'on-image' : ''}`}
             onClick={() => navigate('/login')}
-            style={hasBackgroundImage ? {
-              borderColor: '#ffffff',
-              color: '#ffffff'
-            } : { 
-              borderColor: btnColor,
-              color: btnColor 
-            }}
+            style={{ backgroundColor: btnColor, color: btnTextColor }}
             data-testid="landing-login-btn"
           >
             <IoPersonOutline />
