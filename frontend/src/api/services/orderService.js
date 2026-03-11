@@ -851,14 +851,39 @@ export const getOrderDetails = async (orderId) => {
       const quantity = detail.quantity || 1;
       const isCancelled = detail.food_status === 3;
       
+      // Calculate variation total from detail.variation[].values[].optionPrice
+      let variationTotal = 0;
+      if (detail.variation && detail.variation.length > 0) {
+        detail.variation.forEach(v => {
+          if (v.values) {
+            const vals = Array.isArray(v.values) ? v.values : [v.values];
+            vals.forEach(val => {
+              variationTotal += parseFloat(val.optionPrice) || 0;
+            });
+          }
+        });
+      }
+      
+      // Calculate addon total from detail.add_ons[].price * quantity
+      let addonTotal = 0;
+      if (detail.add_ons && detail.add_ons.length > 0) {
+        detail.add_ons.forEach(a => {
+          addonTotal += (parseFloat(a.price) || 0) * (a.quantity || 1);
+        });
+      }
+      
+      // Full item price = base + variations + addons
+      const fullUnitPrice = unitPrice + variationTotal + addonTotal;
+      
       // Only add to totals if NOT cancelled
       if (!isCancelled) {
-        itemTotal += unitPrice * quantity;
+        itemTotal += fullUnitPrice * quantity;
         
         // Calculate tax from item-level data (mirrors ReviewOrder logic)
+        // Tax is on full price (base + variations + addons)
         const taxPercent = parseFloat(detail.food_details?.tax) || 0;
         const taxType = detail.food_details?.tax_type || 'GST';
-        const taxAmountPerUnit = parseFloat(((unitPrice * taxPercent) / 100).toFixed(2));
+        const taxAmountPerUnit = parseFloat(((fullUnitPrice * taxPercent) / 100).toFixed(2));
         const totalTaxForItem = taxAmountPerUnit * quantity;
         
         if (taxType === 'GST') totalGst += totalTaxForItem;

@@ -150,6 +150,18 @@ const OrderSuccess = () => {
         const updatedItems = orderDetails.previousItems.map(item => {
           // Calculate total unit price including variations and addons
           const basePrice = parseFloat(item.unitPrice || item.price) || 0;
+          // Calculate variation total from variation[].values[].optionPrice
+          let variationsTotal = 0;
+          if (item.variations && item.variations.length > 0) {
+            item.variations.forEach(v => {
+              if (v.values) {
+                const vals = Array.isArray(v.values) ? v.values : [v.values];
+                vals.forEach(val => {
+                  variationsTotal += parseFloat(val.optionPrice) || 0;
+                });
+              }
+            });
+          }
           let addonsTotal = 0;
           if (item.add_ons && item.add_ons.length > 0) {
             item.add_ons.forEach(a => {
@@ -159,7 +171,7 @@ const OrderSuccess = () => {
           return {
             id: item.id,
             name: item.item?.name || 'Item',
-            price: basePrice + addonsTotal,
+            price: basePrice + variationsTotal + addonsTotal,
             quantity: item.quantity || 1,
             veg: item.item?.veg === true || item.item?.veg === 1,
             foodStatus: item.foodStatus,
