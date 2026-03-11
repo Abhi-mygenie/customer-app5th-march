@@ -10,7 +10,6 @@
   z-index: var(--z-fixed);
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
   animation: slideUp 0.3s ease-out;
-  border-top: 2px solid var(--color-primary-dark);
   border-radius: var(--radius-container-xl, 20px) var(--radius-container-xl, 20px) 0 0; /* Rounded top corners */
   box-sizing: border-box;
 }
