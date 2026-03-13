@@ -29,7 +29,7 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
   const location = useLocation();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, user, isCustomer, logout } = useAuth();
-  const { aboutUsContent, navMenuOrder, feedbackEnabled } = useRestaurantConfig();
+  const { navMenuOrder } = useRestaurantConfig();
   const isRestaurant = user?.type === 'restaurant';
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -127,7 +127,7 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             { id: 'about', label: 'About Us', type: 'builtin', visible: true },
             { id: 'contact', label: 'Contact', type: 'builtin', visible: true },
             { id: 'feedback', label: 'Feedback', type: 'builtin', visible: true },
-          ]).filter(item => item.visible !== false && item.id !== 'menu').map((item) => {
+          ]).filter(item => item.visible !== false).map((item) => {
             const iconMap = {
               home: IoHomeOutline,
               menu: IoRestaurantOutline,
@@ -142,11 +142,6 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
               contact: `${menuBasePath}/contact`,
               feedback: `${menuBasePath}/feedback`,
             };
-
-            // Skip feedback if disabled
-            if (item.id === 'feedback' && !feedbackEnabled) return null;
-            // Skip about if no aboutUs content configured
-            if (item.id === 'about' && !aboutUsContent) return null;
 
             const Icon = iconMap[item.id] || IoDocumentTextOutline;
             const path = pathMap[item.id] || `${menuBasePath}/page/${item.id}`;

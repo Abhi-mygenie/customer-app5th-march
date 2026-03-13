@@ -835,7 +835,7 @@ async def get_app_config(restaurant_id: str):
             "showAboutUs": True,
             "showFooter": True,
             "showLandingCustomerCapture": False,  # Default OFF - restaurant opts in
-            "showHamburgerMenu": False,
+            "showHamburgerMenu": True,
             "showLoginButton": False,
             "showEstimatedTimes": False,  # Default OFF
             "showFoodStatus": True,  # Default ON - show Preparing/Ready/Served
