@@ -28,9 +28,8 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { restaurantId } = useRestaurantId();
-  const { isAuthenticated, user, isCustomer, logout } = useAuth();
+  const { isAuthenticated, user, isCustomer, isRestaurant, logout } = useAuth();
   const { navMenuOrder } = useRestaurantConfig();
-  const isRestaurant = user?.type === 'restaurant';
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -178,18 +177,6 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             );
           })}
 
-          {/* Admin Settings Link */}
-          {isAuthenticated && isRestaurant && (
-            <button
-              className="hamburger-item"
-              onClick={() => handleNavigation('/admin/settings')}
-              data-testid="hamburger-settings"
-            >
-              <IoSettingsOutline className="hamburger-item-icon" />
-              <span>Settings</span>
-            </button>
-          )}
-
           <div className="hamburger-divider" />
 
           {/* Logged In Items - Customer only */}
@@ -247,6 +234,20 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             </button>
           )}
         </div>
+
+        {/* Admin Settings - Bottom */}
+        {isAuthenticated && isRestaurant && (
+          <div className="hamburger-settings-section">
+            <button
+              className="hamburger-item hamburger-item-settings"
+              onClick={() => handleNavigation('/admin/settings')}
+              data-testid="hamburger-settings"
+            >
+              <IoSettingsOutline className="hamburger-item-icon" />
+              <span>Settings</span>
+            </button>
+          </div>
+        )}
 
         {/* Footer - Need Help */}
         {phone && (

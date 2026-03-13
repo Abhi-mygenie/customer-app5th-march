@@ -198,6 +198,18 @@
   margin: var(--spacing-sm) var(--spacing-lg);
 }
 
+/* Settings Section - Bottom */
+.hamburger-settings-section {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-top: 1px solid var(--border-light);
+  margin-top: auto;
+}
+
+.hamburger-item-settings {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
 /* Help Section */
 .hamburger-help-section {
   padding: var(--spacing-md) var(--spacing-lg);

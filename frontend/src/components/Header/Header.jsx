@@ -1,14 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { useRestaurantConfig } from '../../context/RestaurantConfigContext';
-import { IoSettingsOutline } from 'react-icons/io5';
 import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 import './Header.css';
 
 const Header = ({ brandText, logoUrl, phone, onLogoClick }) => {
-  const navigate = useNavigate();
-  const { isRestaurant } = useAuth();
   const { showHamburgerMenu } = useRestaurantConfig();
   
   // Use fallback if logoUrl is empty, null, undefined, or whitespace
@@ -18,18 +13,6 @@ const Header = ({ brandText, logoUrl, phone, onLogoClick }) => {
   return (
     <div className="menu-items-header">
       <div className="header-left-section">
-        {/* Admin Settings Button - Only visible for restaurant admins */}
-        {isRestaurant && (
-          <button 
-            className="admin-settings-btn"
-            onClick={() => navigate('/admin/settings')}
-            data-testid="header-admin-settings-btn"
-            title="Admin Settings"
-          >
-            <IoSettingsOutline />
-            <span className="admin-btn-text">Settings</span>
-          </button>
-        )}
         <div className="header-brand" onClick={onLogoClick} style={{ cursor: onLogoClick ? 'pointer' : 'default' }} data-testid="header-logo-link">
           <img 
             src={effectiveLogoUrl} 
