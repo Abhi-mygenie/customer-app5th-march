@@ -851,6 +851,9 @@ async def get_app_config(restaurant_id: str):
             "showSpecialInstructions": True,
             "showPriceBreakdown": True,
             "showTableInfo": True,
+            "showLoyaltyPoints": True,
+            "showCouponCode": False,
+            "showWallet": False,
             # Branding - Colors
             "logoUrl": None,
             "primaryColor": "#E8531E",
