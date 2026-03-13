@@ -1,115 +1,254 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Inter:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap');
+
+:root {
+   /* ============================================
+     PRIMARY COLORS
+     ============================================ */
+   --color-primary: #61B4E5;
+   --color-primary-dark: #4fa3d1;
+   --color-primary-light: #78CAFF;
+   --color-primary-darker: #177DAA;
+   --color-primary-darkest: #0c3f56;
+   --color-primary-pale: #A8DADC;
+
+   /* ============================================
+     CATEGORY COLORS
+     ============================================ */
+   --color-veg: #008000;
+   --color-non-veg: #be3838;
+   --color-egg: #FFA500;
+
+   /* ============================================
+     NEUTRAL COLORS
+     ============================================ */
+   --color-black: #000000;
+   --color-white: #ffffff;
+   --color-gray-50: #fafafa;
+   --color-gray-100: #f9f9f9;
+   --color-gray-200: #f5f5f5;
+   --color-gray-300: #f0f0f0;
+   --color-gray-400: #e8e8e8;
+   --color-gray-500: #e0e0e0;
+   --color-gray-600: #ddd;
+   --color-gray-700: #666;
+   --color-gray-800: #333;
+   --color-gray-900: #000;
+   --color-error: #dc3545;
+
+   /* ============================================
+     BACKGROUND COLORS
+     ============================================ */
+   --bg-primary: #ffffff;
+   --bg-secondary: #f5f5f5;
+   --bg-tertiary: #f9f9f9;
+   --bg-dark: #000000;
+   --bg-light-blue: #f0f8ff;
+   --bg-overlay: rgba(0, 0, 0, 0.5);
+   --bg-overlay-light: rgba(0, 0, 0, 0.1);
+
+   /* ============================================
+     TEXT COLORS
+     ============================================ */
+   --text-primary: #000000;
+   --text-secondary: #333333;
+   --text-tertiary: #666666;
+   --text-light: #999999;
+   --text-white: #ffffff;
+   --button-text-color: #ffffff;
+   --text-link: #61B4E5;
+   --text-link-hover: #4fa3d1;
+   --text-error: #dc3545;
+   --text-success: #28a745;
+   --text-blue-light: #78CAFF;
+   --text-blue-medium: #177DAA;
+   --text-blue-dark: #06293F;
+   --text-blue-hero: #62B5E5;
+
+   /* ============================================
+     BORDER COLORS
+     ============================================ */
+   --border-light: #f0f0f0;
+   --border-medium: #e0e0e0;
+   --border-dark: #ddd;
+   --border-dashed: #aeaeae;
+   --border-primary: #61B4E5;
+   --border-veg: #008000;
+   --border-non-veg: #be3838;
+   --border-egg: #FFA500;
+   --border-white-alpha: rgba(255, 255, 255, 0.1);
+
+   /* ============================================
+     FONTS
+     ============================================ */
+   --font-primary: 'Capriola', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+   --font-heading: 'Big Shoulders', sans-serif;
+   --font-body: 'Montserrat', sans-serif;
+   --font-code: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+
+   /* ============================================
+     FONT SIZES
+     ============================================ */
+   --font-size-xxxs: 0.5rem;
+   /* 8px */
+   --font-size-xxs: 0.625rem;
+   /* 10px */
+   --font-size-xs: 0.75rem;
+   /* 12px */
+   --font-size-sm: 0.875rem;
+   /* 14px */
+   --font-size-base: 1rem;
+   /* 16px */
+   --font-size-md: 1.125rem;
+   /* 18px */
+   --font-size-lg: 1.25rem;
+   /* 20px */
+   --font-size-xl: 1.5rem;
+   /* 24px */
+   --font-size-2xl: 1.875rem;
+   /* 30px */
+   --font-size-3xl: 2.25rem;
+   /* 36px */
+
+   /* ============================================
+     FONT WEIGHTS
+     ============================================ */
+   --font-weight-light: 300;
+   --font-weight-normal: 400;
+   --font-weight-medium: 500;
+   --font-weight-semibold: 600;
+   --font-weight-bold: 700;
+
+   /* ============================================
+     SPACING
+     ============================================ */
+   --spacing-xxs: 2px;
+   --spacing-xs: 4px;
+   --spacing-sm: 8px;
+   --spacing-md: 12px;
+   --spacing-base: 16px;
+   --spacing-lg: 20px;
+   --spacing-xl: 24px;
+   --spacing-2xl: 32px;
+   --spacing-3xl: 40px;
+   --spacing-4xl: 48px;
+
+   /* ============================================
+     BORDER RADIUS
+     ============================================ */
+   /* Fixed radius - for containers, inputs, dropdowns (never changes) */
+   --radius-container-sm: 4px;
+   --radius-container-md: 8px;
+   --radius-container-lg: 12px;
+   --radius-container-xl: 16px;
+   
+   /* Configurable radius - for buttons, badges (can be changed via admin) */
+   --radius-sm: 4px;
+   --radius-md: 8px;
+   --radius-lg: 12px;
+   --radius-xl: 16px;
+   --radius-2xl: 20px;
+   --radius-full: 50%;
+   
+   /* Semantic radius tokens */
+   --radius-button: var(--radius-md);
+   --radius-badge: var(--radius-lg);
+   --radius-input: var(--radius-container-md);
+   --radius-card: var(--radius-container-lg);
+   --radius-dropdown: var(--radius-container-md);
+   --radius-modal: var(--radius-container-lg);
+   --radius-sidebar: var(--radius-container-lg);
+
+   /* ============================================
+     SHADOWS
+     ============================================ */
+   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+
+   /* ============================================
+     Z-INDEX LAYERS
+     ============================================ */
+   --z-base: 1;
+   --z-dropdown: 100;
+   --z-sticky: 500;
+   --z-fixed: 900;
+   --z-fab: 1000;
+   --z-overlay: 1001;
+   --z-modal: 1002;
+   --z-tooltip: 1003;
+
+   /* ============================================
+     TRANSITIONS
+     ============================================ */
+   --transition-fast: 0.15s ease;
+   --transition-base: 0.3s ease;
+   --transition-slow: 0.5s ease;
+
+   /* ============================================
+     BREAKPOINTS (for reference in JS)
+     ============================================ */
+   --breakpoint-mobile: 480px;
+   --breakpoint-tablet: 768px;
+   --breakpoint-desktop: 1024px;
+   --breakpoint-wide: 1440px;
+}
+
+* {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+}
 
 body {
-    margin: 0;
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+   margin: 0;
+   font-family: var(--font-primary);
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+   background-color: var(--bg-secondary);
+   color: var(--text-primary);
 }
 
 code {
-    font-family:
-        source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+   font-family: var(--font-code);
 }
 
-@layer base {
-    :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
-        --radius: 0.5rem;
-    }
-    .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
-    }
+/* Global Button Styles */
+button {
+   font-family: var(--font-primary);
 }
 
-@layer base {
-    * {
-        @apply border-border;
-    }
-    body {
-        @apply bg-background text-foreground;
-    }
+/* Smooth Scrolling */
+html {
+   scroll-behavior: smooth;
 }
 
-@layer base {
-    [data-debug-wrapper="true"] {
-        display: contents !important;
-    }
+/* Remove default link styles */
+a {
+   color: inherit;
+   text-decoration: none;
+}
 
-    [data-debug-wrapper="true"] > * {
-        margin-left: inherit;
-        margin-right: inherit;
-        margin-top: inherit;
-        margin-bottom: inherit;
-        padding-left: inherit;
-        padding-right: inherit;
-        padding-top: inherit;
-        padding-bottom: inherit;
-        column-gap: inherit;
-        row-gap: inherit;
-        gap: inherit;
-        border-left-width: inherit;
-        border-right-width: inherit;
-        border-top-width: inherit;
-        border-bottom-width: inherit;
-        border-left-style: inherit;
-        border-right-style: inherit;
-        border-top-style: inherit;
-        border-bottom-style: inherit;
-        border-left-color: inherit;
-        border-right-color: inherit;
-        border-top-color: inherit;
-        border-bottom-color: inherit;
-    }
+/* Ensure images are responsive */
+img {
+   max-width: 100%;
+   height: auto;
+}
+
+/* Hide Scrollbar - All Browsers */
+/* Chrome, Safari, Edge */
+::-webkit-scrollbar {
+   display: none;
+   width: 0;
+   height: 0;
+}
+
+/* Firefox */
+* {
+   scrollbar-width: none;
+}
+
+/* IE and Edge Legacy */
+body {
+   -ms-overflow-style: none;
 }
