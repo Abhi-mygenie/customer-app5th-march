@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 class MenuFabConfigTester:
-    def __init__(self, base_url="https://customer-app-march.preview.emergentagent.com"):
+    def __init__(self, base_url="https://dynamic-menu-system-2.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
