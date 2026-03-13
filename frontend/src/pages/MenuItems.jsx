@@ -652,7 +652,34 @@ const MenuItems = () => {
                 {sectionsToDisplay.length > 0 && (
                   <div id="items-section">
                     {sectionsToDisplay.map((section, sectionIndex) => {
-                      const filteredItems = filterItems(section.items);
+                      // Apply item order and visibility from admin config
+                      let orderedSectionItems = section.items;
+                      const categoryId = section.categoryId;
+                      const itemOrderKey = stationId ? `${stationId}__${categoryId}` : categoryId;
+                      const itemOrder = stationId
+                        ? (menuOrder?.stationItemOrder?.[itemOrderKey] || [])
+                        : (menuOrder?.itemOrder?.[categoryId] || []);
+                      const itemVis = stationId
+                        ? (menuOrder?.stationItemVisibility?.[itemOrderKey] || {})
+                        : (menuOrder?.itemVisibility?.[categoryId] || {});
+
+                      if (itemOrder.length > 0) {
+                        const ordered = [];
+                        const seen = new Set();
+                        for (const o of itemOrder) {
+                          const item = section.items.find(i => String(i.id) === String(o.id));
+                          if (item) {
+                            if (itemVis[o.id] !== false) ordered.push(item);
+                            seen.add(String(item.id));
+                          }
+                        }
+                        for (const item of section.items) {
+                          if (!seen.has(String(item.id))) ordered.push(item);
+                        }
+                        orderedSectionItems = ordered;
+                      }
+
+                      const filteredItems = filterItems(orderedSectionItems);
 
                       // Reorder items: cart items move to top
                       const reorderedItems = reorderItemsByCart(filteredItems);

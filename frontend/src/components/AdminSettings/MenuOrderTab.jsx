@@ -9,21 +9,22 @@ const MenuOrderTab = ({ config, setConfig }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [apiCategories, setApiCategories] = useState([]);
+  const [apiItems, setApiItems] = useState({});
   const [restaurant, setRestaurant] = useState(null);
   const [stations, setStations] = useState([]);
   const [stationCategories, setStationCategories] = useState({});
+  const [stationItems, setStationItems] = useState({});
   const [expandedStations, setExpandedStations] = useState({});
+  const [expandedCategories, setExpandedCategories] = useState({});
 
   const restaurantId = user?.restaurant_id || user?.id;
   const isMultiMenu = restaurant ? isMultipleMenu(restaurant) : false;
 
-  // Fetch restaurant details to check multiple_menu
   useEffect(() => {
     if (!restaurantId) return;
     getRestaurantDetails(restaurantId).then(setRestaurant).catch(() => {});
   }, [restaurantId]);
 
-  // Fetch stations from JSON for multiple_menu restaurants
   useEffect(() => {
     if (!isMultiMenu) return;
     try {
@@ -34,17 +35,22 @@ const MenuOrderTab = ({ config, setConfig }) => {
     }
   }, [isMultiMenu]);
 
-  // Fetch categories (non-multiple-menu)
+  // Fetch categories + items (non-multiple-menu)
   const fetchCategories = useCallback(async () => {
     if (!restaurantId || isMultiMenu) return;
     setLoading(true);
     try {
       const data = await getRestaurantProducts(restaurantId, "0");
       const products = data?.products || [];
-      setApiCategories(products.map(p => ({
-        id: String(p.category_id),
-        name: p.category_name || '',
-      })));
+      const cats = [];
+      const items = {};
+      for (const p of products) {
+        const catId = String(p.category_id);
+        cats.push({ id: catId, name: p.category_name || '' });
+        items[catId] = (p.items || []).map(i => ({ id: String(i.id), name: i.name || '' }));
+      }
+      setApiCategories(cats);
+      setApiItems(items);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
     } finally {
@@ -52,21 +58,24 @@ const MenuOrderTab = ({ config, setConfig }) => {
     }
   }, [restaurantId, isMultiMenu]);
 
-  // Fetch categories per station (multiple-menu)
+  // Fetch station categories + items (multiple-menu)
   const fetchStationCategories = useCallback(async () => {
     if (!restaurantId || !isMultiMenu || stations.length === 0) return;
     setLoading(true);
     try {
-      const results = {};
+      const catResults = {};
+      const itemResults = {};
       for (const station of stations) {
         const data = await getRestaurantProducts(restaurantId, "0", station.id);
         const products = data?.products || [];
-        results[station.id] = products.map(p => ({
-          id: String(p.category_id),
-          name: p.category_name || '',
-        }));
+        catResults[station.id] = products.map(p => ({ id: String(p.category_id), name: p.category_name || '' }));
+        for (const p of products) {
+          const key = `${station.id}__${p.category_id}`;
+          itemResults[key] = (p.items || []).map(i => ({ id: String(i.id), name: i.name || '' }));
+        }
       }
-      setStationCategories(results);
+      setStationCategories(catResults);
+      setStationItems(itemResults);
     } catch (err) {
       console.error('Failed to fetch station categories:', err);
     } finally {
@@ -75,105 +84,11 @@ const MenuOrderTab = ({ config, setConfig }) => {
   }, [restaurantId, isMultiMenu, stations]);
 
   useEffect(() => {
-    if (isMultiMenu && stations.length > 0) {
-      fetchStationCategories();
-    } else if (!isMultiMenu && restaurantId) {
-      fetchCategories();
-    }
+    if (isMultiMenu && stations.length > 0) fetchStationCategories();
+    else if (!isMultiMenu && restaurantId) fetchCategories();
   }, [isMultiMenu, stations, restaurantId, fetchCategories, fetchStationCategories]);
 
-  // --- Non-multiple-menu: Category order logic (existing) ---
-  const getMergedCategories = () => {
-    const saved = config.menuOrder?.categoryOrder || [];
-    const savedVisibility = config.menuOrder?.categoryVisibility || {};
-    const ordered = [];
-    const seen = new Set();
-    for (const cat of saved) {
-      const apiCat = apiCategories.find(a => a.id === cat.id);
-      if (apiCat) {
-        ordered.push({ ...apiCat, visible: savedVisibility[apiCat.id] !== false });
-        seen.add(apiCat.id);
-      }
-    }
-    for (const apiCat of apiCategories) {
-      if (!seen.has(apiCat.id)) ordered.push({ ...apiCat, visible: true });
-    }
-    return ordered;
-  };
-
-  const updateCategoryConfig = (newCategories) => {
-    const categoryOrder = newCategories.map(c => ({ id: c.id, name: c.name }));
-    const categoryVisibility = {};
-    newCategories.forEach(c => { categoryVisibility[c.id] = c.visible; });
-    setConfig(prev => ({
-      ...prev,
-      menuOrder: { ...prev.menuOrder, categoryOrder, categoryVisibility },
-    }));
-  };
-
-  // --- Multiple-menu: Station order logic ---
-  const getMergedStations = () => {
-    const saved = config.menuOrder?.stationOrder || [];
-    const savedVisibility = config.menuOrder?.stationVisibility || {};
-    const ordered = [];
-    const seen = new Set();
-    for (const s of saved) {
-      const station = stations.find(st => st.id === s.id);
-      if (station) {
-        ordered.push({ ...station, visible: savedVisibility[station.id] !== false });
-        seen.add(station.id);
-      }
-    }
-    for (const station of stations) {
-      if (!seen.has(station.id)) ordered.push({ ...station, visible: true });
-    }
-    return ordered;
-  };
-
-  const getMergedStationCategories = (stationId) => {
-    const apiCats = stationCategories[stationId] || [];
-    const savedOrder = config.menuOrder?.stationCategoryOrder?.[stationId] || [];
-    const savedVis = config.menuOrder?.stationCategoryVisibility?.[stationId] || {};
-    const ordered = [];
-    const seen = new Set();
-    for (const cat of savedOrder) {
-      const apiCat = apiCats.find(a => a.id === cat.id);
-      if (apiCat) {
-        ordered.push({ ...apiCat, visible: savedVis[apiCat.id] !== false });
-        seen.add(apiCat.id);
-      }
-    }
-    for (const apiCat of apiCats) {
-      if (!seen.has(apiCat.id)) ordered.push({ ...apiCat, visible: true });
-    }
-    return ordered;
-  };
-
-  const updateStationConfig = (newStations) => {
-    const stationOrder = newStations.map(s => ({ id: s.id, name: s.name }));
-    const stationVisibility = {};
-    newStations.forEach(s => { stationVisibility[s.id] = s.visible; });
-    setConfig(prev => ({
-      ...prev,
-      menuOrder: { ...prev.menuOrder, stationOrder, stationVisibility },
-    }));
-  };
-
-  const updateStationCategoryConfig = (stationId, newCategories) => {
-    const catOrder = newCategories.map(c => ({ id: c.id, name: c.name }));
-    const catVis = {};
-    newCategories.forEach(c => { catVis[c.id] = c.visible; });
-    setConfig(prev => ({
-      ...prev,
-      menuOrder: {
-        ...prev.menuOrder,
-        stationCategoryOrder: { ...prev.menuOrder?.stationCategoryOrder, [stationId]: catOrder },
-        stationCategoryVisibility: { ...prev.menuOrder?.stationCategoryVisibility, [stationId]: catVis },
-      },
-    }));
-  };
-
-  // --- Shared move/toggle helpers ---
+  // --- Shared helpers ---
   const moveItem = (list, index, direction, updateFn) => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= list.length) return;
@@ -188,33 +103,170 @@ const MenuOrderTab = ({ config, setConfig }) => {
     updateFn(updated);
   };
 
-  const toggleStation = (stationId) => {
-    setExpandedStations(prev => ({ ...prev, [stationId]: !prev[stationId] }));
+  // --- Merge helpers ---
+  const mergeWithSaved = (apiList, savedOrder, savedVisibility) => {
+    const ordered = [];
+    const seen = new Set();
+    for (const s of savedOrder) {
+      const item = apiList.find(a => a.id === s.id);
+      if (item) {
+        ordered.push({ ...item, visible: savedVisibility[item.id] !== false });
+        seen.add(item.id);
+      }
+    }
+    for (const item of apiList) {
+      if (!seen.has(item.id)) ordered.push({ ...item, visible: true });
+    }
+    return ordered;
   };
 
-  if (loading) {
-    return <div className="menu-order-loading">Loading menu data...</div>;
-  }
+  // ============ NON-MULTIPLE MENU ============
+  const getMergedCategories = () => mergeWithSaved(apiCategories, config.menuOrder?.categoryOrder || [], config.menuOrder?.categoryVisibility || {});
 
-  // --- RENDER: Multiple Menu (3-layer) ---
+  const getMergedItems = (categoryId) => mergeWithSaved(apiItems[categoryId] || [], config.menuOrder?.itemOrder?.[categoryId] || [], config.menuOrder?.itemVisibility?.[categoryId] || {});
+
+  const updateCategoryConfig = (newCategories) => {
+    const categoryOrder = newCategories.map(c => ({ id: c.id, name: c.name }));
+    const categoryVisibility = {};
+    newCategories.forEach(c => { categoryVisibility[c.id] = c.visible; });
+    setConfig(prev => ({ ...prev, menuOrder: { ...prev.menuOrder, categoryOrder, categoryVisibility } }));
+  };
+
+  const updateItemConfig = (categoryId, newItems) => {
+    const itemOrder = newItems.map(i => ({ id: i.id, name: i.name }));
+    const itemVis = {};
+    newItems.forEach(i => { itemVis[i.id] = i.visible; });
+    setConfig(prev => ({
+      ...prev,
+      menuOrder: {
+        ...prev.menuOrder,
+        itemOrder: { ...prev.menuOrder?.itemOrder, [categoryId]: itemOrder },
+        itemVisibility: { ...prev.menuOrder?.itemVisibility, [categoryId]: itemVis },
+      },
+    }));
+  };
+
+  // ============ MULTIPLE MENU ============
+  const getMergedStations = () => mergeWithSaved(stations, config.menuOrder?.stationOrder || [], config.menuOrder?.stationVisibility || {});
+
+  const getMergedStationCats = (stationId) => mergeWithSaved(stationCategories[stationId] || [], config.menuOrder?.stationCategoryOrder?.[stationId] || [], config.menuOrder?.stationCategoryVisibility?.[stationId] || {});
+
+  const getMergedStationItems = (stationId, categoryId) => {
+    const key = `${stationId}__${categoryId}`;
+    return mergeWithSaved(stationItems[key] || [], config.menuOrder?.stationItemOrder?.[key] || [], config.menuOrder?.stationItemVisibility?.[key] || {});
+  };
+
+  const updateStationConfig = (newStations) => {
+    const stationOrder = newStations.map(s => ({ id: s.id, name: s.name }));
+    const stationVisibility = {};
+    newStations.forEach(s => { stationVisibility[s.id] = s.visible; });
+    setConfig(prev => ({ ...prev, menuOrder: { ...prev.menuOrder, stationOrder, stationVisibility } }));
+  };
+
+  const updateStationCatConfig = (stationId, newCats) => {
+    const catOrder = newCats.map(c => ({ id: c.id, name: c.name }));
+    const catVis = {};
+    newCats.forEach(c => { catVis[c.id] = c.visible; });
+    setConfig(prev => ({
+      ...prev,
+      menuOrder: {
+        ...prev.menuOrder,
+        stationCategoryOrder: { ...prev.menuOrder?.stationCategoryOrder, [stationId]: catOrder },
+        stationCategoryVisibility: { ...prev.menuOrder?.stationCategoryVisibility, [stationId]: catVis },
+      },
+    }));
+  };
+
+  const updateStationItemConfig = (stationId, categoryId, newItems) => {
+    const key = `${stationId}__${categoryId}`;
+    const itemOrder = newItems.map(i => ({ id: i.id, name: i.name }));
+    const itemVis = {};
+    newItems.forEach(i => { itemVis[i.id] = i.visible; });
+    setConfig(prev => ({
+      ...prev,
+      menuOrder: {
+        ...prev.menuOrder,
+        stationItemOrder: { ...prev.menuOrder?.stationItemOrder, [key]: itemOrder },
+        stationItemVisibility: { ...prev.menuOrder?.stationItemVisibility, [key]: itemVis },
+      },
+    }));
+  };
+
+  // --- Reusable row component ---
+  const OrderRow = ({ item, index, total, onMove, onToggle, className = '' }) => (
+    <div className={`menu-order-item ${className} ${!item.visible ? 'hidden-item' : ''}`}>
+      <div className="menu-order-item-info">
+        <span className="menu-order-item-index">{index + 1}</span>
+        <span className="menu-order-item-name">{item.name}</span>
+      </div>
+      <div className="menu-order-item-actions">
+        <button className="menu-order-btn" onClick={() => onMove('up')} disabled={index === 0}><IoArrowUp /></button>
+        <button className="menu-order-btn" onClick={() => onMove('down')} disabled={index === total - 1}><IoArrowDown /></button>
+        <button className={`menu-order-btn visibility-btn ${item.visible ? 'visible' : 'not-visible'}`} onClick={onToggle}>
+          {item.visible ? <IoEyeOutline /> : <IoEyeOffOutline />}
+        </button>
+      </div>
+    </div>
+  );
+
+  // --- Expandable category with items ---
+  const CategoryWithItems = ({ cat, catIndex, catTotal, onCatMove, onCatToggle, items, onItemMove, onItemToggle, expandKey }) => (
+    <div className={`menu-order-category-block ${!cat.visible ? 'hidden-item' : ''}`}>
+      <div className="menu-order-item category-row">
+        <div className="menu-order-item-info">
+          <button className="menu-order-expand-btn" onClick={() => setExpandedCategories(prev => ({ ...prev, [expandKey]: !prev[expandKey] }))}>
+            {expandedCategories[expandKey] ? <IoChevronDown /> : <IoChevronForward />}
+          </button>
+          <span className="menu-order-item-index">{catIndex + 1}</span>
+          <span className="menu-order-item-name">{cat.name}</span>
+          <span className="menu-order-item-count">({items.length})</span>
+        </div>
+        <div className="menu-order-item-actions">
+          <button className="menu-order-btn" onClick={() => onCatMove('up')} disabled={catIndex === 0}><IoArrowUp /></button>
+          <button className="menu-order-btn" onClick={() => onCatMove('down')} disabled={catIndex === catTotal - 1}><IoArrowDown /></button>
+          <button className={`menu-order-btn visibility-btn ${cat.visible ? 'visible' : 'not-visible'}`} onClick={onCatToggle}>
+            {cat.visible ? <IoEyeOutline /> : <IoEyeOffOutline />}
+          </button>
+        </div>
+      </div>
+      {expandedCategories[expandKey] && (
+        <div className="menu-order-items-list">
+          {items.map((item, iIdx) => (
+            <OrderRow
+              key={item.id}
+              item={item}
+              index={iIdx}
+              total={items.length}
+              onMove={(dir) => onItemMove(iIdx, dir)}
+              onToggle={() => onItemToggle(iIdx)}
+              className="item-row"
+            />
+          ))}
+          {items.length === 0 && <div className="menu-order-empty-sub">No items</div>}
+        </div>
+      )}
+    </div>
+  );
+
+  if (loading) return <div className="menu-order-loading">Loading menu data...</div>;
+
+  // ============ RENDER: MULTIPLE MENU (3-layer) ============
   if (isMultiMenu) {
     const mergedStations = getMergedStations();
     return (
       <div className="menu-order-tab" data-testid="menu-order-tab">
         <div className="menu-order-header">
-          <h3 className="menu-order-title">Station, Category Order & Visibility</h3>
-          <button className="menu-order-refresh" onClick={fetchStationCategories} data-testid="menu-order-refresh" title="Refresh from API">
-            <IoRefresh />
-          </button>
+          <h3 className="menu-order-title">Station, Category & Item Order</h3>
+          <button className="menu-order-refresh" onClick={fetchStationCategories} data-testid="menu-order-refresh"><IoRefresh /></button>
         </div>
-        <p className="menu-order-desc">Reorder stations and categories. Toggle visibility. Changes apply after saving.</p>
+        <p className="menu-order-desc">Reorder stations, categories, and items. Toggle visibility. Save when done.</p>
 
         <div className="menu-order-list" data-testid="menu-order-list">
           {mergedStations.map((station, sIdx) => (
             <div key={station.id} className={`menu-order-station ${!station.visible ? 'hidden-item' : ''}`}>
-              <div className="menu-order-item station-item" data-testid={`menu-order-station-${station.id}`}>
+              <div className="menu-order-item station-item">
                 <div className="menu-order-item-info">
-                  <button className="menu-order-expand-btn" onClick={() => toggleStation(station.id)}>
+                  <button className="menu-order-expand-btn" onClick={() => setExpandedStations(prev => ({ ...prev, [station.id]: !prev[station.id] }))}>
                     {expandedStations[station.id] ? <IoChevronDown /> : <IoChevronForward />}
                   </button>
                   <span className="menu-order-item-index">{sIdx + 1}</span>
@@ -228,30 +280,27 @@ const MenuOrderTab = ({ config, setConfig }) => {
                   </button>
                 </div>
               </div>
-
               {expandedStations[station.id] && (
                 <div className="menu-order-subcategories">
-                  {getMergedStationCategories(station.id).map((cat, cIdx) => {
-                    const cats = getMergedStationCategories(station.id);
+                  {getMergedStationCats(station.id).map((cat, cIdx) => {
+                    const cats = getMergedStationCats(station.id);
+                    const items = getMergedStationItems(station.id, cat.id);
                     return (
-                      <div key={cat.id} className={`menu-order-item subcategory-item ${!cat.visible ? 'hidden-item' : ''}`} data-testid={`menu-order-cat-${station.id}-${cat.id}`}>
-                        <div className="menu-order-item-info">
-                          <span className="menu-order-item-index sub-index">{cIdx + 1}</span>
-                          <span className="menu-order-item-name">{cat.name}</span>
-                        </div>
-                        <div className="menu-order-item-actions">
-                          <button className="menu-order-btn" onClick={() => moveItem(cats, cIdx, 'up', (updated) => updateStationCategoryConfig(station.id, updated))} disabled={cIdx === 0}><IoArrowUp /></button>
-                          <button className="menu-order-btn" onClick={() => moveItem(cats, cIdx, 'down', (updated) => updateStationCategoryConfig(station.id, updated))} disabled={cIdx === cats.length - 1}><IoArrowDown /></button>
-                          <button className={`menu-order-btn visibility-btn ${cat.visible ? 'visible' : 'not-visible'}`} onClick={() => toggleItem(cats, cIdx, (updated) => updateStationCategoryConfig(station.id, updated))}>
-                            {cat.visible ? <IoEyeOutline /> : <IoEyeOffOutline />}
-                          </button>
-                        </div>
-                      </div>
+                      <CategoryWithItems
+                        key={cat.id}
+                        cat={cat}
+                        catIndex={cIdx}
+                        catTotal={cats.length}
+                        onCatMove={(dir) => moveItem(cats, cIdx, dir, (u) => updateStationCatConfig(station.id, u))}
+                        onCatToggle={() => toggleItem(cats, cIdx, (u) => updateStationCatConfig(station.id, u))}
+                        items={items}
+                        onItemMove={(iIdx, dir) => moveItem(items, iIdx, dir, (u) => updateStationItemConfig(station.id, cat.id, u))}
+                        onItemToggle={(iIdx) => toggleItem(items, iIdx, (u) => updateStationItemConfig(station.id, cat.id, u))}
+                        expandKey={`${station.id}__${cat.id}`}
+                      />
                     );
                   })}
-                  {(stationCategories[station.id] || []).length === 0 && (
-                    <div className="menu-order-empty-sub">No categories in this station</div>
-                  )}
+                  {(stationCategories[station.id] || []).length === 0 && <div className="menu-order-empty-sub">No categories</div>}
                 </div>
               )}
             </div>
@@ -261,38 +310,36 @@ const MenuOrderTab = ({ config, setConfig }) => {
     );
   }
 
-  // --- RENDER: Single Menu (2-layer, existing) ---
+  // ============ RENDER: SINGLE MENU (2-layer + items) ============
   const categories = getMergedCategories();
-  if (categories.length === 0) {
-    return <div className="menu-order-empty">No categories found for this restaurant.</div>;
-  }
+  if (categories.length === 0) return <div className="menu-order-empty">No categories found.</div>;
 
   return (
     <div className="menu-order-tab" data-testid="menu-order-tab">
       <div className="menu-order-header">
-        <h3 className="menu-order-title">Category Order & Visibility</h3>
-        <button className="menu-order-refresh" onClick={fetchCategories} data-testid="menu-order-refresh" title="Refresh from API">
-          <IoRefresh />
-        </button>
+        <h3 className="menu-order-title">Category & Item Order</h3>
+        <button className="menu-order-refresh" onClick={fetchCategories} data-testid="menu-order-refresh"><IoRefresh /></button>
       </div>
-      <p className="menu-order-desc">Reorder categories and toggle visibility. Changes apply after saving.</p>
+      <p className="menu-order-desc">Reorder categories and items. Toggle visibility. Save when done.</p>
 
       <div className="menu-order-list" data-testid="menu-order-list">
-        {categories.map((cat, index) => (
-          <div key={cat.id} className={`menu-order-item ${!cat.visible ? 'hidden-item' : ''}`} data-testid={`menu-order-item-${cat.id}`}>
-            <div className="menu-order-item-info">
-              <span className="menu-order-item-index">{index + 1}</span>
-              <span className="menu-order-item-name">{cat.name}</span>
-            </div>
-            <div className="menu-order-item-actions">
-              <button className="menu-order-btn" onClick={() => moveItem(categories, index, 'up', updateCategoryConfig)} disabled={index === 0}><IoArrowUp /></button>
-              <button className="menu-order-btn" onClick={() => moveItem(categories, index, 'down', updateCategoryConfig)} disabled={index === categories.length - 1}><IoArrowDown /></button>
-              <button className={`menu-order-btn visibility-btn ${cat.visible ? 'visible' : 'not-visible'}`} onClick={() => toggleItem(categories, index, updateCategoryConfig)}>
-                {cat.visible ? <IoEyeOutline /> : <IoEyeOffOutline />}
-              </button>
-            </div>
-          </div>
-        ))}
+        {categories.map((cat, cIdx) => {
+          const items = getMergedItems(cat.id);
+          return (
+            <CategoryWithItems
+              key={cat.id}
+              cat={cat}
+              catIndex={cIdx}
+              catTotal={categories.length}
+              onCatMove={(dir) => moveItem(categories, cIdx, dir, updateCategoryConfig)}
+              onCatToggle={() => toggleItem(categories, cIdx, updateCategoryConfig)}
+              items={items}
+              onItemMove={(iIdx, dir) => moveItem(items, iIdx, dir, (u) => updateItemConfig(cat.id, u))}
+              onItemToggle={(iIdx) => toggleItem(items, iIdx, (u) => updateItemConfig(cat.id, u))}
+              expandKey={cat.id}
+            />
+          );
+        })}
       </div>
     </div>
   );
