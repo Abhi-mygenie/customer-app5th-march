@@ -26,7 +26,7 @@ const MenuItems = () => {
   const { stationId } = useParams();
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
-  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantOpeningTime, restaurantClosingTime } = useRestaurantConfig();
+  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantOpeningTime, restaurantClosingTime } = useRestaurantConfig();
   const [stationName, setStationName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -704,9 +704,11 @@ const MenuItems = () => {
         />
 
       </div>
-        <button className="menu-fab" onClick={toggleMenuPanel}>
-          Menu
-        </button>
+        {configShowMenuFab !== false && (
+          <button className="menu-fab" onClick={toggleMenuPanel}>
+            Menu
+          </button>
+        )}
     </div>
   );
 };
