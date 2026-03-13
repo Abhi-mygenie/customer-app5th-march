@@ -260,6 +260,7 @@ const AdminSettings = () => {
           showLoginButton: config.showLoginButton,
           showPromotionsOnMenu: config.showPromotionsOnMenu,
           showCategories: config.showCategories,
+          showMenuFab: config.showMenuFab,
           // Order Page Visibility
           showCustomerDetails: config.showCustomerDetails,
           showCustomerName: config.showCustomerName,
