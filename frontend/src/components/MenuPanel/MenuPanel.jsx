@@ -87,6 +87,9 @@ const MenuPanel = ({
 }) => {
   if (!isOpen) return null;
 
+  // Determine if we should show stations or categories
+  const showStations = stationsData && stationsData.length > 0;
+
   return createPortal(
     <>
       {/* Overlay */}
@@ -102,16 +105,52 @@ const MenuPanel = ({
 
         <div className="menu-panel-content">
 
-          {/* Active Station Block */}
-          {stationName && (
-            <div className="menu-panel-station-block">
+          {/* For multiple_menu restaurants (716/739): Show Stations */}
+          {showStations && (
+            <>
+              {/* Active Station Block */}
+              {stationName && (
+                <div className="menu-panel-station-block">
+                  <div className="menu-panel-station-active">
+                    <span className="menu-panel-station-name">
+                      {stationName}
+                    </span>
+                  </div>
 
-              <div className="menu-panel-station-active">
-                <span className="menu-panel-station-name">
-                  {stationName}
-                </span>
+                  {menuSections.map((section, index) => (
+                    <button
+                      key={index}
+                      className={`menu-panel-item category-item ${
+                        selectedCategory === section.sectionName ? 'active' : ''
+                      }`}
+                      onClick={() => onCategoryClick(section.sectionName)}
+                    >
+                      {section.sectionName}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Other Stations */}
+              <div className="menu-panel-stations-block">
+                {stationsData
+                  .filter((station) => station.id !== currentStationId)
+                  .map((station) => (
+                    <button
+                      key={station.id}
+                      className="menu-panel-item station-item"
+                      onClick={() => onStationClick(station.id)}
+                    >
+                      {station.name}
+                    </button>
+                  ))}
               </div>
+            </>
+          )}
 
+          {/* For non-multiple_menu restaurants: Show Categories from menuSections */}
+          {!showStations && menuSections && menuSections.length > 0 && (
+            <div className="menu-panel-categories-block">
               {menuSections.map((section, index) => (
                 <button
                   key={index}
@@ -123,27 +162,6 @@ const MenuPanel = ({
                   {section.sectionName}
                 </button>
               ))}
-            </div>
-          )}
-
-          {/* Other Stations */}
-          {stationsData && stationsData.length > 0 && (
-            <div className="menu-panel-stations-block">
-              {/* <div className="menu-panel-section-label">
-                FOOD MENU
-              </div> */}
-
-              {stationsData
-                .filter((station) => station.id !== currentStationId)
-                .map((station) => (
-                  <button
-                    key={station.id}
-                    className="menu-panel-item station-item"
-                    onClick={() => onStationClick(station.id)}
-                  >
-                    {station.name}
-                  </button>
-                ))}
             </div>
           )}
 
