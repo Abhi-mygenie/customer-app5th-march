@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import SearchAndFilterBar from '../components/SearchAndFilterBar/SearchAndFilterBar';
@@ -26,7 +26,7 @@ const MenuItems = () => {
   const { stationId } = useParams();
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
-  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantOpeningTime, restaurantClosingTime } = useRestaurantConfig();
+  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantOpeningTime, restaurantClosingTime, menuOrder } = useRestaurantConfig();
   const [stationName, setStationName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -50,7 +50,42 @@ const MenuItems = () => {
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
 
   // Fetch menu sections from API (wait for numeric ID)
-  const { menuSections, loading: menuLoading, error: menuError, errorMessage: menuErrorMessage } = useMenuSections(stationId, numericRestaurantId);
+  const { menuSections: rawMenuSections, loading: menuLoading, error: menuError, errorMessage: menuErrorMessage } = useMenuSections(stationId, numericRestaurantId);
+
+  // Apply category order and visibility from admin config
+  const menuSections = useMemo(() => {
+    if (!rawMenuSections || rawMenuSections.length === 0) return rawMenuSections || [];
+    const categoryOrder = menuOrder?.categoryOrder || [];
+    const categoryVisibility = menuOrder?.categoryVisibility || {};
+    if (categoryOrder.length === 0) return rawMenuSections;
+
+    // Build ordered list
+    const ordered = [];
+    const seen = new Set();
+
+    // Add sections in saved order
+    for (const cat of categoryOrder) {
+      const section = rawMenuSections.find(s => {
+        const sectionId = s.categoryId || s.sectionName;
+        return String(sectionId) === String(cat.id) || s.sectionName === cat.name;
+      });
+      if (section) {
+        if (categoryVisibility[cat.id] !== false) {
+          ordered.push(section);
+        }
+        seen.add(section.sectionName);
+      }
+    }
+
+    // Append new sections not in saved order
+    for (const section of rawMenuSections) {
+      if (!seen.has(section.sectionName)) {
+        ordered.push(section);
+      }
+    }
+
+    return ordered;
+  }, [rawMenuSections, menuOrder]);
 
   // Fetch stations for menu panel
   const { stations: stationsData } = useStations(numericRestaurantId);

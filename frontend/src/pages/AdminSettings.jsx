@@ -24,6 +24,8 @@ import toast from 'react-hot-toast';
 import { getRestaurantDetails } from '../api/services/restaurantService';
 import ContentTab from '../components/AdminSettings/ContentTab';
 import VisibilityTab from '../components/AdminSettings/VisibilityTab';
+import MenuOrderTab from '../components/AdminSettings/MenuOrderTab';
+import '../components/AdminSettings/MenuOrderTab.css';
 import '../components/AdminSettings/ContentTab.css';
 import './AdminSettings.css';
 
@@ -332,6 +334,8 @@ const AdminSettings = () => {
           // Restaurant Operating Hours
           restaurantOpeningTime: config.restaurantOpeningTime,
           restaurantClosingTime: config.restaurantClosingTime,
+          // Menu Order
+          menuOrder: config.menuOrder,
         })
       });
 
@@ -488,7 +492,7 @@ const AdminSettings = () => {
     { id: 'visibility', label: 'Visibility', icon: IoEyeOutline },
     { id: 'banners', label: 'Banners', icon: IoImagesOutline },
     { id: 'content', label: 'Content', icon: IoDocumentOutline },
-    { id: 'menu', label: 'Menu', icon: IoRestaurantOutline, navigateTo: 'menu' },
+    { id: 'menu', label: 'Menu', icon: IoRestaurantOutline },
   ];
 
   if (!user || !isRestaurant) {
@@ -1145,6 +1149,11 @@ const AdminSettings = () => {
       {/* Content Section */}
       {activeSection === 'content' && (
         <ContentTab config={config} setConfig={setConfig} token={token} uploadImage={uploadImage} ToggleRow={ToggleRow} handleChange={handleChange} />
+      )}
+
+      {/* Menu Order Section */}
+      {activeSection === 'menu' && (
+        <MenuOrderTab config={config} setConfig={setConfig} />
       )}
 
       {/* Settings Section */}

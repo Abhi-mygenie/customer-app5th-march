@@ -102,6 +102,7 @@ export const useMenuSections = (stationId, restaurantId) => {
             });
 
             return {
+              categoryId: String(product.category_id || ''),
               sectionName: product.category_name || '',
               sectionImage: product.category_image || '',
               items: transformedItems,

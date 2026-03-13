@@ -77,6 +77,7 @@ const DEFAULT_CONFIG = {
   feedbackIntroText: null,
   customPages: [],
   navMenuOrder: [],
+  menuOrder: {},
   banners: [],
   // Extra Info Section
   showExtraInfo: true,
@@ -389,6 +390,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     feedbackIntroText: config.feedbackIntroText,
     customPages: config.customPages || [],
     navMenuOrder: config.navMenuOrder || [],
+    menuOrder: config.menuOrder || {},
     banners: (config.banners || []).filter(b => b.bannerEnabled !== false).sort((a, b) => (a.bannerOrder || 0) - (b.bannerOrder || 0)).slice(0, 5),
     // Extra Info Section
     showExtraInfo: config.showExtraInfo !== false,

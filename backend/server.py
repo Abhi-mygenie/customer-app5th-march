@@ -180,6 +180,7 @@ class AppConfigUpdate(BaseModel):
     customPages: Optional[List[dict]] = None
     # Content - Nav Menu
     navMenuOrder: Optional[List[dict]] = None
+    menuOrder: Optional[dict] = None
     # Extra Info Section (Footer)
     showExtraInfo: Optional[bool] = None
     extraInfoItems: Optional[List[str]] = None  # Up to 5 bullet points

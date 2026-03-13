@@ -1,0 +1,123 @@
+.menu-order-tab {
+  padding: var(--spacing-md);
+}
+
+.menu-order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+}
+
+.menu-order-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.menu-order-refresh {
+  background: none;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+}
+
+.menu-order-refresh:hover {
+  background: var(--bg-hover);
+}
+
+.menu-order-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
+}
+
+.menu-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  transition: opacity 0.2s;
+}
+
+.menu-order-item.hidden-item {
+  opacity: 0.5;
+  background: #f9f9f9;
+}
+
+.menu-order-item-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-order-item-index {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  min-width: 18px;
+  text-align: center;
+}
+
+.menu-order-item-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.menu-order-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.menu-order-btn {
+  background: none;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  transition: all 0.15s;
+}
+
+.menu-order-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--color-primary);
+}
+
+.menu-order-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.menu-order-btn.visibility-btn.visible {
+  color: var(--color-primary);
+}
+
+.menu-order-btn.visibility-btn.not-visible {
+  color: #ccc;
+}
+
+.menu-order-loading,
+.menu-order-empty {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
