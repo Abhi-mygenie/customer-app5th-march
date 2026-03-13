@@ -823,26 +823,26 @@ async def get_app_config(restaurant_id: str):
             # Landing Page
             "showLogo": True,
             "showWelcomeText": True,
-            "showDescription": True,
-            "showSocialIcons": True,
+            "showDescription": False,
+            "showSocialIcons": False,
             "showTableNumber": True,
             "showPromotions": True,
             "showPoweredBy": True,
-            "showCallWaiter": True,
-            "showPayBill": True,
-            "showLandingCallWaiter": True,
-            "showLandingPayBill": True,
+            "showCallWaiter": False,
+            "showPayBill": False,
+            "showLandingCallWaiter": False,
+            "showLandingPayBill": False,
             "showAboutUs": True,
             "showFooter": True,
             "showLandingCustomerCapture": False,  # Default OFF - restaurant opts in
-            "showHamburgerMenu": True,
+            "showHamburgerMenu": False,
             "showLoginButton": True,
             "showEstimatedTimes": False,  # Default OFF
             "showFoodStatus": True,  # Default ON - show Preparing/Ready/Served
             # Menu Page
-            "showPromotionsOnMenu": True,
+            "showPromotionsOnMenu": False,
             "showCategories": True,
-            "showMenuFab": True,  # Menu FAB button
+            "showMenuFab": False,  # Menu FAB button
             # Order Page
             "showCustomerDetails": True,
             "showCustomerName": True,
