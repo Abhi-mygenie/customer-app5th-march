@@ -54,7 +54,7 @@ const AdminSettings = () => {
     // Menu Page Visibility
     showPromotionsOnMenu: false,
     showCategories: true,
-    showMenuFab: false,
+    showMenuFab: true,
     // Order Page Visibility
     showCustomerDetails: false,
     showCustomerName: false,
