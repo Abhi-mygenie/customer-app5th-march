@@ -190,65 +190,61 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             </button>
           )}
 
-          {loginVisible && (
+          <div className="hamburger-divider" />
+
+          {/* Logged In Items - Customer only */}
+          {isAuthenticated && isCustomer && (
             <>
+              <button 
+                className="hamburger-item"
+                onClick={() => handleNavigation('/profile')}
+                data-testid="hamburger-my-profile"
+              >
+                <IoPersonOutline className="hamburger-item-icon" />
+                <span>My Profile</span>
+              </button>
+
+              <button 
+                className="hamburger-item"
+                onClick={() => handleNavigation('/profile?tab=orders')}
+                data-testid="hamburger-my-orders"
+              >
+                <IoReceiptOutline className="hamburger-item-icon" />
+                <span>My Orders</span>
+              </button>
+
+              <button 
+                className="hamburger-item"
+                onClick={() => handleNavigation('/profile?tab=points')}
+                data-testid="hamburger-my-points"
+              >
+                <IoGiftOutline className="hamburger-item-icon" />
+                <span>My Points</span>
+              </button>
+
+              <button 
+                className="hamburger-item"
+                onClick={() => handleNavigation('/profile?tab=wallet')}
+                data-testid="hamburger-my-wallet"
+              >
+                <IoWalletOutline className="hamburger-item-icon" />
+                <span>My Wallet</span>
+              </button>
+
               <div className="hamburger-divider" />
-
-              {/* Logged In Items - Customer only */}
-              {isAuthenticated && isCustomer && (
-                <>
-                  <button 
-                    className="hamburger-item"
-                    onClick={() => handleNavigation('/profile')}
-                    data-testid="hamburger-my-profile"
-                  >
-                    <IoPersonOutline className="hamburger-item-icon" />
-                    <span>My Profile</span>
-                  </button>
-
-                  <button 
-                    className="hamburger-item"
-                    onClick={() => handleNavigation('/profile?tab=orders')}
-                    data-testid="hamburger-my-orders"
-                  >
-                    <IoReceiptOutline className="hamburger-item-icon" />
-                    <span>My Orders</span>
-                  </button>
-
-                  <button 
-                    className="hamburger-item"
-                    onClick={() => handleNavigation('/profile?tab=points')}
-                    data-testid="hamburger-my-points"
-                  >
-                    <IoGiftOutline className="hamburger-item-icon" />
-                    <span>My Points</span>
-                  </button>
-
-                  <button 
-                    className="hamburger-item"
-                    onClick={() => handleNavigation('/profile?tab=wallet')}
-                    data-testid="hamburger-my-wallet"
-                  >
-                    <IoWalletOutline className="hamburger-item-icon" />
-                    <span>My Wallet</span>
-                  </button>
-
-                  <div className="hamburger-divider" />
-                </>
-              )}
-
-              {/* Logout - Any authenticated user */}
-              {isAuthenticated && (
-                <button 
-                  className="hamburger-item hamburger-item-logout"
-                  onClick={handleLogout}
-                  data-testid="hamburger-logout"
-                >
-                  <IoLogOutOutline className="hamburger-item-icon" />
-                  <span>Logout</span>
-                </button>
-              )}
             </>
+          )}
+
+          {/* Logout - Any authenticated user */}
+          {isAuthenticated && (
+            <button 
+              className="hamburger-item hamburger-item-logout"
+              onClick={handleLogout}
+              data-testid="hamburger-logout"
+            >
+              <IoLogOutOutline className="hamburger-item-icon" />
+              <span>Logout</span>
+            </button>
           )}
         </div>
 
