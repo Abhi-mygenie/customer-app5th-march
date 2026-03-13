@@ -37,23 +37,23 @@ const AdminSettings = () => {
     // Landing Page Visibility
     showLogo: true,
     showWelcomeText: true,
-    showDescription: true,
-    showSocialIcons: true,
+    showDescription: false,
+    showSocialIcons: false,
     showTableNumber: true,
     showPoweredBy: true,
-    showCallWaiter: true,
-    showPayBill: true,
-    showLandingCallWaiter: true,
-    showLandingPayBill: true,
+    showCallWaiter: false,
+    showPayBill: false,
+    showLandingCallWaiter: false,
+    showLandingPayBill: false,
     showEstimatedTimes: false,
     showFooter: true,
     showLandingCustomerCapture: false,  // Capture name/phone on landing
     showHamburgerMenu: false,  // Show hamburger menu
     showLoginButton: true,    // Show login button on landing
     // Menu Page Visibility
-    showPromotionsOnMenu: true,
+    showPromotionsOnMenu: false,
     showCategories: true,
-    showMenuFab: true,
+    showMenuFab: false,
     // Order Page Visibility
     showCustomerDetails: true,
     showCustomerName: true,
@@ -63,11 +63,11 @@ const AdminSettings = () => {
     showPriceBreakdown: true,
     showTableInfo: true,
     showLoyaltyPoints: true,
-    showCouponCode: true,
-    showWallet: true,
+    showCouponCode: false,
+    showWallet: false,
     // Order Status Page
     showFoodStatus: true,
-    showOrderStatusTracker: true,
+    showOrderStatusTracker: false,
     // Branding - Colors
     logoUrl: '',
     backgroundImageUrl: '',          // Desktop background image
