@@ -88,11 +88,6 @@ const DiningMenu = () => {
         />
       )}
 
-      <div className="page-title-section">
-        <h1 className="menu-title">Dining Menu</h1>
-        <p className="menu-subtitle">Select your category below.</p>
-      </div>
-
       {/* Error Message */}
       {error && (
         <div className="error-message">
