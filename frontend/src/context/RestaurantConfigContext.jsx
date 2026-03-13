@@ -7,7 +7,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 const DEFAULT_CONFIG = {
   // Landing Page
   showLogo: true,
-  showWelcomeText: true,
+  showWelcomeText: false,
   showDescription: false,
   showSocialIcons: false,
   showTableNumber: true,
@@ -28,8 +28,8 @@ const DEFAULT_CONFIG = {
   showCategories: true,
   showMenuFab: false,  // Menu FAB button
   // Order Page
-  showCustomerDetails: true,
-  showCustomerName: true,
+  showCustomerDetails: false,
+  showCustomerName: false,
   showCustomerPhone: true,
   showCookingInstructions: true,
   showSpecialInstructions: true,
@@ -73,7 +73,7 @@ const DEFAULT_CONFIG = {
   openingHours: null,
   footerText: null,
   footerLinks: [],
-  feedbackEnabled: true,
+  feedbackEnabled: false,
   feedbackIntroText: null,
   customPages: [],
   navMenuOrder: [],
@@ -385,7 +385,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     openingHours: config.openingHours,
     footerText: config.footerText,
     footerLinks: config.footerLinks || [],
-    feedbackEnabled: config.feedbackEnabled !== false,
+    feedbackEnabled: config.feedbackEnabled === true,
     feedbackIntroText: config.feedbackIntroText,
     customPages: config.customPages || [],
     navMenuOrder: config.navMenuOrder || [],

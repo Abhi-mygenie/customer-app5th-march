@@ -37,7 +37,7 @@ const AdminSettings = () => {
   const [config, setConfig] = useState({
     // Landing Page Visibility
     showLogo: true,
-    showWelcomeText: true,
+    showWelcomeText: false,
     showDescription: false,
     showSocialIcons: false,
     showTableNumber: true,
@@ -56,8 +56,8 @@ const AdminSettings = () => {
     showCategories: true,
     showMenuFab: false,
     // Order Page Visibility
-    showCustomerDetails: true,
-    showCustomerName: true,
+    showCustomerDetails: false,
+    showCustomerName: false,
     showCustomerPhone: true,
     showCookingInstructions: true,
     showSpecialInstructions: true,
@@ -102,7 +102,7 @@ const AdminSettings = () => {
     address: '',
     contactEmail: '',
     mapEmbedUrl: '',
-    feedbackEnabled: true,
+    feedbackEnabled: false,
     feedbackIntroText: '',
     customPages: [],
     navMenuOrder: [

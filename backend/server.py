@@ -822,7 +822,7 @@ async def get_app_config(restaurant_id: str):
             "restaurant_id": restaurant_id,
             # Landing Page
             "showLogo": True,
-            "showWelcomeText": True,
+            "showWelcomeText": False,
             "showDescription": False,
             "showSocialIcons": False,
             "showTableNumber": True,
@@ -845,8 +845,8 @@ async def get_app_config(restaurant_id: str):
             "showCategories": True,
             "showMenuFab": False,  # Menu FAB button
             # Order Page
-            "showCustomerDetails": True,
-            "showCustomerName": True,
+            "showCustomerDetails": False,
+            "showCustomerName": False,
             "showCustomerPhone": True,
             "showCookingInstructions": True,
             "showSpecialInstructions": True,
@@ -885,7 +885,7 @@ async def get_app_config(restaurant_id: str):
             "address": None,
             "contactEmail": None,
             "mapEmbedUrl": None,
-            "feedbackEnabled": True,
+            "feedbackEnabled": False,
             "feedbackIntroText": None,
             "customPages": [],
             "navMenuOrder": [
