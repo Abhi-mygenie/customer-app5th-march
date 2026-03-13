@@ -21,6 +21,7 @@ import {
   IoTimeOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
+import { getRestaurantDetails } from '../api/services/restaurantService';
 import ContentTab from '../components/AdminSettings/ContentTab';
 import VisibilityTab from '../components/AdminSettings/VisibilityTab';
 import '../components/AdminSettings/ContentTab.css';
@@ -202,6 +203,8 @@ const AdminSettings = () => {
     fetchConfig();
   }, [token, isRestaurant, navigate]);
 
+  const [restaurantFlags, setRestaurantFlags] = useState({});
+
   const fetchConfig = async () => {
     if (!user?.id) return;
     
@@ -210,13 +213,21 @@ const AdminSettings = () => {
     
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/config/${configId}`);
-      if (response.ok) {
-        const data = await response.json();
-        // Ensure extraInfoItems has 5 slots
+      const [configResponse, restaurantData] = await Promise.all([
+        fetch(`${API_URL}/api/config/${configId}`),
+        getRestaurantDetails(configId).catch(() => null)
+      ]);
+      if (configResponse.ok) {
+        const data = await configResponse.json();
         const extraInfoItems = data.extraInfoItems || [];
         while (extraInfoItems.length < 5) extraInfoItems.push('');
         setConfig(prev => ({ ...prev, ...data, extraInfoItems }));
+      }
+      if (restaurantData) {
+        setRestaurantFlags({
+          is_loyalty: restaurantData.is_loyalty,
+          is_coupon: restaurantData.is_coupon,
+        });
       }
     } catch (error) {
       toast.error('Failed to load configuration');
@@ -532,7 +543,7 @@ const AdminSettings = () => {
 
       {/* Visibility Section (Landing, Menu, Review Order, Order Status) */}
       {activeSection === 'visibility' && (
-        <VisibilityTab ToggleRow={ToggleRow} />
+        <VisibilityTab ToggleRow={ToggleRow} restaurantFlags={restaurantFlags} />
       )}
 
       {/* Branding Section */}

@@ -15,7 +15,7 @@ const SUB_TABS = [
   { id: 'auth', label: 'Auth & OTP', icon: IoKeyOutline },
 ];
 
-const VisibilityTab = ({ ToggleRow }) => {
+const VisibilityTab = ({ ToggleRow, restaurantFlags = {} }) => {
   const [activeSubTab, setActiveSubTab] = useState('landing');
 
   return (
@@ -93,8 +93,8 @@ const VisibilityTab = ({ ToggleRow }) => {
             <ToggleRow field="showSpecialInstructions" label="Special Instructions" />
             <ToggleRow field="showPriceBreakdown" label="Price Breakdown" />
             <ToggleRow field="showTableInfo" label="Table Information" />
-            <ToggleRow field="showLoyaltyPoints" label="Loyalty Points" />
-            <ToggleRow field="showCouponCode" label="Coupon Code" />
+            {restaurantFlags.is_loyalty === 'Yes' && <ToggleRow field="showLoyaltyPoints" label="Loyalty Points" />}
+            {restaurantFlags.is_coupon === 'Yes' && <ToggleRow field="showCouponCode" label="Coupon Code" />}
             <ToggleRow field="showWallet" label="Wallet" />
           </div>
         </div>
