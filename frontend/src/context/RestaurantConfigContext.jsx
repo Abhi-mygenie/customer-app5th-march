@@ -8,15 +8,15 @@ const DEFAULT_CONFIG = {
   // Landing Page
   showLogo: true,
   showWelcomeText: true,
-  showDescription: true,
-  showSocialIcons: true,
+  showDescription: false,
+  showSocialIcons: false,
   showTableNumber: true,
   showPromotions: true,
   showPoweredBy: true,
-  showCallWaiter: true,
-  showPayBill: true,
-  showLandingCallWaiter: true,
-  showLandingPayBill: true,
+  showCallWaiter: false,
+  showPayBill: false,
+  showLandingCallWaiter: false,
+  showLandingPayBill: false,
   showEstimatedTimes: false,
   showAboutUs: true,
   showFooter: true,
@@ -24,9 +24,9 @@ const DEFAULT_CONFIG = {
   showHamburgerMenu: false,  // Show hamburger menu
   showLoginButton: true,    // Show login button on landing
   // Menu Page
-  showPromotionsOnMenu: true,
+  showPromotionsOnMenu: false,
   showCategories: true,
-  showMenuFab: true,  // Menu FAB button
+  showMenuFab: false,  // Menu FAB button
   // Order Page
   showCustomerDetails: true,
   showCustomerName: true,
@@ -36,11 +36,11 @@ const DEFAULT_CONFIG = {
   showPriceBreakdown: true,
   showTableInfo: true,
   showLoyaltyPoints: true,
-  showCouponCode: true,
-  showWallet: true,
+  showCouponCode: false,
+  showWallet: false,
   // Order Status Page
   showFoodStatus: true,  // Show food item status (Preparing/Ready/Served)
-  showOrderStatusTracker: true,  // Show order status progress bar
+  showOrderStatusTracker: false,  // Show order status progress bar
   // Branding - Colors
   logoUrl: null,
   backgroundImageUrl: null,          // Desktop landing page background image
