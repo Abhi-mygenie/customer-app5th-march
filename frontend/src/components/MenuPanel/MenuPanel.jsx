@@ -154,7 +154,7 @@ const MenuPanel = ({
               {menuSections.map((section, index) => (
                 <button
                   key={index}
-                  className={`menu-panel-item category-item ${
+                  className={`category-compact-item ${
                     selectedCategory === section.sectionName ? 'active' : ''
                   }`}
                   onClick={() => onCategoryClick(section.sectionName)}
