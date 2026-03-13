@@ -472,17 +472,12 @@ const MenuItems = () => {
                 // Only show available stations
                 return isStationAvailable(station.timing);
               })
-              : stationsData.filter(station => {
-                // For other restaurants, show all stations except current
-                // Always show current station
-                if (station.id === stationId) return true;
-                // Show all other stations (or filter by availability if needed)
-                return isStationAvailable(station.timing);
-              })// Empty array when restaurantId !== 716 - only show categories
+              : []  // Empty for non-multiple-menu restaurants - show categories instead
           }
           currentStationId={stationId}
           onCategoryClick={handleCategoryClick}
           onStationClick={handleStationClickFromPanel}
+          selectedCategory={selectedCategory}
         />
 
         <div className="menu-items-content">
