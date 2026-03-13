@@ -123,6 +123,7 @@ class AppConfigUpdate(BaseModel):
     # Menu Page Visibility
     showPromotionsOnMenu: Optional[bool] = None
     showCategories: Optional[bool] = None
+    showMenuFab: Optional[bool] = None  # Menu FAB button on menu page
     # Order Page Visibility
     showCustomerDetails: Optional[bool] = None
     showCustomerName: Optional[bool] = None

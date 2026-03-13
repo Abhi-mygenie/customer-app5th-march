@@ -26,6 +26,7 @@ const DEFAULT_CONFIG = {
   // Menu Page
   showPromotionsOnMenu: true,
   showCategories: true,
+  showMenuFab: true,  // Menu FAB button
   // Order Page
   showCustomerDetails: true,
   showCustomerName: true,

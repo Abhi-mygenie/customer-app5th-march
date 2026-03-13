@@ -72,6 +72,7 @@ const VisibilityTab = ({ ToggleRow }) => {
           <div className="toggle-list">
             <ToggleRow field="showPromotionsOnMenu" label="Promotional Banners" />
             <ToggleRow field="showCategories" label="Category Navigation" />
+            <ToggleRow field="showMenuFab" label="Menu Button (FAB)" />
           </div>
         </div>
       )}
