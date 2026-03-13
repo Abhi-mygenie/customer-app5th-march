@@ -9,15 +9,15 @@ export const RESTAURANTS_ID = ['716', '739'];
 
 /**
  * Check if restaurant has multiple menus (shows stations page).
- * Priority: API field `multiple_menus` (Yes/No) > hardcoded fallback list.
+ * Priority: API field `multiple_menu` (Yes/No) > hardcoded fallback list.
  * @param {object|null} restaurant - Restaurant object from API
  * @param {string|number} restaurantId - Restaurant ID (fallback)
  * @returns {boolean}
  */
 export const isMultipleMenu = (restaurant, restaurantId) => {
-  // 1. Check API config first (multiple_menus: "Yes" or "No")
-  if (restaurant?.multiple_menus) {
-    return restaurant.multiple_menus === 'Yes';
+  // 1. Check API config first (multiple_menu: "Yes" or "No")
+  if (restaurant?.multiple_menu) {
+    return restaurant.multiple_menu === 'Yes';
   }
   // 2. Fallback to hardcoded list
   if (!restaurantId) return false;
