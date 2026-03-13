@@ -18,7 +18,7 @@ const Header = ({ brandText, logoUrl, phone, onLogoClick }) => {
   return (
     <div className="menu-items-header">
       <div className="header-left-section">
-        <HamburgerMenu restaurantName={brandText} phone={phone} />
+        {showHamburgerMenu && <HamburgerMenu restaurantName={brandText} phone={phone} />}
         <div className="header-brand" onClick={onLogoClick} style={{ cursor: onLogoClick ? 'pointer' : 'default' }} data-testid="header-logo-link">
           <img 
             src={effectiveLogoUrl} 
