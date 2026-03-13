@@ -156,7 +156,7 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             };
             const pathMap = {
               home: menuBasePath || '/',
-              menu: `${menuBasePath}/menu`,
+              menu: ['716', '739'].includes(restaurantId) ? `${menuBasePath}/stations` : `${menuBasePath}/menu`,
               about: `${menuBasePath}/about`,
               contact: `${menuBasePath}/contact`,
               feedback: `${menuBasePath}/feedback`,
