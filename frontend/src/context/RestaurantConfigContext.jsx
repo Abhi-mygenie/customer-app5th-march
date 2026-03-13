@@ -22,7 +22,7 @@ const DEFAULT_CONFIG = {
   showFooter: true,
   showLandingCustomerCapture: false,  // Capture name/phone on landing
   showHamburgerMenu: false,  // Show hamburger menu
-  showLoginButton: true,    // Show login button on landing
+  showLoginButton: false,    // Show login button on landing
   // Menu Page
   showPromotionsOnMenu: false,
   showCategories: true,

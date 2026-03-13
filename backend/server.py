@@ -836,7 +836,7 @@ async def get_app_config(restaurant_id: str):
             "showFooter": True,
             "showLandingCustomerCapture": False,  # Default OFF - restaurant opts in
             "showHamburgerMenu": False,
-            "showLoginButton": True,
+            "showLoginButton": False,
             "showEstimatedTimes": False,  # Default OFF
             "showFoodStatus": True,  # Default ON - show Preparing/Ready/Served
             "showOrderStatusTracker": False,  # Order Status Progress Bar

@@ -49,7 +49,7 @@ const AdminSettings = () => {
     showFooter: true,
     showLandingCustomerCapture: false,  // Capture name/phone on landing
     showHamburgerMenu: false,  // Show hamburger menu
-    showLoginButton: true,    // Show login button on landing
+    showLoginButton: false,    // Show login button on landing
     // Menu Page Visibility
     showPromotionsOnMenu: false,
     showCategories: true,
