@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useRestaurantConfig } from '../../context/RestaurantConfigContext';
 import { IoSettingsOutline } from 'react-icons/io5';
 import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 import './Header.css';
@@ -8,6 +9,7 @@ import './Header.css';
 const Header = ({ brandText, logoUrl, phone, onLogoClick }) => {
   const navigate = useNavigate();
   const { isRestaurant } = useAuth();
+  const { showHamburgerMenu } = useRestaurantConfig();
   
   // Use fallback if logoUrl is empty, null, undefined, or whitespace
   const DEFAULT_LOGO = '/assets/images/ic_login_logo.png';
