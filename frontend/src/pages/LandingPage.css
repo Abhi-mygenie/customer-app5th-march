@@ -111,15 +111,15 @@
 .landing-hamburger-wrapper {
   position: absolute;
   top: var(--spacing-md);
-  left: var(--spacing-md);
+  right: var(--spacing-md);
   z-index: 1000;
 }
 
-/* Login Button Wrapper - Top Right */
+/* Login Button Wrapper - Top Left */
 .landing-login-wrapper {
   position: absolute;
   top: var(--spacing-md);
-  right: var(--spacing-md);
+  left: var(--spacing-md);
   z-index: 1000;
 }
 
