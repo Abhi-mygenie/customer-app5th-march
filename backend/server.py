@@ -891,9 +891,9 @@ async def get_app_config(restaurant_id: str):
             "navMenuOrder": [
                 {"id": "home", "label": "Home", "type": "builtin", "visible": True},
                 {"id": "menu", "label": "Menu", "type": "builtin", "visible": True},
-                {"id": "about", "label": "About Us", "type": "builtin", "visible": True},
-                {"id": "contact", "label": "Contact", "type": "builtin", "visible": True},
-                {"id": "feedback", "label": "Feedback", "type": "builtin", "visible": True}
+                {"id": "about", "label": "About Us", "type": "builtin", "visible": False},
+                {"id": "contact", "label": "Contact", "type": "builtin", "visible": False},
+                {"id": "feedback", "label": "Feedback", "type": "builtin", "visible": False}
             ],
             "banners": [],
             # Extra Info Section

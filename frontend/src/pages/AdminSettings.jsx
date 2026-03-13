@@ -108,9 +108,9 @@ const AdminSettings = () => {
     navMenuOrder: [
       { id: 'home', label: 'Home', type: 'builtin', visible: true },
       { id: 'menu', label: 'Menu', type: 'builtin', visible: true },
-      { id: 'about', label: 'About Us', type: 'builtin', visible: true },
-      { id: 'contact', label: 'Contact', type: 'builtin', visible: true },
-      { id: 'feedback', label: 'Feedback', type: 'builtin', visible: true },
+      { id: 'about', label: 'About Us', type: 'builtin', visible: false },
+      { id: 'contact', label: 'Contact', type: 'builtin', visible: false },
+      { id: 'feedback', label: 'Feedback', type: 'builtin', visible: false },
     ],
     // Banners
     banners: [],
