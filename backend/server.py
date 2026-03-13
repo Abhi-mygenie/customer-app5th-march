@@ -842,6 +842,7 @@ async def get_app_config(restaurant_id: str):
             # Menu Page
             "showPromotionsOnMenu": True,
             "showCategories": True,
+            "showMenuFab": True,  # Menu FAB button
             # Order Page
             "showCustomerDetails": True,
             "showCustomerName": True,
