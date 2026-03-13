@@ -839,6 +839,7 @@ async def get_app_config(restaurant_id: str):
             "showLoginButton": True,
             "showEstimatedTimes": False,  # Default OFF
             "showFoodStatus": True,  # Default ON - show Preparing/Ready/Served
+            "showOrderStatusTracker": False,  # Order Status Progress Bar
             # Menu Page
             "showPromotionsOnMenu": False,
             "showCategories": True,
