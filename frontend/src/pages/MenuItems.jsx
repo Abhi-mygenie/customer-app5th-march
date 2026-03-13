@@ -55,15 +55,20 @@ const MenuItems = () => {
   // Apply category order and visibility from admin config
   const menuSections = useMemo(() => {
     if (!rawMenuSections || rawMenuSections.length === 0) return rawMenuSections || [];
-    const categoryOrder = menuOrder?.categoryOrder || [];
-    const categoryVisibility = menuOrder?.categoryVisibility || {};
+
+    // For multiple-menu restaurants, use station-specific category order
+    const categoryOrder = stationId
+      ? (menuOrder?.stationCategoryOrder?.[stationId] || [])
+      : (menuOrder?.categoryOrder || []);
+    const categoryVisibility = stationId
+      ? (menuOrder?.stationCategoryVisibility?.[stationId] || {})
+      : (menuOrder?.categoryVisibility || {});
+
     if (categoryOrder.length === 0) return rawMenuSections;
 
-    // Build ordered list
     const ordered = [];
     const seen = new Set();
 
-    // Add sections in saved order
     for (const cat of categoryOrder) {
       const section = rawMenuSections.find(s => {
         const sectionId = s.categoryId || s.sectionName;
@@ -77,7 +82,6 @@ const MenuItems = () => {
       }
     }
 
-    // Append new sections not in saved order
     for (const section of rawMenuSections) {
       if (!seen.has(section.sectionName)) {
         ordered.push(section);
@@ -85,7 +89,7 @@ const MenuItems = () => {
     }
 
     return ordered;
-  }, [rawMenuSections, menuOrder]);
+  }, [rawMenuSections, menuOrder, stationId]);
 
   // Fetch stations for menu panel
   const { stations: stationsData } = useStations(numericRestaurantId);

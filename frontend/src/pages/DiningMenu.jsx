@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import StationCard from '../components/StationCard/StationCard';
@@ -15,13 +15,37 @@ const DiningMenu = () => {
   
   // Fetch restaurant details FIRST to get numeric ID
   const { restaurant, loading: restaurantLoading, isFetching: restaurantFetching } = useRestaurantDetails(restaurantId);
-  const { logoUrl: configLogoUrl, phone: configPhone } = useRestaurantConfig();
+  const { logoUrl: configLogoUrl, phone: configPhone, menuOrder } = useRestaurantConfig();
   
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
   
   // Fetch stations from API (uses numeric ID)
-  const { stations, loading, error, errorMessage } = useStations(numericRestaurantId);
+  const { stations: rawStations, loading, error, errorMessage } = useStations(numericRestaurantId);
+
+  // Apply station order and visibility from admin config
+  const stations = useMemo(() => {
+    if (!rawStations || rawStations.length === 0) return rawStations || [];
+    const stationOrder = menuOrder?.stationOrder || [];
+    const stationVisibility = menuOrder?.stationVisibility || {};
+    if (stationOrder.length === 0) return rawStations;
+
+    const ordered = [];
+    const seen = new Set();
+    for (const s of stationOrder) {
+      const station = rawStations.find(st => st.id === s.id);
+      if (station) {
+        if (stationVisibility[station.id] !== false) {
+          ordered.push(station);
+        }
+        seen.add(station.id);
+      }
+    }
+    for (const station of rawStations) {
+      if (!seen.has(station.id)) ordered.push(station);
+    }
+    return ordered;
+  }, [rawStations, menuOrder]);
 
   // Update current time every minute for real-time availability
   useEffect(() => {
