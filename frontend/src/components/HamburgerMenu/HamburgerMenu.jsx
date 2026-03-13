@@ -127,7 +127,25 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             { id: 'about', label: 'About Us', type: 'builtin', visible: false },
             { id: 'contact', label: 'Contact', type: 'builtin', visible: false },
             { id: 'feedback', label: 'Feedback', type: 'builtin', visible: false },
+            { id: 'login', label: 'Login', type: 'builtin', visible: false },
           ]).filter(item => item.visible !== false).map((item) => {
+            // Login item has special rendering
+            if (item.id === 'login') {
+              if (isAuthenticated) return null;
+              return (
+                <button
+                  key="login"
+                  className="hamburger-item hamburger-item-login"
+                  onClick={() => handleNavigation('/login')}
+                  data-testid="hamburger-login"
+                >
+                  <IoLogInOutline className="hamburger-item-icon" />
+                  <span>Login</span>
+                  <span className="hamburger-item-badge">Earn Rewards</span>
+                </button>
+              );
+            }
+
             const iconMap = {
               home: IoHomeOutline,
               menu: IoRestaurantOutline,
@@ -225,19 +243,6 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             >
               <IoLogOutOutline className="hamburger-item-icon" />
               <span>Logout</span>
-            </button>
-          )}
-
-          {/* Guest Items */}
-          {!isAuthenticated && (
-            <button 
-              className="hamburger-item hamburger-item-login"
-              onClick={() => handleNavigation('/login')}
-              data-testid="hamburger-login"
-            >
-              <IoLogInOutline className="hamburger-item-icon" />
-              <span>Login</span>
-              <span className="hamburger-item-badge">Earn Rewards</span>
             </button>
           )}
         </div>

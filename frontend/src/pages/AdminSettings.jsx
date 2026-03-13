@@ -111,6 +111,7 @@ const AdminSettings = () => {
       { id: 'about', label: 'About Us', type: 'builtin', visible: false },
       { id: 'contact', label: 'Contact', type: 'builtin', visible: false },
       { id: 'feedback', label: 'Feedback', type: 'builtin', visible: false },
+      { id: 'login', label: 'Login', type: 'builtin', visible: false },
     ],
     // Banners
     banners: [],

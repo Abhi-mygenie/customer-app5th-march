@@ -893,7 +893,8 @@ async def get_app_config(restaurant_id: str):
                 {"id": "menu", "label": "Menu", "type": "builtin", "visible": True},
                 {"id": "about", "label": "About Us", "type": "builtin", "visible": False},
                 {"id": "contact", "label": "Contact", "type": "builtin", "visible": False},
-                {"id": "feedback", "label": "Feedback", "type": "builtin", "visible": False}
+                {"id": "feedback", "label": "Feedback", "type": "builtin", "visible": False},
+                {"id": "login", "label": "Login", "type": "builtin", "visible": False}
             ],
             "banners": [],
             # Extra Info Section
