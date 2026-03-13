@@ -1348,7 +1348,7 @@ const ReviewOrder = () => {
           )}
 
           {/* Customer Rewards Info — shown for any identified customer (via login or phone lookup) */}
-          {configShowLoyaltyPoints && (isAuthenticated || lookedUpCustomer) && loyaltySettings && (
+          {configShowLoyaltyPoints && restaurant?.is_loyalty === 'Yes' && (isAuthenticated || lookedUpCustomer) && loyaltySettings && (
             (() => {
               const custTier = isAuthenticated ? (user?.tier || 'Bronze') : (lookedUpCustomer?.tier || 'Bronze');
               const tier = custTier.toLowerCase();
@@ -1392,7 +1392,7 @@ const ReviewOrder = () => {
           )}
 
           {/* No loyalty settings fallback */}
-          {configShowLoyaltyPoints && (isAuthenticated || lookedUpCustomer) && !loyaltySettings && (
+          {configShowLoyaltyPoints && restaurant?.is_loyalty === 'Yes' && (isAuthenticated || lookedUpCustomer) && !loyaltySettings && (
             <div className="review-order-user-info" data-testid="logged-in-user-info">
               <div className="user-info-content">
                 <IoGiftOutline className="user-info-icon" />
@@ -1409,7 +1409,7 @@ const ReviewOrder = () => {
           )}
 
           {/* Guest prompt — only if no phone entered and not logged in */}
-          {configShowLoyaltyPoints && !isAuthenticated && !lookedUpCustomer && loyaltySettings && (
+          {configShowLoyaltyPoints && restaurant?.is_loyalty === 'Yes' && !isAuthenticated && !lookedUpCustomer && loyaltySettings && (
             (() => {
               const earnPercent = loyaltySettings.bronze_earn_percent || 5;
               const billAmount = totalToPay;
