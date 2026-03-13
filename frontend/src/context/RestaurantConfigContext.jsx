@@ -338,6 +338,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Menu Page
     showPromotionsOnMenu: isOn('showPromotionsOnMenu'),
     showCategories: isOn('showCategories'),
+    showMenuFab: isOn('showMenuFab'),
     // Order Page
     showCustomerDetails: isOn('showCustomerDetails'),
     showCustomerName: isOn('showCustomerName'),
