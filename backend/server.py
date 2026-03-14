@@ -1304,7 +1304,7 @@ async def update_dietary_tags(
     try:
         token = authorization.replace("Bearer ", "")
         payload = verify_token(token)
-    except:
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
     
     # Update or insert the mapping
