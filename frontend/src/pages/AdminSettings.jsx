@@ -233,6 +233,7 @@ const AdminSettings = () => {
         setRestaurantFlags({
           is_loyalty: restaurantData.is_loyalty,
           is_coupon: restaurantData.is_coupon,
+          multiple_menu: restaurantData.multiple_menu === 'Yes',
         });
       }
     } catch (error) {
