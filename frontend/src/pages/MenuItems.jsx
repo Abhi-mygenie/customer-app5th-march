@@ -319,12 +319,22 @@ const MenuItems = () => {
       );
     }
 
+    // Veg/Non-Veg/Egg filter (single select)
     if (activeFilter === 'veg') {
       filtered = filtered.filter(item => item.isVeg === true);
     } else if (activeFilter === 'non-veg') {
       filtered = filtered.filter(item => item.isVeg === false && item.isEgg !== true);
     } else if (activeFilter === 'egg') {
       filtered = filtered.filter(item => item.isEgg === true);
+    }
+
+    // Dietary tags filter (multi-select, AND logic)
+    if (activeDietaryTags.length > 0 && dietaryTagsMapping) {
+      filtered = filtered.filter(item => {
+        const itemTags = dietaryTagsMapping[item.id] || [];
+        // Item must have ALL selected tags
+        return activeDietaryTags.every(tag => itemTags.includes(tag));
+      });
     }
 
     return filtered;
