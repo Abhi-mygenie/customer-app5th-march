@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import './SearchAndFilterBar.css';
 
 const SearchAndFilterBar = ({ 
@@ -6,26 +6,40 @@ const SearchAndFilterBar = ({
   onSearchChange, 
   activeFilter, 
   onFilterChange,
+  // New props for dietary tags
+  activeDietaryTags = [],
+  onDietaryTagChange,
+  availableDietaryTags = [],
 }) => {
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const filterRef = useRef(null);
+  // Handle veg toggle click (single select for veg/non-veg/egg)
+  const handleVegToggle = (filter) => {
+    if (activeFilter === filter) {
+      onFilterChange('all'); // Deselect if clicking active filter
+    } else {
+      onFilterChange(filter);
+    }
+  };
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (filterRef.current && !filterRef.current.contains(e.target)) {
-        setIsFilterOpen(false);
+  // Handle dietary tag click (multi-select)
+  const handleDietaryTagClick = (tagId) => {
+    if (tagId === 'all') {
+      // Clear all dietary tags
+      onDietaryTagChange([]);
+    } else {
+      // Toggle the tag
+      if (activeDietaryTags.includes(tagId)) {
+        onDietaryTagChange(activeDietaryTags.filter(t => t !== tagId));
+      } else {
+        onDietaryTagChange([...activeDietaryTags, tagId]);
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    }
+  };
 
-  const hasActiveFilter = activeFilter !== 'all';
+  const isAllDietarySelected = activeDietaryTags.length === 0;
 
   return (
     <div className="search-filter-bar-container" data-testid="search-filter-bar">
-      {/* Search + Filter Row */}
+      {/* Row 1: Search + Veg Toggle */}
       <div className="search-filter-row">
         <div className="search-bar-section">
           <div className="search-bar">
@@ -44,61 +58,63 @@ const SearchAndFilterBar = ({
           </div>
         </div>
 
-        {/* Filter Dropdown */}
-        <div className="filter-dropdown-wrapper" ref={filterRef}>
+        {/* Veg/Non-Veg/Egg Toggle */}
+        <div className="veg-toggle-group" data-testid="veg-toggle-group">
           <button
-            className={`filter-dropdown-btn ${isFilterOpen ? 'open' : ''} ${hasActiveFilter ? 'has-filter' : ''}`}
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            data-testid="menu-filter-btn"
+            className={`veg-toggle-btn veg ${activeFilter === 'veg' ? 'active' : ''}`}
+            onClick={() => handleVegToggle('veg')}
+            data-testid="veg-toggle-veg"
           >
-            <span className="filter-dropdown-label">{hasActiveFilter ? { veg: 'Veg', 'non-veg': 'Non-Veg', egg: 'Egg' }[activeFilter] || 'Filters' : 'Filters'}</span>
-            <svg className={`filter-chevron ${isFilterOpen ? 'rotated' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            <span className="veg-dot veg-dot-green"></span>
+            Veg
           </button>
-
-          {isFilterOpen && (
-            <div className="filter-dropdown-menu" data-testid="filter-dropdown-menu">
-              <button
-                className={`filter-dropdown-item ${activeFilter === 'all' ? 'active' : ''}`}
-                onClick={() => { onFilterChange('all'); setIsFilterOpen(false); }}
-              >
-                <span className="filter-item-label">All</span>
-                <span className={`filter-check ${activeFilter === 'all' ? 'visible' : ''}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
-                </span>
-              </button>
-              <button
-                className={`filter-dropdown-item ${activeFilter === 'veg' ? 'active' : ''}`}
-                onClick={() => { onFilterChange('veg'); setIsFilterOpen(false); }}
-              >
-                <span className="filter-item-label">Veg</span>
-                <span className={`filter-check ${activeFilter === 'veg' ? 'visible' : ''}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
-                </span>
-              </button>
-              <button
-                className={`filter-dropdown-item ${activeFilter === 'non-veg' ? 'active' : ''}`}
-                onClick={() => { onFilterChange('non-veg'); setIsFilterOpen(false); }}
-              >
-                <span className="filter-item-label">Non-Veg</span>
-                <span className={`filter-check ${activeFilter === 'non-veg' ? 'visible' : ''}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
-                </span>
-              </button>
-              <button
-                className={`filter-dropdown-item ${activeFilter === 'egg' ? 'active' : ''}`}
-                onClick={() => { onFilterChange('egg'); setIsFilterOpen(false); }}
-              >
-                <span className="filter-item-label">Egg</span>
-                <span className={`filter-check ${activeFilter === 'egg' ? 'visible' : ''}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>
-                </span>
-              </button>
-            </div>
-          )}
+          <button
+            className={`veg-toggle-btn non-veg ${activeFilter === 'non-veg' ? 'active' : ''}`}
+            onClick={() => handleVegToggle('non-veg')}
+            data-testid="veg-toggle-nonveg"
+          >
+            <span className="veg-dot veg-dot-red"></span>
+            Non-Veg
+          </button>
+          <button
+            className={`veg-toggle-btn egg ${activeFilter === 'egg' ? 'active' : ''}`}
+            onClick={() => handleVegToggle('egg')}
+            data-testid="veg-toggle-egg"
+          >
+            <span className="veg-dot veg-dot-yellow"></span>
+            Egg
+          </button>
         </div>
       </div>
+
+      {/* Row 2: Dietary Tags Chips (only show if there are available tags) */}
+      {availableDietaryTags.length > 0 && (
+        <div className="dietary-tags-row" data-testid="dietary-tags-row">
+          <div className="dietary-tags-scroll">
+            {/* All chip */}
+            <button
+              className={`dietary-tag-chip ${isAllDietarySelected ? 'active' : ''}`}
+              onClick={() => handleDietaryTagClick('all')}
+              data-testid="dietary-tag-all"
+            >
+              All
+            </button>
+            
+            {/* Dietary tag chips */}
+            {availableDietaryTags.map((tag) => (
+              <button
+                key={tag.id}
+                className={`dietary-tag-chip ${activeDietaryTags.includes(tag.id) ? 'active' : ''}`}
+                onClick={() => handleDietaryTagClick(tag.id)}
+                data-testid={`dietary-tag-${tag.id}`}
+              >
+                <span className="dietary-tag-icon">{tag.icon}</span>
+                {tag.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
