@@ -1,333 +1,111 @@
-# MyGenie Customer App - Complete Project Documentation
+# MyGenie Customer App - PRD
 
 ## Project Overview
-A full-stack restaurant customer-facing and admin application for digital menu ordering, built for the MyGenie platform.
-
-**Repository**: https://github.com/Abhi-mygenie/customer-app5th-march.git  
-**Database**: External MongoDB at `52.66.232.149:27017` (mygenie database)
-
----
+Restaurant Customer-facing and Admin app pulled from GitHub repository: https://github.com/Abhi-mygenie/customer-app5th-march.git
 
 ## Tech Stack
+- **Frontend**: React 19 with TailwindCSS, React Query, React Router
+- **Backend**: FastAPI (Python) with Motor (async MongoDB driver)
+- **Database**: External MongoDB at 52.66.232.149:27017 (mygenie database)
+- **Authentication**: JWT with OTP and Password-based login
 
-### Frontend
-- **React 19** with functional components and hooks
-- **React Router v7** for navigation
-- **TailwindCSS** for styling
-- **React Query** (@tanstack/react-query) for data fetching/caching
-- **Radix UI** components for accessible UI primitives
-- **react-hot-toast** for notifications
-- **react-phone-number-input** for phone validation
-- **TipTap** for rich text editing in admin
-- **dnd-kit** for drag-and-drop menu ordering
+## What's Been Implemented
 
-### Backend
-- **FastAPI** (Python) with async support
-- **Motor** (async MongoDB driver)
-- **JWT** authentication with OTP support
-- **bcrypt** for password hashing
-
-### External APIs
-- **MyGenie POS API** (`https://preprod.mygenie.online/api/v1`)
-  - Restaurant details, products, orders
-  - Table/room configuration
-  - Order placement and updates
-
----
-
-## Architecture
-
-### Frontend Structure
-```
-/app/frontend/src/
-├── api/                    # API layer
-│   ├── config/             # Axios config, endpoints
-│   ├── interceptors/       # Request/response interceptors
-│   ├── services/           # API service modules
-│   └── utils/              # Error handlers, restaurant config
-├── components/             # Reusable UI components
-│   ├── AdminSettings/      # Admin panel components
-│   ├── CartBar/            # Floating cart bar
-│   ├── CartWrapper/        # Cart context provider
-│   ├── CustomizeItemModal/ # Item customization modal
-│   ├── HamburgerMenu/      # Navigation menu
-│   ├── Header/             # Page header
-│   ├── MenuItem/           # Menu item card
-│   ├── OrderItemCard/      # Order review item
-│   ├── PromoBanner/        # Promotional banner carousel
-│   └── ui/                 # Shadcn/Radix UI components
-├── context/                # React contexts
-│   ├── AuthContext.jsx     # Authentication state
-│   ├── CartContext.js      # Shopping cart state
-│   └── RestaurantConfigContext.jsx  # Restaurant config/theming
-├── hooks/                  # Custom hooks
-│   ├── useMenuData.js      # Menu/restaurant data hooks
-│   ├── useScannedTable.js  # QR scanned table detection
-│   └── useCurrentTime.js   # Time-based availability
-├── pages/                  # Page components
-│   ├── LandingPage.jsx     # Restaurant landing
-│   ├── MenuItems.jsx       # Menu browsing
-│   ├── ReviewOrder.jsx     # Order review/checkout
-│   ├── OrderSuccess.jsx    # Order confirmation
-│   ├── AdminSettings.jsx   # Admin panel
-│   ├── Profile.jsx         # Customer profile
-│   └── PasswordSetup.jsx   # Customer password setup
-└── utils/                  # Utility functions
-    ├── authToken.js        # Token management
-    ├── itemAvailability.js # Time-based item availability
-    └── useRestaurantId.js  # Restaurant ID extraction
-```
-
-### Backend Structure
-```
-/app/backend/
-├── server.py              # Main FastAPI application
-├── requirements.txt       # Python dependencies
-├── uploads/               # Uploaded images
-├── db_data/               # Database JSON exports
-└── tests/                 # API tests
-```
-
----
-
-## Core Features
-
-### 1. Customer App
-
-#### Landing Page (`/:restaurantId`)
-- Restaurant branding (logo, colors, fonts)
-- Welcome message and tagline
-- QR-scanned table detection
-- Customer capture form (optional)
-- Edit Order vs Browse Menu logic
-- Social media links
-- Call waiter / Pay bill buttons
-
-#### Menu (`/:restaurantId/menu`)
-- Category navigation
-- Search and filter (Veg/Non-veg/Egg)
-- Item customization (variations, add-ons)
-- Cart management
-- Time-based item availability
-- Edit mode for existing orders
-
-#### Order Review (`/:restaurantId/review-order`)
-- Cart items with quantity controls
-- Previous order items (edit mode)
-- Customer details input
-- Room/table selection (for hotel restaurants)
-- Loyalty points display and redemption
-- Coupon code input
-- Price breakdown with tax calculation
-- Special instructions
-
-#### Order Success (`/:restaurantId/order-success`)
-- Order confirmation
-- Bill summary
-- Food status tracking (Preparing/Ready/Served)
-
-### 2. Admin Panel (`/admin/settings`)
-
-#### Settings Tab
-- Logo upload
-- Welcome message and tagline
-- Browse menu button text
-- Restaurant operating hours
-
-#### Branding Tab
-- Background images (desktop/mobile)
-- Color palette (primary, secondary, text, background)
-- Typography (heading/body fonts)
-- Border radius style
-
-#### Visibility Tab
-- Landing page toggles (logo, welcome, social, table number, etc.)
-- Menu page toggles (categories, promotions, FAB button)
-- Order page toggles (customer details, loyalty, coupon)
-- Order status page toggles
-
-#### Banners Tab
-- Add/edit/delete promotional banners
-- Display location (landing/menu/both)
-- Image upload with dimension validation
-
-#### Content Tab
-- About Us content and image
-- Contact information (address, email, map embed)
-- Footer text and links
-- Navigation menu order
-- Custom pages (WYSIWYG editor)
-- Feedback settings
-
-#### Menu Tab
-- Category order (drag-and-drop)
-- Category visibility
-- Item order per category
-- Item visibility per category
-- Station-specific ordering (for multi-station restaurants)
-
----
-
-## Authentication Flow
-
-### Customer Authentication
-1. **OTP Login**: Phone number → Send OTP → Verify OTP → JWT token
-2. **Password Login**: Phone + Password → Verify → JWT token
-3. **Password Setup**: New customers can set password for quicker login
-
-### Admin Authentication
-- Email/phone + Password login
-- Restaurant-scoped access
-- JWT token with 24-hour expiry
-
----
-
-## Data Models
-
-### Collections
-- **customers**: Customer profiles, points, wallet, tier
-- **users**: Restaurant admin users
-- **customer_app_config**: Per-restaurant app configuration
-- **orders**: Order history
-- **points_transactions**: Loyalty points history
-- **wallet_transactions**: Wallet balance history
-- **coupons**: Discount coupons
-- **loyalty_settings**: Points earning/redemption rules
-- **feedback**: Customer feedback
-- **whatsapp_templates**: Notification templates
-
-### Key Config Fields (`customer_app_config`)
-```javascript
-{
-  restaurant_id: "698",
-  // Visibility toggles
-  showLogo: true,
-  showWelcomeText: true,
-  showTableNumber: true,
-  showLoyaltyPoints: true,
-  // Branding
-  logoUrl: "/api/uploads/...",
-  primaryColor: "#F26B33",
-  fontHeading: "Poppins",
-  borderRadius: "rounded",
-  // Content
-  welcomeMessage: "Welcome!",
-  tagline: "...",
-  banners: [...],
-  navMenuOrder: [...],
-  menuOrder: { categoryOrder: [...], itemOrder: {...} }
-}
-```
-
----
-
-## API Endpoints
-
-### Auth Routes (`/api/auth/`)
-- `POST /send-otp` - Send OTP to phone
-- `POST /check-customer` - Check if customer exists
-- `POST /login` - Unified login (OTP/password)
-- `GET /me` - Get current user
-- `POST /set-password` - Set customer password
-- `POST /verify-password` - Verify password login
-- `POST /reset-password` - Reset via OTP
-
-### Customer Routes (`/api/customer/`)
-- `GET /profile` - Customer profile
-- `PUT /profile` - Update profile
-- `GET /orders` - Order history
-- `GET /points` - Points transactions
-- `GET /wallet` - Wallet balance and history
-- `GET /coupons` - Available coupons
-
-### Config Routes (`/api/config/`)
-- `GET /{restaurant_id}` - Get app config (public)
-- `PUT /` - Update config (admin only)
-- `POST /banners` - Add banner
-- `PUT /banners/{id}` - Update banner
-- `DELETE /banners/{id}` - Delete banner
-- `POST /pages` - Add custom page
-- `POST /feedback` - Submit feedback
-
-### Utility Routes
-- `POST /api/upload/image` - Upload image
-- `GET /api/loyalty-settings/{restaurant_id}` - Loyalty rules
-- `GET /api/customer-lookup/{restaurant_id}?phone=` - Find customer
-
----
-
-## Special Features
-
-### Multi-Station Restaurants (e.g., Hyatt - ID 716, 739)
-- Separate station selection page
-- Station-based menu filtering
-- Time-based station availability
-- Room/table selection with searchable dropdown
-
-### Loyalty Program
-- Tier-based earning (Bronze/Silver/Gold/Platinum)
-- Points redemption with configurable value
-- First-visit bonus points
-- Minimum order value for earning
-
-### Edit Order Flow
-1. QR scan detects existing order via `checkTableStatus` API
-2. "Edit Order" button shown instead of "Browse Menu"
-3. Previous items displayed (read-only)
-4. New items added to cart
-5. `updateCustomerOrder` API appends to existing order
-
-### Time-Based Availability
-- Restaurant operating hours (configurable)
-- Station timing (e.g., "7 am - 11 am")
-- Item availability windows (`web_available_time_starts`, `web_available_time_ends`)
-
----
-
-## Environment Variables
-
-### Backend (`/app/backend/.env`)
-```
-MONGO_URL=mongodb://mygenie_admin:***@52.66.232.149:27017/mygenie
-DB_NAME=mygenie
-JWT_SECRET=customer-app-secret-key-change-in-production
-CORS_ORIGINS=*
-```
-
-### Frontend (`/app/frontend/.env`)
-```
-REACT_APP_BACKEND_URL=https://d2hdw3ik-bgqh-ehjd-8888.preview.emergentagent.com
-REACT_APP_API_BASE_URL=https://preprod.mygenie.online/api/v1
-REACT_APP_IMAGE_BASE_URL=https://manage.mygenie.online
-```
-
----
-
-## Database Stats (Current)
-- Customers: 6,517 records
-- Users: 16 records
-- App Configs: 25 records
-- Collections: 15 total
-
----
-
-## Implementation Status (Jan 2026)
-- ✅ Project cloned and configured
+### Jan 2026 - Initial Setup
+- ✅ Project cloned from GitHub
 - ✅ MongoDB connected to external database
 - ✅ Backend running on port 8001
 - ✅ Frontend running on port 3000
-- ✅ All dependencies installed
 
-## URLs
-- **Preview**: https://d2hdw3ik-bgqh-ehjd-8888.preview.emergentagent.com/698
-- **Admin Panel**: /admin/settings
-- **Customer App**: /{restaurantId} (e.g., /698)
+### Jan 2026 - Security Fix
+- ✅ Removed hardcoded OTP "1111" bypass in `verify_otp()` function
+- OTP is now properly validated against the generated OTP only
 
----
+### Jan 2026 - Multi-Select Dietary Filters Feature
+**New UI Layout:**
+- Row 1: Search bar + Veg/Non-Veg/Egg toggle (single-select)
+- Row 2: Dietary tags chips (multi-select) - shown only if tags have items
+- Row 3: Categories (unchanged)
 
-## Future Enhancements
-- [ ] Customer analytics dashboard
-- [ ] Order history with reorder functionality
-- [ ] Push notifications integration
-- [ ] Payment gateway integration
-- [ ] Multi-language support
+**Backend Changes:**
+- Added `/api/dietary-tags/available` - Get list of 8 dietary tags
+- Added `/api/dietary-tags/{restaurant_id}` - GET/PUT dietary tag mappings
+- New collection: `dietary_tags_mapping`
+
+**Frontend Changes:**
+- Updated `SearchAndFilterBar.jsx` - New segmented Veg toggle + dietary chips
+- Updated `SearchAndFilterBar.css` - Responsive styles
+- Created `DietaryTagsAdmin.jsx` - Admin panel for tagging items
+- Created `DietaryTagsAdmin.css` - Admin styling
+- Created `dietaryTagsService.js` - API service
+- Added `useDietaryTags` hook in `useMenuData.js`
+- Updated `MenuItems.jsx` - Multi-select filter logic with AND operation
+- Updated `AdminSettings.jsx` - Added "Dietary Tags" tab
+
+**Available Dietary Tags:**
+1. Jain 🙏
+2. Vegan 🌱
+3. Gluten-Free 🌾
+4. Lactose-Free 🥛
+5. Nut-Free 🥜
+6. Halal ☪️
+7. Sugar-Free 🍬
+8. High Protein 💪
+
+**Filter Logic:**
+- Veg/Non-Veg/Egg: Single-select, uses existing `isVeg`/`isEgg` fields from POS
+- Dietary Tags: Multi-select with AND logic (item must have ALL selected tags)
+- Dynamic visibility: Only tags with ≥1 tagged item shown
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/send-otp` - Send OTP (returns otp_for_testing in dev)
+- `POST /api/auth/login` - Login with OTP or password
+- `GET /api/auth/me` - Get current user
+
+### Dietary Tags (NEW)
+- `GET /api/dietary-tags/available` - List all 8 dietary tags
+- `GET /api/dietary-tags/{restaurant_id}` - Get mappings for restaurant
+- `PUT /api/dietary-tags/{restaurant_id}` - Update mappings (admin only)
+
+### Existing Endpoints
+- `/api/config/{restaurant_id}` - App configuration
+- `/api/customer/*` - Customer profile, orders, points
+- `/api/loyalty-settings/{restaurant_id}` - Loyalty program settings
+
+## Database Collections
+- customers, users, customer_app_config
+- orders, points_transactions, wallet_transactions
+- coupons, loyalty_settings, feedback
+- **dietary_tags_mapping** (NEW)
+
+## Files Modified/Created
+
+### Backend
+- `/app/backend/server.py` - Added dietary_router and endpoints
+
+### Frontend
+- `/app/frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.jsx` - Redesigned
+- `/app/frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.css` - New styles
+- `/app/frontend/src/components/AdminSettings/DietaryTagsAdmin.jsx` - NEW
+- `/app/frontend/src/components/AdminSettings/DietaryTagsAdmin.css` - NEW
+- `/app/frontend/src/api/services/dietaryTagsService.js` - NEW
+- `/app/frontend/src/hooks/useMenuData.js` - Added useDietaryTags hook
+- `/app/frontend/src/pages/MenuItems.jsx` - Updated filter logic
+- `/app/frontend/src/pages/AdminSettings.jsx` - Added Dietary Tags tab
+
+## Next Action Items
+- P0: Admin needs to tag menu items via Admin Panel > Dietary Tags tab
+- P1: Test multi-select filtering after items are tagged
+- P2: Consider adding bulk tagging feature for categories
+
+## Backlog
+- Customer analytics dashboard
+- Order history with reorder functionality
+- Push notifications integration
+- Payment gateway integration
+- Multi-language support
+
+## Known Issues
+- Frontend `authToken.js` has hardcoded POS service account credentials (by design for guest ordering)
