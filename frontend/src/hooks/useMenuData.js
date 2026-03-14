@@ -325,12 +325,67 @@ export const useTableConfig = (restaurantId) => {
   };
 };
 
+/**
+ * Hook to fetch dietary tags for a restaurant
+ * @param {string} restaurantId - Restaurant ID
+ * @returns {Object} { dietaryTagsMapping, availableTags, loading }
+ */
+export const useDietaryTags = (restaurantId) => {
+  const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+  
+  // Fetch available tags
+  const { data: availableTagsData } = useQuery({
+    queryKey: ['availableDietaryTags'],
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/api/dietary-tags/available`);
+      if (!response.ok) throw new Error('Failed to fetch available tags');
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour - tags rarely change
+  });
+
+  // Fetch restaurant-specific mappings
+  const { data: mappingData, isLoading: loading } = useQuery({
+    queryKey: ['dietaryTagsMapping', restaurantId],
+    queryFn: async () => {
+      if (!restaurantId) return { mappings: {} };
+      const response = await fetch(`${API_URL}/api/dietary-tags/${restaurantId}`);
+      if (!response.ok) throw new Error('Failed to fetch dietary tags mapping');
+      return response.json();
+    },
+    enabled: !!restaurantId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  const allTags = availableTagsData?.tags || [];
+  const mappings = mappingData?.mappings || {};
+
+  // Calculate which tags have at least one item
+  const tagsWithItems = new Set();
+  Object.values(mappings).forEach(itemTags => {
+    if (Array.isArray(itemTags)) {
+      itemTags.forEach(tag => tagsWithItems.add(tag));
+    }
+  });
+
+  // Filter available tags to only those with items
+  const availableTags = allTags.filter(tag => tagsWithItems.has(tag.id));
+
+  return {
+    dietaryTagsMapping: mappings,
+    availableTags,
+    allTags,
+    loading,
+  };
+};
+
 
 const useMenuData = {
   useMenuSections,
   useStations,
   useRestaurantDetails,
   useTableConfig,
+  useDietaryTags,
 };
 
 export default useMenuData;
