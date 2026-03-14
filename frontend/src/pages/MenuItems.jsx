@@ -573,7 +573,7 @@ const MenuItems = () => {
             onFilterChange={handleFilterChange}
             activeDietaryTags={activeDietaryTags}
             onDietaryTagChange={setActiveDietaryTags}
-            availableDietaryTags={availableTags}
+            availableDietaryTags={availableDietaryTags}
           />
 
           {/* Edit Order Mode Banner */}
