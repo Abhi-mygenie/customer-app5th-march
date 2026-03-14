@@ -1,0 +1,329 @@
+.dietary-tags-admin {
+  padding: 0;
+}
+
+.dietary-tags-header {
+  margin-bottom: 20px;
+}
+
+.dietary-tags-admin .section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.dietary-tags-admin .section-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Untagged banner */
+.untagged-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #92400e;
+}
+
+.untagged-banner .banner-icon {
+  font-size: 18px;
+  color: #f59e0b;
+}
+
+/* Filters row */
+.dietary-filters-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dietary-search {
+  flex: 1;
+  position: relative;
+}
+
+.dietary-search .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+.dietary-search input {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.dietary-search input:focus {
+  border-color: var(--color-primary);
+}
+
+.category-filter {
+  padding: 10px 12px;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  font-size: 14px;
+  min-width: 150px;
+  outline: none;
+  cursor: pointer;
+}
+
+.category-filter:focus {
+  border-color: var(--color-primary);
+}
+
+/* Tag legend */
+.tag-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.tag-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tag-legend-item .tag-icon {
+  font-size: 14px;
+}
+
+/* Items list */
+.dietary-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.dietary-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  gap: 16px;
+}
+
+.dietary-item-card.needs-tagging {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.veg-indicator {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.veg-indicator.veg {
+  border-color: #329937;
+}
+
+.veg-indicator.non-veg {
+  border-color: #dc2626;
+}
+
+.veg-indicator.egg {
+  border-color: #d97706;
+}
+
+.veg-indicator .veg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.veg-indicator.veg .veg-dot {
+  background: #329937;
+}
+
+.veg-indicator.non-veg .veg-dot {
+  background: #dc2626;
+}
+
+.veg-indicator.egg .veg-dot {
+  background: #d97706;
+}
+
+.item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.new-badge {
+  padding: 2px 6px;
+  background: #f59e0b;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.item-category {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Item tags */
+.item-tags {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tag-checkbox {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--border-medium);
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.tag-checkbox:hover {
+  border-color: var(--color-primary);
+  background: #f0f4ff;
+}
+
+.tag-checkbox.checked {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.tag-checkbox .tag-icon {
+  font-size: 16px;
+}
+
+.tag-checkbox.checked .tag-icon {
+  filter: brightness(0) invert(1);
+}
+
+.tag-checkbox .check-icon {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 14px;
+  color: #22c55e;
+  background: white;
+  border-radius: 50%;
+}
+
+/* Save bar */
+.dietary-save-bar {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 0;
+  border-top: 1px solid var(--border-light);
+  margin-top: 16px;
+}
+
+.dietary-save-bar .save-btn {
+  width: 100%;
+  padding: 12px 24px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.dietary-save-bar .save-btn:hover {
+  opacity: 0.9;
+}
+
+.dietary-save-bar .save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading & empty states */
+.dietary-tags-admin .loading-state,
+.dietary-tags-admin .empty-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .dietary-filters-row {
+    flex-direction: column;
+  }
+  
+  .category-filter {
+    width: 100%;
+  }
+  
+  .dietary-item-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .item-tags {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .tag-checkbox {
+    width: 44px;
+    height: 44px;
+  }
+}
