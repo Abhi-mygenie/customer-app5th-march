@@ -1,36 +1,49 @@
-# Customer App PRD
+# MyGenie Customer App - PRD
 
-## Original Problem Statement
-1. Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git and build as is
-2. Also tell which DB the env is pointing to
-
-## Implementation Date
-- March 13, 2026
-
-## What's Been Implemented
-- Cloned repository from GitHub
-- Configured MongoDB connection to remote server (52.66.232.149:27017/mygenie)
-- Installed all dependencies (backend & frontend)
-- Application is running and accessible
-
-## Database Configuration
-- Host: 52.66.232.149:27017
-- Database: mygenie
-- User: mygenie_admin
+## Project Overview
+Restaurant Customer-facing and Admin app pulled from GitHub repository: https://github.com/Abhi-mygenie/customer-app5th-march.git
 
 ## Tech Stack
-- Backend: FastAPI, Motor (MongoDB async driver)
-- Frontend: React, TailwindCSS, TanStack Query
-- Database: MongoDB (external)
+- **Frontend**: React 19 with TailwindCSS, React Query, React Router
+- **Backend**: FastAPI (Python) with Motor (async MongoDB driver)
+- **Database**: External MongoDB at 52.66.232.149:27017 (mygenie database)
+- **Authentication**: JWT with OTP and Password-based login
 
 ## Core Features
-- Customer authentication (OTP & password)
-- Restaurant menu browsing
-- Order management
-- Loyalty points system
-- Wallet transactions
-- Admin configuration panel
+### Customer App
+- Landing page with restaurant branding
+- Digital menu with stations
+- Order review and submission
+- Profile management (points, wallet, tier)
+- Feedback submission
 
-## Next Steps
-- Test specific user flows
-- Any additional customizations
+### Admin Features
+- App configuration (branding, colors, visibility toggles)
+- Banner management
+- Custom pages
+- Feedback viewing
+
+## Database Collections
+- customers (6517 records)
+- users (16 records)
+- customer_app_config (25 records)
+- loyalty_settings, coupons, feedback, orders, points_transactions, wallet_transactions
+
+## API Endpoints
+- `/api/auth/*` - Authentication (login, OTP, set/verify/reset password)
+- `/api/customer/*` - Customer profile, orders, points, wallet
+- `/api/config/*` - Restaurant app configuration
+- `/api/upload/*` - Image uploads
+- `/api/air-bnb/*` - Order details from MyGenie API
+
+## Implementation Status (Jan 2026)
+- ✅ Project cloned from GitHub
+- ✅ MongoDB connected to external database (52.66.232.149)
+- ✅ Backend running on port 8001
+- ✅ Frontend running on port 3000
+- ✅ All dependencies installed
+
+## Next Actions
+- Preview URL will be available at: https://d2hdw3ik-bgqh-ehjd-8888.preview.emergentagent.com/698
+- Access admin settings at: /admin/settings
+- Test customer flow at: /698 (restaurant ID)
