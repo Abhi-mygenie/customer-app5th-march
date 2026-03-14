@@ -54,7 +54,30 @@ const MenuItems = () => {
   const { menuSections: rawMenuSections, loading: menuLoading, error: menuError, errorMessage: menuErrorMessage } = useMenuSections(stationId, numericRestaurantId);
 
   // Fetch dietary tags for this restaurant
-  const { dietaryTagsMapping, availableTags, loading: dietaryLoading } = useDietaryTags(numericRestaurantId);
+  const { dietaryTagsMapping, allTags, loading: dietaryLoading } = useDietaryTags(numericRestaurantId);
+
+  // Calculate available dietary tags based on CURRENT menu items only
+  const availableDietaryTags = useMemo(() => {
+    if (!dietaryTagsMapping || !allTags || !rawMenuSections || rawMenuSections.length === 0) {
+      return [];
+    }
+    
+    // Get all item IDs from current menu sections
+    const currentItemIds = new Set();
+    rawMenuSections.forEach(section => {
+      section.items?.forEach(item => currentItemIds.add(String(item.id)));
+    });
+    
+    // Find which tags have items in current menu
+    const tagsWithItems = new Set();
+    currentItemIds.forEach(itemId => {
+      const itemTags = dietaryTagsMapping[itemId] || [];
+      itemTags.forEach(tag => tagsWithItems.add(tag));
+    });
+    
+    // Filter allTags to only those present in current menu
+    return allTags.filter(tag => tagsWithItems.has(tag.id));
+  }, [rawMenuSections, dietaryTagsMapping, allTags]);
 
   // Apply category order and visibility from admin config
   const menuSections = useMemo(() => {
