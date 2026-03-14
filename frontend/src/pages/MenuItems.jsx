@@ -548,6 +548,9 @@ const MenuItems = () => {
             onSearchChange={(e) => setSearchQuery(e.target.value)}
             activeFilter={activeFilter}
             onFilterChange={handleFilterChange}
+            activeDietaryTags={activeDietaryTags}
+            onDietaryTagChange={setActiveDietaryTags}
+            availableDietaryTags={availableTags}
           />
 
           {/* Edit Order Mode Banner */}
