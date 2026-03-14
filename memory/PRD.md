@@ -42,6 +42,27 @@ Restaurant Customer-facing and Admin app pulled from GitHub repository: https://
 - Updated `MenuItems.jsx` - Multi-select filter logic with AND operation
 - Updated `AdminSettings.jsx` - Added "Dietary Tags" tab
 
+### Jan 2026 - Multi-Menu Restaurant Support for Dietary Tags
+**Issue:** For restaurants with multiple menus (e.g., 716 Hyatt), admin was seeing ALL items from ALL menus mixed together in Dietary Tags tab.
+
+**Solution:** Added menu/station selector for multi-menu restaurants.
+
+**Changes:**
+- `AdminSettings.jsx`: Extract `multiple_menu` from restaurant data, pass to DietaryTagsAdmin
+- `DietaryTagsAdmin.jsx`: 
+  - Added station selector UI (horizontal tabs)
+  - Load stations from `stations.json` for multi-menu restaurants
+  - Filter products by `food_for` param when station selected
+  - Show "Select a menu first" prompt until station is selected
+- `DietaryTagsAdmin.css`: Added station selector styles
+
+**UI Flow for Multi-Menu:**
+1. Admin opens Dietary Tags tab
+2. Sees menu selector with all stations (Breakfast, FOOD MENU, Kids Menu, etc.)
+3. Selects a menu → Items for that menu load
+4. Tags items → Save
+5. Can switch to another menu and repeat
+
 **Available Dietary Tags:**
 1. Jain 🙏
 2. Vegan 🌱
