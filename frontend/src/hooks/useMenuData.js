@@ -360,20 +360,9 @@ export const useDietaryTags = (restaurantId) => {
   const allTags = availableTagsData?.tags || [];
   const mappings = mappingData?.mappings || {};
 
-  // Calculate which tags have at least one item
-  const tagsWithItems = new Set();
-  Object.values(mappings).forEach(itemTags => {
-    if (Array.isArray(itemTags)) {
-      itemTags.forEach(tag => tagsWithItems.add(tag));
-    }
-  });
-
-  // Filter available tags to only those with items
-  const availableTags = allTags.filter(tag => tagsWithItems.has(tag.id));
-
+  // Return allTags - filtering will be done in MenuItems.jsx based on current menu items
   return {
     dietaryTagsMapping: mappings,
-    availableTags,
     allTags,
     loading,
   };
