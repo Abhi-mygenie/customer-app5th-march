@@ -61,16 +61,15 @@
 
 .station-tab {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  padding: 12px 20px;
+  gap: 6px;
+  padding: 6px 14px;
   background: white;
-  border: 2px solid var(--border-medium, #d1d5db);
-  border-radius: 10px;
+  border: 1px solid var(--border-medium, #d1d5db);
+  border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 120px;
 }
 
 .station-tab:hover {
@@ -85,7 +84,7 @@
 }
 
 .station-tab .station-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -419,7 +418,6 @@
   }
   
   .station-tab {
-    min-width: 100px;
     flex-shrink: 0;
   }
 }
