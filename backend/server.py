@@ -300,10 +300,6 @@ def generate_otp(phone: str) -> str:
     return otp
 
 def verify_otp(phone: str, otp: str) -> bool:
-    # Hardcoded OTP "1111" for testing - always valid
-    if otp == "1111":
-        return True
-    
     stored = otp_store.get(phone)
     if not stored:
         return False
