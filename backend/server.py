@@ -1247,6 +1247,83 @@ async def customer_lookup(restaurant_id: str, phone: str):
     }
 
 # ============================================
+# Dietary Tags Routes
+# ============================================
+
+# Available dietary tags (global configuration)
+AVAILABLE_DIETARY_TAGS = [
+    {"id": "jain", "label": "Jain", "icon": "🙏"},
+    {"id": "vegan", "label": "Vegan", "icon": "🌱"},
+    {"id": "gluten-free", "label": "Gluten-Free", "icon": "🌾"},
+    {"id": "lactose-free", "label": "Lactose-Free", "icon": "🥛"},
+    {"id": "nut-free", "label": "Nut-Free", "icon": "🥜"},
+    {"id": "halal", "label": "Halal", "icon": "☪️"},
+    {"id": "sugar-free", "label": "Sugar-Free", "icon": "🍬"},
+    {"id": "high-protein", "label": "High Protein", "icon": "💪"},
+]
+
+class DietaryTagsMapping(BaseModel):
+    mappings: dict  # {item_id: [tag_ids]}
+
+@dietary_router.get("/available")
+async def get_available_dietary_tags():
+    """Get list of all available dietary tags"""
+    return {"tags": AVAILABLE_DIETARY_TAGS}
+
+@dietary_router.get("/{restaurant_id}")
+async def get_dietary_tags(restaurant_id: str):
+    """Get dietary tag mappings for a restaurant"""
+    doc = await db.dietary_tags_mapping.find_one(
+        {"restaurant_id": restaurant_id},
+        {"_id": 0}
+    )
+    
+    if doc:
+        return {
+            "restaurant_id": restaurant_id,
+            "mappings": doc.get("mappings", {}),
+            "updated_at": doc.get("updated_at")
+        }
+    
+    return {
+        "restaurant_id": restaurant_id,
+        "mappings": {},
+        "updated_at": None
+    }
+
+@dietary_router.put("/{restaurant_id}")
+async def update_dietary_tags(
+    restaurant_id: str,
+    data: DietaryTagsMapping,
+    authorization: str = Header(None)
+):
+    """Update dietary tag mappings for a restaurant (admin only)"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization required")
+    
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = verify_token(token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Update or insert the mapping
+    await db.dietary_tags_mapping.update_one(
+        {"restaurant_id": restaurant_id},
+        {
+            "$set": {
+                "restaurant_id": restaurant_id,
+                "mappings": data.mappings,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_by": payload.get("sub")
+            }
+        },
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Dietary tags updated successfully"}
+
+# ============================================
 # Include all routers
 # ============================================
 
