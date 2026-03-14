@@ -1160,6 +1160,16 @@ const AdminSettings = () => {
         <MenuOrderTab config={config} setConfig={setConfig} />
       )}
 
+      {/* Dietary Tags Section */}
+      {activeSection === 'dietary' && (
+        <div className="settings-section" data-testid="section-dietary">
+          <DietaryTagsAdmin 
+            restaurantId={user?.restaurant_id || user?.id} 
+            token={token} 
+          />
+        </div>
+      )}
+
       {/* Settings Section */}
       {activeSection === 'settings' && (
         <div className="settings-section" data-testid="section-settings">
