@@ -12,7 +12,7 @@ import CustomizeItemModal from '../components/CustomizeItemModal/CustomizeItemMo
 import RepeatItemModal from '../components/RepeatItemModal/RepeatItemModal';
 import { MenuItemSkeleton, HeaderSkeleton, CategoryBoxSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
-import { useMenuSections, useStations, useRestaurantDetails } from '../hooks/useMenuData';
+import { useMenuSections, useStations, useRestaurantDetails, useDietaryTags } from '../hooks/useMenuData';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
