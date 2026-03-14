@@ -53,6 +53,9 @@ const MenuItems = () => {
   // Fetch menu sections from API (wait for numeric ID)
   const { menuSections: rawMenuSections, loading: menuLoading, error: menuError, errorMessage: menuErrorMessage } = useMenuSections(stationId, numericRestaurantId);
 
+  // Fetch dietary tags for this restaurant
+  const { dietaryTagsMapping, availableTags, loading: dietaryLoading } = useDietaryTags(numericRestaurantId);
+
   // Apply category order and visibility from admin config
   const menuSections = useMemo(() => {
     if (!rawMenuSections || rawMenuSections.length === 0) return rawMenuSections || [];
