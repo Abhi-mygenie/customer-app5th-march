@@ -496,6 +496,7 @@ const AdminSettings = () => {
     { id: 'banners', label: 'Banners', icon: IoImagesOutline },
     { id: 'content', label: 'Content', icon: IoDocumentOutline },
     { id: 'menu', label: 'Menu', icon: IoRestaurantOutline },
+    { id: 'dietary', label: 'Dietary Tags', icon: IoPricetagsOutline },
   ];
 
   if (!user || !isRestaurant) {
