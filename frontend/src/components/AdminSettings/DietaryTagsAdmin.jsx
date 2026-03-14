@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { IoSearchOutline, IoCheckmarkCircle, IoAlertCircle } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import { getRestaurantProducts } from '../../api/services/restaurantService';
@@ -13,11 +13,14 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [hasChanges, setHasChanges] = useState(false);
   
   // Multi-menu states
   const [stations, setStations] = useState([]);
   const [selectedStation, setSelectedStation] = useState(null);
+  
+  // Auto-save debounce ref
+  const saveTimeoutRef = useRef(null);
+  const pendingMappingsRef = useRef(null);
 
   // Load stations for multi-menu restaurants
   useEffect(() => {
@@ -113,6 +116,51 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
     fetchTagsAndMappings();
   }, [restaurantId]);
 
+  // Auto-save function with debounce
+  const autoSave = useCallback(async (newMappings) => {
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Store the latest mappings
+    pendingMappingsRef.current = newMappings;
+    
+    // Debounce save by 800ms
+    saveTimeoutRef.current = setTimeout(async () => {
+      if (!pendingMappingsRef.current) return;
+      
+      setSaving(true);
+      try {
+        await updateDietaryTagsMapping(restaurantId, pendingMappingsRef.current, token);
+        toast.success('Saved ✓', { 
+          duration: 1500,
+          style: { 
+            background: '#10b981', 
+            color: 'white',
+            padding: '8px 16px',
+            fontSize: '14px'
+          }
+        });
+      } catch (error) {
+        console.error('Auto-save error:', error);
+        toast.error('Failed to save changes');
+      } finally {
+        setSaving(false);
+        pendingMappingsRef.current = null;
+      }
+    }, 800);
+  }, [restaurantId, token]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Get unique categories
   const categories = useMemo(() => {
     const cats = new Set();
@@ -147,7 +195,7 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
     }).length;
   }, [menuItems, mappings]);
 
-  // Toggle a tag for an item
+  // Toggle a tag for an item (with auto-save)
   const toggleTag = (itemId, tagId) => {
     setMappings(prev => {
       const currentTags = prev[itemId] || [];
@@ -159,27 +207,16 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
         newTags = [...currentTags, tagId];
       }
       
-      setHasChanges(true);
-      return {
+      const newMappings = {
         ...prev,
         [itemId]: newTags,
       };
+      
+      // Trigger auto-save
+      autoSave(newMappings);
+      
+      return newMappings;
     });
-  };
-
-  // Save changes
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateDietaryTagsMapping(restaurantId, mappings, token);
-      toast.success('Dietary tags saved successfully');
-      setHasChanges(false);
-    } catch (error) {
-      console.error('Error saving:', error);
-      toast.error('Failed to save dietary tags');
-    } finally {
-      setSaving(false);
-    }
   };
 
   // Get selected station name
@@ -194,9 +231,10 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
       <div className="dietary-tags-header">
         <h3 className="section-title">
           🏷️ Dietary Tags Management
+          {saving && <span className="saving-indicator">Saving...</span>}
         </h3>
         <p className="section-description">
-          Assign dietary tags to menu items. Customers can filter menu by these tags.
+          Assign dietary tags to menu items. Changes are saved automatically.
         </p>
       </div>
 
@@ -344,20 +382,6 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
                   );
                 })
               )}
-            </div>
-          )}
-
-          {/* Save button */}
-          {hasChanges && (
-            <div className="dietary-save-bar">
-              <button
-                className="save-btn"
-                onClick={handleSave}
-                disabled={saving}
-                data-testid="save-dietary-tags-btn"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
             </div>
           )}
         </>
