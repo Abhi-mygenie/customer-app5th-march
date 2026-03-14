@@ -35,7 +35,7 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
     }
   }, [multipleMenu]);
 
-  // Fetch menu items and tags
+  // Fetch all data: menu items, tags, and mappings
   useEffect(() => {
     const fetchData = async () => {
       if (!restaurantId) return;
@@ -49,15 +49,19 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
       
       setLoading(true);
       try {
-        // Fetch menu items from POS API (with station filter for multi-menu)
-        const productsData = await getRestaurantProducts(
-          restaurantId, 
-          "0",
-          multipleMenu ? selectedStation : null
-        );
+        // Fetch menu items, tags, and mappings in parallel
+        const [productsData, tagsData, mappingData] = await Promise.all([
+          getRestaurantProducts(
+            restaurantId, 
+            "0",
+            multipleMenu ? selectedStation : null
+          ),
+          getAvailableDietaryTags(),
+          getDietaryTagsMapping(restaurantId),
+        ]);
+
+        // Process menu items
         const products = productsData?.products || [];
-        
-        // Flatten items from all categories
         const allItems = [];
         products.forEach(category => {
           (category.items || []).forEach(item => {
@@ -72,18 +76,8 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
           });
         });
         setMenuItems(allItems);
-
-        // Fetch available dietary tags (only once)
-        if (availableTags.length === 0) {
-          const tagsData = await getAvailableDietaryTags();
-          setAvailableTags(tagsData.tags || []);
-        }
-
-        // Fetch existing mappings (only once)
-        if (Object.keys(mappings).length === 0) {
-          const mappingData = await getDietaryTagsMapping(restaurantId);
-          setMappings(mappingData.mappings || {});
-        }
+        setAvailableTags(tagsData.tags || []);
+        setMappings(mappingData.mappings || {});
         
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -95,26 +89,6 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
 
     fetchData();
   }, [restaurantId, multipleMenu, selectedStation]);
-
-  // Initial fetch for tags and mappings (separate from menu items)
-  useEffect(() => {
-    const fetchTagsAndMappings = async () => {
-      if (!restaurantId) return;
-      
-      try {
-        const [tagsData, mappingData] = await Promise.all([
-          getAvailableDietaryTags(),
-          getDietaryTagsMapping(restaurantId)
-        ]);
-        setAvailableTags(tagsData.tags || []);
-        setMappings(mappingData.mappings || {});
-      } catch (error) {
-        console.error('Error fetching tags/mappings:', error);
-      }
-    };
-
-    fetchTagsAndMappings();
-  }, [restaurantId]);
 
   // Auto-save function with debounce
   const autoSave = useCallback(async (newMappings) => {
