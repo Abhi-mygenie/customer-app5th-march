@@ -5,7 +5,7 @@ import { getRestaurantProducts } from '../../api/services/restaurantService';
 import { getAvailableDietaryTags, getDietaryTagsMapping, updateDietaryTagsMapping } from '../../api/services/dietaryTagsService';
 import './DietaryTagsAdmin.css';
 
-const DietaryTagsAdmin = ({ restaurantId, token }) => {
+const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
   const [mappings, setMappings] = useState({});
@@ -14,16 +14,44 @@ const DietaryTagsAdmin = ({ restaurantId, token }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Multi-menu states
+  const [stations, setStations] = useState([]);
+  const [selectedStation, setSelectedStation] = useState(null);
 
-  // Fetch all data on mount
+  // Load stations for multi-menu restaurants
+  useEffect(() => {
+    if (multipleMenu) {
+      try {
+        const stationsData = require('../../data/stations.json');
+        setStations(stationsData || []);
+      } catch (error) {
+        console.error('Failed to load stations:', error);
+        setStations([]);
+      }
+    }
+  }, [multipleMenu]);
+
+  // Fetch menu items and tags
   useEffect(() => {
     const fetchData = async () => {
       if (!restaurantId) return;
       
+      // For multi-menu, wait until a station is selected
+      if (multipleMenu && !selectedStation) {
+        setLoading(false);
+        setMenuItems([]);
+        return;
+      }
+      
       setLoading(true);
       try {
-        // Fetch menu items from POS API
-        const productsData = await getRestaurantProducts(restaurantId, "0");
+        // Fetch menu items from POS API (with station filter for multi-menu)
+        const productsData = await getRestaurantProducts(
+          restaurantId, 
+          "0",
+          multipleMenu ? selectedStation : null
+        );
         const products = productsData?.products || [];
         
         // Flatten items from all categories
@@ -42,13 +70,17 @@ const DietaryTagsAdmin = ({ restaurantId, token }) => {
         });
         setMenuItems(allItems);
 
-        // Fetch available dietary tags
-        const tagsData = await getAvailableDietaryTags();
-        setAvailableTags(tagsData.tags || []);
+        // Fetch available dietary tags (only once)
+        if (availableTags.length === 0) {
+          const tagsData = await getAvailableDietaryTags();
+          setAvailableTags(tagsData.tags || []);
+        }
 
-        // Fetch existing mappings
-        const mappingData = await getDietaryTagsMapping(restaurantId);
-        setMappings(mappingData.mappings || {});
+        // Fetch existing mappings (only once)
+        if (Object.keys(mappings).length === 0) {
+          const mappingData = await getDietaryTagsMapping(restaurantId);
+          setMappings(mappingData.mappings || {});
+        }
         
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -59,6 +91,26 @@ const DietaryTagsAdmin = ({ restaurantId, token }) => {
     };
 
     fetchData();
+  }, [restaurantId, multipleMenu, selectedStation]);
+
+  // Initial fetch for tags and mappings (separate from menu items)
+  useEffect(() => {
+    const fetchTagsAndMappings = async () => {
+      if (!restaurantId) return;
+      
+      try {
+        const [tagsData, mappingData] = await Promise.all([
+          getAvailableDietaryTags(),
+          getDietaryTagsMapping(restaurantId)
+        ]);
+        setAvailableTags(tagsData.tags || []);
+        setMappings(mappingData.mappings || {});
+      } catch (error) {
+        console.error('Error fetching tags/mappings:', error);
+      }
+    };
+
+    fetchTagsAndMappings();
   }, [restaurantId]);
 
   // Get unique categories
@@ -130,13 +182,12 @@ const DietaryTagsAdmin = ({ restaurantId, token }) => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="dietary-tags-admin">
-        <div className="loading-state">Loading menu items...</div>
-      </div>
-    );
-  }
+  // Get selected station name
+  const selectedStationName = useMemo(() => {
+    if (!selectedStation) return '';
+    const station = stations.find(s => s.id === selectedStation);
+    return station?.name || selectedStation;
+  }, [selectedStation, stations]);
 
   return (
     <div className="dietary-tags-admin" data-testid="dietary-tags-admin">
@@ -149,110 +200,167 @@ const DietaryTagsAdmin = ({ restaurantId, token }) => {
         </p>
       </div>
 
-      {/* Stats banner */}
-      {untaggedCount > 0 && (
-        <div className="untagged-banner" data-testid="untagged-banner">
-          <IoAlertCircle className="banner-icon" />
-          <span>{untaggedCount} item{untaggedCount > 1 ? 's' : ''} need dietary tagging</span>
+      {/* Station Selector for Multi-Menu Restaurants */}
+      {multipleMenu && stations.length > 0 && (
+        <div className="station-selector" data-testid="station-selector">
+          <h4 className="station-selector-title">Select Menu</h4>
+          <div className="station-tabs">
+            {stations.map(station => (
+              <button
+                key={station.id}
+                className={`station-tab ${selectedStation === station.id ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedStation(station.id);
+                  setSelectedCategory('all');
+                  setSearchQuery('');
+                }}
+                data-testid={`station-tab-${station.id}`}
+              >
+                <span className="station-name">{station.name}</span>
+                {station.timing && (
+                  <span className="station-timing">{station.timing}</span>
+                )}
+              </button>
+            ))}
+          </div>
+          
+          {!selectedStation && (
+            <div className="select-station-prompt">
+              <span className="prompt-icon">👆</span>
+              <span>Select a menu to view and tag items</span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Filters row */}
-      <div className="dietary-filters-row">
-        <div className="dietary-search">
-          <IoSearchOutline className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search items..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            data-testid="dietary-search-input"
-          />
-        </div>
-        
-        <select
-          className="category-filter"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          data-testid="dietary-category-filter"
-        >
-          <option value="all">All Categories</option>
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
-      </div>
+      {/* Show content only if not multi-menu OR station is selected */}
+      {(!multipleMenu || selectedStation) && (
+        <>
+          {/* Selected menu indicator */}
+          {multipleMenu && selectedStation && (
+            <div className="selected-menu-indicator">
+              Showing items from: <strong>{selectedStationName}</strong>
+              {menuItems.length > 0 && <span className="item-count">({menuItems.length} items)</span>}
+            </div>
+          )}
 
-      {/* Tag legend */}
-      <div className="tag-legend">
-        {availableTags.map(tag => (
-          <span key={tag.id} className="tag-legend-item">
-            <span className="tag-icon">{tag.icon}</span>
-            {tag.label}
-          </span>
-        ))}
-      </div>
+          {/* Stats banner */}
+          {untaggedCount > 0 && !loading && (
+            <div className="untagged-banner" data-testid="untagged-banner">
+              <IoAlertCircle className="banner-icon" />
+              <span>{untaggedCount} item{untaggedCount > 1 ? 's' : ''} need dietary tagging</span>
+            </div>
+          )}
 
-      {/* Items list */}
-      <div className="dietary-items-list">
-        {filteredItems.length === 0 ? (
-          <div className="empty-state">No items found</div>
-        ) : (
-          filteredItems.map(item => {
-            const itemTags = mappings[item.id] || [];
-            const hasNoTags = itemTags.length === 0;
+          {/* Filters row */}
+          <div className="dietary-filters-row">
+            <div className="dietary-search">
+              <IoSearchOutline className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                data-testid="dietary-search-input"
+              />
+            </div>
             
-            return (
-              <div 
-                key={item.id} 
-                className={`dietary-item-card ${hasNoTags ? 'needs-tagging' : ''}`}
-                data-testid={`dietary-item-${item.id}`}
-              >
-                <div className="item-info">
-                  <div className="item-name-row">
-                    <span className={`veg-indicator ${item.isVeg ? 'veg' : item.isEgg ? 'egg' : 'non-veg'}`}>
-                      <span className="veg-dot"></span>
-                    </span>
-                    <span className="item-name">{item.name}</span>
-                    {hasNoTags && <span className="new-badge">NEW</span>}
-                  </div>
-                  <span className="item-category">{item.categoryName}</span>
-                </div>
-                
-                <div className="item-tags">
-                  {availableTags.map(tag => (
-                    <button
-                      key={tag.id}
-                      className={`tag-checkbox ${itemTags.includes(tag.id) ? 'checked' : ''}`}
-                      onClick={() => toggleTag(item.id, tag.id)}
-                      title={tag.label}
-                      data-testid={`tag-${item.id}-${tag.id}`}
-                    >
-                      <span className="tag-icon">{tag.icon}</span>
-                      {itemTags.includes(tag.id) && (
-                        <IoCheckmarkCircle className="check-icon" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+            <select
+              className="category-filter"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              data-testid="dietary-category-filter"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
 
-      {/* Save button */}
-      {hasChanges && (
-        <div className="dietary-save-bar">
-          <button
-            className="save-btn"
-            onClick={handleSave}
-            disabled={saving}
-            data-testid="save-dietary-tags-btn"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
+          {/* Tag legend */}
+          <div className="tag-legend">
+            {availableTags.map(tag => (
+              <span key={tag.id} className="tag-legend-item">
+                <span className="tag-icon">{tag.icon}</span>
+                {tag.label}
+              </span>
+            ))}
+          </div>
+
+          {/* Loading state */}
+          {loading && (
+            <div className="loading-state">Loading menu items...</div>
+          )}
+
+          {/* Items list */}
+          {!loading && (
+            <div className="dietary-items-list">
+              {filteredItems.length === 0 ? (
+                <div className="empty-state">
+                  {menuItems.length === 0 
+                    ? 'No items found in this menu' 
+                    : 'No items match your search'}
+                </div>
+              ) : (
+                filteredItems.map(item => {
+                  const itemTags = mappings[item.id] || [];
+                  const hasNoTags = itemTags.length === 0;
+                  
+                  return (
+                    <div 
+                      key={item.id} 
+                      className={`dietary-item-card ${hasNoTags ? 'needs-tagging' : ''}`}
+                      data-testid={`dietary-item-${item.id}`}
+                    >
+                      <div className="item-info">
+                        <div className="item-name-row">
+                          <span className={`veg-indicator ${item.isVeg ? 'veg' : item.isEgg ? 'egg' : 'non-veg'}`}>
+                            <span className="veg-dot"></span>
+                          </span>
+                          <span className="item-name">{item.name}</span>
+                          {hasNoTags && <span className="new-badge">NEW</span>}
+                        </div>
+                        <span className="item-category">{item.categoryName}</span>
+                      </div>
+                      
+                      <div className="item-tags">
+                        {availableTags.map(tag => (
+                          <button
+                            key={tag.id}
+                            className={`tag-checkbox ${itemTags.includes(tag.id) ? 'checked' : ''}`}
+                            onClick={() => toggleTag(item.id, tag.id)}
+                            title={tag.label}
+                            data-testid={`tag-${item.id}-${tag.id}`}
+                          >
+                            <span className="tag-icon">{tag.icon}</span>
+                            {itemTags.includes(tag.id) && (
+                              <IoCheckmarkCircle className="check-icon" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {/* Save button */}
+          {hasChanges && (
+            <div className="dietary-save-bar">
+              <button
+                className="save-btn"
+                onClick={handleSave}
+                disabled={saving}
+                data-testid="save-dietary-tags-btn"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
