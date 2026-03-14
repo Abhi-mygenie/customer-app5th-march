@@ -43,6 +43,7 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 customer_router = APIRouter(prefix="/customer", tags=["Customer"])
 config_router = APIRouter(prefix="/config", tags=["Configuration"])
 upload_router = APIRouter(prefix="/upload", tags=["Upload"])
+dietary_router = APIRouter(prefix="/dietary-tags", tags=["Dietary Tags"])
 
 # ============================================
 # Models
