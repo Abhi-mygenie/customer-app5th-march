@@ -380,9 +380,8 @@ const OrderSuccess = () => {
     <div className="order-success-page" data-testid="order-success-page">
       <Header
         brandText={restaurant?.name}
-        logoUrl={configLogoUrl || '/assets/images/ic_login_logo.png'}
         phone={configPhone || restaurant?.phone}
-        onLogoClick={() => navigate(`/${restaurantId}`)}
+        onBackClick={() => navigate(`/${restaurantId}`)}
       />
       <div className="order-success-container">
 

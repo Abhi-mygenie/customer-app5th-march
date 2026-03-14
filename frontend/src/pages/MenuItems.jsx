@@ -521,9 +521,8 @@ const MenuItems = () => {
         ) : (
           <Header
             brandText={restaurant?.name}
-            logoUrl={configLogoUrl || '/assets/images/ic_login_logo.png'}
             phone={configPhone || restaurant?.phone}
-            onLogoClick={() => navigate(`/${restaurantId}`)}
+            onBackClick={handleBackToMenu}
           />
         )}
 

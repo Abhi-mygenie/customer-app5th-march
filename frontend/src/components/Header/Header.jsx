@@ -1,30 +1,21 @@
 import React from 'react';
+import { IoArrowBackOutline } from 'react-icons/io5';
 import { useRestaurantConfig } from '../../context/RestaurantConfigContext';
 import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 import './Header.css';
 
-const Header = ({ brandText, logoUrl, phone, onLogoClick }) => {
+const Header = ({ brandText, phone, onBackClick }) => {
   const { showHamburgerMenu } = useRestaurantConfig();
-  
-  // Use fallback if logoUrl is empty, null, undefined, or whitespace
-  const DEFAULT_LOGO = '/assets/images/ic_login_logo.png';
-  const effectiveLogoUrl = logoUrl && logoUrl.trim() ? logoUrl : DEFAULT_LOGO;
 
   return (
-    <div className="menu-items-header">
+    <div className="menu-items-header" data-testid="app-header">
       <div className="header-left-section">
-        <div className="header-brand" onClick={onLogoClick} style={{ cursor: onLogoClick ? 'pointer' : 'default' }} data-testid="header-logo-link">
-          <img 
-            src={effectiveLogoUrl} 
-            alt={brandText || 'Logo'} 
-            className="header-logo"
-            onError={(e) => {
-              if (e.target.src !== DEFAULT_LOGO) {
-                e.target.src = DEFAULT_LOGO;
-              }
-            }}
-          />
-        </div>
+        {onBackClick && (
+          <button className="header-back-btn" onClick={onBackClick} data-testid="header-back-btn">
+            <IoArrowBackOutline />
+          </button>
+        )}
+        <h1 className="header-title" data-testid="header-title">{brandText || 'Menu'}</h1>
       </div>
       
       <div className="header-right">
