@@ -31,6 +31,7 @@ const MenuItems = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [activeDietaryTags, setActiveDietaryTags] = useState([]);
   const [isMenuPanelOpen, setIsMenuPanelOpen] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [descriptionLimit, setDescriptionLimit] = useState(40);
