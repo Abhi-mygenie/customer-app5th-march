@@ -1255,6 +1255,7 @@ api_router.include_router(customer_router)
 api_router.include_router(config_router)
 api_router.include_router(upload_router)
 api_router.include_router(air_bnb_router)  # Add air-bnb router
+api_router.include_router(dietary_router)  # Add dietary tags router
 app.include_router(api_router)
 
 # CORS Middleware
