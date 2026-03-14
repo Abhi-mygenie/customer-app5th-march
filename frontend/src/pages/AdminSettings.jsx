@@ -18,15 +18,18 @@ import {
   IoRestaurantOutline,
   IoTextOutline,
   IoSettingsOutline,
-  IoTimeOutline
+  IoTimeOutline,
+  IoPricetagsOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import { getRestaurantDetails } from '../api/services/restaurantService';
 import ContentTab from '../components/AdminSettings/ContentTab';
 import VisibilityTab from '../components/AdminSettings/VisibilityTab';
 import MenuOrderTab from '../components/AdminSettings/MenuOrderTab';
+import DietaryTagsAdmin from '../components/AdminSettings/DietaryTagsAdmin';
 import '../components/AdminSettings/MenuOrderTab.css';
 import '../components/AdminSettings/ContentTab.css';
+import '../components/AdminSettings/DietaryTagsAdmin.css';
 import './AdminSettings.css';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
