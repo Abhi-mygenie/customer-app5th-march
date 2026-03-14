@@ -19,6 +19,96 @@
   margin: 0;
 }
 
+/* Station Selector for Multi-Menu */
+.station-selector {
+  background: var(--bg-secondary, #f8f9fa);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-light, #e5e7eb);
+}
+
+.station-selector-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+}
+
+.station-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.station-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 20px;
+  background: white;
+  border: 2px solid var(--border-medium, #d1d5db);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.station-tab:hover {
+  border-color: var(--color-primary);
+  background: #f0f4ff;
+}
+
+.station-tab.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+}
+
+.station-tab .station-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.station-tab .station-timing {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.station-tab.active .station-timing {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.select-station-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.select-station-prompt .prompt-icon {
+  font-size: 20px;
+}
+
+/* Selected Menu Indicator */
+.selected-menu-indicator {
+  padding: 10px 14px;
+  background: #e0f2fe;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #0369a1;
+  margin-bottom: 16px;
+}
+
+.selected-menu-indicator .item-count {
+  margin-left: 6px;
+  opacity: 0.8;
+}
+
 /* Untagged banner */
 .untagged-banner {
   display: flex;
@@ -302,6 +392,20 @@
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+  .station-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .station-tab {
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+}
+
 @media (max-width: 600px) {
   .dietary-filters-row {
     flex-direction: column;
