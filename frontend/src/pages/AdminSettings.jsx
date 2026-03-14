@@ -1166,7 +1166,8 @@ const AdminSettings = () => {
         <div className="settings-section" data-testid="section-dietary">
           <DietaryTagsAdmin 
             restaurantId={user?.restaurant_id || user?.id} 
-            token={token} 
+            token={token}
+            multipleMenu={restaurantFlags.multiple_menu}
           />
         </div>
       )}
