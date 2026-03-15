@@ -7,14 +7,14 @@
 }
 
 /* ============================================
-   Station Pills (Multi-Menu)
+   Station Pills (Multi-Menu) - Scoped to admin
    ============================================ */
 
-.station-pills-container {
+.menu-order-tab .station-pills-container {
   margin-bottom: 16px;
 }
 
-.station-pills-label {
+.menu-order-tab .station-pills-label {
   font-size: 12px;
   font-weight: 600;
   color: #64748b;
@@ -23,13 +23,13 @@
   letter-spacing: 0.5px;
 }
 
-.station-pills {
+.menu-order-tab .station-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.station-pill {
+.menu-order-tab .station-pill {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -41,36 +41,36 @@
   transition: all 0.2s ease;
 }
 
-.station-pill:hover {
+.menu-order-tab .station-pill:hover {
   border-color: #94a3b8;
   background: #f8fafc;
 }
 
-.station-pill.active {
+.menu-order-tab .station-pill.active {
   border-color: #3b82f6;
   background: #eff6ff;
 }
 
-.station-pill.hidden-pill {
+.menu-order-tab .station-pill.hidden-pill {
   opacity: 0.6;
 }
 
-.station-pill .pill-name {
+.menu-order-tab .station-pill .pill-name {
   font-size: 13px;
   font-weight: 600;
   color: #374151;
 }
 
-.station-pill.active .pill-name {
+.menu-order-tab .station-pill.active .pill-name {
   color: #1d4ed8;
 }
 
-.station-pill .pill-timing {
+.menu-order-tab .station-pill .pill-timing {
   font-size: 11px;
   color: #9ca3af;
 }
 
-.station-pill .pill-hidden-badge {
+.menu-order-tab .station-pill .pill-hidden-badge {
   font-size: 9px;
   padding: 2px 5px;
   background: #fef3c7;
@@ -79,8 +79,8 @@
   font-weight: 500;
 }
 
-/* Selected Station Header */
-.selected-station-header {
+/* Selected Station Header - Scoped to admin */
+.menu-order-tab .selected-station-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -91,24 +91,24 @@
   margin-bottom: 16px;
 }
 
-.station-info {
+.menu-order-tab .station-info {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.station-title {
+.menu-order-tab .station-title {
   font-size: 14px;
   font-weight: 600;
   color: #1e293b;
 }
 
-.station-count {
+.menu-order-tab .station-count {
   font-size: 12px;
   color: #64748b;
 }
 
-.station-controls {
+.menu-order-tab .station-controls {
   display: flex;
   align-items: center;
   gap: 10px;
