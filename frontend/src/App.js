@@ -62,7 +62,22 @@ function App() {
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
+              
+              {/* Admin Routes - Web Layout */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Navigate to="settings" replace />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
+                <Route path="branding" element={<AdminBrandingPage />} />
+                <Route path="visibility" element={<AdminVisibilityPage />} />
+                <Route path="banners" element={<AdminBannersPage />} />
+                <Route path="content" element={<AdminContentPage />} />
+                <Route path="menu" element={<AdminMenuPage />} />
+                <Route path="dietary" element={<AdminDietaryPage />} />
+              </Route>
+              
+              {/* Legacy admin route - redirect to new layout */}
+              <Route path="/admin/settings" element={<Navigate to="/admin/settings" replace />} />
+              
               <Route path="/:restaurantId/password-setup" element={<PasswordSetup />} />
               
               {/* Most specific routes first - Station routes with restaurant ID */}
