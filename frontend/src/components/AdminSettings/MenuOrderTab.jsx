@@ -224,7 +224,7 @@ const MenuOrderTab = ({ config, setConfig }) => {
   const [activeId, setActiveId] = useState(null);
 
   const restaurantId = user?.restaurant_id || user?.id;
-  const isMultiMenu = restaurant ? isMultipleMenu(restaurant) : false;
+  const isMultiMenu = restaurant ? isMultipleMenu(restaurant, restaurantId) : false;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
