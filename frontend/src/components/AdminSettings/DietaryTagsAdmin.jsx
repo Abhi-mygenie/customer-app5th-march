@@ -226,26 +226,25 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
     <div className="dietary-tags-admin" data-testid="dietary-tags-admin">
       {saving && <div className="saving-indicator">Saving...</div>}
 
-      {/* Station Selector for Multi-Menu Restaurants */}
+      {/* Station Pills for Multi-Menu Restaurants */}
       {multipleMenu && stations.length > 0 && (
-        <div className="station-selector" data-testid="station-selector">
-          <h4 className="station-selector-title">Select Menu</h4>
-          <div className="station-tabs">
+        <div className="station-pills-container" data-testid="station-selector">
+          <div className="station-pills-label">Select Menu:</div>
+          <div className="station-pills">
             {stations.map(station => (
               <button
                 key={station.id}
-                className={`station-tab ${selectedStation === station.id ? 'active' : ''}`}
+                className={`station-pill ${selectedStation === station.id ? 'active' : ''}`}
                 onClick={() => {
                   setSelectedStation(station.id);
                   setSelectedCategory('all');
+                  setSelectedTag(null);
                   setSearchQuery('');
                 }}
-                data-testid={`station-tab-${station.id}`}
+                data-testid={`station-pill-${station.id}`}
               >
-                <span className="station-name">{station.name}</span>
-                {station.timing && (
-                  <span className="station-timing">{station.timing}</span>
-                )}
+                <span className="pill-name">{station.name}</span>
+                {station.timing && <span className="pill-timing">{station.timing}</span>}
               </button>
             ))}
           </div>
