@@ -13,6 +13,7 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedTag, setSelectedTag] = useState(null); // Filter by dietary tag
   
   // Multi-menu states
   const [stations, setStations] = useState([]);
