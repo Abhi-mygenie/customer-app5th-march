@@ -1,0 +1,50 @@
+[
+  {
+    "id": "Breakfast",
+    "name": "Breakfast",
+    "timing": "(7 am - 11 am)",
+    "image": "/assets/images/breakfast.jpg"
+  },
+  {
+    "id": "GROK",
+    "name": "GROK",
+    "timing": "",
+    "image": "/assets/images/GROK.png"
+  },
+  {
+    "id": "FOOD MENU",
+    "name": "FOOD MENU",
+    "timing": "(11 am - 11 pm)",
+    "image": "/assets/images/FOOD_MENU.png"
+  },
+  {
+    "id": "Kids Menu",
+    "name": "Kids Menu",
+    "timing": "",
+    "image": "/assets/images/Kids_Menu.png"
+  },
+  {
+    "id": "Bar & Drinks",
+    "name": "Bar & Drinks",
+    "timing": "",
+    "image": "/assets/images/Bar_Drinks.png"
+  },
+  {
+    "id": "Tea, Coffee & Soft Beverages",
+    "name": "Tea, Coffee & Soft Beverages",
+    "timing": "",
+    "image": "/assets/images/Tea_Coffee_Soft_Beverages.png"
+  },
+  {
+    "id": "24hrs Menu",
+    "name": "24hrs Menu",
+    "timing": "",
+    "image": "/assets/images/24hrs_Menu.png"
+  },
+  {
+    "id": "PET FOOD",
+    "name": "PET FOOD",
+    "timing": "",
+    "image": "/assets/images/PET_FOOD.png"
+  }
+]

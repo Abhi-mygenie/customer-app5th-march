@@ -1,0 +1,227 @@
+.menu-order-tab {
+  padding: var(--spacing-md);
+}
+
+.menu-order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+}
+
+.menu-order-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.menu-order-refresh {
+  background: none;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+}
+
+.menu-order-refresh:hover {
+  background: var(--bg-hover);
+}
+
+.menu-order-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
+}
+
+.menu-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Base item row */
+.menu-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  transition: opacity 0.2s;
+}
+
+.menu-order-item.hidden-item,
+.menu-order-station.hidden-item,
+.menu-order-category-block.hidden-item {
+  opacity: 0.5;
+}
+
+.menu-order-item-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.menu-order-item-index {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  min-width: 18px;
+  text-align: center;
+}
+
+.menu-order-item-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-order-item-count {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.menu-order-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.menu-order-btn {
+  background: none;
+  border: 1px solid var(--border-light);
+  border-radius: 5px;
+  padding: 3px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  transition: all 0.15s;
+}
+
+.menu-order-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--color-primary);
+}
+
+.menu-order-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.menu-order-btn.visibility-btn.visible {
+  color: var(--color-primary);
+}
+
+.menu-order-btn.visibility-btn.not-visible {
+  color: #ccc;
+}
+
+.menu-order-expand-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+}
+
+.menu-order-loading,
+.menu-order-empty {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.menu-order-empty-sub {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  color: #aaa;
+  font-style: italic;
+}
+
+/* === Station layer === */
+.menu-order-station {
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.menu-order-station .station-item {
+  border: none;
+  border-radius: 0;
+  background: #f0f0f0;
+}
+
+.station-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.menu-order-subcategories {
+  padding: 4px 4px 4px 20px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* === Category layer (expandable with items) === */
+.menu-order-category-block {
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+.menu-order-category-block .category-row {
+  border: none;
+  border-radius: 0;
+  background: #f7f7f7;
+  padding: 8px 10px;
+}
+
+.menu-order-category-block .category-row .menu-order-item-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* === Item layer === */
+.menu-order-items-list {
+  padding: 2px 2px 2px 24px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.menu-order-items-list .item-row {
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  padding: 6px 8px;
+  background: #fff;
+}
+
+.menu-order-items-list .item-row .menu-order-item-name {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.menu-order-items-list .item-row .menu-order-item-index {
+  font-size: 0.65rem;
+  color: #bbb;
+}
