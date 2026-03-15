@@ -232,7 +232,7 @@
   transform: scale(1.01);
 }
 
-.category-header {
+.menu-order-tab .category-header {
   display: flex;
   align-items: center;
   padding: 16px;
@@ -240,29 +240,29 @@
   transition: background 0.15s;
 }
 
-.category-header:hover {
+.menu-order-tab .category-header:hover {
   background: #f9fafb;
 }
 
-.category-info {
+.menu-order-tab .category-info {
   flex: 1;
   min-width: 0;
   margin-left: 8px;
 }
 
-.category-title-row {
+.menu-order-tab .category-title-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.category-name {
+.menu-order-tab .category-name {
   font-size: 15px;
   font-weight: 600;
   color: #1f2937;
 }
 
-.category-badge {
+.menu-order-tab .category-badge {
   padding: 4px 10px;
   background: #f3f4f6;
   border-radius: 20px;
@@ -271,7 +271,7 @@
   color: #6b7280;
 }
 
-.category-preview {
+.menu-order-tab .category-preview {
   display: block;
   margin-top: 4px;
   font-size: 12px;
@@ -282,13 +282,13 @@
   max-width: 300px;
 }
 
-.category-actions {
+.menu-order-tab .category-actions {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.expand-btn {
+.menu-order-tab .expand-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -303,13 +303,13 @@
   font-size: 18px;
 }
 
-.expand-btn:hover {
+.menu-order-tab .expand-btn:hover {
   background: #f3f4f6;
   color: #374151;
 }
 
 /* Drag Handle */
-.drag-handle {
+.menu-order-tab .drag-handle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -324,12 +324,12 @@
   font-size: 22px;
 }
 
-.drag-handle:hover {
+.menu-order-tab .drag-handle:hover {
   color: #6b7280;
   background: #f3f4f6;
 }
 
-.drag-handle:active {
+.menu-order-tab .drag-handle:active {
   cursor: grabbing;
   color: #3b82f6;
 }
