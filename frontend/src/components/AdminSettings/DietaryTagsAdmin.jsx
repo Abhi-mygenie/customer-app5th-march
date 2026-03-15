@@ -147,6 +147,14 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
   const filteredItems = useMemo(() => {
     let items = menuItems;
     
+    // Filter by selected dietary tag
+    if (selectedTag) {
+      items = items.filter(item => {
+        const itemTags = mappings[item.id] || [];
+        return itemTags.includes(selectedTag);
+      });
+    }
+    
     if (selectedCategory !== 'all') {
       items = items.filter(item => item.categoryName === selectedCategory);
     }
@@ -160,7 +168,12 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
     }
     
     return items;
-  }, [menuItems, selectedCategory, searchQuery]);
+  }, [menuItems, selectedCategory, searchQuery, selectedTag, mappings]);
+
+  // Get count of items for each tag
+  const getTagCount = useCallback((tagId) => {
+    return menuItems.filter(item => (mappings[item.id] || []).includes(tagId)).length;
+  }, [menuItems, mappings]);
 
   // Count untagged items
   const untaggedCount = useMemo(() => {
