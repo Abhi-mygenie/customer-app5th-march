@@ -138,11 +138,8 @@
   font-size: 12px;
   color: #64748b;
 }
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 12px 0;
-}
 
+/* Old station tabs - kept for backwards compatibility */
 .station-tabs {
   display: flex;
   flex-wrap: wrap;
