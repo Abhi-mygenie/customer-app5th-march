@@ -320,7 +320,7 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
               data-testid="tag-filter-all"
             >
               <span className="tag-label">All Items</span>
-              <span className="tag-count">{menuItems.length}</span>
+              <span className="tag-count">{categoryFilteredItems.length}</span>
             </button>
             {availableTags.map(tag => {
               const count = getTagCount(tag.id);
