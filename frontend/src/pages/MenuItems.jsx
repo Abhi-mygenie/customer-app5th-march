@@ -539,16 +539,7 @@ const MenuItems = () => {
           onClose={closeMenuPanel}
           stationName={stationName}
           menuSections={menuSections}
-          stationsData={
-            isMultipleMenu(restaurant, restaurantId)
-              ? stationsData.filter(station => {
-                // Always show current station
-                if (station.id === stationId) return true;
-                // Only show available stations
-                return isStationAvailable(station.timing);
-              })
-              : []  // Empty for non-multiple-menu restaurants - show categories instead
-          }
+          stationsData={[]}  // Always show categories-only view in sidebar
           currentStationId={stationId}
           onCategoryClick={handleCategoryClick}
           onStationClick={handleStationClickFromPanel}

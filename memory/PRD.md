@@ -89,12 +89,18 @@
 - [x] Loading spinner and empty states
 - [x] Responsive design improvements
 
+### Mar 2026 - Bug Fix: Multi-Menu Sidebar
+- [x] Fixed customer-facing sidebar for multi-menu restaurants (716/739)
+- [x] Sidebar now shows only categories of the selected station (not a mix of stations + categories)
+- [x] One-line fix in MenuItems.jsx — pass empty stationsData to MenuPanel so it uses the clean "categories only" view
+
 ## Backlog
-- P0: None (features implemented)
+- P1: Remove silent fallbacks for env variables (fail fast)
 - P1: Test drag-drop with large menus
+- P2: Global CSS scoping review (admin styles vs customer styles)
 - P2: Add undo/redo for reordering
 
 ## Next Tasks
+- Remove silent fallbacks for environment variables
 - Test the drag-drop functionality
 - Verify save works after reordering
-- Test with stations (multiple menu)
