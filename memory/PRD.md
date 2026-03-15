@@ -80,12 +80,21 @@
 - `/admin/menu` - Menu ordering
 - `/admin/dietary` - Dietary tags
 
+### Jan 2026 - Menu Order UX Improvements
+- [x] Added drag-and-drop using @dnd-kit library
+- [x] Search bar for filtering categories
+- [x] Modern toggle switches for visibility
+- [x] Bulk actions (Show All / Hide All)
+- [x] Item count badges and preview text
+- [x] Loading spinner and empty states
+- [x] Responsive design improvements
+
 ## Backlog
-- P0: None (layout implemented)
-- P1: Test all admin pages thoroughly
-- P2: Add more web-specific features (data tables, bulk actions)
+- P0: None (features implemented)
+- P1: Test drag-drop with large menus
+- P2: Add undo/redo for reordering
 
 ## Next Tasks
-- Test admin login flow
-- Verify save functionality works
-- Test responsive breakpoints
+- Test the drag-drop functionality
+- Verify save works after reordering
+- Test with stations (multiple menu)
