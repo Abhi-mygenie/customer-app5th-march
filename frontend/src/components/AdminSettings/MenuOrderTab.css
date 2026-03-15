@@ -11,14 +11,14 @@
    ============================================ */
 
 .station-pills-container {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .station-pills-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #64748b;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -26,20 +26,19 @@
 .station-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .station-pill {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 12px 18px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
   background: #fff;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 120px;
 }
 
 .station-pill:hover {
@@ -49,8 +48,7 @@
 
 .station-pill.active {
   border-color: #3b82f6;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  background: #eff6ff;
 }
 
 .station-pill.hidden-pill {
@@ -58,9 +56,9 @@
 }
 
 .station-pill .pill-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #1e293b;
+  color: #374151;
 }
 
 .station-pill.active .pill-name {
@@ -69,17 +67,15 @@
 
 .station-pill .pill-timing {
   font-size: 11px;
-  color: #64748b;
-  margin-top: 2px;
+  color: #9ca3af;
 }
 
 .station-pill .pill-hidden-badge {
-  font-size: 10px;
-  padding: 2px 6px;
+  font-size: 9px;
+  padding: 2px 5px;
   background: #fef3c7;
   color: #92400e;
   border-radius: 4px;
-  margin-top: 6px;
   font-weight: 500;
 }
 
