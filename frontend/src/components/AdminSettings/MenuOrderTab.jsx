@@ -219,7 +219,7 @@ const MenuOrderTab = ({ config, setConfig }) => {
   const [stations, setStations] = useState([]);
   const [stationCategories, setStationCategories] = useState({});
   const [stationItems, setStationItems] = useState({});
-  const [expandedStations, setExpandedStations] = useState({});
+  const [selectedStation, setSelectedStation] = useState(null); // NEW: Selected station for pills
   const [expandedCategories, setExpandedCategories] = useState({});
   const [activeId, setActiveId] = useState(null);
 
