@@ -304,15 +304,48 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
             </select>
           </div>
 
-          {/* Tag legend */}
-          <div className="tag-legend">
-            {availableTags.map(tag => (
-              <span key={tag.id} className="tag-legend-item">
-                <span className="tag-icon">{tag.icon}</span>
-                {tag.label}
-              </span>
-            ))}
+          {/* Tag legend - Clickable filters */}
+          <div className="tag-legend" data-testid="tag-legend">
+            <button
+              className={`tag-legend-item ${selectedTag === null ? 'active' : ''}`}
+              onClick={() => setSelectedTag(null)}
+              data-testid="tag-filter-all"
+            >
+              <span className="tag-label">All Items</span>
+              <span className="tag-count">{menuItems.length}</span>
+            </button>
+            {availableTags.map(tag => {
+              const count = getTagCount(tag.id);
+              return (
+                <button
+                  key={tag.id}
+                  className={`tag-legend-item ${selectedTag === tag.id ? 'active' : ''} ${count === 0 ? 'empty' : ''}`}
+                  onClick={() => setSelectedTag(selectedTag === tag.id ? null : tag.id)}
+                  title={`${tag.label}: ${count} items`}
+                  data-testid={`tag-filter-${tag.id}`}
+                >
+                  <span className="tag-icon">{tag.icon}</span>
+                  <span className="tag-label">{tag.label}</span>
+                  <span className="tag-count">{count}</span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* Active filter indicator */}
+          {selectedTag && (
+            <div className="active-filter-banner" data-testid="active-filter-banner">
+              <span>
+                Showing items tagged as: <strong>{availableTags.find(t => t.id === selectedTag)?.label}</strong>
+              </span>
+              <button 
+                className="clear-filter-btn"
+                onClick={() => setSelectedTag(null)}
+              >
+                Clear Filter ✕
+              </button>
+            </div>
+          )}
 
           {/* Loading state */}
           {loading && (
