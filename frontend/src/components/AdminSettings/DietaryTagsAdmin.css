@@ -139,14 +139,14 @@
   color: #64748b;
 }
 
-/* Old station tabs - kept for backwards compatibility */
-.station-tabs {
+/* Old station tabs - kept for backwards compatibility, scoped to admin */
+.dietary-tags-admin .station-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
-.station-tab {
+.dietary-tags-admin .station-tab {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -159,32 +159,32 @@
   transition: all 0.2s ease;
 }
 
-.station-tab:hover {
+.dietary-tags-admin .station-tab:hover {
   border-color: var(--color-primary);
   background: #f0f4ff;
 }
 
-.station-tab.active {
+.dietary-tags-admin .station-tab.active {
   border-color: var(--color-primary);
   background: var(--color-primary);
   color: white;
 }
 
-.station-tab .station-name {
+.dietary-tags-admin .station-tab .station-name {
   font-size: 13px;
   font-weight: 600;
 }
 
-.station-tab .station-timing {
+.dietary-tags-admin .station-tab .station-timing {
   font-size: 11px;
   opacity: 0.8;
 }
 
-.station-tab.active .station-timing {
+.dietary-tags-admin .station-tab.active .station-timing {
   color: rgba(255, 255, 255, 0.9);
 }
 
-.select-station-prompt {
+.dietary-tags-admin .select-station-prompt {
   display: flex;
   align-items: center;
   justify-content: center;
