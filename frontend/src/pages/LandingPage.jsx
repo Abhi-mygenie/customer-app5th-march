@@ -257,7 +257,7 @@ const LandingPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !restaurantId) {
     return <LandingPageSkeleton />;
   }
 
