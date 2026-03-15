@@ -6,6 +6,125 @@
   padding: 0;
 }
 
+/* ============================================
+   Station Pills (Multi-Menu)
+   ============================================ */
+
+.station-pills-container {
+  margin-bottom: 20px;
+}
+
+.station-pills-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.station-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.station-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px 18px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.station-pill:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.station-pill.active {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.station-pill.hidden-pill {
+  opacity: 0.6;
+}
+
+.station-pill .pill-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.station-pill.active .pill-name {
+  color: #1d4ed8;
+}
+
+.station-pill .pill-timing {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.station-pill .pill-hidden-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 4px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* Selected Station Header */
+.selected-station-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.station-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.station-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.station-count {
+  font-size: 13px;
+  color: #64748b;
+  padding: 4px 10px;
+  background: #fff;
+  border-radius: 20px;
+}
+
+.station-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ============================================
+   Toolbar
+   ============================================ */
+
 /* Toolbar */
 .menu-order-toolbar {
   display: flex;
