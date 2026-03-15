@@ -603,24 +603,24 @@
   color: #1f2937;
 }
 
-/* Station Card (for multiple menu) */
-.station-card {
+/* Station Card (for multiple menu) - Scoped to admin */
+.menu-order-tab .station-card {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
 }
 
-.station-card.hidden-station {
+.menu-order-tab .station-card.hidden-station {
   opacity: 0.6;
 }
 
-.station-card.dragging {
+.menu-order-tab .station-card.dragging {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border-color: #3b82f6;
 }
 
-.station-header {
+.menu-order-tab .station-header {
   display: flex;
   align-items: center;
   padding: 16px;
@@ -628,11 +628,11 @@
   cursor: pointer;
 }
 
-.station-header:hover {
+.menu-order-tab .station-header:hover {
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
 }
 
-.station-name {
+.menu-order-tab .station-name {
   flex: 1;
   font-size: 16px;
   font-weight: 600;
@@ -640,13 +640,13 @@
   margin-left: 8px;
 }
 
-.station-actions {
+.menu-order-tab .station-actions {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.station-categories {
+.menu-order-tab .station-categories {
   padding: 16px;
   padding-left: 48px;
   background: #fafafa;
