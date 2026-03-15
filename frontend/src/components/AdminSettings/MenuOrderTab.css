@@ -207,8 +207,8 @@
   gap: 12px;
 }
 
-/* Category Card */
-.category-card {
+/* Category Card - Scoped to admin */
+.menu-order-tab .category-card {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -216,17 +216,17 @@
   transition: all 0.2s;
 }
 
-.category-card:hover {
+.menu-order-tab .category-card:hover {
   border-color: #d1d5db;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.category-card.hidden-category {
+.menu-order-tab .category-card.hidden-category {
   opacity: 0.6;
   background: #f9fafb;
 }
 
-.category-card.dragging {
+.menu-order-tab .category-card.dragging {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border-color: #3b82f6;
   transform: scale(1.01);
