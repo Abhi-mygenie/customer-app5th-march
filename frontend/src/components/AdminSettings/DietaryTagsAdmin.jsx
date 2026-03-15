@@ -224,15 +224,7 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
 
   return (
     <div className="dietary-tags-admin" data-testid="dietary-tags-admin">
-      <div className="dietary-tags-header">
-        <h3 className="section-title">
-          🏷️ Dietary Tags Management
-          {saving && <span className="saving-indicator">Saving...</span>}
-        </h3>
-        <p className="section-description">
-          Assign dietary tags to menu items. Changes are saved automatically.
-        </p>
-      </div>
+      {saving && <div className="saving-indicator">Saving...</div>}
 
       {/* Station Selector for Multi-Menu Restaurants */}
       {multipleMenu && stations.length > 0 && (
