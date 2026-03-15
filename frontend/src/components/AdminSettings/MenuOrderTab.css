@@ -84,37 +84,34 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 12px 16px;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 8px;
   margin-bottom: 16px;
 }
 
 .station-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .station-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #1e293b;
 }
 
 .station-count {
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
-  padding: 4px 10px;
-  background: #fff;
-  border-radius: 20px;
 }
 
 .station-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* ============================================
