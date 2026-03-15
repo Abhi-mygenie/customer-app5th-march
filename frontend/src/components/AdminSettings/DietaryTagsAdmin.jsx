@@ -332,7 +332,6 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
                   title={`${tag.label}: ${count} items`}
                   data-testid={`tag-filter-${tag.id}`}
                 >
-                  <span className="tag-icon">{tag.icon}</span>
                   <span className="tag-label">{tag.label}</span>
                   <span className="tag-count">{count}</span>
                 </button>
