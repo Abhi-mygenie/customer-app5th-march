@@ -143,7 +143,15 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
     return Array.from(cats).sort();
   }, [menuItems]);
 
-  // Filter items
+  // Get items filtered by category (for tag counts)
+  const categoryFilteredItems = useMemo(() => {
+    if (selectedCategory === 'all') {
+      return menuItems;
+    }
+    return menuItems.filter(item => item.categoryName === selectedCategory);
+  }, [menuItems, selectedCategory]);
+
+  // Filter items (includes search, category, and tag filters)
   const filteredItems = useMemo(() => {
     let items = menuItems;
     
@@ -170,10 +178,10 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
     return items;
   }, [menuItems, selectedCategory, searchQuery, selectedTag, mappings]);
 
-  // Get count of items for each tag
+  // Get count of items for each tag (respects category filter)
   const getTagCount = useCallback((tagId) => {
-    return menuItems.filter(item => (mappings[item.id] || []).includes(tagId)).length;
-  }, [menuItems, mappings]);
+    return categoryFilteredItems.filter(item => (mappings[item.id] || []).includes(tagId)).length;
+  }, [categoryFilteredItems, mappings]);
 
   // Count untagged items
   const untaggedCount = useMemo(() => {
