@@ -694,8 +694,8 @@ async def get_customer_orders(
 # Air BnB router for order details (Edit Order feature)
 air_bnb_router = APIRouter(prefix="/air-bnb", tags=["Air BnB"])
 
-# MyGenie API base URL
-MYGENIE_API_URL = "https://preprod.mygenie.online/api/v1"
+# MyGenie API base URL - configurable via environment variable
+MYGENIE_API_URL = os.environ.get("MYGENIE_API_URL", "https://preprod.mygenie.online/api/v1")
 
 @air_bnb_router.get("/get-order-details/{order_id}")
 async def get_order_details(order_id: str):
