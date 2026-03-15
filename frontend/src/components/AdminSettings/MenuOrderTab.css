@@ -334,8 +334,8 @@
   color: #3b82f6;
 }
 
-/* Toggle Switch */
-.toggle-switch {
+/* Toggle Switch - Scoped to admin */
+.menu-order-tab .toggle-switch {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -347,16 +347,16 @@
   transition: all 0.2s;
 }
 
-.toggle-switch:hover {
+.menu-order-tab .toggle-switch:hover {
   background: #e5e7eb;
 }
 
-.toggle-switch.active {
+.menu-order-tab .toggle-switch.active {
   background: #dcfce7;
   border-color: #86efac;
 }
 
-.toggle-track {
+.menu-order-tab .toggle-track {
   position: relative;
   width: 36px;
   height: 20px;
@@ -365,11 +365,11 @@
   transition: background 0.2s;
 }
 
-.toggle-switch.active .toggle-track {
+.menu-order-tab .toggle-switch.active .toggle-track {
   background: #22c55e;
 }
 
-.toggle-thumb {
+.menu-order-tab .toggle-thumb {
   position: absolute;
   top: 2px;
   left: 2px;
@@ -381,17 +381,17 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.toggle-switch.active .toggle-thumb {
+.menu-order-tab .toggle-switch.active .toggle-thumb {
   transform: translateX(16px);
 }
 
-.toggle-label {
+.menu-order-tab .toggle-label {
   font-size: 12px;
   font-weight: 500;
   color: #6b7280;
 }
 
-.toggle-switch.active .toggle-label {
+.menu-order-tab .toggle-switch.active .toggle-label {
   color: #16a34a;
 }
 
