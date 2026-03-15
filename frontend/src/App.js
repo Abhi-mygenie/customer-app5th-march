@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
@@ -19,6 +19,16 @@ import Profile from './pages/Profile';
 import AdminSettings from './pages/AdminSettings';
 import PasswordSetup from './pages/PasswordSetup';
 import ScrollToTop from './components/ScrollToTop/scrollToTop';
+
+// Admin Layout and Pages (Web optimized)
+import AdminLayout from './layouts/AdminLayout';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminBrandingPage from './pages/admin/AdminBrandingPage';
+import AdminVisibilityPage from './pages/admin/AdminVisibilityPage';
+import AdminBannersPage from './pages/admin/AdminBannersPage';
+import AdminContentPage from './pages/admin/AdminContentPage';
+import AdminMenuPage from './pages/admin/AdminMenuPage';
+import AdminDietaryPage from './pages/admin/AdminDietaryPage';
 
 // Create a QueryClient instance with default options
 const queryClient = new QueryClient({
