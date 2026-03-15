@@ -1,0 +1,503 @@
+/* Admin Pages Common Styles */
+
+.admin-page {
+  max-width: 1200px;
+}
+
+.admin-page-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.admin-page-title svg {
+  font-size: 32px;
+  color: #3b82f6;
+}
+
+.admin-page-description {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0 0 32px;
+}
+
+.admin-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  font-size: 16px;
+  color: #64748b;
+}
+
+/* Input with Button */
+.admin-input-with-btn {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-input-with-btn .admin-form-input {
+  flex: 1;
+}
+
+.admin-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.admin-upload-btn:hover {
+  background: #e2e8f0;
+}
+
+.admin-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Image Preview */
+.admin-image-preview-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.admin-image-preview {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100px;
+  background: #f8fafc;
+  border: 2px dashed #e2e8f0;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.admin-remove-btn {
+  padding: 6px 12px;
+  background: #fee2e2;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #dc2626;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-remove-btn:hover {
+  background: #fecaca;
+}
+
+/* Label Hint */
+.admin-label-hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+/* Color Input */
+.admin-color-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-color-input input[type="color"] {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 2px;
+  background: #fff;
+}
+
+.admin-color-input input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.admin-color-input input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.admin-color-input input[type="text"] {
+  flex: 1;
+}
+
+/* Radius Options */
+.admin-radius-options {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.admin-radius-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.admin-radius-option:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.admin-radius-option.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.admin-radius-preview {
+  width: 40px;
+  height: 24px;
+  background: #3b82f6;
+}
+
+.admin-radius-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.admin-radius-option.active .admin-radius-label {
+  color: #3b82f6;
+}
+
+/* Banners Table */
+.admin-banners-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-banner-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.admin-banner-card:hover {
+  background: #f1f5f9;
+}
+
+.admin-banner-card.editing {
+  background: #eff6ff;
+  border: 2px solid #3b82f6;
+}
+
+.admin-banner-order {
+  font-size: 14px;
+  font-weight: 600;
+  color: #94a3b8;
+  min-width: 30px;
+}
+
+.admin-banner-preview {
+  width: 120px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.admin-banner-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-banner-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-banner-meta {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-banner-status {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.admin-banner-status.active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.admin-banner-status.inactive {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.admin-banner-display {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.admin-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-banner-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.admin-banner-action-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.admin-banner-action-btn.delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+/* Banner Form */
+.admin-banner-form {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.admin-banner-form-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-cancel-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-cancel-btn:hover {
+  background: #e2e8f0;
+}
+
+.admin-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: box-shadow 0.2s;
+}
+
+.admin-add-btn:hover {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.admin-add-btn.update {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.admin-add-btn.update:hover {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Status Toggle Button */
+.admin-status-toggle {
+  padding: 10px 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.admin-status-toggle.active {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #16a34a;
+}
+
+/* Empty State */
+.admin-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+.admin-empty-state svg {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.admin-empty-state p {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* Size Warning */
+.admin-size-warning {
+  display: block;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #fef3c7;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #92400e;
+}
+
+/* Dietary Tags Table */
+.admin-dietary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.admin-dietary-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-dietary-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 20px;
+}
+
+.admin-dietary-info {
+  flex: 1;
+}
+
+.admin-dietary-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.admin-dietary-count {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-page-title {
+    font-size: 22px;
+  }
+
+  .admin-page-title svg {
+    font-size: 26px;
+  }
+
+  .admin-input-with-btn {
+    flex-direction: column;
+  }
+
+  .admin-radius-options {
+    justify-content: center;
+  }
+
+  .admin-banner-card {
+    flex-wrap: wrap;
+  }
+
+  .admin-banner-preview {
+    width: 100%;
+    height: auto;
+    max-height: 150px;
+  }
+
+  .admin-banner-info {
+    width: 100%;
+  }
+}
