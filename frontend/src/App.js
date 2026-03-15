@@ -109,9 +109,10 @@ function App() {
               {/* Landing page with restaurant ID */}
               <Route path="/:restaurantId" element={<LandingPage />} />
               
-              {/* Fallback routes (without restaurant ID) */}
+              {/* Fallback routes (without restaurant ID - subdomain mode) */}
+              <Route path="/stations" element={<DiningMenu />} />
               <Route path="/menu/:stationId" element={<MenuItems />} />
-              <Route path="/menu" element={<DiningMenu />} />
+              <Route path="/menu" element={<MenuItems />} />
               {/* <Route path="/order-success" element={<OrderSuccess />} /> */}
               <Route path="/" element={<LandingPage />} />
             </Routes>

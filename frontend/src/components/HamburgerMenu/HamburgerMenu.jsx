@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRestaurantId } from '../../utils/useRestaurantId';
 import { useRestaurantConfig } from '../../context/RestaurantConfigContext';
+import { useRestaurantDetails, useStations } from '../../hooks/useMenuData';
+import { isMultipleMenu } from '../../api/utils/restaurantIdConfig';
 import { 
   IoMenuOutline, 
   IoCloseOutline, 
@@ -28,6 +30,9 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { restaurantId } = useRestaurantId();
+  const { restaurant } = useRestaurantDetails(restaurantId);
+  const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
+  const { stations } = useStations(numericRestaurantId);
   const { isAuthenticated, user, isCustomer, isRestaurant, logout } = useAuth();
   const { navMenuOrder } = useRestaurantConfig();
   const [isOpen, setIsOpen] = useState(false);
@@ -155,7 +160,7 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             };
             const pathMap = {
               home: menuBasePath || '/',
-              menu: ['716', '739'].includes(restaurantId) ? `${menuBasePath}/stations` : `${menuBasePath}/menu`,
+              menu: isMultipleMenu(stations) ? `${menuBasePath}/stations` : `${menuBasePath}/menu`,
               about: `${menuBasePath}/about`,
               contact: `${menuBasePath}/contact`,
               feedback: `${menuBasePath}/feedback`,

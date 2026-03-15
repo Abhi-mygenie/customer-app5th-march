@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useRestaurantId } from '../utils/useRestaurantId';
-import { useRestaurantDetails } from '../hooks/useMenuData';
+import { useRestaurantDetails, useStations } from '../hooks/useMenuData';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { useCart } from '../context/CartContext';
@@ -109,6 +109,8 @@ const OrderSuccess = () => {
   const location = useLocation();
   const { restaurantId } = useRestaurantId();
   const { restaurant } = useRestaurantDetails(restaurantId);
+  const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
+  const { stations } = useStations(numericRestaurantId);
   const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showOrderStatusTracker, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill } = useRestaurantConfig();
   const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
   const { startEditOrder, clearCart, clearEditMode } = useCart();
@@ -292,16 +294,16 @@ const OrderSuccess = () => {
   useEffect(() => {
     if (!orderData) {
       if (restaurantId) {
-        if (isMultipleMenu(restaurant, restaurantId)) {
+        if (isMultipleMenu(stations)) {
           navigate(`/${restaurantId}/stations`, { replace: true });
         } else {
           navigate(`/${restaurantId}/menu`, { replace: true });
         }
       } else {
-        navigate('/stations', { replace: true });
+        navigate('/menu', { replace: true });
       }
     }
-  }, [orderData, navigate, restaurantId, restaurant]);
+  }, [orderData, navigate, restaurantId, stations]);
 
   if (!orderData) return null;
 
@@ -309,7 +311,7 @@ const OrderSuccess = () => {
   const currentStepIndex = ORDER_STATUSES.findIndex(s => s.key === (fOrderStatus ?? 7));
 
   const handleGoToMenu = () => {
-    if (isMultipleMenu(restaurant, restaurantId)) {
+    if (isMultipleMenu(stations)) {
       navigate(`/${restaurantId}/stations`, { replace: true });
     } else {
       navigate(`/${restaurantId}/menu`, { replace: true });
@@ -339,7 +341,7 @@ const OrderSuccess = () => {
       );
 
       // Navigate to menu to add more items
-      if (isMultipleMenu(restaurant, restaurantId)) {
+      if (isMultipleMenu(stations)) {
         navigate(`/${restaurantId}/stations`, { replace: true });
       } else {
         navigate(`/${restaurantId}/menu`, { replace: true });

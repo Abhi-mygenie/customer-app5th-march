@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { IoSearchOutline, IoCheckmarkCircle, IoAlertCircle } from 'react-icons/io5';
 import toast from 'react-hot-toast';
-import { getRestaurantProducts } from '../../api/services/restaurantService';
+import { getRestaurantProducts, getMenuMaster } from '../../api/services/restaurantService';
 import { getAvailableDietaryTags, getDietaryTagsMapping, updateDietaryTagsMapping } from '../../api/services/dietaryTagsService';
 import './DietaryTagsAdmin.css';
 
@@ -23,18 +23,22 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
   const saveTimeoutRef = useRef(null);
   const pendingMappingsRef = useRef(null);
 
-  // Load stations for multi-menu restaurants
+  // Load stations from menu-master API
   useEffect(() => {
-    if (multipleMenu) {
-      try {
-        const stationsData = require('../../data/stations.json');
-        setStations(stationsData || []);
-      } catch (error) {
-        console.error('Failed to load stations:', error);
-        setStations([]);
-      }
-    }
-  }, [multipleMenu]);
+    if (!restaurantId) return;
+    getMenuMaster(restaurantId).then(data => {
+      const menus = data?.menus || [];
+      const STANDARD_MENUS = ['Normal', 'Party', 'Premium'];
+      const stationMenus = menus.filter(m => !STANDARD_MENUS.includes(m.menu_name));
+      setStations(stationMenus.map(menu => ({
+        id: menu.menu_name,
+        name: menu.menu_name,
+        menuId: menu.id,
+        image: null,
+        timing: null,
+      })));
+    }).catch(() => setStations([]));
+  }, [restaurantId]);
 
   // Fetch all data: menu items, tags, and mappings
   useEffect(() => {

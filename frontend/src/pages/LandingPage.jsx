@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { useRestaurantDetails } from '../hooks/useMenuData';
+import { useRestaurantDetails, useStations } from '../hooks/useMenuData';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +30,8 @@ const LandingPage = () => {
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
 
   const { restaurant, loading, error } = useRestaurantDetails(restaurantId);
+  const actualRestaurantId = restaurant?.id?.toString() || restaurantId;
+  const { stations } = useStations(actualRestaurantId);
 
   // State for customer capture flow
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -62,7 +64,7 @@ const LandingPage = () => {
     const checkTable = async () => {
       // Skip if: no table scanned, or is 716/739 restaurant, or already checked
       if (!isScanned || !scannedTableId || !restaurantId) return;
-      if (isMultipleMenu(restaurant, restaurantId)) return;
+      if (isMultipleMenu(stations)) return;
       if (tableStatusCheck.isChecked) return;
 
       setTableStatusCheck(prev => ({ ...prev, isLoading: true }));
@@ -185,7 +187,7 @@ const LandingPage = () => {
           // On error, save as guest and go to menu
           const guestData = { name: capturedName, phone: capturedPhone, restaurantId };
           localStorage.setItem('guestCustomer', JSON.stringify(guestData));
-          if (isMultipleMenu(restaurant, actualRestaurantId)) {
+          if (isMultipleMenu(stations)) {
             navigate(`/${actualRestaurantId}/stations`);
           } else {
             navigate(`/${actualRestaurantId}/menu`);
@@ -202,7 +204,7 @@ const LandingPage = () => {
       const guestData = { name: capturedName, phone: capturedPhone, restaurantId };
       localStorage.setItem('guestCustomer', JSON.stringify(guestData));
     }
-    if (isMultipleMenu(restaurant, actualRestaurantId)) {
+    if (isMultipleMenu(stations)) {
       navigate(`/${actualRestaurantId}/stations`);
     } else {
       navigate(`/${actualRestaurantId}/menu`);
@@ -241,7 +243,7 @@ const LandingPage = () => {
 
       // Navigate to menu to add more items
       const actualRestaurantId = restaurant?.id || restaurantId;
-      if (isMultipleMenu(restaurant, actualRestaurantId)) {
+      if (isMultipleMenu(stations)) {
         navigate(`/${actualRestaurantId}/stations`);
       } else {
         navigate(`/${actualRestaurantId}/menu`);

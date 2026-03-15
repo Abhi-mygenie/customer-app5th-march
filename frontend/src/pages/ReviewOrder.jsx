@@ -5,7 +5,7 @@ import { isValidPhoneNumber } from 'react-phone-number-input';
 import Select from 'react-select';
 import { useCart } from '../context/CartContext';
 import { useRestaurantId } from '../utils/useRestaurantId';
-import { useRestaurantDetails, useTableConfig } from '../hooks/useMenuData';
+import { useRestaurantDetails, useTableConfig, useStations } from '../hooks/useMenuData';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { useAuth } from '../context/AuthContext';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
@@ -96,6 +96,7 @@ const ReviewOrder = () => {
   
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
+  const { stations } = useStations(numericRestaurantId);
 
   // Fetch admin config
   useEffect(() => {
@@ -422,7 +423,7 @@ const ReviewOrder = () => {
   }, [restaurant, isCustomerDetailsFilled, configShowLoyaltyPoints]);
 
   // Check if restaurant is 716 (table number required)
-  const isRestaurant716 = isMultipleMenu(restaurant, restaurantId);
+  const isRestaurant716 = isMultipleMenu(stations);
 
   // Order page configurability flags - from admin config
   const showCustomerDetails = configShowCustomerDetails;

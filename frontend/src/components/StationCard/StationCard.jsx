@@ -2,18 +2,19 @@ import React from 'react';
 import './StationCard.css';
 
 const StationCard = ({ station, isAvailable, onClick }) => {
+  const hasImage = station.image && station.image !== '';
   return (
     <div
-      className={`station-card ${!isAvailable ? 'disabled' : ''}`}
+      className={`station-card ${!isAvailable ? 'disabled' : ''} ${!hasImage ? 'no-image' : ''}`}
       onClick={onClick}
-      style={{ backgroundImage: `url(${station.image})` }}
+      style={hasImage ? { backgroundImage: `url(${station.image})` } : {}}
     >
       <div className="station-overlay">
         <h2 className="station-name">{station.name}</h2>
-        <p className="station-timing">{station.timing}</p>
+        {station.timing && <p className="station-timing">{station.timing}</p>}
       </div>
       
-      {!isAvailable && (
+      {!isAvailable && station.timing && (
         <div className="unavailable-overlay">
           <div className="unavailable-message">
             <svg 

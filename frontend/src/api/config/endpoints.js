@@ -33,6 +33,9 @@ export const ENDPOINTS = {
   // Restaurant products endpoint (POST)
   RESTAURANT_PRODUCTS: () => `${API_BASE_URL}/web/restaurant-product`,
 
+  // Menu Master - Fetches menus/stations for a restaurant (POST)
+  MENU_MASTER: () => `${API_BASE_URL}/web/menu-master`,
+
   // Restaurant Table/Room endpoints
   RESTAURANT_TABLE_ROOMS: () => `${API_BASE_URL}/web/table-config`,
   

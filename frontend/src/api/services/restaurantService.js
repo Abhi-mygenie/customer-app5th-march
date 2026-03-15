@@ -83,12 +83,20 @@ export const getRestaurantProducts = async (restaurantId, categoryId = "0" , sta
   }
 };
 
+export const getMenuMaster = async (restaurantId) => {
+  const response = await apiClient.post(ENDPOINTS.MENU_MASTER(), {
+    restaurant_id: String(restaurantId),
+  });
+  return response.data;
+};
+
 // restaurantService.js
 const restaurantService = {
   getRestaurantDetails,
   getMenuItems,
   getMenuSections,
   getRestaurantProducts,
+  getMenuMaster,
 };
 
 

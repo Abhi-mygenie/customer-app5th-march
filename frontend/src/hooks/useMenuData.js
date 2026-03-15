@@ -6,7 +6,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { getRestaurantDetails, getRestaurantProducts } from '../api/services/restaurantService';
+import { getRestaurantDetails, getRestaurantProducts, getMenuMaster } from '../api/services/restaurantService';
 // import { getStations } from '../api/services/stationService';
 import { getTableConfig } from '../api/services/tableRoomService';
 import { getErrorMessage } from '../api/utils/errorHandler';
@@ -148,14 +148,16 @@ export const useMenuSections = (stationId, restaurantId) => {
   };
 };
 
+// Standard menus that every restaurant has — everything else is a "station"
+const STANDARD_MENUS = ['Normal', 'Party', 'Premium'];
+
 /**
- * Hook to fetch all stations
- * Uses React Query for automatic caching and deduplication
+ * Hook to fetch stations (non-standard menus) via menu-master API
+ * Filters out Normal/Party/Premium to derive station menus dynamically
  * @param {string} restaurantId - Restaurant ID (required)
  * @returns {Object} { stations, loading, error, errorMessage, refetch }
  */
 export const useStations = (restaurantId) => {
-  // Use provided restaurantId or fallback
   const finalRestaurantId = restaurantId;
 
   const {
@@ -166,28 +168,22 @@ export const useStations = (restaurantId) => {
   } = useQuery({
     queryKey: ['stations', finalRestaurantId],
     queryFn: async () => {
-      try {
-        // const data = await getStations(finalRestaurantId);
-        // return data || [];
-        const stationsData = require('../data/stations.json');
-        return stationsData || [];
-      } catch (err) {
-        // Fallback to local JSON if API fails (for development)
-        if (process.env.NODE_ENV === 'development') {
-          try {
-            const stationsData = require('../data/stations.json');
-            return stationsData || [];
-          } catch (fallbackError) {
-            console.error('Fallback also failed:', fallbackError);
-            throw err; // Re-throw original error if fallback fails
-          }
-        }
-        throw err;
-      }
+      const data = await getMenuMaster(finalRestaurantId);
+      const menus = data?.menus || [];
+      // Filter out standard menus to get station-specific menus
+      const stationMenus = menus.filter(m => !STANDARD_MENUS.includes(m.menu_name));
+      // Map to expected station format with placeholders for image/timing
+      return stationMenus.map(menu => ({
+        id: menu.menu_name,
+        name: menu.menu_name,
+        menuId: menu.id,
+        image: null,   // Placeholder — will come from API later
+        timing: null,  // Placeholder — null means always available
+      }));
     },
-    enabled: !!finalRestaurantId, // Only fetch if restaurantId exists
-    staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    enabled: !!finalRestaurantId,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     retry: 3,
   });
 

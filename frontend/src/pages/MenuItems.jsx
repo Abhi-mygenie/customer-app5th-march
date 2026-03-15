@@ -13,7 +13,6 @@ import RepeatItemModal from '../components/RepeatItemModal/RepeatItemModal';
 import { MenuItemSkeleton, HeaderSkeleton, CategoryBoxSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import { useMenuSections, useStations, useRestaurantDetails, useDietaryTags } from '../hooks/useMenuData';
-import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useCart } from '../context/CartContext';

@@ -27,7 +27,7 @@ import {
   IoCheckmarkCircle,
   IoCloseCircle,
 } from 'react-icons/io5';
-import { getRestaurantProducts, getRestaurantDetails } from '../../api/services/restaurantService';
+import { getRestaurantProducts, getRestaurantDetails, getMenuMaster } from '../../api/services/restaurantService';
 import { isMultipleMenu } from '../../api/utils/restaurantIdConfig';
 import { useAuth } from '../../context/AuthContext';
 import './MenuOrderTab.css';
@@ -224,7 +224,7 @@ const MenuOrderTab = ({ config, setConfig }) => {
   const [activeId, setActiveId] = useState(null);
 
   const restaurantId = user?.restaurant_id || user?.id;
-  const isMultiMenu = restaurant ? isMultipleMenu(restaurant, restaurantId) : false;
+  const isMultiMenu = isMultipleMenu(stations);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -237,14 +237,21 @@ const MenuOrderTab = ({ config, setConfig }) => {
   }, [restaurantId]);
 
   useEffect(() => {
-    if (!isMultiMenu) return;
-    try {
-      const stationsData = require('../../data/stations.json');
-      setStations(stationsData || []);
-    } catch (e) {
-      setStations([]);
-    }
-  }, [isMultiMenu]);
+    if (!restaurantId) return;
+    // Fetch stations from menu-master API
+    getMenuMaster(restaurantId).then(data => {
+      const menus = data?.menus || [];
+      const STANDARD_MENUS = ['Normal', 'Party', 'Premium'];
+      const stationMenus = menus.filter(m => !STANDARD_MENUS.includes(m.menu_name));
+      setStations(stationMenus.map(menu => ({
+        id: menu.menu_name,
+        name: menu.menu_name,
+        menuId: menu.id,
+        image: null,
+        timing: null,
+      })));
+    }).catch(() => setStations([]));
+  }, [restaurantId]);
 
   // Fetch categories + items (non-multiple-menu)
   const fetchCategories = useCallback(async () => {
