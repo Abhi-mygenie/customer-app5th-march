@@ -22,6 +22,15 @@ export const AuthProvider = ({ children }) => {
             }
           });
           
+          // Handle non-JSON responses
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            // Server unavailable, keep token but don't validate
+            console.warn('Auth check: Server returned non-JSON response');
+            setLoading(false);
+            return;
+          }
+          
           if (response.ok) {
             const data = await response.json();
             setUser(data.user);
