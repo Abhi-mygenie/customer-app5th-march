@@ -263,9 +263,11 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
         <>
           {/* Selected menu indicator */}
           {multipleMenu && selectedStation && (
-            <div className="selected-menu-indicator">
-              Showing items from: <strong>{selectedStationName}</strong>
-              {menuItems.length > 0 && <span className="item-count">({menuItems.length} items)</span>}
+            <div className="selected-station-header">
+              <div className="station-info">
+                <span className="station-title">📍 {selectedStationName}</span>
+                <span className="station-count">{menuItems.length} items</span>
+              </div>
             </div>
           )}
 
