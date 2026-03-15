@@ -696,4 +696,29 @@
   .station-categories {
     padding-left: 16px;
   }
+
+  /* Station Pills Responsive */
+  .station-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .station-pill {
+    flex-shrink: 0;
+    min-width: 100px;
+    padding: 10px 14px;
+  }
+
+  .selected-station-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .station-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
