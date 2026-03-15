@@ -94,6 +94,17 @@
 - [x] Sidebar now shows only categories of the selected station (not a mix of stations + categories)
 - [x] One-line fix in MenuItems.jsx — pass empty stationsData to MenuPanel so it uses the clean "categories only" view
 
+### Mar 2026 - Fix: Subdomain Routing Resolution
+- [x] Fixed `useRestaurantId.js` to resolve subdomain (e.g., `youngmonk.mygenie.online`) → numeric ID (`709`) via restaurant-info API
+- [x] Module-level cache ensures resolution happens only once per subdomain
+- [x] All consumers (LandingPage, MenuItems, ReviewOrder, HamburgerMenu, RestaurantConfigContext, etc.) automatically get numeric ID
+- [x] Path-based routing (`/709`, `/716`) continues to work unchanged
+- [x] Config fetch (`/api/config/{id}`) now correctly uses numeric ID in subdomain mode
+
+### Mar 2026 - Audit
+- [x] Full codebase audit documented at `/app/memory/AUDIT_REPORT.md`
+- [x] Found: 4 security issues, 7 dead code items, 5 hardcoded values, 3 code bugs, 5 refactoring opportunities
+
 ## Backlog
 - P1: Remove silent fallbacks for env variables (fail fast)
 - P1: Test drag-drop with large menus
