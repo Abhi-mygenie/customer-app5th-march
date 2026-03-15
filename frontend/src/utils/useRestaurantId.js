@@ -112,14 +112,12 @@ export const useRestaurantId = () => {
   const envRestaurantId = process.env.REACT_APP_RESTAURANT_ID;
   const defaultRestaurantId = "478"; // 18march - hardcoded for preview
 
-  // Priority: path > query > resolved numeric ID > raw subdomain > env > default
+  // Priority: path > query > resolved numeric ID > (null while resolving) > env > default
   const restaurantId =
     pathRestaurantId ||
     queryRestaurantId ||
     resolvedId ||
-    subdomain ||
-    envRestaurantId ||
-    defaultRestaurantId;
+    (needsResolution ? null : (subdomain || envRestaurantId || defaultRestaurantId));
 
   const isSubdomainMode = needsResolution;
 
