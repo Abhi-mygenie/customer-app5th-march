@@ -115,24 +115,24 @@
 }
 
 /* ============================================
-   Toolbar
+   Toolbar - Scoped to admin
    ============================================ */
 
 /* Toolbar */
-.menu-order-toolbar {
+.menu-order-tab .menu-order-toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
 }
 
-.search-box {
+.menu-order-tab .search-box {
   flex: 1;
   position: relative;
   max-width: 400px;
 }
 
-.search-box .search-icon {
+.menu-order-tab .search-box .search-icon {
   position: absolute;
   left: 14px;
   top: 50%;
@@ -141,7 +141,7 @@
   font-size: 18px;
 }
 
-.search-box input {
+.menu-order-tab .search-box input {
   width: 100%;
   padding: 12px 14px 12px 42px;
   border: 1px solid #e5e7eb;
@@ -151,14 +151,14 @@
   transition: all 0.2s;
 }
 
-.search-box input:focus {
+.menu-order-tab .search-box input:focus {
   outline: none;
   border-color: #3b82f6;
   background: #fff;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.refresh-btn {
+.menu-order-tab .refresh-btn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -173,16 +173,16 @@
   transition: all 0.2s;
 }
 
-.refresh-btn:hover {
+.menu-order-tab .refresh-btn:hover {
   background: #e5e7eb;
 }
 
-.refresh-btn svg {
+.menu-order-tab .refresh-btn svg {
   font-size: 16px;
 }
 
-/* Info Banner */
-.menu-order-info {
+/* Info Banner - Scoped to admin */
+.menu-order-tab .menu-order-info {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -195,13 +195,13 @@
   color: #1e40af;
 }
 
-.menu-order-info .info-icon {
+.menu-order-tab .menu-order-info .info-icon {
   font-size: 18px;
 }
 
-/* Categories List */
-.categories-list,
-.stations-list {
+/* Categories List - Scoped to admin */
+.menu-order-tab .categories-list,
+.menu-order-tab .stations-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
