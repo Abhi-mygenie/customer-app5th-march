@@ -491,136 +491,195 @@ const MenuOrderTab = ({ config, setConfig }) => {
     return items.filter((item) => item.name.toLowerCase().includes(term));
   };
 
-  // ============ RENDER: MULTIPLE MENU (3-layer) ============
+  // ============ RENDER: MULTIPLE MENU (Station Pills + Categories) ============
   if (isMultiMenu) {
-    const mergedStations = filterBySearch(getMergedStations());
+    const mergedStations = getMergedStations();
+    const selectedStationData = mergedStations.find(s => s.id === selectedStation);
+    const stationCats = selectedStation ? filterBySearch(getMergedStationCats(selectedStation)) : [];
+
+    // Auto-select first station if none selected
+    if (!selectedStation && mergedStations.length > 0 && !loading) {
+      setSelectedStation(mergedStations[0].id);
+    }
+
     return (
       <div className="menu-order-tab modern" data-testid="menu-order-tab">
-        <div className="menu-order-toolbar">
-          <div className="search-box">
-            <IoSearch className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search stations, categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              data-testid="menu-search"
-            />
+        {/* Station Pills */}
+        <div className="station-pills-container">
+          <div className="station-pills-label">Select Menu:</div>
+          <div className="station-pills" data-testid="station-pills">
+            {mergedStations.map((station) => (
+              <button
+                key={station.id}
+                className={`station-pill ${selectedStation === station.id ? 'active' : ''} ${!station.visible ? 'hidden-pill' : ''}`}
+                onClick={() => {
+                  setSelectedStation(station.id);
+                  setSearchTerm('');
+                }}
+                data-testid={`station-pill-${station.id}`}
+              >
+                <span className="pill-name">{station.name}</span>
+                {station.timing && <span className="pill-timing">{station.timing}</span>}
+                {!station.visible && <span className="pill-hidden-badge">Hidden</span>}
+              </button>
+            ))}
           </div>
-          <button
-            className="refresh-btn"
-            onClick={fetchStationCategories}
-            data-testid="menu-order-refresh"
-          >
-            <IoRefresh /> Refresh
-          </button>
         </div>
 
-        <div className="menu-order-info">
-          <span className="info-icon">💡</span>
-          <span>Drag items using the handle to reorder. Toggle visibility with the switch.</span>
-        </div>
-
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleStationDragEnd}
-        >
-          <SortableContext
-            items={mergedStations.map((s) => s.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="stations-list" data-testid="stations-list">
-              {mergedStations.map((station) => (
-                <SortableItem key={station.id} id={station.id}>
-                  {({ listeners, isDragging }) => (
-                    <div
-                      className={`station-card ${!station.visible ? 'hidden-station' : ''} ${isDragging ? 'dragging' : ''}`}
-                    >
-                      <div
-                        className="station-header"
-                        onClick={() =>
-                          setExpandedStations((prev) => ({
-                            ...prev,
-                            [station.id]: !prev[station.id],
-                          }))
-                        }
-                      >
-                        <DragHandle listeners={listeners} />
-                        <span className="station-name">{station.name}</span>
-                        <div className="station-actions">
-                          <ToggleSwitch
-                            checked={station.visible}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              const updated = getMergedStations().map((s) =>
-                                s.id === station.id ? { ...s, visible: !s.visible } : s
-                              );
-                              updateStationConfig(updated);
-                            }}
-                            label={station.name}
-                          />
-                          <button className="expand-btn">
-                            {expandedStations[station.id] ? (
-                              <IoChevronDown />
-                            ) : (
-                              <IoChevronForward />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {expandedStations[station.id] && (
-                        <div className="station-categories">
-                          {getMergedStationCats(station.id).map((cat, cIdx) => {
-                            const items = getMergedStationItems(station.id, cat.id);
-                            const expandKey = `${station.id}__${cat.id}`;
-                            return (
-                              <CategoryCard
-                                key={cat.id}
-                                cat={cat}
-                                index={cIdx}
-                                items={items}
-                                expanded={expandedCategories[expandKey]}
-                                onToggleExpand={() =>
-                                  setExpandedCategories((prev) => ({
-                                    ...prev,
-                                    [expandKey]: !prev[expandKey],
-                                  }))
-                                }
-                                onToggleVisibility={() => {
-                                  const cats = getMergedStationCats(station.id);
-                                  const updated = cats.map((c) =>
-                                    c.id === cat.id ? { ...c, visible: !c.visible } : c
-                                  );
-                                  updateStationCatConfig(station.id, updated);
-                                }}
-                                onItemReorder={(newItems) =>
-                                  updateStationItemConfig(station.id, cat.id, newItems)
-                                }
-                                onItemToggle={(iIdx) => {
-                                  const updated = [...items];
-                                  updated[iIdx] = {
-                                    ...updated[iIdx],
-                                    visible: !updated[iIdx].visible,
-                                  };
-                                  updateStationItemConfig(station.id, cat.id, updated);
-                                }}
-                                listeners={{}}
-                                isDragging={false}
-                              />
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </SortableItem>
-              ))}
+        {/* Selected Station Header */}
+        {selectedStation && selectedStationData && (
+          <div className="selected-station-header">
+            <div className="station-info">
+              <span className="station-title">📍 {selectedStationData.name}</span>
+              <span className="station-count">{stationCats.length} categories</span>
             </div>
-          </SortableContext>
-        </DndContext>
+            <div className="station-controls">
+              <ToggleSwitch
+                checked={selectedStationData.visible}
+                onChange={() => {
+                  const updated = getMergedStations().map((s) =>
+                    s.id === selectedStation ? { ...s, visible: !s.visible } : s
+                  );
+                  updateStationConfig(updated);
+                }}
+                label={selectedStationData.name}
+              />
+              <button
+                className="refresh-btn"
+                onClick={fetchStationCategories}
+                data-testid="menu-order-refresh"
+              >
+                <IoRefresh /> Refresh
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Search & Info */}
+        {selectedStation && (
+          <>
+            <div className="menu-order-toolbar">
+              <div className="search-box">
+                <IoSearch className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  data-testid="menu-search"
+                />
+              </div>
+            </div>
+
+            <div className="menu-order-info">
+              <span className="info-icon">💡</span>
+              <span>Drag categories to reorder. Click to expand and manage items.</span>
+            </div>
+          </>
+        )}
+
+        {/* Categories List for Selected Station */}
+        {selectedStation && (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={(event) => {
+              const { active, over } = event;
+              setActiveId(null);
+              if (!over || active.id === over.id) return;
+              const cats = getMergedStationCats(selectedStation);
+              const oldIndex = cats.findIndex((c) => c.id === active.id);
+              const newIndex = cats.findIndex((c) => c.id === over.id);
+              if (oldIndex !== -1 && newIndex !== -1) {
+                updateStationCatConfig(selectedStation, arrayMove(cats, oldIndex, newIndex));
+              }
+            }}
+          >
+            <SortableContext
+              items={stationCats.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="categories-list" data-testid="categories-list">
+                {stationCats.map((cat, cIdx) => {
+                  const items = getMergedStationItems(selectedStation, cat.id);
+                  return (
+                    <SortableItem key={cat.id} id={cat.id}>
+                      {({ listeners, isDragging }) => (
+                        <CategoryCard
+                          cat={cat}
+                          index={cIdx}
+                          items={items}
+                          expanded={expandedCategories[cat.id]}
+                          onToggleExpand={() =>
+                            setExpandedCategories((prev) => ({
+                              ...prev,
+                              [cat.id]: !prev[cat.id],
+                            }))
+                          }
+                          onToggleVisibility={() => {
+                            const cats = getMergedStationCats(selectedStation);
+                            const updated = cats.map((c) =>
+                              c.id === cat.id ? { ...c, visible: !c.visible } : c
+                            );
+                            updateStationCatConfig(selectedStation, updated);
+                          }}
+                          onItemReorder={(newItems) =>
+                            updateStationItemConfig(selectedStation, cat.id, newItems)
+                          }
+                          onItemToggle={(iIdx) => {
+                            const updated = [...items];
+                            updated[iIdx] = {
+                              ...updated[iIdx],
+                              visible: !updated[iIdx].visible,
+                            };
+                            updateStationItemConfig(selectedStation, cat.id, updated);
+                          }}
+                          listeners={listeners}
+                          isDragging={isDragging}
+                        />
+                      )}
+                    </SortableItem>
+                  );
+                })}
+              </div>
+            </SortableContext>
+
+            <DragOverlay>
+              {activeId && (
+                <div className="drag-overlay-item">
+                  {stationCats.find((c) => c.id === activeId)?.name || 'Category'}
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
+        )}
+
+        {/* Empty State */}
+        {selectedStation && stationCats.length === 0 && !loading && (
+          <div className="menu-order-empty">
+            <span className="empty-icon">📋</span>
+            <h3>No Categories Found</h3>
+            <p>No categories available for {selectedStationData?.name || 'this menu'}.</p>
+          </div>
+        )}
+
+        {/* No Station Selected */}
+        {!selectedStation && !loading && (
+          <div className="menu-order-empty">
+            <span className="empty-icon">👆</span>
+            <h3>Select a Menu</h3>
+            <p>Choose a menu from the pills above to manage its categories.</p>
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="menu-order-loading">
+            <div className="loading-spinner" />
+            <span>Loading menu data...</span>
+          </div>
+        )}
       </div>
     );
   }
