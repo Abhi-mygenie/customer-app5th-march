@@ -483,7 +483,7 @@
   font-size: 18px;
 }
 
-.item-index {
+.menu-order-tab .item-index {
   min-width: 24px;
   font-size: 11px;
   font-weight: 600;
@@ -491,7 +491,7 @@
   text-align: center;
 }
 
-.item-name {
+.menu-order-tab .item-name {
   flex: 1;
   font-size: 13px;
   color: #374151;
@@ -501,7 +501,7 @@
   margin-left: 8px;
 }
 
-.visibility-btn {
+.menu-order-tab .visibility-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -516,22 +516,22 @@
   font-size: 18px;
 }
 
-.visibility-btn:hover {
+.menu-order-tab .visibility-btn:hover {
   background: #f3f4f6;
   color: #6b7280;
 }
 
-.visibility-btn.visible {
+.menu-order-tab .visibility-btn.visible {
   color: #3b82f6;
 }
 
-.visibility-btn.visible:hover {
+.menu-order-tab .visibility-btn.visible:hover {
   color: #2563eb;
 }
 
 /* Empty States */
-.empty-items,
-.no-results {
+.menu-order-tab .empty-items,
+.menu-order-tab .no-results {
   padding: 20px;
   text-align: center;
   color: #9ca3af;
