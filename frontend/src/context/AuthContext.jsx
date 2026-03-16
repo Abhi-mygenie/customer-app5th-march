@@ -147,6 +147,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('auth_token');
   };
 
+  // Direct setter for auth state (used when Login.jsx handles its own fetch)
+  const setAuth = (newToken, newUser, newUserType) => {
+    setUser(newUser);
+    setUserType(newUserType);
+    setToken(newToken);
+    localStorage.setItem('auth_token', newToken);
+  };
+
   const value = {
     user,
     userType,
@@ -157,6 +165,7 @@ export const AuthProvider = ({ children }) => {
     isRestaurant: userType === 'restaurant',
     sendOTP,
     login,
+    setAuth,
     logout
   };
 

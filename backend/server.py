@@ -421,13 +421,19 @@ async def unified_login(request: LoginRequest):
         }, {"_id": 0})
     
     if customer:
-        # Customer found - verify OTP
-        if not request.otp:
-            raise HTTPException(status_code=400, detail="OTP required for customer login")
-        
-        phone = customer.get("phone")
-        if not verify_otp(phone, request.otp):
-            raise HTTPException(status_code=401, detail="Invalid or expired OTP")
+        # Customer found - verify via OTP or password
+        if request.otp:
+            phone = customer.get("phone")
+            if not verify_otp(phone, request.otp):
+                raise HTTPException(status_code=401, detail="Invalid or expired OTP")
+        elif request.password:
+            password_hash = customer.get("password_hash")
+            if not password_hash:
+                raise HTTPException(status_code=401, detail="No password set. Please use OTP to login.")
+            if not verify_password(request.password, password_hash):
+                raise HTTPException(status_code=401, detail="Invalid password")
+        else:
+            raise HTTPException(status_code=400, detail="Password or OTP required for login")
         
         token = create_token(customer["id"], "customer")
         return LoginResponse(
@@ -442,7 +448,8 @@ async def unified_login(request: LoginRequest):
                 "tier": customer.get("tier", "Bronze"),
                 "total_points": customer.get("total_points", 0),
                 "wallet_balance": customer.get("wallet_balance", 0.0),
-                "user_id": customer.get("user_id", "")
+                "user_id": customer.get("user_id", ""),
+                "has_password": bool(customer.get("password_hash"))
             },
             restaurant_context={
                 "restaurant_id": request.restaurant_id,
