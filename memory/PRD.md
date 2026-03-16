@@ -35,51 +35,6 @@
 - [x] Updated App.js with nested admin routes
 - [x] Customer pages remain unchanged (mobile-first)
 
-## Key Features (from codebase)
-- Restaurant customer app with multi-tenant support
-- Authentication (OTP + Password based)
-- Menu browsing with stations
-- Cart & Order management
-- Customer profiles with loyalty points
-- **Admin settings for restaurant customization (NOW WEB-OPTIMIZED)**
-- Dietary tags support
-- Promotional banners
-
-## Core Requirements
-- Connect to remote MongoDB (mygenie database)
-- Serve frontend on port 3000
-- Serve backend API on port 8001
-- Admin panel uses web layout (sidebar)
-- Customer pages use mobile layout
-
-## File Structure - Admin Layout
-```
-/app/frontend/src/
-├── layouts/
-│   ├── AdminLayout.jsx
-│   └── AdminLayout.css
-├── pages/admin/
-│   ├── AdminSettingsPage.jsx
-│   ├── AdminBrandingPage.jsx
-│   ├── AdminVisibilityPage.jsx
-│   ├── AdminBannersPage.jsx
-│   ├── AdminContentPage.jsx
-│   ├── AdminMenuPage.jsx
-│   ├── AdminDietaryPage.jsx
-│   └── AdminPages.css
-└── context/
-    └── AdminConfigContext.jsx
-```
-
-## Routes
-- `/admin/settings` - Settings page
-- `/admin/branding` - Branding page
-- `/admin/visibility` - Visibility toggles
-- `/admin/banners` - Banner management
-- `/admin/content` - Content pages
-- `/admin/menu` - Menu ordering
-- `/admin/dietary` - Dietary tags
-
 ### Jan 2026 - Menu Order UX Improvements
 - [x] Added drag-and-drop using @dnd-kit library
 - [x] Search bar for filtering categories
@@ -91,40 +46,61 @@
 
 ### Mar 2026 - Bug Fix: Multi-Menu Sidebar
 - [x] Fixed customer-facing sidebar for multi-menu restaurants (716/739)
-- [x] Sidebar now shows only categories of the selected station (not a mix of stations + categories)
-- [x] One-line fix in MenuItems.jsx — pass empty stationsData to MenuPanel so it uses the clean "categories only" view
 
 ### Mar 2026 - Fix: Subdomain Routing Resolution
-- [x] Fixed `useRestaurantId.js` to resolve subdomain (e.g., `youngmonk.mygenie.online`) → numeric ID (`709`) via restaurant-info API
-- [x] Module-level cache ensures resolution happens only once per subdomain
-- [x] All consumers (LandingPage, MenuItems, ReviewOrder, HamburgerMenu, RestaurantConfigContext, etc.) automatically get numeric ID
-- [x] Path-based routing (`/709`, `/716`) continues to work unchanged
-- [x] Config fetch (`/api/config/{id}`) now correctly uses numeric ID in subdomain mode
+- [x] Fixed `useRestaurantId.js` to resolve subdomain → numeric ID via restaurant-info API
 
 ### Mar 2026 - Audit
 - [x] Full codebase audit documented at `/app/memory/AUDIT_REPORT.md`
-- [x] Found: 4 security issues, 7 dead code items, 5 hardcoded values, 3 code bugs, 5 refactoring opportunities
+
+### Mar 2026 - Multi-Layered Timing Controls (VERIFIED)
+- [x] **Master Open/Close Toggle**: Restaurant-wide ordering toggle in Admin Settings (default: ON)
+- [x] **Multi-Shift Support**: Up to 4 operating shifts with start/end times (replaces single open/close)
+- [x] **Category Timing Overrides**: Admin can set specific time windows for menu categories
+- [x] **Item Timing Overrides**: Admin can set specific time windows for individual items
+- [x] **POS Null Time Handling**: Items with null POS times treated as 24/7 available
+- [x] **Timing Cascade**: live_web → master toggle → shifts → category timing → item timing → POS times
+- [x] **Testing**: 100% pass rate - backend (9/9) and frontend (all features) verified via testing agent
+
+## Key Features (from codebase)
+- Restaurant customer app with multi-tenant support
+- Authentication (OTP + Password based)
+- Menu browsing with stations
+- Cart & Order management
+- Customer profiles with loyalty points
+- Admin settings for restaurant customization (web-optimized)
+- Dietary tags support
+- Promotional banners
+
+## Core Requirements
+- Connect to remote MongoDB (mygenie database)
+- Serve frontend on port 3000
+- Serve backend API on port 8001
+- Admin panel uses web layout (sidebar)
+- Customer pages use mobile layout
 
 ## In Progress
 - P0: Fix station name mismatch — `/web/menu-master` returns `menu_name` (e.g. "GROK") but `/web/restaurant-product` expects `station_name` (e.g. "Grok") via `food_for` param. Fix in `useStations` hook in `/app/frontend/src/hooks/useMenuData.js`. Test with restaurant 716 (multi-menu) and 709 (single-menu).
 
 ## Backlog
+- P1: Admin QR Scanner Page (plan below)
 - P1: Remove silent fallbacks for env variables (fail fast)
 - P1: Test drag-drop with large menus
 - P2: Global CSS scoping review (admin styles vs customer styles)
 - P2: Add undo/redo for reordering
-- P2: Code audit action items (see `/app/memory/CODE_AUDIT_REPORT.md`)
+- P2: Code audit action items (see `/app/memory/AUDIT_REPORT.md`)
+- P2: Dynamic station images & timings
 
 ## Upcoming — Admin QR Scanner Page
 - **Feature:** New admin panel page "QR Scanners" for generating & downloading QR codes
 - **Route:** `/admin/qr-scanners` (add to sidebar)
 - **Data Sources:**
-  - `subdomain` + `restaurant_id` → from login/auth context (already known)
+  - `subdomain` + `restaurant_id` → from login/auth context
   - Tables & Rooms → `GET /api/v2/vendoremployee/restaurant-settings/table-config` (auth: Bearer token)
     - Returns `{ data: { tables: [...], restaurant_id, restaurant_name } }`
     - Each table: `{ id, table_no, rtype: "TB"|"RM", title, status, qr_code_urls }`
     - Test token: `nY44KJn3ffbJQ2NQryFmFSLDAU9J5qsRJyR7MMFYaWesliKz23JDerMk51Bz3C70VU3tN8uQ4yI1D99My2BaoBfLrhD3wLaAJpTaSMpuvaANH4i3McGQPsCY`
-  - Menu → from `/web/menu-master` (Normal menu only for Phase 1; multi-menu later)
+  - Menu → from `/web/menu-master`
 - **QR URL Patterns:**
   - Dine-In (generic): `https://{subdomain}/{rid}?orderType=dinein`
   - Delivery: `https://{subdomain}/{rid}?orderType=delivery`
@@ -132,9 +108,23 @@
   - Dine-In per Table: `https://{subdomain}/{rid}?tableId={id}&tableName={table_no}&type=table&orderType=dinein`
   - Dine-In per Room: `https://{subdomain}/{rid}?tableId={id}&tableName={table_no}&type=room&orderType=dinein`
 - **Features:** Generate QR client-side (e.g. `qrcode.react`), download as PNG, bulk download as ZIP
-- **Phase 2:** Add multi-menu/station QR support, dynamic station images & timings
+- **Phase 2:** Add multi-menu/station QR support
 
-## Next Tasks
-- Fix station name mismatch (P0 blocker)
-- Remove silent fallbacks for environment variables
-- Build Admin QR Scanner page (when user returns to this task)
+## Routes
+- `/admin/settings` - Settings page
+- `/admin/branding` - Branding page
+- `/admin/visibility` - Visibility toggles
+- `/admin/banners` - Banner management
+- `/admin/content` - Content pages
+- `/admin/menu` - Menu ordering
+- `/admin/dietary` - Dietary tags
+
+## DB Schema - Timing Fields
+The `customer_app_config` collection:
+- `restaurantOpen: bool` (default: true)
+- `restaurantShifts: List[Dict]` (default: [{start: "06:00", end: "03:00"}])
+- `categoryTimings: Dict` (default: {})
+- `itemTimings: Dict` (default: {})
+
+## Admin Credentials
+- Restaurant 709: email=owner@youngmonk.com, password=admin123
