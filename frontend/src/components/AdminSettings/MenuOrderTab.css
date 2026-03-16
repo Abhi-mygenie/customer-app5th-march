@@ -715,3 +715,139 @@
     justify-content: space-between;
   }
 }
+
+
+/* ============================================
+   Timing Editor
+   ============================================ */
+.timing-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.timing-display:hover {
+  border-color: #94a3b8;
+}
+
+.timing-display.pos-default {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.timing-display.admin-override {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+  border-color: #bfdbfe;
+}
+
+.timing-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.timing-text {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.timing-reset-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  margin-left: 2px;
+  transition: color 0.2s;
+}
+
+.timing-reset-btn:hover {
+  color: #ef4444;
+}
+
+.timing-editor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.timing-input {
+  width: 90px;
+  padding: 3px 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #334155;
+  background: #fff;
+}
+
+.timing-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.timing-sep {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.timing-save-btn,
+.timing-cancel-btn {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 2px;
+  font-size: 18px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.timing-save-btn {
+  color: #22c55e;
+}
+
+.timing-save-btn:hover {
+  background: #f0fdf4;
+}
+
+.timing-cancel-btn {
+  color: #94a3b8;
+}
+
+.timing-cancel-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Item row timing adjustments */
+.item-row .timing-display {
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+.item-row .timing-editor {
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+/* Category header timing */
+.category-actions .timing-display,
+.category-actions .timing-editor {
+  margin-right: 8px;
+}

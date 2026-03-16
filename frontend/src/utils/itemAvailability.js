@@ -40,57 +40,96 @@ export const timeToSeconds = (timeStr) => {
 };
 
 /**
- * Check if an item is available based on live_web and time range
+ * Check if an item is available based on live_web, admin timings, and POS time range
  * 
- * Logic (in order):
- * 1. If live_web !== 'Y' → UNAVAILABLE
- * 2. If either time is null → UNAVAILABLE
- * 3. If start === end → AVAILABLE (always)
- * 4. Time range check:
- *    - Same day (start < end): current >= start AND current <= end
- *    - Overnight (start > end): current >= start OR current <= end
+ * Cascade:
+ * 1. live_web !== 'Y' → UNAVAILABLE
+ * 2. Category has admin timing? → check it
+ * 3. Item has admin timing? → use it. Else use POS times. Null POS = 24hr available.
  * 
  * @param {Object} item - Menu item object
- * @param {string} item.live_web - "Y" or "N" (or null/undefined)
- * @param {string|null} item.web_available_time_starts - Time string "HH:MM:SS" or null
- * @param {string|null} item.web_available_time_ends - Time string "HH:MM:SS" or null
- * @param {number} currentTimeInSeconds - Current time in seconds since midnight (0-86399)
- * @returns {boolean} true if item is available, false otherwise
+ * @param {number} currentTimeInSeconds - Current time in seconds since midnight
+ * @param {Object} opts - Optional admin timing overrides
+ * @param {Object|null} opts.categoryTiming - { start: "HH:MM", end: "HH:MM" } or null
+ * @param {Object|null} opts.itemTiming - { start: "HH:MM", end: "HH:MM" } or null
+ * @returns {boolean} true if item is available
  */
-export const isItemAvailable = (item, currentTimeInSeconds) => {
-  // STEP 1: Check live_web
-  // Treat null/undefined as 'N' (unavailable)
+export const isItemAvailable = (item, currentTimeInSeconds, opts = {}) => {
+  // STEP 1: Check live_web — POS kill switch
   if (!item.live_web || item.live_web !== 'Y') {
     return false;
   }
 
-  // STEP 2: Check if times are null
+  // STEP 2: Category admin timing check
+  if (opts.categoryTiming) {
+    if (!isWithinTimeRange(opts.categoryTiming.start, opts.categoryTiming.end, currentTimeInSeconds)) {
+      return false;
+    }
+  }
+
+  // STEP 3: Item timing — admin override takes priority, then POS, then 24hr
+  if (opts.itemTiming) {
+    return isWithinTimeRange(opts.itemTiming.start, opts.itemTiming.end, currentTimeInSeconds);
+  }
+
+  // No admin override — use POS times
   if (!item.web_available_time_starts || !item.web_available_time_ends) {
-    return false;
-  }
-
-  // Convert times to seconds
-  const startSeconds = timeToSeconds(item.web_available_time_starts);
-  const endSeconds = timeToSeconds(item.web_available_time_ends);
-
-  // If conversion failed, item is unavailable
-  if (startSeconds === null || endSeconds === null) {
-    return false;
-  }
-
-  // STEP 3: If start === end, item is always available
-  if (startSeconds === endSeconds) {
+    // Null POS times = 24hr available
     return true;
   }
 
-  // STEP 4: Time range check
+  // POS times exist — check them
+  const startSeconds = timeToSeconds(item.web_available_time_starts);
+  const endSeconds = timeToSeconds(item.web_available_time_ends);
+
+  if (startSeconds === null || endSeconds === null) {
+    return true; // Malformed POS times treated as 24hr
+  }
+
+  if (startSeconds === endSeconds) {
+    return true; // start === end means always available
+  }
+
   if (startSeconds < endSeconds) {
-    // Same day range: current >= start AND current <= end
     return currentTimeInSeconds >= startSeconds && currentTimeInSeconds <= endSeconds;
   } else {
-    // Overnight range (start > end): current >= start OR current <= end
     return currentTimeInSeconds >= startSeconds || currentTimeInSeconds <= endSeconds;
   }
+};
+
+/**
+ * Check if current time is within a HH:MM time range
+ * Works with both HH:MM and HH:MM:SS formats
+ * @param {string} start - Start time
+ * @param {string} end - End time
+ * @param {number} currentTimeInSeconds - Current time in seconds since midnight
+ * @returns {boolean}
+ */
+const isWithinTimeRange = (start, end, currentTimeInSeconds) => {
+  if (!start || !end) return true; // No timing = always available
+
+  const startSec = parseTimeToSeconds(start);
+  const endSec = parseTimeToSeconds(end);
+
+  if (startSec === null || endSec === null) return true;
+  if (startSec === endSec) return true;
+
+  if (startSec < endSec) {
+    return currentTimeInSeconds >= startSec && currentTimeInSeconds <= endSec;
+  } else {
+    return currentTimeInSeconds >= startSec || currentTimeInSeconds <= endSec;
+  }
+};
+
+/**
+ * Parse HH:MM or HH:MM:SS to seconds since midnight
+ */
+const parseTimeToSeconds = (timeStr) => {
+  if (!timeStr || typeof timeStr !== 'string') return null;
+  const parts = timeStr.split(':').map(Number);
+  if (parts.length < 2 || parts.some(isNaN)) return null;
+  const [h, m, s = 0] = parts;
+  return (h * 3600) + (m * 60) + s;
 };
 
 /**

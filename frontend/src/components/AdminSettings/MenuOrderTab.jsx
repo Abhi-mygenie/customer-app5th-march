@@ -26,6 +26,8 @@ import {
   IoSearch,
   IoCheckmarkCircle,
   IoCloseCircle,
+  IoTimeOutline,
+  IoCloseOutline,
 } from 'react-icons/io5';
 import { getRestaurantProducts, getRestaurantDetails, getMenuMaster } from '../../api/services/restaurantService';
 import { isMultipleMenu } from '../../api/utils/restaurantIdConfig';
@@ -78,6 +80,57 @@ const ToggleSwitch = ({ checked, onChange, label }) => (
   </button>
 );
 
+// Format HH:MM:SS or HH:MM to display-friendly HH:MM
+const formatTime = (t) => {
+  if (!t) return null;
+  return t.split(':').slice(0, 2).join(':');
+};
+
+// Timing Display + Inline Editor
+const TimingEditor = ({ timing, posStart, posEnd, onChange, onReset, id }) => {
+  const [editing, setEditing] = React.useState(false);
+  const [start, setStart] = React.useState(timing?.start || '');
+  const [end, setEnd] = React.useState(timing?.end || '');
+
+  const isAdminOverride = !!timing;
+  const displayStart = timing?.start || formatTime(posStart);
+  const displayEnd = timing?.end || formatTime(posEnd);
+  const is24hr = !displayStart && !displayEnd;
+
+  React.useEffect(() => {
+    setStart(timing?.start || '');
+    setEnd(timing?.end || '');
+  }, [timing]);
+
+  if (editing) {
+    return (
+      <div className="timing-editor" data-testid={`timing-editor-${id}`} onClick={(e) => e.stopPropagation()}>
+        <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="timing-input" data-testid={`timing-start-${id}`} />
+        <span className="timing-sep">-</span>
+        <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="timing-input" data-testid={`timing-end-${id}`} />
+        <button className="timing-save-btn" onClick={(e) => { e.stopPropagation(); if (start && end) { onChange({ start, end }); setEditing(false); } }} data-testid={`timing-save-${id}`}>
+          <IoCheckmarkCircle />
+        </button>
+        <button className="timing-cancel-btn" onClick={(e) => { e.stopPropagation(); setEditing(false); setStart(timing?.start || ''); setEnd(timing?.end || ''); }} data-testid={`timing-cancel-${id}`}>
+          <IoCloseOutline />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`timing-display ${isAdminOverride ? 'admin-override' : 'pos-default'}`} onClick={(e) => { e.stopPropagation(); setEditing(true); }} data-testid={`timing-display-${id}`}>
+      <IoTimeOutline className="timing-icon" />
+      <span className="timing-text">{is24hr ? '24 hrs' : `${displayStart} - ${displayEnd}`}</span>
+      {isAdminOverride && (
+        <button className="timing-reset-btn" onClick={(e) => { e.stopPropagation(); onReset(); }} title="Reset to POS default" data-testid={`timing-reset-${id}`}>
+          <IoCloseCircle />
+        </button>
+      )}
+    </div>
+  );
+};
+
 // Category Card Component
 const CategoryCard = ({
   cat,
@@ -90,6 +143,12 @@ const CategoryCard = ({
   onItemToggle,
   listeners,
   isDragging,
+  categoryTiming,
+  itemTimings,
+  onCategoryTimingChange,
+  onCategoryTimingReset,
+  onItemTimingChange,
+  onItemTimingReset,
 }) => {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -125,6 +184,14 @@ const CategoryCard = ({
           )}
         </div>
         <div className="category-actions">
+          <TimingEditor
+            timing={categoryTiming}
+            posStart={null}
+            posEnd={null}
+            onChange={onCategoryTimingChange}
+            onReset={onCategoryTimingReset}
+            id={`cat-${cat.id}`}
+          />
           <ToggleSwitch
             checked={cat.visible}
             onChange={(e) => {
@@ -184,6 +251,14 @@ const CategoryCard = ({
                         <DragHandle listeners={itemListeners} />
                         <span className="item-index">{iIdx + 1}</span>
                         <span className="item-name">{item.name}</span>
+                        <TimingEditor
+                          timing={itemTimings?.[item.id]}
+                          posStart={item.posTimeStart}
+                          posEnd={item.posTimeEnd}
+                          onChange={(t) => onItemTimingChange(item.id, t)}
+                          onReset={() => onItemTimingReset(item.id)}
+                          id={`item-${item.id}`}
+                        />
                         <button
                           className={`visibility-btn ${item.visible ? 'visible' : ''}`}
                           onClick={() => onItemToggle(iIdx)}
@@ -265,7 +340,12 @@ const MenuOrderTab = ({ config, setConfig }) => {
       for (const p of products) {
         const catId = String(p.category_id);
         cats.push({ id: catId, name: p.category_name || '' });
-        items[catId] = (p.items || []).map((i) => ({ id: String(i.id), name: i.name || '' }));
+        items[catId] = (p.items || []).map((i) => ({
+          id: String(i.id),
+          name: i.name || '',
+          posTimeStart: i.web_available_time_starts || null,
+          posTimeEnd: i.web_available_time_ends || null,
+        }));
       }
       setApiCategories(cats);
       setApiItems(items);
@@ -295,6 +375,8 @@ const MenuOrderTab = ({ config, setConfig }) => {
           itemResults[key] = (p.items || []).map((i) => ({
             id: String(i.id),
             name: i.name || '',
+            posTimeStart: i.web_available_time_starts || null,
+            posTimeEnd: i.web_available_time_ends || null,
           }));
         }
       }
@@ -445,6 +527,37 @@ const MenuOrderTab = ({ config, setConfig }) => {
         stationItemVisibility: { ...prev.menuOrder?.stationItemVisibility, [key]: itemVis },
       },
     }));
+  };
+
+  // ============ TIMING HELPERS ============
+  const updateCategoryTiming = (catId, timing) => {
+    setConfig((prev) => ({
+      ...prev,
+      categoryTimings: { ...prev.categoryTimings, [catId]: timing },
+    }));
+  };
+
+  const resetCategoryTiming = (catId) => {
+    setConfig((prev) => {
+      const updated = { ...prev.categoryTimings };
+      delete updated[catId];
+      return { ...prev, categoryTimings: updated };
+    });
+  };
+
+  const updateItemTiming = (itemId, timing) => {
+    setConfig((prev) => ({
+      ...prev,
+      itemTimings: { ...prev.itemTimings, [itemId]: timing },
+    }));
+  };
+
+  const resetItemTiming = (itemId) => {
+    setConfig((prev) => {
+      const updated = { ...prev.itemTimings };
+      delete updated[itemId];
+      return { ...prev, itemTimings: updated };
+    });
   };
 
   // Drag handlers
@@ -644,6 +757,12 @@ const MenuOrderTab = ({ config, setConfig }) => {
                           }}
                           listeners={listeners}
                           isDragging={isDragging}
+                          categoryTiming={config.categoryTimings?.[cat.id]}
+                          itemTimings={config.itemTimings}
+                          onCategoryTimingChange={(t) => updateCategoryTiming(cat.id, t)}
+                          onCategoryTimingReset={() => resetCategoryTiming(cat.id)}
+                          onItemTimingChange={(itemId, t) => updateItemTiming(itemId, t)}
+                          onItemTimingReset={(itemId) => resetItemTiming(itemId)}
                         />
                       )}
                     </SortableItem>
@@ -768,6 +887,12 @@ const MenuOrderTab = ({ config, setConfig }) => {
                       }}
                       listeners={listeners}
                       isDragging={isDragging}
+                      categoryTiming={config.categoryTimings?.[cat.id]}
+                      itemTimings={config.itemTimings}
+                      onCategoryTimingChange={(t) => updateCategoryTiming(cat.id, t)}
+                      onCategoryTimingReset={() => resetCategoryTiming(cat.id)}
+                      onItemTimingChange={(itemId, t) => updateItemTiming(itemId, t)}
+                      onItemTimingReset={(itemId) => resetItemTiming(itemId)}
                     />
                   )}
                 </SortableItem>

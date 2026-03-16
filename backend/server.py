@@ -204,6 +204,9 @@ class AppConfigUpdate(BaseModel):
     restaurantShifts: Optional[List[dict]] = None  # [{ "start": "07:00", "end": "11:00" }, ...]
     # Restaurant Open master toggle
     restaurantOpen: Optional[bool] = None
+    # Category & Item Timings (admin overrides)
+    categoryTimings: Optional[dict] = None  # { "catId": { "start": "07:00", "end": "11:00" } }
+    itemTimings: Optional[dict] = None  # { "itemId": { "start": "08:00", "end": "10:00" } }
 
 class SetPasswordRequest(BaseModel):
     phone: str
@@ -915,6 +918,9 @@ async def get_app_config(restaurant_id: str):
             "restaurantShifts": [{"start": "06:00", "end": "03:00"}],
             # Restaurant Open master toggle (default open)
             "restaurantOpen": True,
+            # Category & Item Timings
+            "categoryTimings": {},
+            "itemTimings": {},
         }
     
     return config

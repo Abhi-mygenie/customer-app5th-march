@@ -16,7 +16,9 @@ const MenuItem = ({
   onIncrement,
   onDecrement,
   currentTimeInSeconds = 0,
-  isOnlineOrderEnabled = true
+  isOnlineOrderEnabled = true,
+  categoryTiming = null,
+  itemTiming = null,
 }) => {
   const shouldTruncate = item.description && item.description.length > descriptionLimit;
   const displayDescription = isExpanded || !shouldTruncate
@@ -30,8 +32,8 @@ const MenuItem = ({
   const isCustomizable = (item.variations && item.variations.length > 0) ||
     (item.add_ons && item.add_ons.length > 0);
 
-  // Check if item is available based on live_web and time range
-  const isAvailable = isItemAvailable(item, currentTimeInSeconds);
+  // Check if item is available based on live_web, admin timings, and POS time range
+  const isAvailable = isItemAvailable(item, currentTimeInSeconds, { categoryTiming, itemTiming });
 
   const handleImageError = (e) => {
     // Hide the failed image

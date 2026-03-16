@@ -97,6 +97,9 @@ const DEFAULT_CONFIG = {
   restaurantShifts: [{ start: '06:00', end: '03:00' }],
   // Restaurant Open master toggle (default open)
   restaurantOpen: true,
+  // Category & Item Timings
+  categoryTimings: {},
+  itemTimings: {},
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -411,6 +414,9 @@ export const RestaurantConfigProvider = ({ children }) => {
     restaurantShifts: config.restaurantShifts || [{ start: '06:00', end: '03:00' }],
     // Restaurant Open master toggle
     restaurantOpen: config.restaurantOpen !== false,
+    // Category & Item Timings
+    categoryTimings: config.categoryTimings || {},
+    itemTimings: config.itemTimings || {},
   };
 
   return (

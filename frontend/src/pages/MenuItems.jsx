@@ -25,7 +25,7 @@ const MenuItems = () => {
   const { stationId } = useParams();
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
-  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantShifts, restaurantOpen, menuOrder } = useRestaurantConfig();
+  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantShifts, restaurantOpen, menuOrder, categoryTimings, itemTimings } = useRestaurantConfig();
   const [stationName, setStationName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -751,6 +751,8 @@ const MenuItems = () => {
                                     onDecrement={() => handleDecrement(item)}
                                     currentTimeInSeconds={currentTimeInSeconds}
                                     isOnlineOrderEnabled={isOnlineOrderEnabled}
+                                    categoryTiming={categoryTimings?.[categoryId]}
+                                    itemTiming={itemTimings?.[String(item.id)]}
                                   />
                                 );
                               })}
