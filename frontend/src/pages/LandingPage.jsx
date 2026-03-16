@@ -59,10 +59,10 @@ const LandingPage = () => {
     }
   }, [restaurantId, fetchConfig]);
 
-  // Check table status on load (only for non-716/739 restaurants with scanned table)
+  // Check table status on load (only for non-multi-menu restaurants with scanned table)
   useEffect(() => {
     const checkTable = async () => {
-      // Skip if: no table scanned, or is 716/739 restaurant, or already checked
+      // Skip if: no table scanned, or is multi-menu restaurant, or already checked
       if (!isScanned || !scannedTableId || !restaurantId) return;
       if (isMultipleMenu(stations)) return;
       if (tableStatusCheck.isChecked) return;

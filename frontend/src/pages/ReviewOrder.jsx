@@ -422,8 +422,8 @@ const ReviewOrder = () => {
     return loyaltyEnabled && isCustomerDetailsFilled && configShowLoyaltyPoints;
   }, [restaurant, isCustomerDetailsFilled, configShowLoyaltyPoints]);
 
-  // Check if restaurant is 716 (table number required)
-  const isRestaurant716 = isMultipleMenu(stations);
+  // Check if restaurant has multiple menus (table number required)
+  const isMultiMenu = isMultipleMenu(stations);
 
   // Order page configurability flags - from admin config
   const showCustomerDetails = configShowCustomerDetails;
@@ -434,9 +434,9 @@ const ReviewOrder = () => {
   const showPriceBreakdown = configShowPriceBreakdown;
   const showTableInfo = configShowTableInfo;
 
-  // Validate room/table selection and number (required only for restaurant 716)
+  // Validate room/table selection and number (required for multi-menu restaurants)
   const isTableNumberValid = () => {
-    if (!isRestaurant716) return true; // Not required for other restaurants
+    if (!isMultiMenu) return true; // Not required for other restaurants
     if (!roomOrTable) return false; // Must select Room or Table
     return tableNumber.trim().length > 0; // Must fill the input
   };
@@ -620,7 +620,7 @@ const ReviewOrder = () => {
 
       const redirectTimer = setTimeout(() => {
         if (restaurantId) {
-          if (isRestaurant716) {
+          if (isMultiMenu) {
             navigate(`/${restaurantId}/stations`, { replace: true });
           } else {
             navigate(`/${restaurantId}/menu`, { replace: true });
@@ -633,12 +633,12 @@ const ReviewOrder = () => {
         clearTimeout(redirectTimer);
       };
     }
-  }, [totalItems, navigate, restaurantId, isRestaurant716]);
+  }, [totalItems, navigate, restaurantId, isMultiMenu]);
 
   // Handle back button click
   const handleBackClick = () => {
     if (restaurantId) {
-      if (isRestaurant716) {
+      if (isMultiMenu) {
         navigate(`/${restaurantId}/menu/${stationId}`);
       } else {
         navigate(`/${restaurantId}/menu`);
@@ -650,7 +650,7 @@ const ReviewOrder = () => {
   // (check table status → Edit Order or Browse Menu) is always applied.
   const handleNavigateToMenu = () => {
     if (restaurantId) {
-      if (isRestaurant716) {
+      if (isMultiMenu) {
         navigate(`/${restaurantId}/stations`, { replace: true });
       } else {
         navigate(`/${restaurantId}`, { replace: true });
@@ -692,8 +692,8 @@ const ReviewOrder = () => {
     if (isPlacingOrderRef.current) return;
     isPlacingOrderRef.current = true;
     orderDispatchedRef.current = false; // Reset dispatch tracker for this attempt
-    // Validate room/table selection and number for restaurant 716
-    if (isRestaurant716) {
+    // Validate room/table selection and number for multi-menu restaurants
+    if (isMultiMenu) {
       // Check if scanned table is available
       const hasScannedTable = isScanned && scannedOrderType === 'dinein' && scannedTableId;
 
@@ -751,7 +751,7 @@ const ReviewOrder = () => {
       // Use scanned table if available, otherwise use manual selection
       const finalTableId = (isScanned && scannedOrderType === 'dinein' && scannedTableId)
         ? scannedTableId
-        : (isRestaurant716 && tableNumber ? tableNumber : '');
+        : (isMultiMenu && tableNumber ? tableNumber : '');
 
       let response;
 
@@ -793,7 +793,7 @@ const ReviewOrder = () => {
           totalToPay,
           totalTax,
           orderType: scannedOrderType,
-          isMultipleMenuType: isRestaurant716,
+          isMultipleMenuType: isMultiMenu,
           token,
           // Points redemption
           pointsRedeemed: pointsToRedeem,
@@ -872,7 +872,7 @@ const ReviewOrder = () => {
           // Use scanned table if available, otherwise use manual selection
           const retryTableId = (isScanned && scannedOrderType === 'dinein' && scannedTableId)
             ? scannedTableId
-            : (isRestaurant716 && tableNumber ? tableNumber : '');
+            : (isMultiMenu && tableNumber ? tableNumber : '');
 
           let retryResponse;
 
@@ -909,7 +909,7 @@ const ReviewOrder = () => {
               subtotal,
               totalToPay,
               totalTax,
-              isMultipleMenuType: isRestaurant716,
+              isMultipleMenuType: isMultiMenu,
               token: newToken,
               // Points redemption
               pointsRedeemed: pointsToRedeem,
@@ -1046,7 +1046,7 @@ const ReviewOrder = () => {
         <div className="review-order-content">
 
           {/*Scanned Table Container */}
-          {showTableInfo && !isRestaurant716 && isScanned && scannedOrderType === 'dinein' && (
+          {showTableInfo && !isMultiMenu && isScanned && scannedOrderType === 'dinein' && (
             <>
               <div className="review-order-section">
                 {/* <h2 className="review-order-section-title">
@@ -1073,7 +1073,7 @@ const ReviewOrder = () => {
 
 
           {/* Room/Table Selection - Only for Restaurant hyatt */}
-          {isRestaurant716 && (
+          {isMultiMenu && (
             <>
               <div className="review-order-section">
                 <h2 className="review-order-section-title">Room/Table</h2>
@@ -1161,7 +1161,7 @@ const ReviewOrder = () => {
 
 
           {/* Customer Details - configurable */}
-          {!isRestaurant716 && showCustomerDetails && (<>  <div className="review-order-section">
+          {!isMultiMenu && showCustomerDetails && (<>  <div className="review-order-section">
             <div className="review-order-section-header">
               <div className="review-order-section-title-icon"><IoPersonOutline size={16} /></div>
               <h2 className="review-order-section-title">Customer Details</h2>

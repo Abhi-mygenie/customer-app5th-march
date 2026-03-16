@@ -380,7 +380,7 @@ const transformAddOns = (cartItem) => {
 
 /**
  * Calculate item price (base + variations + addons)
- * Shared by both normal and 716 cart transformers
+ * Shared by both normal and multi-menu cart transformers
  * @param {Object} cartItem - Cart item
  * @returns {number} Total item price
  */
@@ -406,7 +406,7 @@ const calculateItemPrice = (cartItem) => {
 
 /**
  * Calculate variations total price only
- * Used for total_variation_price field in 716 API
+ * Used for total_variation_price field in multi-menu API
  * @param {Object} cartItem
  * @returns {number} Variations total price
  */
@@ -419,7 +419,7 @@ const calculateVariationsTotal = (cartItem) => {
 
 /**
  * Calculate add-ons total price only
- * Used for total_add_on_price field in 716 API
+ * Used for total_add_on_price field in multi-menu API
  * @param {Object} cartItem
  * @returns {number} Add-ons total price
  */
@@ -458,13 +458,13 @@ const transformCartItems = (cartItems) => {
 };
 
 /**
- * Transform cart items — 716 API format
+ * Transform cart items — multi-menu API format
  * Same as normal but includes tax + price breakdown fields per item
  * Tax is calculated from item.tax (percentage) and item.tax_type (GST | VAT)
  * @param {Array} cartItems - Array of cart items
- * @returns {Array} Formatted cart array for 716 API
+ * @returns {Array} Formatted cart array for multi-menu API
  */
-const transformCartItemsFor716 = (cartItems) => {
+const transformCartItemsMultiMenu = (cartItems) => {
   return cartItems.map(cartItem => {
     const { add_on_ids, add_ons, add_on_qtys } = transformAddOns(cartItem);
     const variations      = transformVariations(cartItem);
@@ -619,7 +619,7 @@ const buildNormalPayload = (orderData) => {
 };
 
 /**
- * Build payload for restaurant 716/478
+ * Build payload for multi-menu restaurants
  * Differences from normal:
  *   - { data: {} } wrapper — same as normal                        
  *   - order_type: "dinein"                                         
@@ -631,7 +631,7 @@ const buildNormalPayload = (orderData) => {
  * @param {Object} orderData - Order data
  * @returns {Object} API payload wrapped in { data: {} }
  */
-const build716Payload = (orderData) => {
+const buildMultiMenuPayload = (orderData) => {
   const {
     cartItems,
     customerName,
@@ -647,7 +647,7 @@ const build716Payload = (orderData) => {
     // totalTax     // ← pre-calculated in ReviewOrder.jsx and passed in
   } = orderData;
 
-  const cart      = transformCartItemsFor716(cartItems);
+  const cart      = transformCartItemsMultiMenu(cartItems);
   const custPhone = extractPhoneNumber(customerPhone || '');
   const dialCode  = getDialCode(customerPhone || '');
 
@@ -715,7 +715,7 @@ const build716Payload = (orderData) => {
       // Loyalty points redemption
       points_redeemed: pointsRedeemed,
       points_discount: pointsDiscount,
-      // ─── 716 specific root fields ────────────────────────────────
+      // ─── Multi-menu specific root fields ─────────────────────────
       total_gst_tax_amount: totalGstTaxAmount,                    
       total_vat_tax_amount: totalVatTaxAmount,                      
       total_service_tax_amount: 0,                                  
@@ -740,7 +740,7 @@ const build716Payload = (orderData) => {
  * @param {number} orderData.restaurantId         - Restaurant ID
  * @param {number} orderData.subtotal             - Subtotal (before tax)
  * @param {number} orderData.totalToPay           - Final total (subtotal + tax)
- * @param {number} orderData.totalTax             - Total tax amount (for 716/478)
+ * @param {number} orderData.totalTax             - Total tax amount (for multi-menu)
  * @param {string} orderData.token                - Auth token
  * @returns {Promise} Order response data
  */
@@ -748,17 +748,17 @@ export const placeOrder = async (orderData) => {
   try {
     const { token, restaurantId, isMultipleMenuType } = orderData;
 
-    // Use flag passed from component (which checks API config + hardcoded fallback)
-    const is716 = isMultipleMenuType === true;
+    // Use flag passed from component (dynamic multi-menu detection)
+    const isMultiMenu = isMultipleMenuType === true;
 
     // ─── Select endpoint ─────────────────────────────────────────
-    const endpoint = is716
+    const endpoint = isMultiMenu
       ? ENDPOINTS.PLACE_ORDER_AUTOPAID()
       : ENDPOINTS.PLACE_ORDER();
 
     // ─── Select payload ──────────────────────────────────────────
-    const payload = is716
-      ? build716Payload(orderData)
+    const payload = isMultiMenu
+      ? buildMultiMenuPayload(orderData)
       : buildNormalPayload(orderData);
 
     // ─── Headers — same for both ──────────────────────────────────
@@ -774,7 +774,7 @@ export const placeOrder = async (orderData) => {
     // DEBUG: Log full payload to verify loyalty fields
     console.log('[OrderService] ========== ORDER PAYLOAD DEBUG ==========');
     console.log('[OrderService] Endpoint:', endpoint);
-    console.log('[OrderService] Is 716 format:', is716);
+    console.log('[OrderService] Is multi-menu format:', isMultiMenu);
     console.log('[OrderService] Full Payload:', JSON.stringify(payload, null, 2));
     console.log('[OrderService] Loyalty Fields:');
     console.log('  - points_redeemed:', payload.data.points_redeemed);

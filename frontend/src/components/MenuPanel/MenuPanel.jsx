@@ -105,7 +105,7 @@ const MenuPanel = ({
 
         <div className="menu-panel-content">
 
-          {/* For multiple_menu restaurants (716/739): Show Stations */}
+          {/* For multi-menu restaurants: Show Stations */}
           {showStations && (
             <>
               {/* Active Station Block */}
