@@ -200,6 +200,8 @@ class AppConfigUpdate(BaseModel):
     otpRequiredDineInWithTable: Optional[bool] = None
     otpRequiredWalkIn: Optional[bool] = None
     otpRequiredRoomOrders: Optional[bool] = None
+    # Restaurant Operating Shifts (up to 4)
+    restaurantShifts: Optional[List[dict]] = None  # [{ "start": "07:00", "end": "11:00" }, ...]
 
 class SetPasswordRequest(BaseModel):
     phone: str
@@ -907,6 +909,8 @@ async def get_app_config(restaurant_id: str):
             "otpRequiredDineInWithTable": False,
             "otpRequiredWalkIn": False,
             "otpRequiredRoomOrders": False,
+            # Restaurant Operating Shifts
+            "restaurantShifts": [{"start": "06:00", "end": "03:00"}],
         }
     
     return config

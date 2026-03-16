@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useAdminConfig } from '../../context/AdminConfigContext';
-import { IoSettingsOutline, IoCloudUploadOutline, IoTimeOutline } from 'react-icons/io5';
+import { IoSettingsOutline, IoCloudUploadOutline, IoTimeOutline, IoAddCircleOutline, IoTrashOutline } from 'react-icons/io5';
 import './AdminPages.css';
 
 const AdminSettingsPage = () => {
@@ -132,38 +132,77 @@ const AdminSettingsPage = () => {
         </div>
       </div>
 
-      {/* Operating Hours Section */}
+      {/* Operating Shifts Section */}
       <div className="admin-section">
         <h2 className="admin-section-title">
-          <IoTimeOutline /> Restaurant Operating Hours
+          <IoTimeOutline /> Restaurant Operating Shifts
         </h2>
-        
-        <div className="admin-form-grid">
-          <div className="admin-form-group">
-            <label className="admin-form-label">Opening Time</label>
-            <input
-              type="time"
-              className="admin-form-input"
-              value={config.restaurantOpeningTime || '06:00'}
-              onChange={(e) => updateField('restaurantOpeningTime', e.target.value)}
-              data-testid="input-restaurantOpeningTime"
-            />
-          </div>
-
-          <div className="admin-form-group">
-            <label className="admin-form-label">Closing Time</label>
-            <input
-              type="time"
-              className="admin-form-input"
-              value={config.restaurantClosingTime || '03:00'}
-              onChange={(e) => updateField('restaurantClosingTime', e.target.value)}
-              data-testid="input-restaurantClosingTime"
-            />
-          </div>
-        </div>
-        <p className="admin-form-hint" style={{ marginTop: '12px' }}>
-          The "Add" button will be hidden when restaurant is closed. Default: 6:00 AM - 3:00 AM
+        <p className="admin-form-hint" style={{ marginBottom: '16px' }}>
+          Define up to 4 shifts. The "Add to cart" button is only visible during active shifts.
         </p>
+
+        {(config.restaurantShifts || [{ start: '06:00', end: '03:00' }]).map((shift, index) => (
+          <div key={index} className="admin-shift-row" data-testid={`shift-row-${index}`}>
+            <span className="admin-shift-label">Shift {index + 1}</span>
+            <div className="admin-form-group">
+              <label className="admin-form-label">Start</label>
+              <input
+                type="time"
+                className="admin-form-input"
+                value={shift.start || ''}
+                onChange={(e) => {
+                  const shifts = [...(config.restaurantShifts || [{ start: '06:00', end: '03:00' }])];
+                  shifts[index] = { ...shifts[index], start: e.target.value };
+                  updateField('restaurantShifts', shifts);
+                }}
+                data-testid={`shift-${index}-start`}
+              />
+            </div>
+            <div className="admin-form-group">
+              <label className="admin-form-label">End</label>
+              <input
+                type="time"
+                className="admin-form-input"
+                value={shift.end || ''}
+                onChange={(e) => {
+                  const shifts = [...(config.restaurantShifts || [{ start: '06:00', end: '03:00' }])];
+                  shifts[index] = { ...shifts[index], end: e.target.value };
+                  updateField('restaurantShifts', shifts);
+                }}
+                data-testid={`shift-${index}-end`}
+              />
+            </div>
+            {(config.restaurantShifts || []).length > 1 && (
+              <button
+                type="button"
+                className="admin-shift-remove-btn"
+                onClick={() => {
+                  const shifts = [...(config.restaurantShifts || [])];
+                  shifts.splice(index, 1);
+                  updateField('restaurantShifts', shifts);
+                }}
+                data-testid={`shift-${index}-remove`}
+              >
+                <IoTrashOutline />
+              </button>
+            )}
+          </div>
+        ))}
+
+        {(config.restaurantShifts || [{ start: '06:00', end: '03:00' }]).length < 4 && (
+          <button
+            type="button"
+            className="admin-add-shift-btn"
+            onClick={() => {
+              const shifts = [...(config.restaurantShifts || [{ start: '06:00', end: '03:00' }])];
+              shifts.push({ start: '', end: '' });
+              updateField('restaurantShifts', shifts);
+            }}
+            data-testid="add-shift-btn"
+          >
+            <IoAddCircleOutline /> Add Shift
+          </button>
+        )}
       </div>
     </div>
   );

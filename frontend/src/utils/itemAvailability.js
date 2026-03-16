@@ -94,42 +94,48 @@ export const isItemAvailable = (item, currentTimeInSeconds) => {
 };
 
 /**
- * Check if restaurant is currently open based on operating hours
- * @param {string} openingTime - Opening time in "HH:MM" format (e.g., "06:00")
- * @param {string} closingTime - Closing time in "HH:MM" format (e.g., "03:00")
- * @returns {boolean} True if restaurant is open
- * @example
- * isRestaurantOpen("06:00", "03:00") at 10:00 AM → true
- * isRestaurantOpen("06:00", "03:00") at 04:00 AM → false
+ * Check if current time falls within a single shift
+ * @param {string} start - Start time "HH:MM"
+ * @param {string} end - End time "HH:MM"
+ * @param {number} currentTimeInMinutes - Current time in minutes since midnight
+ * @returns {boolean}
  */
-export const isRestaurantOpen = (openingTime = '06:00', closingTime = '03:00') => {
-  // If no times provided, assume always open
-  if (!openingTime || !closingTime) {
-    return true;
-  }
+const isWithinShift = (start, end, currentTimeInMinutes) => {
+  if (!start || !end) return false;
 
-  // Get current time
-  const now = new Date();
-  const currentHours = now.getHours();
-  const currentMinutes = now.getMinutes();
-  const currentTimeInMinutes = (currentHours * 60) + currentMinutes;
-
-  // Parse opening time
-  const [openHours, openMinutes] = openingTime.split(':').map(Number);
+  const [openHours, openMinutes] = start.split(':').map(Number);
   const openingTimeInMinutes = (openHours * 60) + (openMinutes || 0);
 
-  // Parse closing time
-  const [closeHours, closeMinutes] = closingTime.split(':').map(Number);
+  const [closeHours, closeMinutes] = end.split(':').map(Number);
   const closingTimeInMinutes = (closeHours * 60) + (closeMinutes || 0);
 
-  // Handle overnight closing (e.g., 06:00 - 03:00)
   if (closingTimeInMinutes < openingTimeInMinutes) {
-    // Restaurant closes after midnight
-    // Open if: current >= opening OR current < closing
+    // Overnight shift (e.g., 20:00 → 01:00)
     return currentTimeInMinutes >= openingTimeInMinutes || currentTimeInMinutes < closingTimeInMinutes;
   } else {
-    // Normal hours (e.g., 09:00 - 22:00)
-    // Open if: current >= opening AND current < closing
+    // Same-day shift (e.g., 07:00 → 11:00)
     return currentTimeInMinutes >= openingTimeInMinutes && currentTimeInMinutes < closingTimeInMinutes;
   }
+};
+
+/**
+ * Check if restaurant is currently open based on shifts
+ * Supports multiple shifts (up to 4). Falls back to legacy single open/close.
+ * @param {Array|null} shifts - Array of { start, end } objects, or null/undefined
+ * @param {string} openingTime - Legacy single opening time (fallback)
+ * @param {string} closingTime - Legacy single closing time (fallback)
+ * @returns {boolean} True if restaurant is open (current time within any shift)
+ */
+export const isRestaurantOpen = (shifts, openingTime, closingTime) => {
+  const now = new Date();
+  const currentTimeInMinutes = (now.getHours() * 60) + now.getMinutes();
+
+  // Use shifts array if available
+  if (Array.isArray(shifts) && shifts.length > 0) {
+    return shifts.some(shift => isWithinShift(shift.start, shift.end, currentTimeInMinutes));
+  }
+
+  // Legacy fallback: single opening/closing time
+  if (!openingTime || !closingTime) return true;
+  return isWithinShift(openingTime, closingTime, currentTimeInMinutes);
 };

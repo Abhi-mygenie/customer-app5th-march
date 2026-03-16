@@ -100,9 +100,8 @@ const defaultConfig = {
   extraInfoItems: ['', '', '', '', ''],
   // Custom Text
   browseMenuButtonText: 'Browse Menu',
-  // Restaurant Operating Hours
-  restaurantOpeningTime: '06:00',
-  restaurantClosingTime: '03:00',
+  // Restaurant Operating Shifts
+  restaurantShifts: [{ start: '06:00', end: '03:00' }],
   // Menu Order
   menuOrder: null,
 };
