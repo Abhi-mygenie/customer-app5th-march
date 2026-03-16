@@ -1,26 +1,30 @@
 <analysis>**original_problem_statement:**
-The user initiated a session with several objectives:
-1.  Fix a UI bug on the customer-facing menu sidebar for multi-menu restaurants where it incorrectly showed a mix of stations and categories.
-2.  Address fundamental issues with subdomain-based routing where the application would fail to load the correct restaurant configuration (logos, colors, settings), showing default branding instead.
-3.  Conduct a comprehensive audit of the frontend codebase to identify areas for refactoring, dead code, hardcoded values, and potential security vulnerabilities.
-4.  Based on the audit, undertake a major refactoring to remove all hardcoded logic related to multi-menu restaurants (e.g., hardcoded IDs , static  file) and replace it with a fully dynamic, API-driven system.
+The user's initial goals were to fix UI bugs, resolve subdomain routing issues, and refactor hardcoded multi-menu logic. However, during the session, the user pivoted multiple times, introducing new feature requests.
+
+The final set of tasks implemented were:
+1.  **Implement Multi-Shift Restaurant Timings:** Replace the single open/close time with support for up to 4 distinct operating shifts in the admin panel.
+2.  **Add Master Restaurant Open/Close Toggle:** Create a master toggle in admin settings to enable or disable ordering for the entire restaurant, overriding any shift schedules. The default state is ON (open).
+3.  **Implement Category & Item Level Timing Controls:**
+    *   Allow administrators to set availability time windows for specific menu categories and individual items directly from the admin menu management page.
+    *   These admin-set timings override the default timings received from the POS API.
+    *   Change the application behavior so that menu items with  start/end times from the POS are considered available 24/7, instead of being unavailable.
+4.  **Defer QR Code Generator Feature:** The user requested a feature to generate various types of QR codes from the admin panel. The feature was fully planned but deferred by the user to be worked on later.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack React and FastAPI customer ordering app. In this session, the agent successfully implemented a large-scale refactoring to make the multi-menu and station logic fully dynamic, driven by a new  API endpoint. This involved modifying over a dozen files to remove hardcoded values and integrate the new API data flow.
+The application is a full-stack React/FastAPI solution. The agent successfully implemented a complex, multi-layered timing control system for menu item availability. This new system allows administrators to control ordering via a master toggle, multiple daily shifts, and specific time overrides for both categories and items. The logic for determining item availability now follows a detailed priority cascade, checking the master toggle, then restaurant shifts, then category-level overrides, and finally item-level overrides, with POS API timings as the fallback.
 
-Several critical bugs were also fixed:
-- The customer menu sidebar now correctly displays only the categories for a selected station.
-- Subdomain routing now works as expected, resolving the subdomain to the correct numeric restaurant ID and loading the appropriate branding and configuration without a flash of default content.
-
-A comprehensive code audit was performed, and the results were documented. However, the new dynamic menu feature is currently blocked by a bug discovered during implementation.
+The original high-priority bug related to the dynamic multi-menu feature (station name mismatch) remains unresolved as the user prioritized the new timing features instead.
 
 **Last working item**:
--   **Last item agent was working:** The agent was debugging why clicking a station card (e.g., GROK) on the newly dynamic stations page resulted in an empty menu. The agent successfully identified the root cause: a name mismatch between the two APIs involved. The  API returns a  (e.g., GROK), but the  API expects a  with different casing (e.g., Grok) for filtering. This mismatch causes the product fetch to fail and return an empty list.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** Y (Manual testing which revealed the bug)
--   **Which testing method agent to use?** The agent should first fix the logic, then use the **frontend testing agent** to run a full regression test on the menu flow for both multi-menu (ID ) and single-menu (ID ) restaurants.
+-   **Last item agent was working:** The agent completed the implementation of the comprehensive timing control system. This involved adding a master toggle, multi-shift support, and category/item-level timing overrides. The final step was to ensure the full priority cascade for showing/hiding the ADD button was correctly implemented on the customer-facing menu.
+-   **Status:** USER VERIFICATION PENDING
+-   **Agent Testing Done:** Y (Logic was validated using  with multiple test cases, but no E2E or UI testing was performed).
+-   **Which testing method agent to use?** **frontend testing agent**. This was a major feature touching both admin and customer flows. The agent should test:
+    1.  **Admin Panel:** Verify the master toggle, shift management (add/remove/update), and category/item timing editors work as expected.
+    2.  **Customer Menu:** Create extensive tests for the ADD button's visibility based on the full timing cascade (e.g., restaurant closed via master toggle, outside of all shifts, outside a category's time window, etc.).
+    3.  **Regression:** Test on both a multi-menu (ID ) and single-menu (ID ) restaurant to ensure no regressions.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
@@ -29,51 +33,48 @@ A comprehensive code audit was performed, and the results were documented. Howev
 
 **Issues Detail:**
 -   **Issue 1:** Fix API Station Name Mismatch
-    -   **Attempted fixes:** The agent integrated the new  API but discovered the name mismatch during testing. No fix has been attempted yet.
+    -   **Attempted fixes:** None in this session. This issue was carried over from the previous fork and deferred by user request.
     -   **Next debug checklist:**
-        1.  The source of truth for station names is the  field within the product data itself, fetched from the  endpoint.
-        2.  Modify the  hook in .
-        3.  When fetching the list of menus from , also fetch the *full* product list for the restaurant (e.g., call  with  and no  filter).
-        4.  Create a mapping from the 's  to the actual  found in the product data.
-        5.  The  hook must return station objects that contain the correct  to be used for filtering on the menu items page.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a **blocker** for the entire dynamic menu feature. Fixing it will allow users to click a station and see its corresponding menu items, completing the refactoring task.
-    -   **Status:** IN PROGRESS
+        1.  Modify the  hook in .
+        2.  When fetching menus from , also fetch the full product list for the restaurant.
+        3.  Create a mapping from the  API's  to the actual  found in the product data.
+        4.  The hook must return station objects containing the correct  to be used for filtering.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a **blocker** for the entire dynamic multi-menu feature, preventing users from seeing menu items after selecting a station. Fixing it is critical to completing the refactor started in the previous session.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** frontend
     -   **Blocked on other issue:** None
 
 -   **Issue 2:** Remove Silent Fallbacks for Environment Variables
-    -   **Attempted fixes:** None. This task was carried over from a previous session and deferred.
+    -   **Attempted fixes:** None. This was deferred.
     -   **Next debug checklist:**
-        -   Review files like , , and .
-        -   Remove any logic that provides a default value (e.g., a pre-prod URL) if a required environment variable is missing. The application should fail fast by crashing or throwing an explicit error.
-    -   **Why fix this issue and what will be achieved with the fix?** This prevents the application from accidentally connecting to the wrong environment in a production setting if configuration is missing, which could lead to data corruption or incorrect behavior.
+        -   Audit files like , , and .
+        -   Remove any logic that provides a default value for a missing environment variable. The app should fail fast.
+    -   **Why fix this issue and what will be achieved with the fix?** Prevents the app from connecting to the wrong environment (e.g., pre-prod) in a production setting, avoiding potential data corruption.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1:** Complete Dynamic Menu Refactor
-    -   **Where to resume:** Implement the fix for the station name mismatch (Issue 1) in .
-    -   **What will be achieved with this?** A fully dynamic, API-driven multi-menu system that works for any restaurant without any hardcoded values, fulfilling a major user request.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** frontend
-    -   **Blocked on something:** The station name mismatch (Issue 1).
+None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **Task 1 (P1):** Remove silent fallbacks for environment variables (same as Issue 2).
-    -   **Task 2 (P2):** Action the findings from the code audit report. This involves planning and executing refactoring tasks for the issues identified in , such as breaking down large components and removing dead code.
+    -   **(P0) Complete Dynamic Menu Refactor:** Resume the work from the previous session by fixing the station name mismatch bug (Issue #1).
+    -   **(P1) Admin QR Scanner Page:** Implement the planned admin page for generating and downloading QR codes. The plan is saved in  and involves using the  endpoint.
+    -   **(P2) Remove Silent Fallbacks:** Address Issue #2.
+
 -   **Future Tasks:**
-    -   **Task 3 (P2):** Implement dynamic station images and timings. The user has requested that the  API be updated to include image and timing data for each station, which should then be rendered on the station selection cards, replacing the current placeholders.
+    -   Action the findings from the code audit report in .
+    -   Implement dynamic station images and timings based on the  API.
 
 **Completed work in this session**
--   **Dynamic Menu System Refactor:** Replaced all hardcoded multi-menu logic with a dynamic system driven by the  API across ~13 files.
--   **Subdomain Routing Fix:** Corrected the core logic in  to properly resolve subdomains to numeric IDs, ensuring the correct restaurant configuration is loaded.
--   **UI Flash Fix:** Eliminated the flash of default content on page load in subdomain mode by showing a skeleton loader until the correct configuration is fetched.
--   **Menu Sidebar Bug Fix:** Resolved the bug where the customer-facing menu sidebar showed a confusing mix of stations and categories.
--   **Code Audit:** Performed a comprehensive frontend code audit and documented the findings.
+-   **Multi-Layered Timing Controls (Feature Complete, Pending Verification):**
+    -   **Multi-Shift Support:** Replaced the single restaurant opening/closing time with a dynamic list of up to four shifts in Admin Settings.
+    -   **Master Open/Close Toggle:** Added a master toggle to enable/disable ordering for the entire restaurant. It defaults to ON and visually grays out the shift controls when OFF.
+    -   **Category & Item Timing Overrides:** Implemented UI in the admin menu editor for setting specific time windows on categories and items, which override POS defaults.
+    -   **POS  Time Handling:** Changed the core logic in  to treat items with  start/end times from the POS as available 24/7.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -85,86 +86,72 @@ A comprehensive code audit was performed, and the results were documented. Howev
 
 
 **Key Technical Concepts**
--   **Frontend:** React, React Router, Axios, React Query (for API data caching and state management).
--   **Backend:** FastAPI
--   **Database:** MongoDB
--   **Architecture:** API-driven configuration, subdomain-based multi-tenancy, significant use of React hooks for shared logic.
+-   **Frontend:** React, React Context API, CSS.
+-   **Backend:** FastAPI, Pydantic.
+-   **State Management:** A complex state management cascade was implemented for availability. It combines global admin settings (master toggle, shifts), entity-specific admin settings (category/item timings), and external API data (POS item times) to determine the final UI state of the ADD button.
 
 **key DB schema**
--   No changes. Inferred collections include , , , .
+The  collection in MongoDB was extended to include:
+-    (default: )
+-    (default: )
+-    (default: )
+-    (default: )
 
 **changes in tech stack**
--   No new packages were added, but there was a significant architectural shift to rely more heavily on React Query and API-driven state instead of hardcoded data.
+-   None.
 
 **All files of reference**
--   : Contains the  hook that is central to the current bug.
--   : Contains the  logic, now refactored.
--   : Contains the critical fix for subdomain routing.
--   : Modified to handle the subdomain loading state.
--   : Contains the full audit results for future refactoring work.
--   The ~10 other files modified for the dynamic menu refactor (, , etc.).
+-   : Contains the core rewritten logic for the timing cascade.
+-   : The new UI for master toggle and multi-shift management.
+-   : The admin drag-and-drop menu editor, now with timing controls.
+-   : Consumes the final timing logic to show/hide the ADD button.
+-   : Updated to handle the new configuration fields.
+-   : Contains the plan for the deferred Admin QR Scanner Page feature.
 
 **Areas that need refactoring**:
--   The file  is the source of truth for all pending refactoring work. Key areas identified include:
-    -   Large components like , , and  that should be broken down.
-    -   Significant prop drilling that could be simplified with more targeted context or hooks.
-    -   Numerous instances of dead code and unused variables that need to be cleaned up.
+-   Refer to  for a list of previously identified refactoring opportunities. No new areas were introduced.
 
 **key api endpoints**
--   : **New and critical.** Used to determine if a restaurant is multi-menu and to get its list of stations.
--   : Used to fetch menu items. The filtering behavior of this endpoint is central to the current bug.
--   : Fetches restaurant configuration.
--   : Resolves a subdomain to a numeric restaurant ID.
+-   ****: Updated to accept , , , and .
+-   ****: Updated to return the new timing fields.
+-   ****: This endpoint was identified and confirmed for the upcoming QR Scanner feature. It requires a bearer token.
 
 **Critical Info for New Agent**
--   The current task is blocked by a **mismatch in station names** between two different APIs. The  from  is not the same as the  expected by . The solution is to use the  from the product data itself as the source of truth.
--   The external preprod API () has been unreliable. The agent temporarily switched to the production API to continue work. The  is back to normal, but be prepared to test against production if preprod is down.
--   The multi-menu logic is now entirely dynamic. There are no more hardcoded IDs or JSON files to rely on. All behavior is derived from the  API response.
--   A comprehensive code audit is complete and available at . This should be consulted for future refactoring tasks.
+-   **USER PRIORITY SHIFTS:** Be aware that the user frequently changes priorities. The current P0 task from the last session (fixing the dynamic menu) was deferred to build a large new timing feature. Be prepared to re-plan based on user requests.
+-   **VERIFY NEW FEATURE:** The newly implemented timing control system is complex and has only been logic-checked, not UI or E2E tested. Your first task should be to confirm with the user if you should run the testing agent to validate it.
+-   **PENDING P0 BUG:** The API Station Name Mismatch bug is a critical blocker for the multi-menu feature and should be treated as the highest priority technical task once the new timing feature is verified.
+-   **DEFERRED QR TASK:** A complete plan for an Admin QR Scanner feature exists and is saved in . The user may ask to resume this task at any point.
 
 **documents and test reports created in this job**
--   
--    (updated)
+-    (updated with the plan for the QR scanner feature).
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Asks to summarize the task for making menus dynamic, with placeholders for images/timing.
-2.  **Agent:** Provides summary.
-3.  **User:** Approves implementation (yes).
-4.  **User:** Reports the flash of default branding on subdomain pages.
-5.  **Agent:** Explains the cause and proposes a fix.
-6.  **User:** Asks for file/line of the proposed fix.
-7.  **Agent:** Provides details.
-8.  **User:** Approves the change (yes make chnage).
-9.  **User:** Reports the fix now shows a skeleton page and asks for confirmation this is correct.
-10. **Agent:** Confirms skeleton is correct and no default branding will show.
-11. **User:** Reports that navigating to  on a subdomain shows the wrong page (Hyatt's stations).
-12. **Agent:** Analyzes the routing issue in .
-13. **User:** Asks for a full impact analysis of removing all hardcoding.
-14. **Agent:** Provides a detailed analysis.
-15. **User:** Provides a new, correct API endpoint () to fetch station data.
-16. **Agent:** Re-analyzes the plan using the new endpoint.
-17. **User:** Confirms to use placeholders for image/timing and asks for a final task summary.
-18. **Agent:** Provides the final summary.
-19. **User:** Approves final plan (yes).
+1.  **User:** Asks for category and item level timing controls, specifying that admin settings should override POS API times. **(In Progress)**
+2.  **User:** Clarifies that if POS times are , the item should be considered available 24/7. **(In Progress)**
+3.  **User:** Asks to analyze the difference between  (from POS) and admin visibility controls. **(Completed)**
+4.  **Agent:** Explains that  hides the ADD button, while admin visibility removes the item from the UI entirely.
+5.  **User:** Confirms this is the expected behavior and asks for the final plan. **(Completed)**
+6.  **Agent:** Presents the final, detailed implementation plan for the category/item timing feature.
+7.  **User:** Approves the plan (Yes). **(Completed)**
+8.  **Agent:** Implements the full feature across frontend and backend. **(Completed)**
+9.  **Agent:** Verifies the implementation with logic tests and confirms completion. **(Completed)**
+10. **(PENDING HUMAN MESSAGE):** The agent has just finished the implementation and needs to ask the user if they should run the testing agent or if the user wants to test it themselves.
 
 **Project Health Check:**
--   **Broken:** The main feature of viewing menu items for multi-menu restaurants is broken due to the API station name mismatch.
--   **Mocked:** Station images and timings on the station selection page are using placeholders as requested by the user.
+-   **Broken:** The core functionality of viewing items in a multi-menu restaurant (e.g., ID ) is still broken due to the API Station Name Mismatch bug from the previous session.
+-   **Mocked:** Station images and timings on the station selection page are still using placeholders.
 
 **3rd Party Integrations**
--   None added in this session.
+-   None added.
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None
--   **Known regressions:** The main refactoring introduced a new bug where clicking a station card leads to an empty menu page.
+-   **Known regressions:** The multi-menu item listing bug from the previous session is still present.
 
 **Credentials to test flow:**
--   No explicit credentials.
--   Test with restaurant ID  to reproduce the multi-menu flow and bug.
--   Test with restaurant ID  to verify single-menu restaurant flow is not broken.
+-   Testing the new admin settings requires an admin login. The agent determined this is tied to the restaurant login but did not find specific credentials. The next agent will need to investigate how to log in as an administrator to test the new features.
 
 **What agent forgot to execute**
--   The agent did not forget to execute any steps but is in the middle of a complex task. The immediate next step is to fix the station name mismatch bug.
--   The planned task to remove silent fallbacks for environment variables has been deferred and should be picked up after the current feature is complete.</analysis>
+-   The agent correctly followed user requests to deprioritize the original P0 bug in favor of new features. Nothing was forgotten; tasks were explicitly deferred.</analysis>
