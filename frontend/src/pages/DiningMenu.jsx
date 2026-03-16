@@ -128,21 +128,27 @@ const DiningMenu = () => {
       )}
 
       {/* Stations List */}
-      {!loading && !error && (
-        <div className="stations-list">
-          {stations.map((station) => {
-            const isAvailable = isStationAvailable(station.timing);
-            
-            return (
-              <StationCard
-                key={station.id}
-                station={station}
-                isAvailable={isAvailable}
-                onClick={() => handleStationClick(station.id, station.timing )}
-              />
-            );
-          })}
-        </div>
+      {!loading && !error && stations.length > 0 && (
+        <>
+          <div className="station-page-title">
+            <h2>Select a Menu</h2>
+            <p>Choose from the available menus below</p>
+          </div>
+          <div className="stations-list">
+            {stations.map((station) => {
+              const isAvailable = isStationAvailable(station.timing);
+              
+              return (
+                <StationCard
+                  key={station.id}
+                  station={station}
+                  isAvailable={isAvailable}
+                  onClick={() => handleStationClick(station.id, station.timing )}
+                />
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Empty State */}
