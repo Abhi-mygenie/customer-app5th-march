@@ -64,7 +64,7 @@ const LandingPage = () => {
     const checkTable = async () => {
       // Skip if: no table scanned, or is multi-menu restaurant, or already checked
       if (!isScanned || !scannedTableId || !restaurantId) return;
-      if (isMultipleMenu(stations)) return;
+      if (isMultipleMenu(restaurant)) return;
       if (tableStatusCheck.isChecked) return;
 
       setTableStatusCheck(prev => ({ ...prev, isLoading: true }));
@@ -187,7 +187,7 @@ const LandingPage = () => {
           // On error, save as guest and go to menu
           const guestData = { name: capturedName, phone: capturedPhone, restaurantId };
           localStorage.setItem('guestCustomer', JSON.stringify(guestData));
-          if (isMultipleMenu(stations)) {
+          if (isMultipleMenu(restaurant)) {
             navigate(`/${actualRestaurantId}/stations`);
           } else {
             navigate(`/${actualRestaurantId}/menu`);
@@ -204,7 +204,7 @@ const LandingPage = () => {
       const guestData = { name: capturedName, phone: capturedPhone, restaurantId };
       localStorage.setItem('guestCustomer', JSON.stringify(guestData));
     }
-    if (isMultipleMenu(stations)) {
+    if (isMultipleMenu(restaurant)) {
       navigate(`/${actualRestaurantId}/stations`);
     } else {
       navigate(`/${actualRestaurantId}/menu`);
@@ -243,7 +243,7 @@ const LandingPage = () => {
 
       // Navigate to menu to add more items
       const actualRestaurantId = restaurant?.id || restaurantId;
-      if (isMultipleMenu(stations)) {
+      if (isMultipleMenu(restaurant)) {
         navigate(`/${actualRestaurantId}/stations`);
       } else {
         navigate(`/${actualRestaurantId}/menu`);

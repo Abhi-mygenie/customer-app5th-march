@@ -1,14 +1,14 @@
 /**
  * Restaurant configuration utilities
- * Determines multi-menu status dynamically from menu-master API data
+ * Determines multi-menu status from POS API's multiple_menu flag
  */
 
 /**
- * Check if a restaurant has multiple menus (stations)
- * Driven by stations data from useStations hook (menu-master API)
- * @param {Array} stations - Array of station objects from useStations
- * @returns {boolean} true if restaurant has station menus
+ * Check if a restaurant has multiple menus
+ * Uses the multiple_menu flag from the restaurant-info POS API
+ * @param {Object} restaurant - Restaurant object from useRestaurantDetails
+ * @returns {boolean} true if restaurant is multi-menu
  */
-export const isMultipleMenu = (stations) => {
-  return Array.isArray(stations) && stations.length > 0;
+export const isMultipleMenu = (restaurant) => {
+  return restaurant?.multiple_menu === 'Yes';
 };

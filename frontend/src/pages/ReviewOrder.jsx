@@ -423,7 +423,7 @@ const ReviewOrder = () => {
   }, [restaurant, isCustomerDetailsFilled, configShowLoyaltyPoints]);
 
   // Check if restaurant has multiple menus (table number required)
-  const isMultiMenu = isMultipleMenu(stations);
+  const isMultiMenu = isMultipleMenu(restaurant);
 
   // Order page configurability flags - from admin config
   const showCustomerDetails = configShowCustomerDetails;

@@ -294,7 +294,7 @@ const OrderSuccess = () => {
   useEffect(() => {
     if (!orderData) {
       if (restaurantId) {
-        if (isMultipleMenu(stations)) {
+        if (isMultipleMenu(restaurant)) {
           navigate(`/${restaurantId}/stations`, { replace: true });
         } else {
           navigate(`/${restaurantId}/menu`, { replace: true });
@@ -311,7 +311,7 @@ const OrderSuccess = () => {
   const currentStepIndex = ORDER_STATUSES.findIndex(s => s.key === (fOrderStatus ?? 7));
 
   const handleGoToMenu = () => {
-    if (isMultipleMenu(stations)) {
+    if (isMultipleMenu(restaurant)) {
       navigate(`/${restaurantId}/stations`, { replace: true });
     } else {
       navigate(`/${restaurantId}/menu`, { replace: true });
@@ -341,7 +341,7 @@ const OrderSuccess = () => {
       );
 
       // Navigate to menu to add more items
-      if (isMultipleMenu(stations)) {
+      if (isMultipleMenu(restaurant)) {
         navigate(`/${restaurantId}/stations`, { replace: true });
       } else {
         navigate(`/${restaurantId}/menu`, { replace: true });

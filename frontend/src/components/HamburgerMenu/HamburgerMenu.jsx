@@ -160,7 +160,7 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
             };
             const pathMap = {
               home: menuBasePath || '/',
-              menu: isMultipleMenu(stations) ? `${menuBasePath}/stations` : `${menuBasePath}/menu`,
+              menu: isMultipleMenu(restaurant) ? `${menuBasePath}/stations` : `${menuBasePath}/menu`,
               about: `${menuBasePath}/about`,
               contact: `${menuBasePath}/contact`,
               feedback: `${menuBasePath}/feedback`,
