@@ -95,8 +95,8 @@ const DEFAULT_CONFIG = {
   otpRequiredRoomOrders: false,
   // Restaurant Operating Shifts
   restaurantShifts: [{ start: '06:00', end: '03:00' }],
-  // Restaurant Open master toggle (default closed)
-  restaurantOpen: false,
+  // Restaurant Open master toggle (default open)
+  restaurantOpen: true,
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -410,7 +410,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Restaurant Operating Shifts
     restaurantShifts: config.restaurantShifts || [{ start: '06:00', end: '03:00' }],
     // Restaurant Open master toggle
-    restaurantOpen: config.restaurantOpen === true,
+    restaurantOpen: config.restaurantOpen !== false,
   };
 
   return (

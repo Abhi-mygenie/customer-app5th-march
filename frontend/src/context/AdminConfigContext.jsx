@@ -102,8 +102,8 @@ const defaultConfig = {
   browseMenuButtonText: 'Browse Menu',
   // Restaurant Operating Shifts
   restaurantShifts: [{ start: '06:00', end: '03:00' }],
-  // Restaurant Open master toggle (default closed)
-  restaurantOpen: false,
+  // Restaurant Open master toggle (default open)
+  restaurantOpen: true,
   // Menu Order
   menuOrder: null,
 };

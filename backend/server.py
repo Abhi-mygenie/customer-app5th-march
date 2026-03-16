@@ -913,8 +913,8 @@ async def get_app_config(restaurant_id: str):
             "otpRequiredRoomOrders": False,
             # Restaurant Operating Shifts
             "restaurantShifts": [{"start": "06:00", "end": "03:00"}],
-            # Restaurant Open master toggle (default closed)
-            "restaurantOpen": False,
+            # Restaurant Open master toggle (default open)
+            "restaurantOpen": True,
         }
     
     return config

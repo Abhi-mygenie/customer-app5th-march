@@ -146,17 +146,17 @@ const AdminSettingsPage = () => {
             <span className="admin-master-toggle-label">Restaurant Open</span>
             <span className="admin-form-hint">Master switch — when OFF, the "Add" button is hidden for all customers</span>
           </div>
-          <label className="admin-toggle-switch" data-testid="restaurant-open-toggle">
+          <label className="admin-master-toggle-switch" data-testid="restaurant-open-toggle">
             <input
               type="checkbox"
-              checked={config.restaurantOpen === true}
+              checked={config.restaurantOpen !== false}
               onChange={(e) => updateField('restaurantOpen', e.target.checked)}
             />
-            <span className="admin-toggle-slider"></span>
+            <span className="admin-master-toggle-knob"></span>
           </label>
         </div>
 
-        <div style={{ opacity: config.restaurantOpen ? 1 : 0.5, pointerEvents: config.restaurantOpen ? 'auto' : 'none' }}>
+        <div style={{ opacity: config.restaurantOpen !== false ? 1 : 0.5, pointerEvents: config.restaurantOpen !== false ? 'auto' : 'none' }}>
         {(config.restaurantShifts || [{ start: '06:00', end: '03:00' }]).map((shift, index) => (
           <div key={index} className="admin-shift-row" data-testid={`shift-row-${index}`}>
             <span className="admin-shift-label">Shift {index + 1}</span>
