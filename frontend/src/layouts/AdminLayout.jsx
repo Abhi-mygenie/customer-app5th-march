@@ -13,7 +13,8 @@ import {
   IoLogOutOutline,
   IoMenuOutline,
   IoCloseOutline,
-  IoSaveOutline
+  IoSaveOutline,
+  IoQrCodeOutline
 } from 'react-icons/io5';
 import toast from 'react-hot-toast';
 import './AdminLayout.css';
@@ -26,6 +27,7 @@ const navItems = [
   { path: 'content', label: 'Content', icon: IoDocumentOutline },
   { path: 'menu', label: 'Menu Order', icon: IoRestaurantOutline },
   { path: 'dietary', label: 'Dietary Tags', icon: IoPricetagsOutline },
+  { path: 'qr-scanners', label: 'QR Codes', icon: IoQrCodeOutline },
 ];
 
 const AdminLayoutContent = () => {

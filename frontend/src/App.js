@@ -29,6 +29,7 @@ import AdminBannersPage from './pages/admin/AdminBannersPage';
 import AdminContentPage from './pages/admin/AdminContentPage';
 import AdminMenuPage from './pages/admin/AdminMenuPage';
 import AdminDietaryPage from './pages/admin/AdminDietaryPage';
+import AdminQRPage from './pages/admin/AdminQRPage';
 
 // Create a QueryClient instance with default options
 const queryClient = new QueryClient({
@@ -73,6 +74,7 @@ function App() {
                 <Route path="content" element={<AdminContentPage />} />
                 <Route path="menu" element={<AdminMenuPage />} />
                 <Route path="dietary" element={<AdminDietaryPage />} />
+                <Route path="qr-scanners" element={<AdminQRPage />} />
               </Route>
               
               {/* Legacy admin route - redirect to new layout */}

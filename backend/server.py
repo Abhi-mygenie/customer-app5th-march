@@ -725,6 +725,67 @@ async def get_order_details(order_id: str):
     except httpx.RequestError as e:
         raise HTTPException(status_code=503, detail=f"MyGenie API unavailable: {str(e)}")
 
+@api_router.get("/table-config")
+async def get_table_config(user: dict = Depends(get_restaurant_user)):
+    """Fetch table/room config from POS API using stored mygenie_token"""
+    import httpx
+    from urllib.parse import unquote, urlparse
+
+    mygenie_token = user.get("mygenie_token")
+    if not mygenie_token:
+        raise HTTPException(status_code=400, detail="No POS token found for this restaurant")
+
+    # Derive v2 base URL from MYGENIE_API_URL (replace /api/v1 with /api/v2)
+    base_url = MYGENIE_API_URL.replace("/api/v1", "")
+    url = f"{base_url}/api/v2/vendoremployee/restaurant-settings/table-config"
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as http_client:
+            response = await http_client.get(
+                url,
+                headers={
+                    "accept": "application/json",
+                    "authorization": f"Bearer {mygenie_token}",
+                },
+            )
+
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail="POS API error")
+
+            data = response.json()
+            if not data.get("success"):
+                raise HTTPException(status_code=502, detail="POS API returned an error")
+
+            pos_data = data.get("data", {})
+            all_items = pos_data.get("tables", [])
+
+            # Extract subdomain from the first table's Normal QR URL
+            subdomain = ""
+            for item in all_items:
+                normal_url = (item.get("qr_code_urls") or {}).get("Normal", "")
+                if normal_url:
+                    decoded = unquote(normal_url)
+                    # Pattern: ...data=https://subdomain/rid?...
+                    if "data=" in decoded:
+                        target = decoded.split("data=")[1].split("?")[0]
+                        parsed = urlparse(target)
+                        subdomain = parsed.hostname or ""
+                    break
+
+            tables = [t for t in all_items if t.get("rtype") == "TB"]
+            rooms = [t for t in all_items if t.get("rtype") == "RM"]
+
+            return {
+                "tables": tables,
+                "rooms": rooms,
+                "subdomain": subdomain,
+                "restaurant_id": pos_data.get("restaurant_id"),
+                "restaurant_name": pos_data.get("restaurant_name"),
+            }
+
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=503, detail=f"POS API unavailable: {str(e)}")
+
 @customer_router.get("/points", response_model=List[PointsTransaction])
 async def get_customer_points(
     limit: int = 50,
