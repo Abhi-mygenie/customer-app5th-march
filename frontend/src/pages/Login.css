@@ -206,6 +206,18 @@
   border: 1px solid #bbf7d0;
 }
 
+.login-dev-otp {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-container-sm, 6px);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
 .login-note {
   font-family: var(--font-body);
   font-size: var(--font-size-xs);

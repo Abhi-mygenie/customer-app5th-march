@@ -27,6 +27,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [devOtp, setDevOtp] = useState('');
 
   const logoSrc = configLogoUrl || '/assets/images/ic_login_logo.png';
 
@@ -102,6 +103,7 @@ const Login = () => {
 
       setOtpSent(true);
       setOtp('');
+      setDevOtp(data.otp_for_testing || '');
       setStep(forForgot ? 'forgot-otp' : 'otp');
     } catch (err) {
       setError(err.message);
@@ -375,6 +377,11 @@ const Login = () => {
             <p className="login-subtitle">
               OTP sent to <strong>{phone}</strong>
             </p>
+            {devOtp && (
+              <div className="login-dev-otp" data-testid="dev-otp-display">
+                Your OTP is: <strong>{devOtp}</strong>
+              </div>
+            )}
             <div className="input-group">
               <span className="input-icon"><IoKeyOutline /></span>
               <input
@@ -414,6 +421,11 @@ const Login = () => {
             <p className="login-subtitle">
               Enter the OTP sent to <strong>{phone}</strong> to verify your identity
             </p>
+            {devOtp && (
+              <div className="login-dev-otp" data-testid="dev-otp-forgot-display">
+                Your OTP is: <strong>{devOtp}</strong>
+              </div>
+            )}
             <div className="input-group">
               <span className="input-icon"><IoKeyOutline /></span>
               <input
