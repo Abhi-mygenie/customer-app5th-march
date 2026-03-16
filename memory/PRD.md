@@ -1,130 +1,84 @@
 # Customer App PRD
 
 ## Original Problem Statement
-1. Pull code from default branch https://github.com/Abhi-mygenie/customer-app5th-march.git
-2. Use db: mongodb://mygenie_admin:***@52.66.232.149:27017/mygenie
-3. Build as-is
-4. Don't run testing agent
-5. Split Admin (Web) vs Customer (Mobile) layouts
+Restaurant customer app with multi-tenant support. Admin (Web) vs Customer (Mobile) layouts. Connected to remote POS API (MyGenie) and MongoDB.
 
 ## Architecture
 - **Backend**: FastAPI (Python) - `/app/backend/server.py`
-- **Frontend**: React with React Query, Tailwind CSS, shadcn/ui components
+- **Frontend**: React with React Query, Tailwind CSS, shadcn/ui
 - **Database**: Remote MongoDB at 52.66.232.149
 
 ## What's Been Implemented
 
-### Jan 2026 - Initial Setup
-- [x] Cloned repository from GitHub
-- [x] Configured backend .env with remote MongoDB connection
-- [x] Configured frontend .env with backend URL
-- [x] Installed all dependencies (pip + yarn)
-- [x] Started both services via supervisor
-
-### Jan 2026 - Admin Web Layout
-- [x] Created AdminLayout.jsx with sidebar navigation
-- [x] Created AdminConfigContext for shared state
-- [x] Split AdminSettings into 7 separate pages:
-  - AdminSettingsPage (logo, welcome, hours)
-  - AdminBrandingPage (colors, fonts, images)
-  - AdminVisibilityPage (toggles grid)
-  - AdminBannersPage (table + form)
-  - AdminContentPage (about, footer, extras)
-  - AdminMenuPage (menu ordering)
-  - AdminDietaryPage (dietary tags)
-- [x] Updated App.js with nested admin routes
-- [x] Customer pages remain unchanged (mobile-first)
-
-### Jan 2026 - Menu Order UX Improvements
-- [x] Added drag-and-drop using @dnd-kit library
-- [x] Search bar for filtering categories
-- [x] Modern toggle switches for visibility
-- [x] Bulk actions (Show All / Hide All)
-- [x] Item count badges and preview text
-- [x] Loading spinner and empty states
-- [x] Responsive design improvements
-
-### Mar 2026 - Bug Fix: Multi-Menu Sidebar
-- [x] Fixed customer-facing sidebar for multi-menu restaurants (716/739)
-
-### Mar 2026 - Fix: Subdomain Routing Resolution
-- [x] Fixed `useRestaurantId.js` to resolve subdomain → numeric ID via restaurant-info API
-
-### Mar 2026 - Audit
-- [x] Full codebase audit documented at `/app/memory/AUDIT_REPORT.md`
+### Jan 2026 - Initial Setup & Admin Layout
+- [x] Cloned repo, configured backend/frontend, installed deps
+- [x] AdminLayout with sidebar nav, split into 7 admin pages
+- [x] Menu drag-drop, search, bulk actions, toggle switches
 
 ### Mar 2026 - Multi-Layered Timing Controls (VERIFIED)
-- [x] **Master Open/Close Toggle**: Restaurant-wide ordering toggle in Admin Settings (default: ON)
-- [x] **Multi-Shift Support**: Up to 4 operating shifts with start/end times (replaces single open/close)
-- [x] **Category Timing Overrides**: Admin can set specific time windows for menu categories
-- [x] **Item Timing Overrides**: Admin can set specific time windows for individual items
-- [x] **POS Null Time Handling**: Items with null POS times treated as 24/7 available
-- [x] **Timing Cascade**: live_web → master toggle → shifts → category timing → item timing → POS times
-- [x] **Testing**: 100% pass rate - backend (9/9) and frontend (all features) verified via testing agent
+- [x] Master open/close toggle, multi-shift (up to 4), category/item timing overrides
+- [x] POS null time = 24/7 available, full timing cascade
 
-## Key Features (from codebase)
-- Restaurant customer app with multi-tenant support
-- Authentication (OTP + Password based)
-- Menu browsing with stations
-- Cart & Order management
-- Customer profiles with loyalty points
-- Admin settings for restaurant customization (web-optimized)
-- Dietary tags support
-- Promotional banners
+### Mar 2026 - Admin QR Scanner Page
+- [x] Backend: `GET /api/table-config` proxy endpoint (auth required)
+- [x] Frontend: `/admin/qr-scanners` with Order Type QR codes (dine-in, delivery, take away)
+- [x] Per-table QR codes with individual download + bulk ZIP download
+- [x] QR codes generated client-side using qrcode.react
+- [x] **Known issue**: QR URLs missing base URL (baseUrl empty) — needs fix
 
-## Core Requirements
-- Connect to remote MongoDB (mygenie database)
-- Serve frontend on port 3000
-- Serve backend API on port 8001
-- Admin panel uses web layout (sidebar)
-- Customer pages use mobile layout
+### Mar 2026 - Dynamic Multi-Menu Detection
+- [x] `isMultipleMenu()` now uses POS API `multiple_menu: "Yes"/"No"` flag
+- [x] Removed all hardcoded "716" references — renamed to `isMultiMenu`
+- [x] Kunafa Mahal (689) no longer shows false "Aggregator" station page
 
-## In Progress
-- P0: Fix station name mismatch — `/web/menu-master` returns `menu_name` (e.g. "GROK") but `/web/restaurant-product` expects `station_name` (e.g. "Grok") via `food_for` param. Fix in `useStations` hook in `/app/frontend/src/hooks/useMenuData.js`. Test with restaurant 716 (multi-menu) and 709 (single-menu).
+### Mar 2026 - Station Selection Page Redesign
+- [x] Horizontal cards: image placeholder (brand color) + name + timing + arrow
+- [x] Brand colors from restaurant config applied
+- [x] Placeholder timings for demo (Breakfast 7-11 AM, Bar 5-11 PM, etc.)
+- [x] Disabled state for stations outside operating hours
+- [x] "Select a Menu" title section
+
+### Mar 2026 - Customer Login Revamp (VERIFIED)
+- [x] Unified login: phone + password fields upfront
+- [x] Flow A: Password login (admin + customer)
+- [x] Flow B: OTP login (customer only) with "Use OTP instead" link
+- [x] Flow C: Forgot Password (OTP verify → reset password)
+- [x] Flow D: Set Password prompt after every OTP login if no password set
+- [x] `has_password` flag in login response
+- [x] Restaurant logo + name on login page (from config)
+- [x] Backend: customer password login support added to `/api/auth/login`
+- [x] AuthContext: added `setAuth()` for direct auth state setting
+
+## Pending / In Progress
+- **P0**: Fix QR code broken URLs (baseUrl empty — subdomain/restaurantId not populated)
+- **P1**: Remove silent env fallbacks
 
 ## Backlog
-- P1: Admin QR Scanner Page (plan below)
-- P1: Remove silent fallbacks for env variables (fail fast)
-- P1: Test drag-drop with large menus
-- P2: Global CSS scoping review (admin styles vs customer styles)
-- P2: Add undo/redo for reordering
-- P2: Code audit action items (see `/app/memory/AUDIT_REPORT.md`)
-- P2: Dynamic station images & timings
+- Wire up real menu-master API data (image, description, opening_time, closing_time) when available
+- Code audit action items (`/app/memory/AUDIT_REPORT.md`)
+- CSS scoping review (admin vs customer)
+- Dynamic station images
+- Undo/redo for menu reordering
 
-## Upcoming — Admin QR Scanner Page
-- **Feature:** New admin panel page "QR Scanners" for generating & downloading QR codes
-- **Route:** `/admin/qr-scanners` (add to sidebar)
-- **Data Sources:**
-  - `subdomain` + `restaurant_id` → from login/auth context
-  - Tables & Rooms → `GET /api/v2/vendoremployee/restaurant-settings/table-config` (auth: Bearer token)
-    - Returns `{ data: { tables: [...], restaurant_id, restaurant_name } }`
-    - Each table: `{ id, table_no, rtype: "TB"|"RM", title, status, qr_code_urls }`
-    - Test token: `nY44KJn3ffbJQ2NQryFmFSLDAU9J5qsRJyR7MMFYaWesliKz23JDerMk51Bz3C70VU3tN8uQ4yI1D99My2BaoBfLrhD3wLaAJpTaSMpuvaANH4i3McGQPsCY`
-  - Menu → from `/web/menu-master`
-- **QR URL Patterns:**
-  - Dine-In (generic): `https://{subdomain}/{rid}?orderType=dinein`
-  - Delivery: `https://{subdomain}/{rid}?orderType=delivery`
-  - Take Away: `https://{subdomain}/{rid}?orderType=take_away`
-  - Dine-In per Table: `https://{subdomain}/{rid}?tableId={id}&tableName={table_no}&type=table&orderType=dinein`
-  - Dine-In per Room: `https://{subdomain}/{rid}?tableId={id}&tableName={table_no}&type=room&orderType=dinein`
-- **Features:** Generate QR client-side (e.g. `qrcode.react`), download as PNG, bulk download as ZIP
-- **Phase 2:** Add multi-menu/station QR support
+## DB Schema
+### customers collection (login-related)
+- `id`, `user_id` (scoped: `pos_{posId}_restaurant_{rid}`)
+- `phone`, `name`, `password_hash` (optional)
+- `tier`, `total_points`, `wallet_balance`, `total_visits`, `total_spent`
 
-## Routes
-- `/admin/settings` - Settings page
-- `/admin/branding` - Branding page
-- `/admin/visibility` - Visibility toggles
-- `/admin/banners` - Banner management
-- `/admin/content` - Content pages
-- `/admin/menu` - Menu ordering
-- `/admin/dietary` - Dietary tags
-
-## DB Schema - Timing Fields
-The `customer_app_config` collection:
-- `restaurantOpen: bool` (default: true)
-- `restaurantShifts: List[Dict]` (default: [{start: "06:00", end: "03:00"}])
-- `categoryTimings: Dict` (default: {})
-- `itemTimings: Dict` (default: {})
+### customer_app_config collection (timing fields)
+- `restaurantOpen: bool`, `restaurantShifts: List[Dict]`
+- `categoryTimings: Dict`, `itemTimings: Dict`
 
 ## Admin Credentials
-- Restaurant 709: email=owner@youngmonk.com, password=admin123
+- Restaurant 709 (Young Monk): email=owner@youngmonk.com, password=admin123
+- Customer test: phone=7505242126, restaurant_id=709
+
+## Key API Endpoints
+- `POST /api/auth/login` — unified login (password + OTP for customers, password for admin)
+- `POST /api/auth/send-otp` — send OTP to customer phone
+- `POST /api/auth/set-password` — set password for customer
+- `POST /api/auth/reset-password` — reset password via OTP
+- `GET /api/table-config` — proxy for POS table config (auth required)
+- `GET /api/config/:restaurantId` — get restaurant admin config
+- `PUT /api/config/` — save restaurant admin config
