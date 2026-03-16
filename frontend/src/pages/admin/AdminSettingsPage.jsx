@@ -138,9 +138,25 @@ const AdminSettingsPage = () => {
           <IoTimeOutline /> Restaurant Operating Shifts
         </h2>
         <p className="admin-form-hint" style={{ marginBottom: '16px' }}>
-          Define up to 4 shifts. The "Add to cart" button is only visible during active shifts.
+          Define up to 4 shifts. The "Add to cart" button is only visible when restaurant is open and within active shifts.
         </p>
 
+        <div className="admin-master-toggle-row" data-testid="restaurant-open-toggle-row">
+          <div className="admin-master-toggle-info">
+            <span className="admin-master-toggle-label">Restaurant Open</span>
+            <span className="admin-form-hint">Master switch — when OFF, the "Add" button is hidden for all customers</span>
+          </div>
+          <label className="admin-toggle-switch" data-testid="restaurant-open-toggle">
+            <input
+              type="checkbox"
+              checked={config.restaurantOpen === true}
+              onChange={(e) => updateField('restaurantOpen', e.target.checked)}
+            />
+            <span className="admin-toggle-slider"></span>
+          </label>
+        </div>
+
+        <div style={{ opacity: config.restaurantOpen ? 1 : 0.5, pointerEvents: config.restaurantOpen ? 'auto' : 'none' }}>
         {(config.restaurantShifts || [{ start: '06:00', end: '03:00' }]).map((shift, index) => (
           <div key={index} className="admin-shift-row" data-testid={`shift-row-${index}`}>
             <span className="admin-shift-label">Shift {index + 1}</span>
@@ -203,6 +219,7 @@ const AdminSettingsPage = () => {
             <IoAddCircleOutline /> Add Shift
           </button>
         )}
+        </div>
       </div>
     </div>
   );

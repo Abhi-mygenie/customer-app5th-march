@@ -202,6 +202,8 @@ class AppConfigUpdate(BaseModel):
     otpRequiredRoomOrders: Optional[bool] = None
     # Restaurant Operating Shifts (up to 4)
     restaurantShifts: Optional[List[dict]] = None  # [{ "start": "07:00", "end": "11:00" }, ...]
+    # Restaurant Open master toggle
+    restaurantOpen: Optional[bool] = None
 
 class SetPasswordRequest(BaseModel):
     phone: str
@@ -911,6 +913,8 @@ async def get_app_config(restaurant_id: str):
             "otpRequiredRoomOrders": False,
             # Restaurant Operating Shifts
             "restaurantShifts": [{"start": "06:00", "end": "03:00"}],
+            # Restaurant Open master toggle (default closed)
+            "restaurantOpen": False,
         }
     
     return config

@@ -506,6 +506,72 @@
 /* ============================================
    Operating Shifts
    ============================================ */
+.admin-master-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.admin-master-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-master-toggle-label {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.admin-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.admin-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.admin-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #cbd5e1;
+  border-radius: 26px;
+  transition: background-color 0.25s;
+}
+
+.admin-toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s;
+}
+
+.admin-toggle-switch input:checked + .admin-toggle-slider {
+  background-color: #22c55e;
+}
+
+.admin-toggle-switch input:checked + .admin-toggle-slider::before {
+  transform: translateX(22px);
+}
+
 .admin-shift-row {
   display: flex;
   align-items: flex-end;

@@ -25,7 +25,7 @@ const MenuItems = () => {
   const { stationId } = useParams();
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
-  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantShifts, menuOrder } = useRestaurantConfig();
+  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantShifts, restaurantOpen, menuOrder } = useRestaurantConfig();
   const [stationName, setStationName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -122,6 +122,7 @@ const MenuItems = () => {
 
   // Check if online ordering is enabled AND restaurant is currently open
   const isOnlineOrderEnabled = (restaurant?.online_order === 'Yes' || restaurant?.online_order === undefined) 
+    && restaurantOpen === true
     && isRestaurantOpen(restaurantShifts);
 
   // Fetch admin config for this restaurant
