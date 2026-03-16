@@ -173,12 +173,26 @@ export const useStations = (restaurantId) => {
       // Filter out standard menus to get station-specific menus
       const stationMenus = menus.filter(m => !STANDARD_MENUS.includes(m.menu_name));
       // Map to expected station format with placeholders for image/timing
+      // TODO: Replace with real data when menu-master API provides opening_time, closing_time, description, image
+      const PLACEHOLDER_TIMINGS = {
+        'Breakfast': '(7 AM - 11 AM)',
+        'FOOD MENU': '(11 AM - 11 PM)',
+        'Kids Menu': '(11 AM - 9 PM)',
+        'Bar & Drinks': '(5 PM - 11 PM)',
+        'PET FOOD': '(8 AM - 10 PM)',
+        'Tea, Coffee & Soft Beverages': '(6 AM - 6 PM)',
+        '24hrs Menu': null,
+        'GROK': '(12 PM - 3 PM)',
+      };
       return stationMenus.map(menu => ({
         id: menu.menu_name,
         name: menu.menu_name,
         menuId: menu.id,
-        image: null,   // Placeholder — will come from API later
-        timing: null,  // Placeholder — null means always available
+        image: menu.image || null,
+        description: menu.description || null,
+        timing: menu.opening_time && menu.closing_time
+          ? `(${menu.opening_time} - ${menu.closing_time})`
+          : (PLACEHOLDER_TIMINGS[menu.menu_name] !== undefined ? PLACEHOLDER_TIMINGS[menu.menu_name] : null),
       }));
     },
     enabled: !!finalRestaurantId,
