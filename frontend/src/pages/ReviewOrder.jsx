@@ -579,9 +579,9 @@ const ReviewOrder = () => {
   // Grand Total = Subtotal after discounts + Adjusted Tax
   const totalToPay = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
 
-  // Total Rounding - when enabled, round grand total to nearest whole number
+  // Total Rounding - when enabled, round grand total UP to nearest whole number
   const isTotalRoundEnabled = restaurant?.total_round === 'Yes';
-  const roundedTotal = isTotalRoundEnabled ? Math.round(totalToPay) : totalToPay;
+  const roundedTotal = isTotalRoundEnabled ? Math.ceil(totalToPay) : totalToPay;
   const roundingDifference = isTotalRoundEnabled ? parseFloat((roundedTotal - totalToPay).toFixed(2)) : 0;
 
   // console.log('totalTax', totalTax);
