@@ -1,84 +1,264 @@
-# Customer App PRD
+# Customer App - Project Documentation
 
-## Original Problem Statement
-Restaurant customer app with multi-tenant support. Admin (Web) vs Customer (Mobile) layouts. Connected to remote POS API (MyGenie) and MongoDB.
+## Last Updated: March 20, 2026
 
-## Architecture
-- **Backend**: FastAPI (Python) - `/app/backend/server.py`
-- **Frontend**: React with React Query, Tailwind CSS, shadcn/ui
-- **Database**: Remote MongoDB at 52.66.232.149
+---
 
-## What's Been Implemented
+## Project Overview
+- **Repository**: https://github.com/Abhi-mygenie/customer-app5th-march.git
+- **Database**: MongoDB at `52.66.232.149:27017/mygenie`
+- **Tech Stack**: React (Frontend) + FastAPI (Backend) + MongoDB
+- **Preview URL**: https://a9f7621f-0bce-4932-a3f9-6bf208e1a576.preview.emergentagent.com
 
-### Jan 2026 - Initial Setup & Admin Layout
-- [x] Cloned repo, configured backend/frontend, installed deps
-- [x] AdminLayout with sidebar nav, split into 7 admin pages
-- [x] Menu drag-drop, search, bulk actions, toggle switches
+---
 
-### Mar 2026 - Multi-Layered Timing Controls (VERIFIED)
-- [x] Master open/close toggle, multi-shift (up to 4), category/item timing overrides
-- [x] POS null time = 24/7 available, full timing cascade
+## Base URLs Used in Project
 
-### Mar 2026 - Admin QR Scanner Page
-- [x] Backend: `GET /api/table-config` proxy endpoint (auth required)
-- [x] Frontend: `/admin/qr-scanners` with Order Type QR codes (dine-in, delivery, take away)
-- [x] Per-table QR codes with individual download + bulk ZIP download
-- [x] QR codes generated client-side using qrcode.react
-- [x] **Known issue**: QR URLs missing base URL (baseUrl empty) — needs fix
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `REACT_APP_API_BASE_URL` | `https://preprod.mygenie.online/api/v1` | External POS API |
+| `REACT_APP_BACKEND_URL` | From env | Local FastAPI backend |
+| `REACT_APP_IMAGE_BASE_URL` | `https://manage.mygenie.online` | Image URLs |
 
-### Mar 2026 - Dynamic Multi-Menu Detection
-- [x] `isMultipleMenu()` now uses POS API `multiple_menu: "Yes"/"No"` flag
-- [x] Removed all hardcoded "716" references — renamed to `isMultiMenu`
-- [x] Kunafa Mahal (689) no longer shows false "Aggregator" station page
+---
 
-### Mar 2026 - Station Selection Page Redesign
-- [x] Horizontal cards: image placeholder (brand color) + name + timing + arrow
-- [x] Brand colors from restaurant config applied
-- [x] Placeholder timings for demo (Breakfast 7-11 AM, Bar 5-11 PM, etc.)
-- [x] Disabled state for stations outside operating hours
-- [x] "Select a Menu" title section
+## API Endpoints Summary
 
-### Mar 2026 - Customer Login Revamp (VERIFIED)
-- [x] Unified login: phone + password fields upfront
-- [x] Flow A: Password login (admin + customer)
-- [x] Flow B: OTP login (customer only) with "Use OTP instead" link
-- [x] Flow C: Forgot Password (OTP verify → reset password)
-- [x] Flow D: Set Password prompt after every OTP login if no password set
-- [x] `has_password` flag in login response
-- [x] Restaurant logo + name on login page (from config)
-- [x] Backend: customer password login support added to `/api/auth/login`
-- [x] AuthContext: added `setAuth()` for direct auth state setting
+### External POS API (preprod.mygenie.online/api/v1)
+- `/auth/login` - POS authentication
+- `/customer/order/place` - Place order
+- `/customer/order/autopaid-place-prepaid-order` - Place prepaid order
+- `/customer/order/update-customer-order` - Update order
+- `/air-bnb/get-order-details/{orderId}` - Get order details
+- `/web/restaurant-info` - Restaurant details (POST with restaurant_web)
+- `/web/restaurant-product` - Restaurant products/menu
+- `/web/menu-master` - Menu/stations list
+- `/web/table-config` - Table/room config
 
-## Pending / In Progress
-- **P0**: Fix QR code broken URLs (baseUrl empty — subdomain/restaurantId not populated)
-- **P1**: Remove silent env fallbacks
+### Local Backend API (/api)
+- Auth: `/api/auth/login`, `/api/auth/send-otp`, `/api/auth/set-password`, `/api/auth/me`
+- Customer: `/api/customer/orders`, `/api/customer/points`, `/api/customer/wallet`
+- Config: `/api/config/{restaurant_id}`, `/api/config/banners`, `/api/config/feedback`
+- Dietary: `/api/dietary-tags/available`, `/api/dietary-tags/{restaurant_id}`
+
+---
+
+## Implemented Features (March 2026)
+
+### 1. Egg Filter Color Fix
+**Date**: March 20, 2026
+**File**: `/app/frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.css`
+**Changes**:
+- Line 111: `.veg-toggle-btn.egg.active` color → `var(--color-egg)`
+- Line 156: `.veg-dot-yellow` border-color → `var(--color-egg)`
+- Line 169: `.veg-dot-yellow::after` background → `var(--color-egg)`
+**Result**: Egg filter button now matches egg label color on food item cards (#FFA500)
+
+---
+
+### 2. Total Rounding Feature (Review Order Page)
+**Date**: March 20, 2026
+**Files Modified**: 
+- `/app/frontend/src/pages/ReviewOrder.jsx`
+- `/app/frontend/src/pages/ReviewOrder.css`
+
+**Requirement**: When `total_round === 'Yes'` from restaurant-info API, round grand total UP (ceiling) and display original in brackets.
+
+**Implementation Details**:
+
+#### ReviewOrder.jsx Changes:
+1. **Lines 583-585** - Added rounding logic:
+```jsx
+const isTotalRoundEnabled = restaurant?.total_round === 'Yes';
+const roundedTotal = isTotalRoundEnabled ? Math.ceil(totalToPay) : totalToPay;
+const roundingDifference = isTotalRoundEnabled ? parseFloat((roundedTotal - totalToPay).toFixed(2)) : 0;
+```
+
+2. **Lines 1354-1358** - Grand Total display:
+```jsx
+<span className="price-value-total">
+  ₹{isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}
+  {isTotalRoundEnabled && roundedTotal !== totalToPay && (
+    <span className="original-total">(₹{totalToPay.toFixed(2)})</span>
+  )}
+</span>
+```
+
+3. **Lines 1477-1478** - Place Order button shows rounded amount
+
+4. **Lines 798, 918** - API payload sends rounded value:
+```jsx
+totalToPay: isTotalRoundEnabled ? roundedTotal : totalToPay,
+```
+
+5. **billSummary** updated with rounding info:
+```jsx
+billSummary: {
+  grandTotal: isTotalRoundEnabled ? roundedTotal : totalToPay,
+  originalTotal: totalToPay,
+  roundingApplied: isTotalRoundEnabled,
+  roundingDifference: roundingDifference
+}
+```
+
+#### ReviewOrder.css Changes:
+**Lines 1054-1059** - Added `.original-total` class:
+```css
+.original-total {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+```
+
+**Result**: 
+- Grand Total: ₹48 (₹47.26) - Rounded UP with original in brackets
+- Place Order button: ₹48 - Shows rounded amount
+- API receives rounded amount
+
+---
+
+### 3. Login Prompt Margin Fix
+**Date**: March 20, 2026
+**File**: `/app/frontend/src/pages/ReviewOrder.css`
+**Line**: 764
+
+**Change**:
+```css
+/* Before */
+margin: var(--spacing-sm) 0;
+
+/* After */
+margin-top: 20px;
+margin-bottom: 60px;
+```
+
+**Result**: "Earn rewards on this order!" login prompt no longer hidden behind Place Order button when multiple items in cart.
+
+---
+
+## Pending Implementation
+
+### 4. Order Success Page - Total Round Display
+**Status**: NOT YET IMPLEMENTED
+**File**: `/app/frontend/src/pages/OrderSuccess.jsx`
+**Line**: 565
+
+**Requirement**: 
+- When `total_round === 'Yes'`: Show `₹{liveOrderAmount || orderData.totalToPay} (₹{billSummary.grandTotal.toFixed(2)})`
+- When `total_round !== 'Yes'`: Show `₹{billSummary.grandTotal.toFixed(2)}`
+
+**Proposed Implementation**:
+1. Add variable after line 111:
+```jsx
+const isTotalRoundEnabled = restaurant?.total_round === 'Yes';
+```
+
+2. Update line 565:
+```jsx
+<span className="bill-value-total">
+  {isTotalRoundEnabled ? (
+    <>₹{liveOrderAmount || orderData.totalToPay} (₹{billSummary.grandTotal.toFixed(2)})</>
+  ) : (
+    <>₹{billSummary.grandTotal.toFixed(2)}</>
+  )}
+</span>
+```
+
+---
+
+## Restaurant Info API - Key Implementation Status
+
+### Implemented Keys (~19):
+id, name, phone, email, logo, address, tax, gst_tax, multiple_menu, food_for, delivery, take_away, veg, is_loyalty, is_coupon, description, slug, latitude, longitude, online_order
+
+### NOT Implemented Keys (~131):
+- **Billing/Rounding**: `total_round` (NOW IMPLEMENTED), currency
+- **Service Charges**: tip, service_charge, service_charge_percentage
+- **Timing**: available_time_starts, available_time_ends, food_timings
+- **Order Settings**: minimum_order, total_order, order_count, schedule_order
+- **Payment**: online_payment, pay_cash, pay_cc, pay_upi, razorpay
+- **GST/Tax**: gst_status, gst_code, vat
+- **Display**: theme, cover_photo, is_banner, is_category_box
+- **Food Options**: non_veg, dine_in
+- **Delivery**: free_delivery, delivery_time, delivery_fee
+- **Feedback/Rating**: feed_back, feedback_url, avg_rating, rating_count
+- And 100+ more...
+
+---
+
+## P0 - Critical Issues (From Original PRD)
+
+1. **Fix QR code broken URLs** - baseUrl empty, subdomain/restaurantId not populated
+
+---
+
+## P1 - High Priority
+
+1. **Remove silent env fallbacks** - Security concern with hardcoded credentials in authToken.js
+
+---
 
 ## Backlog
-- Wire up real menu-master API data (image, description, opening_time, closing_time) when available
-- Code audit action items (`/app/memory/AUDIT_REPORT.md`)
-- CSS scoping review (admin vs customer)
-- Dynamic station images
-- Undo/redo for menu reordering
 
-## DB Schema
-### customers collection (login-related)
-- `id`, `user_id` (scoped: `pos_{posId}_restaurant_{rid}`)
-- `phone`, `name`, `password_hash` (optional)
-- `tier`, `total_points`, `wallet_balance`, `total_visits`, `total_spent`
+1. Wire up real menu-master API data (image, description, opening_time, closing_time)
+2. Code audit action items (see `/app/memory/AUDIT_REPORT.md`):
+   - Remove hardcoded credentials in `authToken.js`
+   - Fix weak JWT secret with fallback
+   - Remove dead code (AdminSettings.jsx - 1,323 lines, SearchBar, FilterPanel, stationService.js)
+   - Fix CORS wildcard setting
+   - Clean up ~130+ console.log statements
+3. CSS scoping review (admin vs customer conflicts)
+4. Dynamic station images
+5. Undo/redo for menu reordering
 
-### customer_app_config collection (timing fields)
-- `restaurantOpen: bool`, `restaurantShifts: List[Dict]`
-- `categoryTimings: Dict`, `itemTimings: Dict`
+---
 
-## Admin Credentials
-- Restaurant 709 (Young Monk): email=owner@youngmonk.com, password=admin123
-- Customer test: phone=7505242126, restaurant_id=709
+## Completed Features (Jan-Mar 2026 - Historical)
 
-## Key API Endpoints
-- `POST /api/auth/login` — unified login (password + OTP for customers, password for admin)
-- `POST /api/auth/send-otp` — send OTP to customer phone
-- `POST /api/auth/set-password` — set password for customer
-- `POST /api/auth/reset-password` — reset password via OTP
-- `GET /api/table-config` — proxy for POS table config (auth required)
-- `GET /api/config/:restaurantId` — get restaurant admin config
-- `PUT /api/config/` — save restaurant admin config
+- Admin layout with 7 pages, menu drag-drop, timing controls
+- Admin QR Scanner page with per-table QR codes
+- Dynamic multi-menu detection, station selection redesign
+- Unified customer login (password + OTP flows)
+
+---
+
+## Technical Notes
+
+### Total Rounding Logic
+- Uses `Math.ceil()` for always rounding UP
+- `restaurant?.total_round === 'Yes'` enables rounding
+- Rounded value sent to API in `order_amount`
+- Original value stored in `billSummary.originalTotal`
+
+### Order Flow Data Sources
+| Stage | Data Source |
+|-------|-------------|
+| ReviewOrder display | Local calculation |
+| Place Order API payload | Rounded value (when enabled) |
+| OrderSuccess initial | Passed from ReviewOrder via location.state |
+| OrderSuccess after refresh | API response + local recalculation |
+
+---
+
+## File Reference
+
+### Key Files Modified in This Session:
+1. `/app/frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.css` - Egg filter color
+2. `/app/frontend/src/pages/ReviewOrder.jsx` - Total rounding logic
+3. `/app/frontend/src/pages/ReviewOrder.css` - Original total styling, login prompt margin
+4. `/app/frontend/src/pages/OrderSuccess.jsx` - Pending: Total round display
+
+### Configuration Files:
+- `/app/backend/.env` - MongoDB connection, JWT secret
+- `/app/frontend/.env` - API URLs
+
+---
+
+## Next Actions
+
+1. ✅ Implement Order Success page total_round conditional display
+2. Fix P0: QR code broken URLs
+3. Fix P1: Remove silent env fallbacks
+4. Continue with backlog items

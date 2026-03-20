@@ -34,7 +34,7 @@ const mapFoodOrderStatus = (item) => {
     };
     return statusMap[fStatus] || 'pending';
   }
-  
+
   return 'pending';
 };
 
@@ -126,10 +126,12 @@ const OrderSuccess = () => {
 
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
-  
+
+  const isTotalRoundEnabled = restaurant?.total_round === 'Yes';
+
   // Use billSummary from location.state (passed from ReviewOrder) as primary source
   const passedBillSummary = orderData?.billSummary || null;
-  
+
   // Use ONLY items from API (single source of truth)
   const allItems = liveOrderItems;
   const totalItemsCount = allItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
@@ -144,11 +146,11 @@ const OrderSuccess = () => {
   // Fetch order details and update item statuses
   const fetchOrderStatus = async (isInitial = false) => {
     if (!orderId) return;
-    
+
     try {
       if (isInitial) setIsLoadingStatus(true);
       const orderDetails = await getOrderDetails(orderId);
-      
+
       if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
         const updatedItems = orderDetails.previousItems.map(item => {
           // Calculate total unit price including variations and addons
@@ -185,21 +187,21 @@ const OrderSuccess = () => {
           };
         });
         setLiveOrderItems(updatedItems);
-        
+
         // Update order-level status from API
         if (orderDetails.fOrderStatus !== undefined && orderDetails.fOrderStatus !== null) {
           setFOrderStatus(orderDetails.fOrderStatus);
-          
+
           // Store restaurant_order_id from API
           if (orderDetails.restaurantOrderId) {
             setRestaurantOrderId(orderDetails.restaurantOrderId);
           }
-          
+
           // Store live order_amount from API (reflects cancellations)
           if (orderDetails.orderAmount) {
             setLiveOrderAmount(orderDetails.orderAmount);
           }
-          
+
           // Status 3 (Cancelled) or 6 (Paid) → clear state and redirect to landing page
           if (orderDetails.fOrderStatus === 3 || orderDetails.fOrderStatus === 6) {
             clearCart();
@@ -221,11 +223,11 @@ const OrderSuccess = () => {
           // Read directly from passedBillSummary (sync) to avoid race condition with async state
           const persistedPointsDiscount = passedBillSummary?.pointsDiscount || 0;
           const persistedPointsRedeemed = passedBillSummary?.pointsRedeemed || 0;
-          
+
           // Recalculate subtotal with loyalty discount applied
           const itemTotal = apiBillSummary.itemTotal || 0;
           const subtotalAfterDiscount = Math.max(0, itemTotal - persistedPointsDiscount);
-          
+
           // Recalculate tax on discounted subtotal (same logic as ReviewOrder)
           // Tax should be calculated on subtotal after discount
           const taxRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
@@ -233,10 +235,10 @@ const OrderSuccess = () => {
           const adjustedSgst = parseFloat((apiBillSummary.sgst * taxRatio).toFixed(2));
           const adjustedVat = parseFloat((apiBillSummary.vat * taxRatio).toFixed(2));
           const adjustedTotalTax = parseFloat((adjustedCgst + adjustedSgst + adjustedVat).toFixed(2));
-          
+
           // Grand total = subtotal after discount + adjusted tax
           const grandTotal = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
-          
+
           setBillSummary({
             ...apiBillSummary,
             pointsDiscount: persistedPointsDiscount,
@@ -252,7 +254,7 @@ const OrderSuccess = () => {
       }
     } catch (error) {
       console.error('Failed to fetch order status:', error);
-      
+
       // If order not found (deleted), clear state and redirect
       if (error?.response?.status === 404 || error?.response?.data?.errors) {
         clearCart();
@@ -328,7 +330,7 @@ const OrderSuccess = () => {
     try {
       // Fetch order details from API
       const orderDetails = await getOrderDetails(orderData.orderId);
-      
+
       // Start edit mode with previous items (including cancelled for visibility)
       startEditOrder(
         orderData.orderId,
@@ -370,7 +372,7 @@ const OrderSuccess = () => {
   const showCallWaiter = configShowCallWaiter;
   const showPayBill = configShowPayBill;
   const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo;
-  
+
   // Edit Order vs Browse Menu - based on table presence (business logic)
   // If table exists → Show Edit Order (user can add more items to this table's order)
   // If no table → Show Browse Menu (no table to edit, start fresh)
@@ -431,7 +433,7 @@ const OrderSuccess = () => {
         {/* Items Ordered - Collapsible */}
         {(isLoadingStatus || allItems.length > 0) && (
           <div className="order-success-items-card">
-            <div 
+            <div
               className="order-success-items-header"
               onClick={() => setShowItems(!showItems)}
               data-testid="toggle-items-btn"
@@ -451,7 +453,7 @@ const OrderSuccess = () => {
                     <span>Fetching order details...</span>
                   </div>
                 )}
-                
+
                 {/* All Items - Single flat list from API */}
                 {!isLoadingStatus && allItems.map((item, index) => (
                   <div key={`item-${index}`} className="order-success-item-row">
@@ -508,7 +510,7 @@ const OrderSuccess = () => {
         {/* Bill Summary - Collapsible */}
         {billSummary && (
           <div className="order-success-bill-card">
-            <div 
+            <div
               className="order-success-bill-header"
               onClick={() => setShowBillSummary(!showBillSummary)}
               data-testid="toggle-bill-btn"
@@ -529,8 +531,8 @@ const OrderSuccess = () => {
                 {(billSummary.pointsDiscount > 0 || billSummary.discount > 0) && (
                   <div className="bill-row bill-row-discount">
                     <span className="bill-label">
-                      {billSummary.pointsDiscount > 0 
-                        ? `Loyalty Points (${billSummary.pointsRedeemed || 0} pts)` 
+                      {billSummary.pointsDiscount > 0
+                        ? `Loyalty Points (${billSummary.pointsRedeemed || 0} pts)`
                         : 'Discount'}
                     </span>
                     <span className="bill-value bill-discount">
@@ -562,7 +564,13 @@ const OrderSuccess = () => {
                 )}
                 <div className="bill-row bill-row-total">
                   <span className="bill-label-total">Grand Total</span>
-                  <span className="bill-value-total">₹{liveOrderAmount || orderData.totalToPay }({(billSummary.grandTotal.toFixed(2))})</span>
+                  <span className="bill-value-total">
+                    {isTotalRoundEnabled ? (
+                      <>₹{liveOrderAmount || orderData.totalToPay} (₹{billSummary.grandTotal.toFixed(2)})</>
+                    ) : (
+                      <>₹{billSummary.grandTotal.toFixed(2)}</>
+                    )}
+                  </span>
                 </div>
               </div>
             )}

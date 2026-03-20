@@ -328,7 +328,7 @@
     transform: translateX(-100%);
     width: 280px;
     top: 56px;
-    height: calc(100vh - 56px);
+    /* height: calc(100vh - 56px); */
   }
 
   .admin-sidebar.mobile-open {
