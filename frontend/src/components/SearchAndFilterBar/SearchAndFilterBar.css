@@ -108,7 +108,7 @@
 }
 
 .veg-toggle-btn.egg.active {
-  color: #d97706;
+  color: var(--color-egg);
 }
 
 .veg-dot {
@@ -153,7 +153,7 @@
 }
 
 .veg-dot-yellow {
-  border-color: #d97706;
+  border-color: var(--color-egg);
   position: relative;
 }
 
@@ -166,7 +166,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #d97706;
+  background: var(--color-egg);
 }
 
 /* Dietary Tags Row */
