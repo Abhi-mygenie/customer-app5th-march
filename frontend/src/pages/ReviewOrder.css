@@ -761,7 +761,8 @@
   justify-content: space-between;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  margin: var(--spacing-sm) 0;
+  margin-top: 20px;
+  margin-bottom: 60px;
   background: linear-gradient(135deg, rgba(97, 180, 229, 0.1) 0%, rgba(97, 180, 229, 0.05) 100%);
   border: 1px dashed var(--color-primary);
   border-radius: var(--radius-container-lg);
