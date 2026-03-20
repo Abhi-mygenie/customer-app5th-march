@@ -1,0 +1,99 @@
+{
+  "summary": "Completed comprehensive testing of redesigned login page with all 4 login flows. Backend API tests: 15/15 passed. Frontend UI and integration tests: All flows working correctly after fixing useRestaurantId hook usage and AuthContext integration.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Login page", "issues": ["Restaurant name shows '18march' (hardcoded default) when no restaurantId in URL - expected behavior for /login route"]}
+    ]
+  },
+  
+  "passed_tests": [
+    "Backend: POST /api/auth/login with admin password (email=owner@youngmonk.com, password=admin123) returns success=true, user_type=restaurant",
+    "Backend: POST /api/auth/login with customer phone+otp returns success with has_password field",
+    "Backend: POST /api/auth/login with customer phone only (no password/otp) returns 400 error",
+    "Backend: POST /api/auth/login with customer phone and wrong password returns 401",
+    "Backend: POST /api/auth/login with customer phone and no password set returns 'No password set' error",
+    "Backend: POST /api/auth/send-otp sends OTP successfully",
+    "Backend: POST /api/auth/send-otp to unregistered phone returns 404",
+    "Backend: POST /api/auth/reset-password with mismatched passwords returns 400",
+    "Backend: POST /api/auth/reset-password with invalid OTP returns 401",
+    "Backend: POST /api/auth/set-password with mismatched passwords returns 400",
+    "Backend: POST /api/auth/set-password with short password returns 400",
+    "Backend: POST /api/auth/check-customer returns exists status and has_password field",
+    "Backend: Login with non-existent user returns 404",
+    "Frontend: Login page shows phone input at data-testid='login-phone-input'",
+    "Frontend: Login page shows password input at data-testid='login-password-input'",
+    "Frontend: Login button at data-testid='login-submit-btn'",
+    "Frontend: 'Use OTP instead' link at data-testid='login-use-otp-btn'",
+    "Frontend: 'Forgot Password?' link at data-testid='login-forgot-password-btn'",
+    "Frontend: Restaurant logo displayed on login page",
+    "Frontend: Admin login flow works (enter email + password → login → redirected to /admin/settings)",
+    "Frontend: OTP flow works (send OTP → OTP input appears with data-testid='login-otp-input')",
+    "Frontend: Complete OTP login flow works (send OTP → verify → login → set-password prompt if has_password=false)",
+    "Frontend: Forgot Password flow works (send OTP → verify → reset password form appears)",
+    "Frontend: Set Password form has Skip button at data-testid='set-password-skip-btn'"
+  ],
+  
+  "test_report_links": [
+    "/app/backend/tests/test_login_auth.py",
+    "/app/test_reports/pytest/login_auth_results.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [
+    "Fixed bug: useRestaurantId() returns object {restaurantId, isSubdomainMode, subdomain} but Login.jsx was assigning it directly instead of destructuring - fixed to const { restaurantId } = useRestaurantId()",
+    "Fixed bug: Login.jsx was calling AuthContext's login() function with (token, user, user_type) but login() expects (phoneOrEmail, otpOrPassword, isOTP, restaurantContext) - added setAuth() helper to AuthContext for direct state setting"
+  ],
+  
+  "updated_files": [
+    "/app/backend/tests/test_login_auth.py",
+    "/app/frontend/src/pages/Login.jsx",
+    "/app/frontend/src/context/AuthContext.jsx"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "100% (all 4 login flows working)"
+  },
+  
+  "test_credentials": {
+    "admin_email": "owner@youngmonk.com",
+    "admin_password": "admin123",
+    "customer_phone": "7505242126",
+    "restaurant_id": "709"
+  },
+  
+  "seed_data_creation": "No seed data created - used existing test customer 7505242126",
+  
+  "retest_needed": false,
+  
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Login page redesign is complete and tested. All 4 flows working: Flow A (password login for admin/customer), Flow B (OTP login for customer), Flow C (Forgot password with OTP verification), Flow D (Set password prompt after OTP login if has_password=false). Key fixes made: 1) useRestaurantId() destructuring, 2) AuthContext setAuth() helper for external login handling. OTP is logged server-side (check backend.err.log) and returned in API response as otp_for_testing for testing purposes.",
+  
+  "bugs_fixed": [
+    {
+      "file": "/app/frontend/src/pages/Login.jsx",
+      "issue": "useRestaurantId hook returns object but was assigned directly to variable",
+      "fix": "Changed 'const restaurantId = useRestaurantId()' to 'const { restaurantId } = useRestaurantId()'"
+    },
+    {
+      "file": "/app/frontend/src/pages/Login.jsx",
+      "issue": "Calling login() from AuthContext with wrong parameters caused [object Object] error",
+      "fix": "Changed login(data.token, data.user, data.user_type) to setAuth(data.token, data.user, data.user_type)"
+    },
+    {
+      "file": "/app/frontend/src/context/AuthContext.jsx",
+      "issue": "Missing direct auth state setter for external login handling",
+      "fix": "Added setAuth(newToken, newUser, newUserType) function to allow Login.jsx to set auth state directly"
+    }
+  ]
+}

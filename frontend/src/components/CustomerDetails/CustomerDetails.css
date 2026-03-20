@@ -1,0 +1,187 @@
+.customer-details {
+  /* margin-bottom: var(--spacing-xl); */
+  min-height: 0;
+}
+
+.customer-details-title {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.customer-details-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-container-md);
+  background-color: var(--bg-primary);
+}
+
+.customer-details-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+/* Separator between phone and name */
+.customer-details-input-group:first-child {
+  border-bottom: 1px solid var(--border-dark);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.customer-details-label {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.customer-details-input {
+  background-color: transparent;
+  border: none;
+  border-bottom: none;
+  border-radius: 0;
+  padding: var(--spacing-xs) 0;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.customer-details-input:focus {
+  border-color: var(--color-primary-dark);
+}
+
+.customer-details-input::placeholder {
+  color: var(--text-light);
+}
+
+/* Phone Input Styling */
+.customer-details-phone-input {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+}
+
+.customer-details-phone-input .PhoneInput {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.customer-details-phone-input .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  margin-right: var(--spacing-sm);
+  padding: var(--spacing-xs);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.customer-details-phone-input .PhoneInputCountry:focus-within {
+  border-color: var(--color-primary-dark);
+}
+
+.customer-details-phone-input .PhoneInputCountryIcon {
+  width: 24px;
+  height: 18px;
+  box-shadow: none;
+  border: none;
+  margin-right: var(--spacing-xs);
+}
+
+.customer-details-phone-input .PhoneInputCountrySelect {
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.customer-details-phone-input .PhoneInputCountrySelectArrow {
+  opacity: 0.6;
+  margin-left: var(--spacing-xs);
+  width: 8px;
+  height: 8px;
+}
+
+.customer-details-phone-input .PhoneInputInput {
+  flex: 1;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  padding: var(--spacing-xs) 0;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition-fast);
+  min-width: 0;
+}
+
+.customer-details-phone-input .PhoneInputInput:focus {
+  border-color: var(--color-primary-dark);
+}
+
+.customer-details-phone-input .PhoneInputInput::placeholder {
+  color: var(--text-light);
+}
+
+/* Error State */
+.customer-details-phone-input-error .PhoneInputInput {
+  border-color: #dc3545;
+}
+
+.customer-details-phone-input-error .PhoneInputInput:focus {
+  border-color: #dc3545;
+}
+
+.customer-details-phone-input-error .PhoneInputCountry {
+  border-color: #dc3545;
+}
+
+.customer-details-error {
+  color: #dc3545;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
+  padding-left: var(--spacing-xs);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .customer-details-title {
+    font-size: var(--font-size-base);
+  }
+
+  .customer-details-input {
+    font-size: var(--font-size-sm);
+  }
+
+  .customer-details-phone-input .PhoneInputInput {
+    font-size: var(--font-size-sm);
+  }
+
+  .customer-details-phone-input .PhoneInputCountrySelect {
+    font-size: var(--font-size-xs);
+  }
+
+  .customer-details-phone-input .PhoneInputCountryIcon {
+    width: 20px;
+    height: 15px;
+  }
+}
