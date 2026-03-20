@@ -562,7 +562,7 @@ const OrderSuccess = () => {
                 )}
                 <div className="bill-row bill-row-total">
                   <span className="bill-label-total">Grand Total</span>
-                  <span className="bill-value-total">₹{liveOrderAmount.toFixed(2) || orderData.totalToPay.toFixed(2)}</span>
+                  <span className="bill-value-total">₹{liveOrderAmount || orderData.totalToPay }({(billSummary.grandTotal.toFixed(2))})</span>
                 </div>
               </div>
             )}
