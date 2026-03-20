@@ -579,6 +579,11 @@ const ReviewOrder = () => {
   // Grand Total = Subtotal after discounts + Adjusted Tax
   const totalToPay = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
 
+  // Total Rounding - when enabled, round grand total to nearest whole number
+  const isTotalRoundEnabled = restaurant?.total_round === 'Yes';
+  const roundedTotal = isTotalRoundEnabled ? Math.round(totalToPay) : totalToPay;
+  const roundingDifference = isTotalRoundEnabled ? parseFloat((roundedTotal - totalToPay).toFixed(2)) : 0;
+
   // console.log('totalTax', totalTax);
   // console.log('totalGst', totalGst);
   // console.log('totalVat', vat);
@@ -841,7 +846,10 @@ const ReviewOrder = () => {
               sgst: adjustedSgst,
               vat: adjustedVat,
               totalTax: adjustedTotalTax,
-              grandTotal: totalToPay
+              grandTotal: isTotalRoundEnabled ? roundedTotal : totalToPay,
+              originalTotal: totalToPay,
+              roundingApplied: isTotalRoundEnabled,
+              roundingDifference: roundingDifference
             }
           }
         }
@@ -1342,7 +1350,12 @@ const ReviewOrder = () => {
               {/* Total */}
               <div className="price-row price-row-total">
                 <span className="price-label-total">Grand Total</span>
-                <span className="price-value-total">₹{totalToPay.toFixed(2)}</span>
+                <span className="price-value-total">
+                  ₹{isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}
+                  {isTotalRoundEnabled && roundedTotal !== totalToPay && (
+                    <span className="original-total">(₹{totalToPay.toFixed(2)})</span>
+                  )}
+                </span>
               </div>
             </div>
           </div>
@@ -1461,8 +1474,8 @@ const ReviewOrder = () => {
             {isPlacingOrder 
               ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
               : (isEditMode 
-                  ? `Update Order ₹${totalToPay.toFixed(2)}` 
-                  : `Place Order ₹${totalToPay.toFixed(2)}`
+                  ? `Update Order ₹${isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}` 
+                  : `Place Order ₹${isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}`
                 )
             }
           </button>

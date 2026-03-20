@@ -1051,6 +1051,13 @@
   color: var(--color-primary);
 }
 
+.original-total {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
 
 /* Online Order Disabled Message */
 .online-order-disabled-message {
