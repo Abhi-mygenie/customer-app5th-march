@@ -776,7 +776,7 @@ const ReviewOrder = () => {
           customerPhone: customerPhone || '',
           orderAmount: isTotalRoundEnabled ? roundedTotal : totalToPay,
           orderSubTotal: subtotalAfterDiscount,
-          taxAmount: totalTax
+          taxAmount: totalTax  
         });
 
         // Clear edit mode after successful update
