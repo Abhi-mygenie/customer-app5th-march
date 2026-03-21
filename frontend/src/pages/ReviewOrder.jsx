@@ -15,7 +15,7 @@ import OrderItemCard from '../components/OrderItemCard/OrderItemCard';
 import PreviousOrderItems from '../components/PreviousOrderItems/PreviousOrderItems';
 import { IoArrowBackOutline, IoGiftOutline, IoPersonOutline } from "react-icons/io5";
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
-import { MdOutlineShoppingBag, MdOutlineTableRestaurant  } from "react-icons/md";
+import { MdOutlineShoppingBag, MdOutlineTableRestaurant } from "react-icons/md";
 import { FaDoorOpen } from "react-icons/fa";
 // import { GiShoppingCart } from "react-icons/gi";
 import ReviewOrderPriceBreakdown from '../components/ReviewOrderPriceBreakdown/ReviewOrderPriceBreakdown';
@@ -78,10 +78,10 @@ const ReviewOrder = () => {
   const params = useParams();
   const stationId = location.state?.stationId || params.stationId;
 
-  const { 
-    cartItems, 
-    getTotalItems, 
-    getTotalPrice, 
+  const {
+    cartItems,
+    getTotalItems,
+    getTotalPrice,
     clearCart,
     // Edit order mode
     isEditMode,
@@ -93,7 +93,7 @@ const ReviewOrder = () => {
 
   // Fetch restaurant details FIRST to get numeric ID
   const { restaurant } = useRestaurantDetails(restaurantId);
-  
+
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
   const { stations } = useStations(numericRestaurantId);
@@ -208,14 +208,14 @@ const ReviewOrder = () => {
       const savedSession = sessionStorage.getItem(SESSION_CUSTOMER_KEY);
       if (savedSession) {
         const { name, phone, restaurantId: savedRestaurantId } = JSON.parse(savedSession);
-        
+
         // Only pre-fill if restaurant matches (or no restaurantId stored - legacy data)
         if (savedRestaurantId && savedRestaurantId !== numericRestaurantId) {
           // Different restaurant - clear the stale data
           sessionStorage.removeItem(SESSION_CUSTOMER_KEY);
           return;
         }
-        
+
         if (name && !customerName) setCustomerName(name);
         if (phone && !customerPhone) {
           // Store E.164 format (+91...) so PhoneInput shows India flag correctly
@@ -236,14 +236,14 @@ const ReviewOrder = () => {
         const savedGuest = localStorage.getItem('guestCustomer');
         if (savedGuest) {
           const { name, phone, restaurantId: savedRestaurantId } = JSON.parse(savedGuest);
-          
+
           // Only pre-fill if restaurant matches (or no restaurantId stored - legacy data)
           if (savedRestaurantId && savedRestaurantId !== numericRestaurantId) {
             // Different restaurant - clear the stale data
             localStorage.removeItem('guestCustomer');
             return;
           }
-          
+
           if (name && !customerName) setCustomerName(name);
           if (phone && !customerPhone) {
             // Store E.164 format (+91...) so PhoneInput shows India flag correctly
@@ -280,41 +280,41 @@ const ReviewOrder = () => {
   // Reset ALL form states when restaurant changes (scan & order app - user is at one restaurant at a time)
   // Uses localStorage to track previous restaurant ID (survives component re-mounts)
   const PREV_RESTAURANT_KEY = 'prevRestaurantId';
-  
+
   useEffect(() => {
     const prevRestaurantId = localStorage.getItem(PREV_RESTAURANT_KEY);
-    
+
     // Only reset if restaurant actually changed (not on initial mount)
     if (prevRestaurantId && prevRestaurantId !== numericRestaurantId && numericRestaurantId) {
       // Clear customer details
       setCustomerName('');
       setCustomerPhone('');
       setLookedUpCustomer(null);
-      
+
       // Clear table/room selection
       setTableNumber('');
       setRoomOrTable(null);
-      
+
       // Clear order details
       setSpecialInstructions('');
       setCouponCode('');
-      
+
       // Clear loyalty/points state
       setLoyaltySettings(null);
       setIsUsingPoints(false);
       setPointsToRedeem(0);
       setPointsDiscount(0);
-      
+
       // Clear session/local storage for customer details
       sessionStorage.removeItem('sessionCustomerInfo');
       localStorage.removeItem('guestCustomer');
-      
+
       // Clear auth token on restaurant change
       localStorage.removeItem('auth_token');
-      
+
       console.log(`Restaurant changed from ${prevRestaurantId} to ${numericRestaurantId} - cleared all form states`);
     }
-    
+
     // Store current restaurant ID for next comparison (CartContext also does this, but this ensures it's set)
     if (numericRestaurantId) {
       localStorage.setItem(PREV_RESTAURANT_KEY, numericRestaurantId);
@@ -478,7 +478,7 @@ const ReviewOrder = () => {
 
   const totalItems = getTotalItems();
   const subtotal = getTotalPrice();
-  
+
   // Previous order subtotal (for edit mode)
   const previousSubtotal = isEditMode ? getPreviousOrderTotal() : 0;
 
@@ -505,7 +505,7 @@ const ReviewOrder = () => {
         );
         return base + varTotal + addonTotal;
       })();
-      
+
       const taxPercent = parseFloat(cartItem.item.tax) || 0;
       const taxType = cartItem.item.tax_type || 'GST';
       const taxAmountPerUnit = parseFloat(((itemPrice * taxPercent) / 100).toFixed(2));
@@ -526,7 +526,7 @@ const ReviewOrder = () => {
     if (previousOrderItems && previousOrderItems.length > 0) {
       previousOrderItems.forEach((prevItem, index) => {
         if (prevItem.foodStatus === 3) return; // Skip cancelled items
-        
+
         const itemPrice = parseFloat(prevItem.unitPrice || prevItem.price) || 0;
         const quantity = prevItem.quantity || 1;
         const taxPercent = parseFloat(prevItem.item?.tax) || 0;
@@ -565,17 +565,17 @@ const ReviewOrder = () => {
   // ─── Final totals ──────────────────────────────────────────────
   // Item Total = sum of all item prices (before tax, before discounts)
   const itemTotal = previousSubtotal + subtotal;
-  
+
   // Subtotal after discounts (this is the base for tax calculation)
   const subtotalAfterDiscount = Math.max(0, itemTotal - pointsDiscount);
-  
+
   // Recalculate tax on discounted amount (proportional reduction)
   const discountRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
   const adjustedCgst = parseFloat((cgst * discountRatio).toFixed(2));
   const adjustedSgst = parseFloat((sgst * discountRatio).toFixed(2));
   const adjustedVat = parseFloat((vat * discountRatio).toFixed(2));
   const adjustedTotalTax = parseFloat((adjustedCgst + adjustedSgst + adjustedVat).toFixed(2));
-  
+
   // Grand Total = Subtotal after discounts + Adjusted Tax
   const totalToPay = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
 
@@ -667,15 +667,15 @@ const ReviewOrder = () => {
   const handleUsePoints = () => {
     const availablePoints = isAuthenticated ? (user?.total_points || 0) : (lookedUpCustomer?.total_points || 0);
     const redemptionValue = loyaltySettings?.redemption_value || 0;
-    
+
     if (!availablePoints || !redemptionValue) return;
-    
+
     // Calculate max points that can be used (can't exceed subtotal)
     const maxPointsValue = subtotal; // Max discount = subtotal (can't go negative)
     const maxPointsToUse = Math.floor(maxPointsValue / redemptionValue);
     const pointsToUse = Math.min(availablePoints, maxPointsToUse);
     const discount = pointsToUse * redemptionValue;
-    
+
     setPointsToRedeem(pointsToUse);
     setPointsDiscount(discount);
     setIsUsingPoints(true);
@@ -774,11 +774,14 @@ const ReviewOrder = () => {
           authToken: token,
           customerName,
           customerPhone: customerPhone || '',
+          orderAmount: isTotalRoundEnabled ? roundedTotal : totalToPay,
+          orderSubTotal: subtotalAfterDiscount,
+          taxAmount: totalTax
         });
 
         // Clear edit mode after successful update
         clearEditMode();
-        
+
         toast.success('Order updated successfully!');
       } else {
         // Place new order
@@ -897,11 +900,14 @@ const ReviewOrder = () => {
               authToken: newToken,
               customerName,
               customerPhone: customerPhone || '',
+              orderAmount: isTotalRoundEnabled ? roundedTotal : totalToPay,
+              orderSubTotal: subtotalAfterDiscount,
+              taxAmount: totalTax
             });
 
             // Clear edit mode after successful update
             clearEditMode();
-            
+
             toast.success('Order updated successfully!');
           } else {
             // Retry order placement
@@ -1066,9 +1072,9 @@ const ReviewOrder = () => {
                   <p className="review-order-seated-text">We'll bring your order to</p>
                   <div className="review-order-seated-info">
                     {scannedRoomOrTable === 'room' ? (
-                      <span className="review-order-room-icon"><FaDoorOpen  /></span>
+                      <span className="review-order-room-icon"><FaDoorOpen /></span>
                     ) : (
-                      <span className="review-order-table-icon"><MdOutlineTableRestaurant   /></span>
+                      <span className="review-order-table-icon"><MdOutlineTableRestaurant /></span>
                     )}
                     <span className="review-order-seated-name">{scannedTableNo}</span>
                   </div>
@@ -1196,8 +1202,8 @@ const ReviewOrder = () => {
           {/* Previous Order Items - Show only in edit mode */}
           {isEditMode && previousOrderItems && previousOrderItems.length > 0 && (
             <>
-              <PreviousOrderItems 
-                items={previousOrderItems} 
+              <PreviousOrderItems
+                items={previousOrderItems}
                 orderId={editingOrderId}
               />
               <div className="review-order-divider"></div>
@@ -1239,126 +1245,126 @@ const ReviewOrder = () => {
 
           {/* Price Breakdown - with integrated Coupon & Loyalty */}
           {showPriceBreakdown && (
-          <div className="review-order-section">
-            <div className="review-order-section-header">
-              <div className="review-order-section-title-icon"><RiFileList3Line size={16} /></div>
-              <h2 className="review-order-section-title">Price Breakdown</h2>
-            </div>
-            
-            <div className="review-order-price-card">
-              {/* Item Total */}
-              <div className="price-row">
-                <span className="price-label">Item Total</span>
-                <span className="price-value">₹{itemTotal.toFixed(2)}</span>
+            <div className="review-order-section">
+              <div className="review-order-section-header">
+                <div className="review-order-section-title-icon"><RiFileList3Line size={16} /></div>
+                <h2 className="review-order-section-title">Price Breakdown</h2>
               </div>
 
-              {/* Coupon Code - inline */}
-              {showCoupon && (
-                <div className="price-row price-row-input">
-                  <div className="price-input-group">
-                    <span className="price-input-icon">🏷️</span>
-                    <input
-                      type="text"
-                      className="price-inline-input"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      placeholder="Enter coupon code"
-                      data-testid="coupon-input"
-                    />
-                  </div>
-                  <button className="price-inline-btn" data-testid="apply-coupon-btn">Apply</button>
+              <div className="review-order-price-card">
+                {/* Item Total */}
+                <div className="price-row">
+                  <span className="price-label">Item Total</span>
+                  <span className="price-value">₹{itemTotal.toFixed(2)}</span>
                 </div>
-              )}
 
-              {/* Loyalty Points - inline */}
-              {showLoyalty && (
-                (() => {
-                  const pts = lookedUpCustomer?.found 
-                    ? (lookedUpCustomer?.total_points || 0) 
-                    : (isAuthenticated ? (user?.total_points || 0) : 0);
-                  const rdv = loyaltySettings?.redemption_value || 0;
-                  
-                  // If points are being used, show the applied discount
-                  if (isUsingPoints && pointsToRedeem > 0) {
+                {/* Coupon Code - inline */}
+                {showCoupon && (
+                  <div className="price-row price-row-input">
+                    <div className="price-input-group">
+                      <span className="price-input-icon">🏷️</span>
+                      <input
+                        type="text"
+                        className="price-inline-input"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        placeholder="Enter coupon code"
+                        data-testid="coupon-input"
+                      />
+                    </div>
+                    <button className="price-inline-btn" data-testid="apply-coupon-btn">Apply</button>
+                  </div>
+                )}
+
+                {/* Loyalty Points - inline */}
+                {showLoyalty && (
+                  (() => {
+                    const pts = lookedUpCustomer?.found
+                      ? (lookedUpCustomer?.total_points || 0)
+                      : (isAuthenticated ? (user?.total_points || 0) : 0);
+                    const rdv = loyaltySettings?.redemption_value || 0;
+
+                    // If points are being used, show the applied discount
+                    if (isUsingPoints && pointsToRedeem > 0) {
+                      return (
+                        <div className="price-row price-row-input price-row-discount">
+                          <div className="price-input-group">
+                            <span className="price-input-icon">🎁</span>
+                            <span className="price-loyalty-text price-loyalty-applied">
+                              Using {pointsToRedeem} points (-₹{pointsDiscount.toFixed(0)})
+                            </span>
+                          </div>
+                          <button
+                            className="price-inline-btn price-inline-btn-remove"
+                            data-testid="remove-loyalty-btn"
+                            onClick={handleRemovePoints}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    // Show available points with Use button
                     return (
-                      <div className="price-row price-row-input price-row-discount">
+                      <div className="price-row price-row-input">
                         <div className="price-input-group">
                           <span className="price-input-icon">🎁</span>
-                          <span className="price-loyalty-text price-loyalty-applied">
-                            Using {pointsToRedeem} points (-₹{pointsDiscount.toFixed(0)})
+                          <span className="price-loyalty-text">
+                            {pts} points{rdv ? ` (Worth ₹${(pts * rdv).toFixed(0)})` : ''}
                           </span>
                         </div>
-                        <button 
-                          className="price-inline-btn price-inline-btn-remove" 
-                          data-testid="remove-loyalty-btn"
-                          onClick={handleRemovePoints}
+                        <button
+                          className="price-inline-btn"
+                          data-testid="redeem-loyalty-btn"
+                          disabled={!pts}
+                          onClick={handleUsePoints}
                         >
-                          Remove
+                          Use
                         </button>
                       </div>
                     );
-                  }
-                  
-                  // Show available points with Use button
-                  return (
-                    <div className="price-row price-row-input">
-                      <div className="price-input-group">
-                        <span className="price-input-icon">🎁</span>
-                        <span className="price-loyalty-text">
-                          {pts} points{rdv ? ` (Worth ₹${(pts * rdv).toFixed(0)})` : ''}
-                        </span>
-                      </div>
-                      <button 
-                        className="price-inline-btn" 
-                        data-testid="redeem-loyalty-btn" 
-                        disabled={!pts}
-                        onClick={handleUsePoints}
-                      >
-                        Use
-                      </button>
-                    </div>
-                  );
-                })()
-              )}
+                  })()
+                )}
 
-              {/* Subtotal (before taxes) */}
-              <div className="price-row price-row-subtotal">
-                <span className="price-label">Subtotal</span>
-                <span className="price-value">₹{subtotalAfterDiscount.toFixed(2)}</span>
-              </div>
-
-              {/* GST/VAT if applicable */}
-              {totalGst > 0 && (
-                <>
-                  <div className="price-row price-row-sub">
-                    <span className="price-label-sub">CGST</span>
-                    <span className="price-value-sub">₹{adjustedCgst.toFixed(2)}</span>
-                  </div>
-                  <div className="price-row price-row-sub">
-                    <span className="price-label-sub">SGST</span>
-                    <span className="price-value-sub">₹{adjustedSgst.toFixed(2)}</span>
-                  </div>
-                </>
-              )}
-              {vat > 0 && (
-                <div className="price-row price-row-sub">
-                  <span className="price-label-sub">VAT</span>
-                  <span className="price-value-sub">₹{adjustedVat.toFixed(2)}</span>
+                {/* Subtotal (before taxes) */}
+                <div className="price-row price-row-subtotal">
+                  <span className="price-label">Subtotal</span>
+                  <span className="price-value">₹{subtotalAfterDiscount.toFixed(2)}</span>
                 </div>
-              )}
 
-              {/* Total */}
-              <div className="price-row price-row-total">
-                <span className="price-label-total">Grand Total</span>
-                <span className="price-value-total">
-                  ₹{isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}
-                  {isTotalRoundEnabled && roundedTotal !== totalToPay && (
-                    <span className="original-total">(₹{totalToPay.toFixed(2)})</span>
-                  )}
-                </span>
+                {/* GST/VAT if applicable */}
+                {totalGst > 0 && (
+                  <>
+                    <div className="price-row price-row-sub">
+                      <span className="price-label-sub">CGST</span>
+                      <span className="price-value-sub">₹{adjustedCgst.toFixed(2)}</span>
+                    </div>
+                    <div className="price-row price-row-sub">
+                      <span className="price-label-sub">SGST</span>
+                      <span className="price-value-sub">₹{adjustedSgst.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                {vat > 0 && (
+                  <div className="price-row price-row-sub">
+                    <span className="price-label-sub">VAT</span>
+                    <span className="price-value-sub">₹{adjustedVat.toFixed(2)}</span>
+                  </div>
+                )}
+
+                {/* Total */}
+                <div className="price-row price-row-total">
+                  <span className="price-label-total">Grand Total</span>
+                  <span className="price-value-total">
+                    ₹{isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}
+                    {isTotalRoundEnabled && roundedTotal !== totalToPay && (
+                      <span className="original-total">(₹{totalToPay.toFixed(2)})</span>
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
           )}
 
           {/* Customer Rewards Info — shown for any identified customer (via login or phone lookup) */}
@@ -1471,12 +1477,12 @@ const ReviewOrder = () => {
             disabled={totalItems === 0 || isPlacingOrder || isLoadingToken}
             data-testid="place-order-btn"
           >
-            {isPlacingOrder 
-              ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
-              : (isEditMode 
-                  ? `Update Order ₹${isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}` 
-                  : `Place Order ₹${isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}`
-                )
+            {isPlacingOrder
+              ? (isEditMode ? 'Updating Order...' : 'Placing Order...')
+              : (isEditMode
+                ? `Update Order ₹${isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}`
+                : `Place Order ₹${isTotalRoundEnabled ? roundedTotal : totalToPay.toFixed(2)}`
+              )
             }
           </button>
         </div>

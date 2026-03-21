@@ -990,6 +990,9 @@ export const updateCustomerOrder = async ({
   customerName = '',
   customerPhone = '',
   dialCode = '+91',
+  orderAmount,
+  orderSubTotal,  
+  taxAmount 
 }) => {
   try {
     // Transform cart items to API format
@@ -1067,7 +1070,7 @@ export const updateCustomerOrder = async ({
       cust_name: customerName,
       cust_phone: customerPhone,
       schedule_at: null,
-      order_amount: 0,
+      order_amount: orderAmount,
       order_note: orderNote,
       order_type: orderType,
       payment_method: 'cash_on_delivery',
@@ -1080,8 +1083,8 @@ export const updateCustomerOrder = async ({
       contact_person_name: '',
       contact_person_number: '',
       discount_amount: 0,
-      tax_amount: 0,
-      order_sub_total_amount: 0,
+      tax_amount: taxAmount ?? 0,
+      order_sub_total_amount: orderSubTotal,
       road: '',
       house: '',
       floor: '',
@@ -1099,6 +1102,10 @@ export const updateCustomerOrder = async ({
     // Create FormData with 'data' field as JSON string
     const formData = new FormData();
     formData.append('data', JSON.stringify(orderData));
+
+    console.log('[OrderService] updateCustomerOrder URL:', `${process.env.REACT_APP_API_BASE_URL || 'https://preprod.mygenie.online/api/v1'}/customer/order/update-customer-order`);
+console.log('[OrderService] updateCustomerOrder payload:', orderData);
+console.log('[OrderService] updateCustomerOrder payload JSON:', JSON.stringify(orderData, null, 2));
 
     // Make API call
     const response = await apiClient.post(
