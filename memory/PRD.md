@@ -45,6 +45,30 @@
 
 ## Implemented Features (March 2026)
 
+### 0. OrderSuccess Table Source of Truth Fix
+**Date**: March 23, 2026
+**File**: `/app/frontend/src/pages/OrderSuccess.jsx`
+
+**Problem**: Table number was displayed using scanned/sessionStorage values instead of API response, causing:
+- Stale table display when staff reassigns table on backend
+- Inconsistency between UI and actual order table
+- Edit order using wrong table data
+
+**Solution**: 2-tier priority system with controlled switch:
+1. **Priority 1**: `getOrderDetails` API table (`tableId`, `tableNo`) - after `hasFetchedOrderDetails = true`
+2. **Priority 2**: Fallback (`location.state` / `scannedTable` / `sessionStorage`) - before API completes
+
+**Implementation**:
+- Added `hasFetchedOrderDetails` boolean flag to prevent flicker
+- Added `apiTableData` state to store API table response
+- On successful API fetch: extract table, set flag, sync to sessionStorage
+- Display logic uses `displayTableNo = hasFetchedOrderDetails ? apiTableData.tableNo : scannedTableNo`
+- Edit Order/Browse Menu logic also uses API table when available
+
+**Result**: Table display is now consistent with backend, sessionStorage stays synced for cross-page consistency
+
+---
+
 ### 1. Egg Filter Color Fix
 **Date**: March 20, 2026
 **File**: `/app/frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.css`
@@ -258,7 +282,8 @@ id, name, phone, email, logo, address, tax, gst_tax, multiple_menu, food_for, de
 
 ## Next Actions
 
-1. ✅ Implement Order Success page total_round conditional display
-2. Fix P0: QR code broken URLs
-3. Fix P1: Remove silent env fallbacks
-4. Continue with backlog items
+1. ~~Implement OrderSuccess table source of truth fix~~ ✅ DONE (March 23, 2026)
+2. ✅ Implement Order Success page total_round conditional display (already done)
+3. Fix P0: QR code broken URLs
+4. Fix P1: Remove silent env fallbacks
+5. Continue with backlog items

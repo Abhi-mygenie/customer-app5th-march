@@ -123,6 +123,10 @@ const OrderSuccess = () => {
   const [fOrderStatus, setFOrderStatus] = useState(null);
   const [restaurantOrderId, setRestaurantOrderId] = useState(null);
   const [liveOrderAmount, setLiveOrderAmount] = useState(null);
+  
+  // Table data from API (source of truth after first fetch)
+  const [hasFetchedOrderDetails, setHasFetchedOrderDetails] = useState(false);
+  const [apiTableData, setApiTableData] = useState(null);
 
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
@@ -216,6 +220,37 @@ const OrderSuccess = () => {
             return;
           }
         }
+
+        // Extract table data from API and sync to sessionStorage
+        // API is the source of truth - table can be reassigned on backend
+        if (orderDetails.tableId || orderDetails.tableNo) {
+          const apiTable = {
+            tableId: orderDetails.tableId,
+            tableNo: orderDetails.tableNo,
+          };
+          setApiTableData(apiTable);
+          
+          // Sync API table to sessionStorage for cross-page consistency
+          if (restaurantId) {
+            const storageKey = `scanned_table_${restaurantId}`;
+            try {
+              const existingData = sessionStorage.getItem(storageKey);
+              const parsed = existingData ? JSON.parse(existingData) : {};
+              // Update with API values, preserve room_or_table and order_type
+              const updatedData = {
+                ...parsed,
+                table_id: orderDetails.tableId || parsed.table_id,
+                table_no: orderDetails.tableNo || parsed.table_no,
+              };
+              sessionStorage.setItem(storageKey, JSON.stringify(updatedData));
+            } catch (e) {
+              console.error('Failed to sync table to sessionStorage:', e);
+            }
+          }
+        }
+        
+        // Mark that we've successfully fetched order details
+        setHasFetchedOrderDetails(true);
 
         // Recalculate billSummary with API data + persisted loyalty discount
         if (orderDetails.billSummary) {
@@ -371,12 +406,23 @@ const OrderSuccess = () => {
   const showOrderStatus = showOrderStatusTracker;
   const showCallWaiter = configShowCallWaiter;
   const showPayBill = configShowPayBill;
-  const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo;
+  
+  // Table display logic:
+  // Priority 1: API table data (after hasFetchedOrderDetails = true)
+  // Priority 2: Fallback to scanned/session table (before API fetch completes)
+  const displayTableNo = hasFetchedOrderDetails && apiTableData?.tableNo 
+    ? apiTableData.tableNo 
+    : scannedTableNo;
+  const hasTableToDisplay = !!displayTableNo;
+  const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && hasTableToDisplay;
 
   // Edit Order vs Browse Menu - based on table presence (business logic)
   // If table exists → Show Edit Order (user can add more items to this table's order)
   // If no table → Show Browse Menu (no table to edit, start fresh)
-  const hasTable = isScanned && scannedTableNo;
+  // Use API table if available, otherwise fallback to scanned table
+  const hasTable = hasFetchedOrderDetails 
+    ? !!(apiTableData?.tableId || apiTableData?.tableNo)
+    : (isScanned && scannedTableNo);
   const showEditOrder = hasTable;
   const showBrowseMenu = !hasTable;
 
@@ -425,7 +471,7 @@ const OrderSuccess = () => {
               <span className="order-success-table-label">
                 {scannedRoomOrTable === 'room' ? 'Room' : 'Table'}
               </span>
-              <span className="order-success-table-value">{scannedTableNo}</span>
+              <span className="order-success-table-value">{displayTableNo}</span>
             </div>
           )}
         </div>
