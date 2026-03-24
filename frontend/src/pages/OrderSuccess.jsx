@@ -151,11 +151,15 @@ const OrderSuccess = () => {
       const orderDetails = await getOrderDetails(orderId);
       
       // Check if table has been merged/transferred (table now free = order moved away)
-      // Must be top-level: when order is merged, details[] is empty so nested checks are skipped
-      if (isScanned && scannedTableId) {
+      // Read directly from sessionStorage to avoid stale closure issue with React state
+      const storageKey = `scanned_table_${restaurantId}`;
+      const storedTable = sessionStorage.getItem(storageKey);
+      const scannedData = storedTable ? JSON.parse(storedTable) : null;
+      
+      if (scannedData?.table_id) {
         try {
           const tableCheckResult = await checkTableStatus(
-            orderDetails.tableId || scannedTableId,
+            orderDetails.tableId || scannedData.table_id,
             numericRestaurantId,
             getStoredToken()
           );
