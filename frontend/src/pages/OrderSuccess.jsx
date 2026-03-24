@@ -176,7 +176,6 @@ const OrderSuccess = () => {
           if (tableCheckResult.isAvailable || tableCheckResult.isInvalid) {
             clearCart();
             clearEditMode();
-            clearScannedTable();
             toast('Your table has been reassigned. Please place a new order.', { icon: '🔄', duration: 4000 });
             navigate(`/${restaurantId}`, { replace: true });
             return;
