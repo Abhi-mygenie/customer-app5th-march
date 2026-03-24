@@ -270,6 +270,98 @@ Low — Only reordered existing code. No new logic added. Double-click guard sti
 
 ---
 
+## BUG-003: `foodFor` URL param not supported — menu page shows all items instead of filtered menu
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-003 |
+| **Date Reported** | 2026-03-24 |
+| **Date Fixed** | 2026-03-24 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Menu Page / QR Code URL Params |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All non-multi-menu restaurants where QR URLs include `foodFor` param. Customer sees all 144 items instead of filtered 135 (Normal menu only). Affects order accuracy for restaurants with distinct menu types (Normal, Party, Premium). |
+
+### Summary
+When a QR code URL includes `foodFor=Normal` (e.g. `/{restaurantId}?tableId=3241&foodFor=Normal`), the menu page should only show items belonging to the "Normal" menu. Instead, it ignored the `foodFor` param and showed ALL items from all menus combined.
+
+### Steps to Reproduce
+1. Open URL: `/478?tableId=3241&tableName=5&type=table&orderType=dinein&foodFor=Normal`
+2. Click "BROWSE MENU" on landing page
+3. **Expected**: Menu shows only Normal menu items (29 categories, 135 items)
+4. **Actual (before fix)**: Menu shows ALL items from Normal + Party + Premium (30 categories, 144 items)
+
+### Root Cause
+The `foodFor` URL parameter was never read or used anywhere in the app. The flow was:
+1. `useScannedTable` hook only read `tableId`, `tableName`, `type`, `orderType` from URL — **no `foodFor`**
+2. `MenuItems.jsx` used `stationId` from route params (`:stationId`), which is `undefined` for non-multi-menu routes (`/:restaurantId/menu`)
+3. `useMenuSections(undefined, restaurantId)` → API called without `food_for` param → returned all items
+
+### Fix Applied
+
+**File 1: `/app/frontend/src/hooks/useScannedTable.js`**
+
+- Read `foodFor` (or `food_for`) from URL query params
+- Store as `food_for` in the sessionStorage object alongside `table_id`, `table_no`, etc.
+- Return `foodFor` from the hook
+
+```javascript
+// New: read foodFor from URL
+const urlFoodFor = searchParams.get('foodFor') || searchParams.get('food_for');
+
+// Store in sessionStorage
+const newTable = {
+  table_id: urlTableId,
+  table_no: urlTableNo,
+  room_or_table: roomOrTable,
+  order_type: orderType,
+  food_for: urlFoodFor || null    // ← NEW FIELD
+};
+
+// Return from hook
+return {
+  ...existing fields,
+  foodFor: scannedTable?.food_for || null,  // ← NEW RETURN
+};
+```
+
+**File 2: `/app/frontend/src/pages/MenuItems.jsx`**
+
+- Import `useScannedTable` hook
+- Read `foodFor` from hook
+- Use as fallback when `stationId` (from route) is undefined
+
+```javascript
+const { foodFor } = useScannedTable();
+const effectiveStationId = stationId || foodFor;
+useMenuSections(effectiveStationId, numericRestaurantId);
+```
+
+### Priority Logic
+- `stationId` (from route `/menu/:stationId`) takes priority — for multi-menu station clicks
+- `foodFor` (from sessionStorage/URL) kicks in when `stationId` is undefined — for non-multi-menu restaurants
+- Neither present → no `food_for` sent → all items (backward compatible)
+
+### Verification
+- Frontend compiles cleanly
+- `/478?foodFor=Normal` → menu shows 29 categories, 135 items (Normal only) ✅
+- `/478` (no foodFor) → menu shows 30 categories, 144 items (all menus) ✅
+- `/716?foodFor=Breakfast` → still goes to station selection page (multi-menu) ✅
+- API payload confirmed: `{ restaurant_id: "478", category_id: "0", food_for: "Normal" }` ✅
+
+### Regression Risk
+Low — `foodFor` is purely additive. If not present in URL, `foodFor` = null → `effectiveStationId` falls back to `stationId` → existing behavior unchanged.
+
+### Notes
+- `foodFor` supports both camelCase (`foodFor`) and snake_case (`food_for`) in URL params
+- Stored in sessionStorage so it persists across page navigations within the same session
+- For multi-menu restaurants, `stationId` from route always takes priority over `foodFor`
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
