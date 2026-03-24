@@ -777,6 +777,11 @@ const ReviewOrder = () => {
           authToken: token,
           customerName,
           customerPhone: customerPhone || '',
+          totalToPay: roundedTotal,
+          subtotal: subtotalAfterDiscount,
+          totalTax: adjustedTotalTax,
+          pointsDiscount,
+          pointsRedeemed: pointsToRedeem,
         });
 
         // Clear edit mode after successful update
@@ -898,6 +903,11 @@ const ReviewOrder = () => {
               authToken: newToken,
               customerName,
               customerPhone: customerPhone || '',
+              totalToPay: roundedTotal,
+              subtotal: subtotalAfterDiscount,
+              totalTax: adjustedTotalTax,
+              pointsDiscount,
+              pointsRedeemed: pointsToRedeem,
             });
 
             // Clear edit mode after successful update

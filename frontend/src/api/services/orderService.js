@@ -990,6 +990,11 @@ export const updateCustomerOrder = async ({
   customerName = '',
   customerPhone = '',
   dialCode = '+91',
+  totalToPay = 0,
+  subtotal = 0,
+  totalTax = 0,
+  pointsDiscount = 0,
+  pointsRedeemed = 0,
 }) => {
   try {
     // Transform cart items to API format
@@ -1067,7 +1072,7 @@ export const updateCustomerOrder = async ({
       cust_name: customerName,
       cust_phone: customerPhone,
       schedule_at: null,
-      order_amount: 0,
+      order_amount: parseFloat(Number(totalToPay).toFixed(2)),
       order_note: orderNote,
       order_type: orderType,
       payment_method: 'cash_on_delivery',
@@ -1079,9 +1084,9 @@ export const updateCustomerOrder = async ({
       address_type: '',
       contact_person_name: '',
       contact_person_number: '',
-      discount_amount: 0,
-      tax_amount: 0,
-      order_sub_total_amount: 0,
+      discount_amount: parseFloat(Number(pointsDiscount).toFixed(2)),
+      tax_amount: parseFloat(Number(totalTax).toFixed(2)),
+      order_sub_total_amount: parseFloat(Number(subtotal).toFixed(2)),
       road: '',
       house: '',
       floor: '',
@@ -1093,7 +1098,9 @@ export const updateCustomerOrder = async ({
       subscription_days: [],
       subscription_start_at: '',
       subscription_end_at: '',
-      discount_type: ''
+      discount_type: pointsRedeemed > 0 ? 'Loyality' : '',
+      points_redeemed: pointsRedeemed,
+      points_discount: pointsDiscount
     };
 
     // Create FormData with 'data' field as JSON string
