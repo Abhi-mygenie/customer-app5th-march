@@ -176,6 +176,100 @@ Low — Change is additive (new check after existing logic). Existing cancel/pai
 
 ---
 
+## BUG-002: Place Order button permanently locked after validation failure (all restaurants, critical on multi-menu)
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-002 |
+| **Date Reported** | 2026-03-24 |
+| **Date Fixed** | 2026-03-24 |
+| **Severity** | P0 - Critical |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Place Order / ReviewOrder Page |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All customers on multi-menu restaurants (716, etc.) where room/table validation can fail. Also affects all restaurants if phone validation or token fetch fails on first click. |
+
+### Summary
+After clicking "Place Order" once and hitting any validation failure (no room selected, no table number, invalid phone), the button becomes permanently unresponsive. No error, no toast, no console logs — complete silence on all subsequent clicks. Page refresh is the only recovery.
+
+### Steps to Reproduce
+1. Go to restaurant 716 (multi-menu), add item to cart
+2. Go to ReviewOrder page
+3. Click "Place Order" WITHOUT selecting a room/table first
+4. Toast shows: "Please Select Your Room or Table"
+5. Now select room + room number
+6. Click "Place Order" again
+7. **Expected**: Order is placed
+8. **Actual**: Nothing happens. No logs, no toast, no API call. Button appears enabled but is dead.
+
+### Root Cause
+`isPlacingOrderRef` (synchronous double-click guard) was set to `true` **before** validation. Validation failures returned early **without resetting** the ref. Once locked, every subsequent click exits silently at line 692.
+
+```
+BEFORE (broken):
+  Line 692: if (isPlacingOrderRef.current) return;   ← blocks all clicks
+  Line 693: isPlacingOrderRef.current = true;          ← LOCKED before validation
+
+  Line 704: return;  ← validation fail: no room selected    — REF STAYS LOCKED ❌
+  Line 711: return;  ← validation fail: no table number     — REF STAYS LOCKED ❌
+  Line 720: return;  ← validation fail: invalid phone       — REF STAYS LOCKED ❌
+  Line 742: return;  ← token fetch fail                     — REF STAYS LOCKED ❌
+
+  Line 978: isPlacingOrderRef.current = false;  ← only reset in finally (never reached)
+```
+
+### Why 478 worked but 716 didn't
+- **478** (`isMultiMenu = false`): The room/table validation block (lines 696-713) is **skipped entirely**. Fewer early-return paths before the `try` block. Harder to trigger the lock.
+- **716** (`isMultiMenu = true`): The validation block **runs**, creating 3 extra early-return paths that can lock the ref permanently.
+
+### Fix Applied
+
+**File Modified**: `/app/frontend/src/pages/ReviewOrder.jsx`
+
+**Change: Moved validation BEFORE the ref lock**
+
+Before (broken order):
+```
+1. Lock ref                    ← too early
+2. Validate room/table         ← can return, ref stuck
+3. Validate phone              ← can return, ref stuck
+4. Lock ref (duplicate)
+5. Fetch token                 ← can return, ref stuck
+6. try/finally (resets ref)
+```
+
+After (fixed order):
+```
+1. Validate room/table         ← returns safely, ref not locked yet
+2. Validate phone              ← returns safely, ref not locked yet
+3. Lock ref                    ← only AFTER all validation passes
+4. Fetch token                 ← if fails, explicitly resets ref
+5. try/finally (resets ref)
+```
+
+Specific changes:
+- **Moved** validation blocks (room/table + phone) to BEFORE `isPlacingOrderRef.current = true`
+- **Added** `isPlacingOrderRef.current = false` in the token fetch error handler (the one remaining early-return after the lock)
+- Updated comment to explain why ref lock is placed after validation
+
+### Verification
+- Frontend compiles cleanly
+- Validation failures no longer lock the button — user can retry immediately
+- Double-click guard still works (ref locks after validation, before API call)
+- Token fetch failure now properly resets the ref
+- Affects all restaurants (global fix), not just 716
+
+### Regression Risk
+Low — Only reordered existing code. No new logic added. Double-click guard still functional. All early-return paths before ref lock are pure validation (synchronous, no side effects).
+
+### Notes
+- The `isPlacingOrderRef` pattern is a valid double-click guard — the bug was only in its placement (before validation instead of after)
+- `isPlacingOrder` state (button disabled UI) was never the issue — it's set at line 749 inside the try block. The ref is the synchronous guard that runs before React re-renders.
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
