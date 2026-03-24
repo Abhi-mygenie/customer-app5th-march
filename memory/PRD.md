@@ -63,12 +63,18 @@
 - Applied filter in:
   - `getPreviousOrderTotal()` - excludes from subtotal
   - `getCombinedItemCount()` - excludes from item count
-  - `taxBreakdown` calculation - excludes from tax
+  - `taxBreakdown` calculation in ReviewOrder - excludes from tax
   - `PreviousOrderItems` component - hides from UI
   - `OrderSuccess` items list - hides from display
+  - `OrderSuccess` billSummary calculation - recalculates itemTotal, taxes, grandTotal from filtered items
   - `CartBar` previous items count - excludes from count
 
 **Identification**: Item name === "check in" (case-insensitive)
+
+**Bill Summary Fix (OrderSuccess)**:
+- Previously used `apiBillSummary.itemTotal` which included "check in"
+- Now recalculates `itemTotal`, `taxes`, and `grandTotal` from filtered `previousItems`
+- Ensures both Item Total and Grand Total (local calculation) exclude "check in"
 
 ---
 

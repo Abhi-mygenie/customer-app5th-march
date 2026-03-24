@@ -258,29 +258,91 @@ const OrderSuccess = () => {
         setHasFetchedOrderDetails(true);
 
         // Recalculate billSummary with API data + persisted loyalty discount
-        if (orderDetails.billSummary) {
-          const apiBillSummary = orderDetails.billSummary;
+        // For room orders, exclude "check in" items from calculations
+        if (orderDetails.billSummary || orderDetails.previousItems) {
+          const apiBillSummary = orderDetails.billSummary || {};
           // Read directly from passedBillSummary (sync) to avoid race condition with async state
           const persistedPointsDiscount = passedBillSummary?.pointsDiscount || 0;
           const persistedPointsRedeemed = passedBillSummary?.pointsRedeemed || 0;
 
-          // Recalculate subtotal with loyalty discount applied
-          const itemTotal = apiBillSummary.itemTotal || 0;
+          // For room orders, filter out "check in" items and recalculate
+          const isRoom = scannedRoomOrTable === 'room';
+          const itemsForCalc = orderDetails.previousItems || [];
+          
+          // Recalculate itemTotal and taxes from filtered items
+          let itemTotal = 0;
+          let totalGst = 0;
+          let totalVat = 0;
+          
+          itemsForCalc.forEach(item => {
+            // Skip cancelled items
+            if (item.foodStatus === 3) return;
+            // Skip "check in" items for room orders
+            if (isRoom && isCheckinItem(item)) return;
+            
+            const unitPrice = parseFloat(item.unitPrice || item.price) || 0;
+            const quantity = item.quantity || 1;
+            
+            // Calculate variation total
+            let variationTotal = 0;
+            if (item.variations && item.variations.length > 0) {
+              item.variations.forEach(v => {
+                if (v.values) {
+                  const vals = Array.isArray(v.values) ? v.values : [v.values];
+                  vals.forEach(val => {
+                    variationTotal += parseFloat(val.optionPrice) || 0;
+                  });
+                }
+              });
+            }
+            
+            // Calculate addon total
+            let addonTotal = 0;
+            if (item.add_ons && item.add_ons.length > 0) {
+              item.add_ons.forEach(a => {
+                addonTotal += (parseFloat(a.price) || 0) * (a.quantity || 1);
+              });
+            }
+            
+            const fullUnitPrice = unitPrice + variationTotal + addonTotal;
+            itemTotal += fullUnitPrice * quantity;
+            
+            // Calculate tax
+            const taxPercent = parseFloat(item.item?.tax) || 0;
+            const taxType = item.item?.tax_type || 'GST';
+            const taxAmountPerUnit = parseFloat(((fullUnitPrice * taxPercent) / 100).toFixed(2));
+            const totalTaxForItem = taxAmountPerUnit * quantity;
+            
+            if (taxType === 'GST') totalGst += totalTaxForItem;
+            if (taxType === 'VAT') totalVat += totalTaxForItem;
+          });
+          
+          // Round values
+          itemTotal = parseFloat(itemTotal.toFixed(2));
+          totalGst = parseFloat(totalGst.toFixed(2));
+          totalVat = parseFloat(totalVat.toFixed(2));
+          
+          // Split GST into CGST and SGST
+          const cgst = parseFloat((totalGst / 2).toFixed(2));
+          const sgst = parseFloat((totalGst / 2).toFixed(2));
+          const totalTax = parseFloat((totalGst + totalVat).toFixed(2));
+
+          // Apply loyalty discount
           const subtotalAfterDiscount = Math.max(0, itemTotal - persistedPointsDiscount);
 
           // Recalculate tax on discounted subtotal (same logic as ReviewOrder)
-          // Tax should be calculated on subtotal after discount
           const taxRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
-          const adjustedCgst = parseFloat((apiBillSummary.cgst * taxRatio).toFixed(2));
-          const adjustedSgst = parseFloat((apiBillSummary.sgst * taxRatio).toFixed(2));
-          const adjustedVat = parseFloat((apiBillSummary.vat * taxRatio).toFixed(2));
+          const adjustedCgst = parseFloat((cgst * taxRatio).toFixed(2));
+          const adjustedSgst = parseFloat((sgst * taxRatio).toFixed(2));
+          const adjustedVat = parseFloat((totalVat * taxRatio).toFixed(2));
           const adjustedTotalTax = parseFloat((adjustedCgst + adjustedSgst + adjustedVat).toFixed(2));
 
           // Grand total = subtotal after discount + adjusted tax
           const grandTotal = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
 
           setBillSummary({
-            ...apiBillSummary,
+            itemTotal: itemTotal,
+            discount: apiBillSummary.discount || 0,
             pointsDiscount: persistedPointsDiscount,
             pointsRedeemed: persistedPointsRedeemed,
             subtotal: subtotalAfterDiscount,
