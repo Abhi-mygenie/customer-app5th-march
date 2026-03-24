@@ -1,6 +1,8 @@
 import React from 'react';
 import { IoLockClosedOutline, IoTimeOutline, IoCheckmarkOutline, IoCheckmarkDoneOutline } from 'react-icons/io5';
 import { useRestaurantConfig } from '../../context/RestaurantConfigContext';
+import { useScannedTable } from '../../hooks/useScannedTable';
+import { isCheckinItem } from '../../utils/roomOrderUtils';
 import './PreviousOrderItems.css';
 
 /**
@@ -74,13 +76,25 @@ const mapFoodOrderStatus = (item) => {
  * PreviousOrderItems Component
  * Displays read-only items from a previous order during edit mode
  * These items cannot be modified or removed
+ * Filters out "check in" items for room orders
  */
 const PreviousOrderItems = ({ items, orderId }) => {
   const { showFoodStatus } = useRestaurantConfig();
+  const { roomOrTable } = useScannedTable();
+  
   if (!items || items.length === 0) return null;
 
-  // Calculate subtotal for previous items
-  const subtotal = items.reduce((total, item) => {
+  // Filter out "check in" items for room orders
+  const isRoom = roomOrTable === 'room';
+  const filteredItems = isRoom 
+    ? items.filter(item => !isCheckinItem(item))
+    : items;
+
+  // Return null if no items after filtering
+  if (filteredItems.length === 0) return null;
+
+  // Calculate subtotal for previous items (excluding check in items for room orders)
+  const subtotal = filteredItems.reduce((total, item) => {
     const price = parseFloat(item.unitPrice) || parseFloat(item.price) || 0;
     return total + (price * item.quantity);
   }, 0);
@@ -97,7 +111,7 @@ const PreviousOrderItems = ({ items, orderId }) => {
 
       {/* Items List */}
       <div className="previous-order-items-list">
-        {items.map((item, index) => (
+        {filteredItems.map((item, index) => (
           <div 
             key={item.id || index} 
             className="previous-order-item"

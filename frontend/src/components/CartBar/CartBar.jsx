@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { useScannedTable } from '../../hooks/useScannedTable';
+import { isCheckinItem } from '../../utils/roomOrderUtils';
 import './CartBar.css';
 
 const CartBar = () => {
@@ -12,6 +14,7 @@ const CartBar = () => {
     previousOrderItems,
     getPreviousOrderTotal
   } = useCart();
+  const { roomOrTable } = useScannedTable();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -91,9 +94,17 @@ const CartBar = () => {
   };
 
   // Calculate counts and totals
+  // Filter out "check in" items for room orders
+  const isRoom = roomOrTable === 'room';
   const newItemsCount = totalItems;
   const newItemsPrice = totalPrice;
-  const previousItemsCount = isEditMode ? previousOrderItems.reduce((sum, item) => sum + (item.quantity || 1), 0) : 0;
+  const previousItemsCount = isEditMode 
+    ? previousOrderItems.reduce((sum, item) => {
+        if (item.foodStatus === 3) return sum; // Skip cancelled items
+        if (isRoom && isCheckinItem(item)) return sum; // Skip "check in" items for room orders
+        return sum + (item.quantity || 1);
+      }, 0) 
+    : 0;
   const previousItemsPrice = isEditMode ? getPreviousOrderTotal() : 0;
   const totalItemsCount = newItemsCount + previousItemsCount;
   const grandTotal = newItemsPrice + previousItemsPrice;

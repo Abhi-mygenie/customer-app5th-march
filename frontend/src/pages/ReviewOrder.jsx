@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { getAuthToken, isTokenExpired } from '../utils/authToken';
 import { placeOrder, updateCustomerOrder } from '../api/services/orderService';
+import { isCheckinItem } from '../utils/roomOrderUtils';
 import OrderItemCard from '../components/OrderItemCard/OrderItemCard';
 import PreviousOrderItems from '../components/PreviousOrderItems/PreviousOrderItems';
 import { IoArrowBackOutline, IoGiftOutline, IoPersonOutline } from "react-icons/io5";
@@ -522,10 +523,12 @@ const ReviewOrder = () => {
     });
 
     // Calculate tax for PREVIOUS items (in edit mode)
-    // Exclude cancelled items (foodStatus === 3)
+    // Exclude cancelled items (foodStatus === 3) and "check in" items (for room orders)
+    const isRoom = scannedRoomOrTable === 'room';
     if (previousOrderItems && previousOrderItems.length > 0) {
       previousOrderItems.forEach((prevItem, index) => {
         if (prevItem.foodStatus === 3) return; // Skip cancelled items
+        if (isRoom && isCheckinItem(prevItem)) return; // Skip "check in" items for room orders
 
         const itemPrice = parseFloat(prevItem.unitPrice || prevItem.price) || 0;
         const quantity = prevItem.quantity || 1;
@@ -558,7 +561,7 @@ const ReviewOrder = () => {
     console.log('=== TAX DEBUG END ===');
 
     return { cgst, sgst, totalGst, vat: totalVat, totalTax };
-  }, [cartItems, previousOrderItems]);
+  }, [cartItems, previousOrderItems, scannedRoomOrTable]);
 
   const { cgst, sgst, totalGst, vat, totalTax } = taxBreakdown;
 

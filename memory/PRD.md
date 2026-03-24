@@ -45,6 +45,33 @@
 
 ## Implemented Features (March 2026)
 
+### 0.1 Room Order "Check In" Item Filter
+**Date**: March 24, 2026
+**Files Created/Modified**:
+- `/app/frontend/src/utils/roomOrderUtils.js` (NEW)
+- `/app/frontend/src/context/CartContext.js`
+- `/app/frontend/src/pages/ReviewOrder.jsx`
+- `/app/frontend/src/pages/OrderSuccess.jsx`
+- `/app/frontend/src/components/PreviousOrderItems/PreviousOrderItems.jsx`
+- `/app/frontend/src/components/CartBar/CartBar.jsx`
+
+**Problem**: For room orders (`type=room` in QR URL), a "check in" item exists as a pre-ordered item. This item should be completely hidden and excluded from billing.
+
+**Solution**: 
+- Created utility functions `isCheckinItem(item)` and `isRoomOrder(restaurantId)`
+- Filter "check in" items (by name, case-insensitive) when `roomOrTable === 'room'`
+- Applied filter in:
+  - `getPreviousOrderTotal()` - excludes from subtotal
+  - `getCombinedItemCount()` - excludes from item count
+  - `taxBreakdown` calculation - excludes from tax
+  - `PreviousOrderItems` component - hides from UI
+  - `OrderSuccess` items list - hides from display
+  - `CartBar` previous items count - excludes from count
+
+**Identification**: Item name === "check in" (case-insensitive)
+
+---
+
 ### 0. OrderSuccess Table Source of Truth Fix
 **Date**: March 23, 2026
 **File**: `/app/frontend/src/pages/OrderSuccess.jsx`

@@ -7,6 +7,7 @@ import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { useCart } from '../context/CartContext';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
+import { isCheckinItem } from '../utils/roomOrderUtils';
 import { getOrderDetails } from '../api/services/orderService';
 import Header from '../components/Header/Header';
 import { IoCheckmarkCircle, IoCallOutline, IoChevronDownOutline, IoChevronUpOutline, IoTimeOutline, IoCheckmarkOutline, IoCheckmarkDoneOutline, IoCloseOutline } from 'react-icons/io5';
@@ -137,7 +138,11 @@ const OrderSuccess = () => {
   const passedBillSummary = orderData?.billSummary || null;
 
   // Use ONLY items from API (single source of truth)
-  const allItems = liveOrderItems;
+  // Filter out "check in" items for room orders
+  const isRoom = scannedRoomOrTable === 'room';
+  const allItems = isRoom 
+    ? liveOrderItems.filter(item => !isCheckinItem(item))
+    : liveOrderItems;
   const totalItemsCount = allItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   // Initialize billSummary from passed data

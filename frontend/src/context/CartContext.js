@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { isCheckinItem, isRoomOrder } from '../utils/roomOrderUtils';
 
 const CartContext = createContext();
 
@@ -443,17 +444,21 @@ export const CartProvider = ({ children, restaurantId }) => {
 
   /**
    * Calculate total price including previous order items (for display)
+   * Excludes "check in" items for room orders
    */
   const getPreviousOrderTotal = useCallback(() => {
     if (!previousOrderItems || previousOrderItems.length === 0) return 0;
     
-    // Exclude cancelled items (foodStatus === 3) from total
+    const isRoom = isRoomOrder(restaurantId);
+    
+    // Exclude cancelled items (foodStatus === 3) and "check in" items (for room orders) from total
     return previousOrderItems.reduce((total, item) => {
       if (item.foodStatus === 3) return total; // Skip cancelled items
+      if (isRoom && isCheckinItem(item)) return total; // Skip "check in" items for room orders
       const price = parseFloat(item.unitPrice) || parseFloat(item.price) || 0;
       return total + (price * item.quantity);
     }, 0);
-  }, [previousOrderItems]);
+  }, [previousOrderItems, restaurantId]);
 
   /**
    * Get combined total (previous + new items)
@@ -464,11 +469,18 @@ export const CartProvider = ({ children, restaurantId }) => {
 
   /**
    * Get total item count including previous order items
+   * Excludes "check in" items for room orders
    */
   const getCombinedItemCount = useCallback(() => {
-    const previousCount = previousOrderItems.reduce((total, item) => total + item.quantity, 0);
+    const isRoom = isRoomOrder(restaurantId);
+    
+    const previousCount = previousOrderItems.reduce((total, item) => {
+      if (item.foodStatus === 3) return total; // Skip cancelled items
+      if (isRoom && isCheckinItem(item)) return total; // Skip "check in" items for room orders
+      return total + item.quantity;
+    }, 0);
     return previousCount + getTotalItems();
-  }, [previousOrderItems, getTotalItems]);
+  }, [previousOrderItems, getTotalItems, restaurantId]);
 
   const value = {
     // Cart items and basic operations
