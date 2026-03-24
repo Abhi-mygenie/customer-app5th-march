@@ -8,6 +8,17 @@ import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import './DiningMenu.css';
 
+// Redirect component for empty stations
+const RedirectToMenu = ({ restaurantId }) => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (restaurantId) {
+      navigate(`/${restaurantId}/menu`, { replace: true });
+    }
+  }, [restaurantId, navigate]);
+  return null;
+};
+
 const DiningMenu = () => {
   const navigate = useNavigate();
   const {restaurantId }= useRestaurantId();
@@ -146,11 +157,9 @@ const DiningMenu = () => {
         </>
       )}
 
-      {/* Empty State */}
+      {/* Empty State — redirect to menu */}
       {!loading && !error && stations.length === 0 && (
-        <div className="empty-state">
-          <p>No stations available at the moment.</p>
-        </div>
+        <RedirectToMenu restaurantId={restaurantId} />
       )}
     </div>
   );
