@@ -23,6 +23,7 @@ export const useScannedTable = () => {
     const urlTableNo = searchParams.get('tableName') || searchParams.get('table_no');
     const urlType = searchParams.get('type'); // "table" | "room" | null
     const urlOrderType = searchParams.get('orderType') || searchParams.get('order_type'); // "dinein" | "delivery" | "takeaway" | null
+    const urlFoodFor = searchParams.get('foodFor') || searchParams.get('food_for'); // menu filter e.g. "Normal", "Party"
     
     if (urlTableId || urlTableNo || urlOrderType) {
       // Validate type parameter - default to 'table' if invalid/missing
@@ -39,7 +40,8 @@ export const useScannedTable = () => {
         table_id: urlTableId,
         table_no: urlTableNo,
         room_or_table: roomOrTable,
-        order_type: orderType
+        order_type: orderType,
+        food_for: urlFoodFor || null
       };
       
       // Always overwrite on new scan
@@ -68,6 +70,7 @@ export const useScannedTable = () => {
     tableNo: scannedTable?.table_no || null,
     roomOrTable: scannedTable?.room_or_table || null,
     orderType: scannedTable?.order_type || null,
+    foodFor: scannedTable?.food_for || null,
     isScanned: !!scannedTable,
     clearScannedTable: () => {
       if (restaurantId) {

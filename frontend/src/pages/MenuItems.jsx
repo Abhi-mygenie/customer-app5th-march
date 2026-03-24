@@ -13,6 +13,7 @@ import RepeatItemModal from '../components/RepeatItemModal/RepeatItemModal';
 import { MenuItemSkeleton, HeaderSkeleton, CategoryBoxSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import { useMenuSections, useStations, useRestaurantDetails, useDietaryTags } from '../hooks/useMenuData';
+import { useScannedTable } from '../hooks/useScannedTable';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useCart } from '../context/CartContext';
@@ -49,8 +50,12 @@ const MenuItems = () => {
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
 
+  const { foodFor } = useScannedTable();
+
   // Fetch menu sections from API (wait for numeric ID)
-  const { menuSections: rawMenuSections, loading: menuLoading, error: menuError, errorMessage: menuErrorMessage } = useMenuSections(stationId, numericRestaurantId);
+  // stationId (from route) takes priority, foodFor (from URL/sessionStorage) as fallback
+  const effectiveStationId = stationId || foodFor;
+  const { menuSections: rawMenuSections, loading: menuLoading, error: menuError, errorMessage: menuErrorMessage } = useMenuSections(effectiveStationId, numericRestaurantId);
 
   // Fetch dietary tags for this restaurant
   const { dietaryTagsMapping, allTags, loading: dietaryLoading } = useDietaryTags(numericRestaurantId);
