@@ -96,6 +96,14 @@
 - "Check in" items always excluded from bill and display
 - Applied in: getPreviousOrderTotal, getCombinedItemCount, taxBreakdown, PreviousOrderItems, OrderSuccess, CartBar
 
+### Mar 24, 2026 - Table Merge/Transfer Detection on OrderSuccess
+- Added `check-table-status` API call inside `fetchOrderStatus()` on OrderSuccess page
+- After order details are fetched and order is active (not cancelled/paid), checks if table is still occupied
+- If table status is "Available" or "Invalid" → table was merged/transferred by POS staff → redirects customer to landing page for fresh order
+- Uses `getStoredToken()` (sync localStorage read) for POS auth token, with 401 auto-retry via response interceptor
+- Runs on initial load + every 60s poll cycle automatically
+- File modified: `/app/frontend/src/pages/OrderSuccess.jsx` (lines 10-11, 116, 218-237)
+
 ---
 
 ## Pending Implementation / Next Actions
