@@ -685,13 +685,6 @@ const ReviewOrder = () => {
 
   // Handle place order
   const handlePlaceOrder = async () => {
-    // SECURITY FIX 1: Synchronous double-click guard.
-    // React's setState is async — setIsPlacingOrder(true) doesn't disable the button
-    // until the next render cycle. A fast double-click can bypass the disabled check.
-    // This ref check is synchronous and blocks any concurrent invocation immediately.
-    if (isPlacingOrderRef.current) return;
-    isPlacingOrderRef.current = true;
-    orderDispatchedRef.current = false; // Reset dispatch tracker for this attempt
     // Validate room/table selection and number for multi-menu restaurants
     if (isMultiMenu) {
       // Check if scanned table is available
@@ -720,6 +713,15 @@ const ReviewOrder = () => {
       return;
     }
 
+    // SECURITY FIX 1: Synchronous double-click guard.
+    // Placed AFTER validation so early returns don't permanently lock the ref.
+    // React's setState is async — setIsPlacingOrder(true) doesn't disable the button
+    // until the next render cycle. A fast double-click can bypass the disabled check.
+    // This ref check is synchronous and blocks any concurrent invocation immediately.
+    if (isPlacingOrderRef.current) return;
+    isPlacingOrderRef.current = true;
+    orderDispatchedRef.current = false; // Reset dispatch tracker for this attempt
+
     // Clear phone error if phone is empty (optional)
     if (!customerPhone || customerPhone.trim() === '') {
       setShowPhoneError(false);
@@ -739,6 +741,7 @@ const ReviewOrder = () => {
         // console.error('[ReviewOrder] Failed to get token:', error);
         toast.error('Session expired. Please refresh the page and try again.');
         setIsLoadingToken(false);
+        isPlacingOrderRef.current = false;
         return;
       } finally {
         setIsLoadingToken(false);
