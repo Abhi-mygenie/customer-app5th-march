@@ -151,24 +151,25 @@ const OrderSuccess = () => {
       const orderDetails = await getOrderDetails(orderId);
       
       // Check if table has been merged/transferred (table now free = order moved away)
-      // Read directly from sessionStorage to avoid stale closure issue with React state
+      // Use table_id from API response (source of truth from POS)
+      // Also check sessionStorage as fallback for scanned table data
       const storageKey = `scanned_table_${restaurantId}`;
       const storedTable = sessionStorage.getItem(storageKey);
       const scannedData = storedTable ? JSON.parse(storedTable) : null;
+      const tableIdForCheck = orderDetails.tableId || scannedData?.table_id;
       
       console.log('[DEBUG TABLE CHECK]', {
         restaurantId,
-        storageKey,
-        storedTable,
-        scannedData,
         tableIdFromApi: orderDetails.tableId,
+        tableIdFromStorage: scannedData?.table_id,
+        tableIdForCheck,
         numericRestaurantId
       });
 
-      if (scannedData?.table_id) {
+      if (tableIdForCheck && String(tableIdForCheck) !== '0') {
         try {
           const tableCheckResult = await checkTableStatus(
-            orderDetails.tableId || scannedData.table_id,
+            tableIdForCheck,
             numericRestaurantId,
             getStoredToken()
           );
