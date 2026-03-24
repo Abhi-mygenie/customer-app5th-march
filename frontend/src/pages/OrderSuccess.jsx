@@ -156,6 +156,15 @@ const OrderSuccess = () => {
       const storedTable = sessionStorage.getItem(storageKey);
       const scannedData = storedTable ? JSON.parse(storedTable) : null;
       
+      console.log('[DEBUG TABLE CHECK]', {
+        restaurantId,
+        storageKey,
+        storedTable,
+        scannedData,
+        tableIdFromApi: orderDetails.tableId,
+        numericRestaurantId
+      });
+
       if (scannedData?.table_id) {
         try {
           const tableCheckResult = await checkTableStatus(
