@@ -261,8 +261,12 @@ const OrderSuccess = () => {
           const adjustedVat = parseFloat((apiBillSummary.vat * taxRatio).toFixed(2));
           const adjustedTotalTax = parseFloat((adjustedCgst + adjustedSgst + adjustedVat).toFixed(2));
           
-          // Grand total = subtotal after discount + adjusted tax
-          const grandTotal = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
+          // Local grand total = subtotal after discount + adjusted tax (no rounding)
+          const localGrandTotal = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
+          
+          // Use order_amount from API as grand total (includes rounding applied at order placement)
+          const apiOrderAmount = orderDetails.orderAmount || localGrandTotal;
+          const hasRoundingDiff = apiOrderAmount !== localGrandTotal;
           
           setBillSummary({
             ...apiBillSummary,
@@ -273,7 +277,8 @@ const OrderSuccess = () => {
             sgst: adjustedSgst,
             vat: adjustedVat,
             totalTax: adjustedTotalTax,
-            grandTotal: grandTotal
+            grandTotal: apiOrderAmount,
+            originalTotal: hasRoundingDiff ? localGrandTotal : null
           });
         }
       }
@@ -589,7 +594,12 @@ const OrderSuccess = () => {
                 )}
                 <div className="bill-row bill-row-total">
                   <span className="bill-label-total">Grand Total</span>
-                  <span className="bill-value-total">₹{billSummary.grandTotal.toFixed(2)}</span>
+                  <span className="bill-value-total">
+                    ₹{billSummary.grandTotal.toFixed(2)}
+                    {billSummary.originalTotal != null && (
+                      <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{billSummary.originalTotal.toFixed(2)})</span>
+                    )}
+                  </span>
                 </div>
               </div>
             )}
