@@ -113,7 +113,7 @@ const OrderSuccess = () => {
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
   const { stations } = useStations(numericRestaurantId);
   const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showOrderStatusTracker, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill } = useRestaurantConfig();
-  const { tableId: scannedTableId, tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
+  const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
   const { startEditOrder, clearCart, clearEditMode } = useCart();
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [showItems, setShowItems] = useState(true);
@@ -151,20 +151,11 @@ const OrderSuccess = () => {
       const orderDetails = await getOrderDetails(orderId);
       
       // Check if table has been merged/transferred (table now free = order moved away)
-      // Use table_id from API response (source of truth from POS)
-      // Also check sessionStorage as fallback for scanned table data
+      // Read scanned table from sessionStorage (always current, avoids stale closure)
       const storageKey = `scanned_table_${restaurantId}`;
       const storedTable = sessionStorage.getItem(storageKey);
       const scannedData = storedTable ? JSON.parse(storedTable) : null;
       const tableIdForCheck = scannedData?.table_id;
-      
-      console.log('[DEBUG TABLE CHECK]', {
-        restaurantId,
-        tableIdFromApi: orderDetails.tableId,
-        tableIdFromStorage: scannedData?.table_id,
-        tableIdForCheck,
-        numericRestaurantId
-      });
 
       if (tableIdForCheck && String(tableIdForCheck) !== '0') {
         try {

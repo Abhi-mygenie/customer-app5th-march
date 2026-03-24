@@ -30,7 +30,7 @@
 | **Date Reported** | 2026-03-24 |
 | **Date Fixed** | 2026-03-24 |
 | **Severity** | P1 - High |
-| **Status** | Fixed |
+| **Status** | Fixed (v3 — final) |
 | **Author** | Abhi-mygenie |
 | **Fixed By** | Abhi-mygenie |
 | **Related Feature** | Order Success Page / Table Management |
@@ -41,11 +41,11 @@
 When POS staff merges or transfers a table's order to another table, the customer on the original table remains stuck on the OrderSuccess page with stale data. No redirect, no notification — the customer has no way to know their table is now free and they should start a new order.
 
 ### Steps to Reproduce
-1. Customer scans QR code on Table A and places an order
+1. Customer scans QR code on Table A (e.g. table_id=3241) and places an order
 2. Customer lands on OrderSuccess page (order polling every 60s)
 3. POS staff merges Table A's order into Table B (or transfers to another table)
 4. Table A is now "Available" in POS system
-5. **Expected**: Customer on Table A gets redirected to landing page
+5. **Expected**: Customer on Table A gets redirected to landing page with table context preserved
 6. **Actual (before fix)**: Customer stays on OrderSuccess page indefinitely with stale order data
 
 ### Root Cause
@@ -56,7 +56,22 @@ OrderSuccess page only handled 3 redirect scenarios:
 
 No check existed for table availability. When staff merges/transfers, the order's `fOrderStatus` doesn't change to 3 or 6 — it's still active but on a different table. The original table becomes "Available" but the app never checks this.
 
-### Fix Applied
+### Fix Iterations (3 attempts to get it right)
+
+**v1 (FAILED)** — Placed check inside `previousItems.length > 0` → `fOrderStatus !== null` nested block. When POS merges, API returns `details: []` (empty), so the nested block was skipped entirely. Check never ran.
+
+**v2 (FAILED)** — Moved check to top-level of `fetchOrderStatus()` but used React state (`isScanned`, `scannedTableId`) from `useScannedTable()` hook. Due to **stale closure** issue — `fetchOrderStatus` is captured in a `useEffect([orderId])` closure on first render when `useScannedTable` hasn't populated state yet — `isScanned` was always `false` and `scannedTableId` was always `null`. Check never ran.
+
+Also in v2:
+- Used `orderDetails.tableId` (from API) as primary source for table ID, but API returned a different table ID (`3237`) than the scanned table (`3241`). Wrong table was being checked.
+- Called `clearScannedTable()` on redirect, which wiped sessionStorage. After redirect to landing page, new order had no table context — customer couldn't place a dine-in order for their table.
+
+**v3 (FINAL — Working)** — Three key fixes:
+1. Read `table_id` from **sessionStorage directly** (not React state) to bypass stale closure
+2. Use **only scanned table ID** (no API fallback) — we're checking if the customer's physical table is free
+3. **Don't call `clearScannedTable()`** on redirect — customer is still at the same table, preserve context for new order
+
+### Final Fix Applied
 
 **File Modified**: `/app/frontend/src/pages/OrderSuccess.jsx`
 
@@ -73,38 +88,36 @@ import { getOrderDetails, checkTableStatus } from '../api/services/orderService'
 import { getStoredToken } from '../utils/authToken';
 ```
 
-**Change 2 — Destructure tableId from hook (Line 116)**
+**Change 2 — useScannedTable destructure (Line 116)**
 
-Before:
+No change to the original destructure — `scannedTableId` is NOT used (we read from sessionStorage instead to avoid stale closure):
 ```javascript
 const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
 ```
 
-After:
-```javascript
-const { tableId: scannedTableId, tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
-```
-
-**Change 3 — Table status check logic (Lines 153-173)**
-
-Moved to TOP LEVEL of `fetchOrderStatus()`, right after `getOrderDetails()` returns — outside both `previousItems.length > 0` and `fOrderStatus` gates:
+**Change 3 — Table status check (Lines 153-177, top-level in `fetchOrderStatus()`)**
 
 ```javascript
 const orderDetails = await getOrderDetails(orderId);
 
 // Check if table has been merged/transferred (table now free = order moved away)
-// Must be top-level: when order is merged, details[] is empty so nested checks are skipped
-if (isScanned && scannedTableId) {
+// Read scanned table from sessionStorage (always current, avoids stale closure)
+const storageKey = `scanned_table_${restaurantId}`;
+const storedTable = sessionStorage.getItem(storageKey);
+const scannedData = storedTable ? JSON.parse(storedTable) : null;
+const tableIdForCheck = scannedData?.table_id;
+
+if (tableIdForCheck && String(tableIdForCheck) !== '0') {
   try {
     const tableCheckResult = await checkTableStatus(
-      orderDetails.tableId || scannedTableId,
+      tableIdForCheck,
       numericRestaurantId,
       getStoredToken()
     );
     if (tableCheckResult.isAvailable || tableCheckResult.isInvalid) {
       clearCart();
       clearEditMode();
-      clearScannedTable();
+      // DO NOT clear scanned table — customer is still at this physical table
       toast('Your table has been reassigned. Please place a new order.', { icon: '🔄', duration: 4000 });
       navigate(`/${restaurantId}`, { replace: true });
       return;
@@ -118,7 +131,15 @@ if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
   // ... existing items/status logic ...
 ```
 
-**Bug in initial fix (v1):** The check was originally placed inside `previousItems.length > 0` → `fOrderStatus !== null` nested block. When POS merges a table, the API returns `details: []` (empty), so `previousItems.length === 0` and the entire block — including the table check — was skipped. Moved to top-level so it runs regardless of order item data.
+### Key Design Decisions
+
+| Decision | Reason |
+|----------|--------|
+| Read from sessionStorage, not React state | Avoids stale closure in `useEffect([orderId])` — sessionStorage is always current on every read |
+| Use scanned table_id only, no API fallback | API's `table_id` can differ from scanned table (e.g. 3237 vs 3241). We're checking the customer's physical table. |
+| Don't clear scanned table on redirect | Customer is still sitting at the same table. New order needs the table context for dine-in. |
+| Top-level in fetchOrderStatus, before previousItems check | When order is merged, API returns `details: []` — nested checks would be skipped |
+| Skip if tableId is '0' or falsy | Takeaway/delivery orders have no table — skip check |
 
 ### API Used
 - **Endpoint**: `GET /api/v1/customer/check-table-status?table_id={id}&restaurant_id={id}`
@@ -139,17 +160,19 @@ if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
 ### Verification
 - Frontend compiles cleanly (only pre-existing eslint warnings)
 - Logic runs on initial `fetchOrderStatus()` call + every 60s poll interval
-- Only triggers for scanned-table orders (`isScanned && scannedTableId`)
-- Skipped for takeaway/delivery orders (no table)
-- Cancel/Paid redirects (existing) take priority — table check only runs for active orders
+- Only triggers for scanned-table dine-in orders (sessionStorage has table data)
+- Skipped for takeaway/delivery orders (no scanned table)
+- Cancel/Paid redirects (existing) take priority — table check runs for active orders only
+- After redirect, table context preserved — new order picks up same table automatically
+- Debug console.log removed from final version
 
 ### Regression Risk
-Low — Change is additive (new check after existing logic). Existing cancel/paid/404 redirects untouched. On API failure, falls through silently to existing behavior.
+Low — Change is additive (new check after existing logic). Existing cancel/paid/404 redirects untouched. On API failure, falls through silently to existing behavior. No existing code was modified.
 
 ### Notes
-- The `check-table-status` function was already built in `orderService.js` (used by LandingPage.jsx). No changes needed to the API layer.
+- `checkTableStatus` was already built in `orderService.js` (used by LandingPage.jsx). No changes needed to the API layer.
 - `getStoredToken` was already exported from `authToken.js`. No changes needed to the auth layer.
-- `tableId` was already exposed by `useScannedTable` hook. Only needed to destructure it in OrderSuccess.
+- No changes to any other file. All changes in `OrderSuccess.jsx` only.
 
 ---
 
