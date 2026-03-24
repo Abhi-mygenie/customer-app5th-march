@@ -156,7 +156,7 @@ const OrderSuccess = () => {
       const storageKey = `scanned_table_${restaurantId}`;
       const storedTable = sessionStorage.getItem(storageKey);
       const scannedData = storedTable ? JSON.parse(storedTable) : null;
-      const tableIdForCheck = orderDetails.tableId || scannedData?.table_id;
+      const tableIdForCheck = scannedData?.table_id;
       
       console.log('[DEBUG TABLE CHECK]', {
         restaurantId,
