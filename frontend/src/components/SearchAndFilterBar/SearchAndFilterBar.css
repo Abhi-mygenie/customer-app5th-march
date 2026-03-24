@@ -108,7 +108,7 @@
 }
 
 .veg-toggle-btn.egg.active {
-  color: #d97706;
+  color: var(--color-egg);
 }
 
 .veg-dot {
