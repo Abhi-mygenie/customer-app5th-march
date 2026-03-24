@@ -138,11 +138,8 @@ const OrderSuccess = () => {
   const passedBillSummary = orderData?.billSummary || null;
 
   // Use ONLY items from API (single source of truth)
-  // Filter out "check in" items for room orders
-  const isRoom = scannedRoomOrTable === 'room';
-  const allItems = isRoom 
-    ? liveOrderItems.filter(item => !isCheckinItem(item))
-    : liveOrderItems;
+  // Always filter out "check in" items (system item, not displayable)
+  const allItems = liveOrderItems.filter(item => !isCheckinItem(item));
   const totalItemsCount = allItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   // Initialize billSummary from passed data
@@ -258,15 +255,13 @@ const OrderSuccess = () => {
         setHasFetchedOrderDetails(true);
 
         // Recalculate billSummary with API data + persisted loyalty discount
-        // For room orders, exclude "check in" items from calculations
+        // Always exclude "check in" items from calculations (system item, not billable)
         if (orderDetails.billSummary || orderDetails.previousItems) {
           const apiBillSummary = orderDetails.billSummary || {};
           // Read directly from passedBillSummary (sync) to avoid race condition with async state
           const persistedPointsDiscount = passedBillSummary?.pointsDiscount || 0;
           const persistedPointsRedeemed = passedBillSummary?.pointsRedeemed || 0;
 
-          // For room orders, filter out "check in" items and recalculate
-          const isRoom = scannedRoomOrTable === 'room';
           const itemsForCalc = orderDetails.previousItems || [];
           
           // Recalculate itemTotal and taxes from filtered items
@@ -277,8 +272,8 @@ const OrderSuccess = () => {
           itemsForCalc.forEach(item => {
             // Skip cancelled items
             if (item.foodStatus === 3) return;
-            // Skip "check in" items for room orders
-            if (isRoom && isCheckinItem(item)) return;
+            // Always skip "check in" items (system item, not billable)
+            if (isCheckinItem(item)) return;
             
             const unitPrice = parseFloat(item.unitPrice || item.price) || 0;
             const quantity = item.quantity || 1;

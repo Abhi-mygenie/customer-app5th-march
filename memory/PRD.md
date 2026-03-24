@@ -57,24 +57,22 @@
 
 **Problem**: For room orders (`type=room` in QR URL), a "check in" item exists as a pre-ordered item. This item should be completely hidden and excluded from billing.
 
-**Solution**: 
-- Created utility functions `isCheckinItem(item)` and `isRoomOrder(restaurantId)`
-- Filter "check in" items (by name, case-insensitive) when `roomOrTable === 'room'`
+**Root Cause of Initial Bug**: In `fetchOrderStatus()`, used `scannedRoomOrTable === 'room'` which relied on React hook state. This state wasn't populated yet when the function ran due to useEffect timing.
+
+**Final Solution**: 
+- Created utility functions `isCheckinItem(item)` and `isRoomOrder(restaurantId)` 
+- **Always exclude "check in" items** from bill calculation and display (not just room orders)
+- "Check in" is a system item that should never be billed to customers
 - Applied filter in:
-  - `getPreviousOrderTotal()` - excludes from subtotal
-  - `getCombinedItemCount()` - excludes from item count
-  - `taxBreakdown` calculation in ReviewOrder - excludes from tax
-  - `PreviousOrderItems` component - hides from UI
-  - `OrderSuccess` items list - hides from display
-  - `OrderSuccess` billSummary calculation - recalculates itemTotal, taxes, grandTotal from filtered items
-  - `CartBar` previous items count - excludes from count
+  - `getPreviousOrderTotal()` - excludes from subtotal (room orders only)
+  - `getCombinedItemCount()` - excludes from item count (room orders only)
+  - `taxBreakdown` calculation in ReviewOrder - excludes from tax (room orders only)
+  - `PreviousOrderItems` component - hides from UI (room orders only)
+  - `OrderSuccess` items list - **always hidden**
+  - `OrderSuccess` billSummary calculation - **always excluded** from itemTotal, taxes, grandTotal
+  - `CartBar` previous items count - excludes from count (room orders only)
 
 **Identification**: Item name === "check in" (case-insensitive)
-
-**Bill Summary Fix (OrderSuccess)**:
-- Previously used `apiBillSummary.itemTotal` which included "check in"
-- Now recalculates `itemTotal`, `taxes`, and `grandTotal` from filtered `previousItems`
-- Ensures both Item Total and Grand Total (local calculation) exclude "check in"
 
 ---
 
