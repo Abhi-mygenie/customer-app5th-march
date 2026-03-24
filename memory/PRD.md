@@ -126,13 +126,30 @@
 - Enables menu filtering per QR code for non-multi-menu restaurants
 - Files modified: `useScannedTable.js`, `MenuItems.jsx`
 
+### Mar 25, 2026 - OrderSuccess Grand Total Fix (BUG-007)
+- Grand total now uses `order_amount` from API (rounded value sent at placement)
+- Locally calculated total (without rounding) shown in brackets when different
+- Matches ReviewOrder display style: e.g., ₹106.00 (₹105.30)
+- File modified: `OrderSuccess.jsx`
+
+### Mar 25, 2026 - Update Order Financial Fields Fix (BUG-006)
+- `updateCustomerOrder` now sends real `order_amount`, `tax_amount`, `discount_amount`, `order_sub_total_amount`
+- Added loyalty points fields (`points_redeemed`, `points_discount`, `discount_type`)
+- Fixed both primary and 401-retry call paths in ReviewOrder.jsx
+- Files modified: `orderService.js`, `ReviewOrder.jsx`
+
+### Mar 25, 2026 - Earn Rewards Prompt Visibility Fix (BUG-005)
+- Increased `padding-bottom` on `.review-order-content` from 80px to 110px
+- "Earn rewards on this order!" prompt no longer hidden behind fixed Place Order button
+- File modified: `ReviewOrder.css`
+
 ---
 
 ## Pending Implementation / Next Actions
 
 ### P0 - Critical
 1. **Fix QR code broken URLs** - baseUrl empty, subdomain/restaurantId not populated in QR codes
-2. **Order Success page total_round display** - Show rounded total with original in brackets (may already be done per PRD notes)
+2. ~~**Order Success page total_round display**~~ ✅ Done (Mar 25) — Uses `order_amount` from API, local calc in brackets
 
 ### P1 - High Priority
 1. **Remove silent env fallbacks** - Security concern with hardcoded credentials in `authToken.js`

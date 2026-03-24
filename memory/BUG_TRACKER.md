@@ -410,6 +410,188 @@ None — purely cosmetic, single CSS property change.
 
 ---
 
+## BUG-005: "Earn rewards" prompt hidden behind fixed Place Order button on ReviewOrder page
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-005 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P2 - Medium |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | ReviewOrder Page / Loyalty Rewards Prompt |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All customers on the ReviewOrder page. The "Earn rewards on this order!" prompt is partially or fully obscured by the fixed Place Order button at the bottom of the screen, especially on smaller mobile screens. |
+
+### Summary
+The "Earn rewards on this order!" loyalty prompt at the bottom of the ReviewOrder page content is clipped/hidden behind the fixed-position Place Order button footer. Users cannot fully see the rewards information.
+
+### Steps to Reproduce
+1. Add items to cart on any restaurant with loyalty enabled
+2. Go to ReviewOrder page
+3. Scroll to the bottom
+4. **Expected**: "Earn rewards on this order!" prompt is fully visible above the Place Order button
+5. **Actual**: The prompt is partially hidden behind the fixed footer button
+
+### Root Cause
+`.review-order-content` had `padding-bottom: 80px` to account for the fixed footer (`.review-order-footer` with `position: fixed; bottom: 0`). However, the total footer height (button padding + border + shadow) is ~85-90px on mobile, so 80px was insufficient. The "Earn rewards" prompt, being the last content element, got clipped.
+
+### Fix Applied
+**File Modified**: `/app/frontend/src/pages/ReviewOrder.css`
+
+**Change (line 52)**:
+```css
+/* Before */
+padding-bottom: 80px;
+
+/* After */
+padding-bottom: 110px;
+```
+
+### Verification
+- 1 file, 1 line change
+- "Earn rewards" prompt now fully visible above the Place Order button on all screen sizes
+
+### Regression Risk
+None — purely cosmetic, single CSS padding change. No layout shifts or element repositioning.
+
+---
+
+## BUG-006: `updateCustomerOrder` sends hardcoded zero for `order_amount` and financial fields
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-006 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Edit Order / ReviewOrder Page |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All customers who edit/update an existing order. The POS receives `order_amount: 0`, `tax_amount: 0`, `discount_amount: 0`, `order_sub_total_amount: 0` — potentially corrupting the order total on the POS side. |
+
+### Summary
+When a customer updates an existing order (edit mode), the `updateCustomerOrder` API call sends hardcoded `0` for all financial fields (`order_amount`, `tax_amount`, `discount_amount`, `order_sub_total_amount`). The `placeOrder` function correctly passes real calculated values, but the update function was never wired up.
+
+### Root Cause
+The `updateCustomerOrder` function in `orderService.js` had hardcoded zeros in its payload:
+```javascript
+order_amount: 0,            // should be roundedTotal
+discount_amount: 0,         // should be pointsDiscount
+tax_amount: 0,              // should be adjustedTotalTax
+order_sub_total_amount: 0,  // should be subtotalAfterDiscount
+```
+The function signature also did not accept these financial parameters, and `ReviewOrder.jsx` did not pass them.
+
+### Fix Applied
+**Files Modified**:
+- `/app/frontend/src/api/services/orderService.js`
+- `/app/frontend/src/pages/ReviewOrder.jsx`
+
+**Change 1 — Function signature** (`orderService.js`):
+Added params: `totalToPay`, `subtotal`, `totalTax`, `pointsDiscount`, `pointsRedeemed`
+
+**Change 2 — Payload** (`orderService.js`):
+```javascript
+// Before
+order_amount: 0,
+discount_amount: 0,
+tax_amount: 0,
+order_sub_total_amount: 0,
+discount_type: ''
+
+// After
+order_amount: parseFloat(Number(totalToPay).toFixed(2)),
+discount_amount: parseFloat(Number(pointsDiscount).toFixed(2)),
+tax_amount: parseFloat(Number(totalTax).toFixed(2)),
+order_sub_total_amount: parseFloat(Number(subtotal).toFixed(2)),
+discount_type: pointsRedeemed > 0 ? 'Loyality' : '',
+points_redeemed: pointsRedeemed,
+points_discount: pointsDiscount
+```
+
+**Change 3 — Caller** (`ReviewOrder.jsx`, both primary + retry paths):
+Now passes `roundedTotal`, `subtotalAfterDiscount`, `adjustedTotalTax`, `pointsDiscount`, `pointsToRedeem` to `updateCustomerOrder`.
+
+### Verification
+- Frontend compiles cleanly
+- Financial fields now match `placeOrder` behavior
+- Both primary and 401-retry paths updated
+
+### Regression Risk
+Low — Only added missing data to API payload. No existing logic changed. Backward compatible (API was receiving zeros before, now receives correct values).
+
+---
+
+## BUG-007: OrderSuccess grand total reverts to non-rounded value after API poll
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-007 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | OrderSuccess Page / total_round |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All customers on restaurants with `total_round = 'Yes'`. Grand total initially shows rounded value (e.g., ₹106) from ReviewOrder, then reverts to non-rounded (₹105.30) after the first API poll recalculates it locally. |
+
+### Summary
+On the OrderSuccess page, the grand total initially displays the correct rounded value passed from ReviewOrder. However, when `fetchOrderStatus` polls the API and recalculates the bill summary, it computed the grand total locally (subtotal + tax) without using the `order_amount` from the API, losing the rounding.
+
+### Root Cause
+The recalculation block in `fetchOrderStatus()` computed:
+```javascript
+const grandTotal = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
+```
+This raw local calculation doesn't include rounding. The API's `order_amount` field (which contains the rounded value sent at order placement) was stored in state but never used for the bill summary display.
+
+### Fix Applied
+**File Modified**: `/app/frontend/src/pages/OrderSuccess.jsx`
+
+**Change 1 — Recalculation block**:
+```javascript
+// Before
+const grandTotal = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
+setBillSummary({ ...apiBillSummary, grandTotal: grandTotal });
+
+// After
+const localGrandTotal = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
+const apiOrderAmount = orderDetails.orderAmount || localGrandTotal;
+const hasRoundingDiff = apiOrderAmount !== localGrandTotal;
+setBillSummary({ ...apiBillSummary, grandTotal: apiOrderAmount, originalTotal: hasRoundingDiff ? localGrandTotal : null });
+```
+
+**Change 2 — Display**:
+```jsx
+// Before
+<span className="bill-value-total">₹{billSummary.grandTotal.toFixed(2)}</span>
+
+// After
+<span className="bill-value-total">
+  ₹{billSummary.grandTotal.toFixed(2)}
+  {billSummary.originalTotal != null && (
+    <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{billSummary.originalTotal.toFixed(2)})</span>
+  )}
+</span>
+```
+
+### Verification
+- Grand total now shows `order_amount` from API (rounded) as primary value
+- Locally calculated total (without rounding) shown in brackets when different
+- Matches ReviewOrder display style exactly
+
+### Regression Risk
+Low — Additive change. If `orderDetails.orderAmount` is missing, falls back to local calculation (existing behavior).
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
