@@ -150,6 +150,28 @@ const OrderSuccess = () => {
       if (isInitial) setIsLoadingStatus(true);
       const orderDetails = await getOrderDetails(orderId);
       
+      // Check if table has been merged/transferred (table now free = order moved away)
+      // Must be top-level: when order is merged, details[] is empty so nested checks are skipped
+      if (isScanned && scannedTableId) {
+        try {
+          const tableCheckResult = await checkTableStatus(
+            orderDetails.tableId || scannedTableId,
+            numericRestaurantId,
+            getStoredToken()
+          );
+          if (tableCheckResult.isAvailable || tableCheckResult.isInvalid) {
+            clearCart();
+            clearEditMode();
+            clearScannedTable();
+            toast('Your table has been reassigned. Please place a new order.', { icon: '🔄', duration: 4000 });
+            navigate(`/${restaurantId}`, { replace: true });
+            return;
+          }
+        } catch (tableCheckErr) {
+          console.error('Table status check failed:', tableCheckErr);
+        }
+      }
+
       if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
         const updatedItems = orderDetails.previousItems.map(item => {
           // Calculate total unit price including variations and addons
@@ -213,27 +235,6 @@ const OrderSuccess = () => {
             }
             navigate(`/${restaurantId}`, { replace: true });
             return;
-          }
-
-          // Check if table has been merged/transferred (table now free = order moved away)
-          if (isScanned && scannedTableId) {
-            try {
-              const tableCheckResult = await checkTableStatus(
-                orderDetails.tableId || scannedTableId,
-                numericRestaurantId,
-                getStoredToken()
-              );
-              if (tableCheckResult.isAvailable || tableCheckResult.isInvalid) {
-                clearCart();
-                clearEditMode();
-                clearScannedTable();
-                toast('Your table has been reassigned. Please place a new order.', { icon: '🔄', duration: 4000 });
-                navigate(`/${restaurantId}`, { replace: true });
-                return;
-              }
-            } catch (tableCheckErr) {
-              console.error('Table status check failed:', tableCheckErr);
-            }
           }
         }
 

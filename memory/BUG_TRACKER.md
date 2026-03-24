@@ -85,12 +85,15 @@ After:
 const { tableId: scannedTableId, tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
 ```
 
-**Change 3 — Table status check logic (Lines 218-237)**
+**Change 3 — Table status check logic (Lines 153-173)**
 
-Added after the existing cancel/paid redirect block (line 216), inside `fetchOrderStatus()`:
+Moved to TOP LEVEL of `fetchOrderStatus()`, right after `getOrderDetails()` returns — outside both `previousItems.length > 0` and `fOrderStatus` gates:
 
 ```javascript
+const orderDetails = await getOrderDetails(orderId);
+
 // Check if table has been merged/transferred (table now free = order moved away)
+// Must be top-level: when order is merged, details[] is empty so nested checks are skipped
 if (isScanned && scannedTableId) {
   try {
     const tableCheckResult = await checkTableStatus(
@@ -110,7 +113,12 @@ if (isScanned && scannedTableId) {
     console.error('Table status check failed:', tableCheckErr);
   }
 }
+
+if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
+  // ... existing items/status logic ...
 ```
+
+**Bug in initial fix (v1):** The check was originally placed inside `previousItems.length > 0` → `fOrderStatus !== null` nested block. When POS merges a table, the API returns `details: []` (empty), so `previousItems.length === 0` and the entire block — including the table check — was skipped. Moved to top-level so it runs regardless of order item data.
 
 ### API Used
 - **Endpoint**: `GET /api/v1/customer/check-table-status?table_id={id}&restaurant_id={id}`
