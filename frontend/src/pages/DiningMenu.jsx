@@ -57,40 +57,35 @@ const DiningMenu = () => {
   }, []);
 
   // Check if station is available based on IST timing
-  const isStationAvailable = (timing) => {
-    if (!timing || timing === "") return true; // Always available if no timing specified
+  const isStationAvailable = (station) => {
+    // Use raw 24h opening/closing time from API if available
+    const openTime = station.openingTime;
+    const closeTime = station.closingTime;
+    
+    if (!openTime || !closeTime) return true; // Always available if no timing
+    
+    // All-day check: 00:00:00 to 23:59:59 or 23:59:00
+    if (openTime === '00:00:00' && (closeTime === '23:59:59' || closeTime === '23:59:00')) return true;
 
     // Get current time in IST
     const istTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-    const currentHour = istTime.getHours();
-    const currentMinute = istTime.getMinutes();
+    const currentMinutes = istTime.getHours() * 60 + istTime.getMinutes();
 
-    // Parse timing string like "(7 am - 11 am)" or "(11 am - 11 pm)"
-    const timingMatch = timing.match(/\((\d+)\s*(am|pm)\s*-\s*(\d+)\s*(am|pm)\)/i);
-    if (!timingMatch) return true; // If timing format is invalid, allow access
+    // Parse HH:mm:ss to minutes
+    const openParts = openTime.split(':');
+    const closeParts = closeTime.split(':');
+    const openMinutes = parseInt(openParts[0], 10) * 60 + parseInt(openParts[1] || 0, 10);
+    const closeMinutes = parseInt(closeParts[0], 10) * 60 + parseInt(closeParts[1] || 0, 10);
 
-    let startHour = parseInt(timingMatch[1]);
-    const startPeriod = timingMatch[2].toLowerCase();
-    let endHour = parseInt(timingMatch[3]);
-    const endPeriod = timingMatch[4].toLowerCase();
-
-    // Convert to 24-hour format
-    if (startPeriod === 'pm' && startHour !== 12) startHour += 12;
-    if (startPeriod === 'am' && startHour === 12) startHour = 0;
-    if (endPeriod === 'pm' && endHour !== 12) endHour += 12;
-    if (endPeriod === 'am' && endHour === 12) endHour = 0;
-
-    // Create time values for comparison (hours * 60 + minutes)
-    const currentTimeValue = currentHour * 60 + currentMinute;
-    const startTimeValue = startHour * 60;
-    const endTimeValue = endHour * 60;
-
-    return currentTimeValue >= startTimeValue && currentTimeValue < endTimeValue;
+    // Handle overnight ranges (e.g. 22:00 - 06:00)
+    if (closeMinutes <= openMinutes) {
+      return currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+    }
+    return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
   };
 
-  const handleStationClick = (stationId, timing) => {
-    if (isStationAvailable(timing)) {
-      // Preserve restaurant ID in navigation
+  const handleStationClick = (stationId, station) => {
+    if (isStationAvailable(station)) {
       if (restaurantId) {
         navigate(`/${restaurantId}/menu/${stationId}`);
       }
@@ -136,14 +131,14 @@ const DiningMenu = () => {
           </div>
           <div className="stations-list">
             {stations.map((station) => {
-              const isAvailable = isStationAvailable(station.timing);
+              const isAvailable = isStationAvailable(station);
               
               return (
                 <StationCard
                   key={station.id}
                   station={station}
                   isAvailable={isAvailable}
-                  onClick={() => handleStationClick(station.id, station.timing )}
+                  onClick={() => handleStationClick(station.id, station)}
                 />
               );
             })}

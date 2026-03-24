@@ -147,43 +147,33 @@ const MenuItems = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Check if station is available based on IST timing
-  const isStationAvailable = useCallback((timing) => {
-    if (!timing || timing === "") return true; // Always available if no timing specified
+  // Check if station is available based on IST timing (uses raw 24h API data)
+  const isStationAvailable = useCallback((station) => {
+    const openTime = station?.openingTime;
+    const closeTime = station?.closingTime;
+    
+    if (!openTime || !closeTime) return true;
+    if (openTime === '00:00:00' && (closeTime === '23:59:59' || closeTime === '23:59:00')) return true;
 
-    // Get current time in IST (using cached currentTime state)
     const istTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-    const currentHour = istTime.getHours();
-    const currentMinute = istTime.getMinutes();
+    const currentMinutes = istTime.getHours() * 60 + istTime.getMinutes();
 
-    // Parse timing string like "(7 am - 11 am)" or "(11 am - 11 pm)"
-    const timingMatch = timing.match(/\((\d+)\s*(am|pm)\s*-\s*(\d+)\s*(am|pm)\)/i);
-    if (!timingMatch) return true; // If timing format is invalid, allow access
+    const openParts = openTime.split(':');
+    const closeParts = closeTime.split(':');
+    const openMinutes = parseInt(openParts[0], 10) * 60 + parseInt(openParts[1] || 0, 10);
+    const closeMinutes = parseInt(closeParts[0], 10) * 60 + parseInt(closeParts[1] || 0, 10);
 
-    let startHour = parseInt(timingMatch[1]);
-    const startPeriod = timingMatch[2].toLowerCase();
-    let endHour = parseInt(timingMatch[3]);
-    const endPeriod = timingMatch[4].toLowerCase();
-
-    // Convert to 24-hour format
-    if (startPeriod === 'pm' && startHour !== 12) startHour += 12;
-    if (startPeriod === 'am' && startHour === 12) startHour = 0;
-    if (endPeriod === 'pm' && endHour !== 12) endHour += 12;
-    if (endPeriod === 'am' && endHour === 12) endHour = 0;
-
-    // Create time values for comparison (hours * 60 + minutes)
-    const currentTimeValue = currentHour * 60 + currentMinute;
-    const startTimeValue = startHour * 60;
-    const endTimeValue = endHour * 60;
-
-    return currentTimeValue >= startTimeValue && currentTimeValue < endTimeValue;
+    if (closeMinutes <= openMinutes) {
+      return currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+    }
+    return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
   }, [currentTime]);
 
   // Check if current station is unavailable and redirect
   useEffect(() => {
     if (stationId && stationsData.length > 0) {
       const currentStation = stationsData.find(s => s.id === stationId);
-      if (currentStation && !isStationAvailable(currentStation.timing)) {
+      if (currentStation && !isStationAvailable(currentStation)) {
         // Redirect to stations route if current station is unavailable
         if (restaurantId) {
           navigate(`/${restaurantId}/stations`);
@@ -310,7 +300,7 @@ const MenuItems = () => {
   const handleStationClickFromPanel = (newStationId) => {
     // Check if station is available before navigation
     const targetStation = stationsData.find(s => s.id === newStationId);
-    if (targetStation && !isStationAvailable(targetStation.timing)) {
+    if (targetStation && !isStationAvailable(targetStation)) {
       // Don't navigate if station is unavailable
       closeMenuPanel();
       return;

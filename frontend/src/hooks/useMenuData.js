@@ -152,6 +152,20 @@ export const useMenuSections = (stationId, restaurantId) => {
 const STANDARD_MENUS = ['Normal', 'Party', 'Premium'];
 
 /**
+ * Convert 24h time string "HH:mm:ss" or "HH:mm" to human-readable "h AM/PM"
+ * e.g. "07:00:00" → "7 AM", "23:00:00" → "11 PM", "00:00:00" → "12 AM"
+ */
+const formatTimeTo12h = (timeStr) => {
+  if (!timeStr) return null;
+  const parts = timeStr.split(':');
+  let hour = parseInt(parts[0], 10);
+  if (isNaN(hour)) return null;
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour} ${period}`;
+};
+
+/**
  * Hook to fetch stations (non-standard menus) via menu-master API
  * Filters out Normal/Party/Premium to derive station menus dynamically
  * @param {string} restaurantId - Restaurant ID (required)
@@ -172,28 +186,29 @@ export const useStations = (restaurantId) => {
       const menus = data?.menus || [];
       // Filter out standard menus to get station-specific menus
       const stationMenus = menus.filter(m => !STANDARD_MENUS.includes(m.menu_name));
-      // Map to expected station format with placeholders for image/timing
-      // TODO: Replace with real data when menu-master API provides opening_time, closing_time, description, image
-      const PLACEHOLDER_TIMINGS = {
-        'Breakfast': '(7 AM - 11 AM)',
-        'FOOD MENU': '(11 AM - 11 PM)',
-        'Kids Menu': '(11 AM - 9 PM)',
-        'Bar & Drinks': '(5 PM - 11 PM)',
-        'PET FOOD': '(8 AM - 10 PM)',
-        'Tea, Coffee & Soft Beverages': '(6 AM - 6 PM)',
-        '24hrs Menu': null,
-        'GROK': '(12 PM - 3 PM)',
-      };
-      return stationMenus.map(menu => ({
-        id: menu.menu_name,
-        name: menu.menu_name,
-        menuId: menu.id,
-        image: menu.image || null,
-        description: menu.description || null,
-        timing: menu.opening_time && menu.closing_time
-          ? `(${menu.opening_time} - ${menu.closing_time})`
-          : (PLACEHOLDER_TIMINGS[menu.menu_name] !== undefined ? PLACEHOLDER_TIMINGS[menu.menu_name] : null),
-      }));
+      // Map to expected station format using real API data
+      return stationMenus.map(menu => {
+        const openFormatted = formatTimeTo12h(menu.opening_time);
+        const closeFormatted = formatTimeTo12h(menu.closing_time);
+        const isAllDay = menu.opening_time === '00:00:00' && 
+          (menu.closing_time === '23:59:59' || menu.closing_time === '23:59:00');
+        
+        let timing = null;
+        if (openFormatted && closeFormatted && !isAllDay) {
+          timing = `(${openFormatted} - ${closeFormatted})`;
+        }
+
+        return {
+          id: menu.menu_name,
+          name: menu.menu_name,
+          menuId: menu.id,
+          image: menu.image || null,
+          description: menu.description || null,
+          timing,
+          openingTime: menu.opening_time || null,
+          closingTime: menu.closing_time || null,
+        };
+      });
     },
     enabled: !!finalRestaurantId,
     staleTime: 10 * 60 * 1000,
