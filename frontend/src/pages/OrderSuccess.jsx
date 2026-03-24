@@ -7,7 +7,8 @@ import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { useCart } from '../context/CartContext';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
-import { getOrderDetails } from '../api/services/orderService';
+import { getOrderDetails, checkTableStatus } from '../api/services/orderService';
+import { getStoredToken } from '../utils/authToken';
 import Header from '../components/Header/Header';
 import { IoCheckmarkCircle, IoCallOutline, IoChevronDownOutline, IoChevronUpOutline, IoTimeOutline, IoCheckmarkOutline, IoCheckmarkDoneOutline, IoCloseOutline } from 'react-icons/io5';
 import { RiBillLine } from 'react-icons/ri';
@@ -112,7 +113,7 @@ const OrderSuccess = () => {
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
   const { stations } = useStations(numericRestaurantId);
   const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showOrderStatusTracker, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill } = useRestaurantConfig();
-  const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
+  const { tableId: scannedTableId, tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
   const { startEditOrder, clearCart, clearEditMode } = useCart();
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [showItems, setShowItems] = useState(true);
@@ -212,6 +213,27 @@ const OrderSuccess = () => {
             }
             navigate(`/${restaurantId}`, { replace: true });
             return;
+          }
+
+          // Check if table has been merged/transferred (table now free = order moved away)
+          if (isScanned && scannedTableId) {
+            try {
+              const tableCheckResult = await checkTableStatus(
+                orderDetails.tableId || scannedTableId,
+                numericRestaurantId,
+                getStoredToken()
+              );
+              if (tableCheckResult.isAvailable || tableCheckResult.isInvalid) {
+                clearCart();
+                clearEditMode();
+                clearScannedTable();
+                toast('Your table has been reassigned. Please place a new order.', { icon: '🔄', duration: 4000 });
+                navigate(`/${restaurantId}`, { replace: true });
+                return;
+              }
+            } catch (tableCheckErr) {
+              console.error('Table status check failed:', tableCheckErr);
+            }
           }
         }
 
