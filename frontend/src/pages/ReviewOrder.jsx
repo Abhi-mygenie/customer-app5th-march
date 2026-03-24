@@ -579,6 +579,11 @@ const ReviewOrder = () => {
   // Grand Total = Subtotal after discounts + Adjusted Tax
   const totalToPay = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
 
+  // Round up to ceiling if restaurant has total_round enabled
+  const isRoundingEnabled = restaurant?.total_round === 'Yes';
+  const roundedTotal = isRoundingEnabled ? Math.ceil(totalToPay) : totalToPay;
+  const hasRoundingDiff = isRoundingEnabled && roundedTotal !== totalToPay;
+
   // console.log('totalTax', totalTax);
   // console.log('totalGst', totalGst);
   // console.log('totalVat', vat);
@@ -793,7 +798,7 @@ const ReviewOrder = () => {
           couponCode,
           restaurantId,
           subtotal,
-          totalToPay,
+          totalToPay: roundedTotal,
           totalTax,
           orderType: scannedOrderType,
           isMultipleMenuType: isMultiMenu,
@@ -830,7 +835,7 @@ const ReviewOrder = () => {
         state: {
           orderData: {
             orderId: response?.order_id || editingOrderId || null,
-            totalToPay: response?.total_amount || totalToPay.toFixed(2),
+            totalToPay: response?.total_amount || roundedTotal.toFixed(2),
             isEditedOrder: isEditMode,
             items: newOrderItems,
             previousItems: prevItems,
@@ -844,7 +849,8 @@ const ReviewOrder = () => {
               sgst: adjustedSgst,
               vat: adjustedVat,
               totalTax: adjustedTotalTax,
-              grandTotal: totalToPay
+              grandTotal: roundedTotal,
+              originalTotal: hasRoundingDiff ? totalToPay : null
             }
           }
         }
@@ -910,7 +916,7 @@ const ReviewOrder = () => {
               restaurantId,
               orderType: scannedOrderType,
               subtotal,
-              totalToPay,
+              totalToPay: roundedTotal,
               totalTax,
               isMultipleMenuType: isMultiMenu,
               token: newToken,
@@ -946,7 +952,7 @@ const ReviewOrder = () => {
             state: {
               orderData: {
                 orderId: retryResponse?.order_id || editingOrderId || null,
-                totalToPay: retryResponse?.total_amount || totalToPay.toFixed(2),
+                totalToPay: retryResponse?.total_amount || roundedTotal.toFixed(2),
                 isEditedOrder: isEditMode,
                 items: retryOrderItems,
                 previousItems: retryPrevItems,
@@ -960,7 +966,8 @@ const ReviewOrder = () => {
                   sgst: adjustedSgst,
                   vat: adjustedVat,
                   totalTax: adjustedTotalTax,
-                  grandTotal: totalToPay
+                  grandTotal: roundedTotal,
+                  originalTotal: hasRoundingDiff ? totalToPay : null
                 }
               }
             }
@@ -1345,7 +1352,12 @@ const ReviewOrder = () => {
               {/* Total */}
               <div className="price-row price-row-total">
                 <span className="price-label-total">Grand Total</span>
-                <span className="price-value-total">₹{totalToPay.toFixed(2)}</span>
+                <span className="price-value-total">
+                  ₹{roundedTotal.toFixed(2)}
+                  {hasRoundingDiff && (
+                    <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{totalToPay.toFixed(2)})</span>
+                  )}
+                </span>
               </div>
             </div>
           </div>
@@ -1464,8 +1476,8 @@ const ReviewOrder = () => {
             {isPlacingOrder 
               ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
               : (isEditMode 
-                  ? `Update Order ₹${totalToPay.toFixed(2)}` 
-                  : `Place Order ₹${totalToPay.toFixed(2)}`
+                  ? `Update Order ₹${roundedTotal.toFixed(2)}` 
+                  : `Place Order ₹${roundedTotal.toFixed(2)}`
                 )
             }
           </button>
