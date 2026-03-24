@@ -35,6 +35,7 @@
 | **Fixed By** | Abhi-mygenie |
 | **Related Feature** | Order Success Page / Table Management |
 | **Branch** | 6marchv1 |
+| **Customer Impact** | All dine-in customers on tables that get merged/transferred by POS staff. Affects any restaurant using table merge/transfer feature. |
 
 ### Summary
 When POS staff merges or transfers a table's order to another table, the customer on the original table remains stuck on the OrderSuccess page with stale data. No redirect, no notification — the customer has no way to know their table is now free and they should start a new order.
@@ -159,6 +160,7 @@ Low — Change is additive (new check after existing logic). Existing cancel/pai
 | **Fixed By** |  |
 | **Related Feature** |  |
 | **Branch** |  |
+| **Customer Impact** | Who is affected, how many, which restaurants/flows |
 
 ### Summary
 
