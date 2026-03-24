@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 170px;
+  min-height: 120px;
   border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
@@ -144,7 +144,7 @@
 
 @media (min-width: 768px) {
   .station-card {
-    min-height: 200px;
+    min-height: 140px;
   }
 
   .station-card-name {
@@ -162,7 +162,7 @@
 
 @media (max-width: 375px) {
   .station-card {
-    min-height: 140px;
+    min-height: 98px;
   }
 
   .station-card-name {
