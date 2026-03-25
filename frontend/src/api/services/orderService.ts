@@ -257,7 +257,7 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       otp: '',
       pincode: '',
       cust_email: '',
-      table_id: String(orderData.tableId),
+      table_id: String(orderData.tableId || orderData.tableNumber || ''),
       cart,
       coupon_discount_amount: 0,
       distance: 1,
