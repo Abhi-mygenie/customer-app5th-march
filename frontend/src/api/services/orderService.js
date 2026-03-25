@@ -462,9 +462,10 @@ const transformCartItems = (cartItems) => {
  * Same as normal but includes tax + price breakdown fields per item
  * Tax is calculated from item.tax (percentage) and item.tax_type (GST | VAT)
  * @param {Array} cartItems - Array of cart items
+ * @param {boolean} gstEnabled - Whether GST is enabled at restaurant level (from restaurant.gst_status)
  * @returns {Array} Formatted cart array for multi-menu API
  */
-const transformCartItemsMultiMenu = (cartItems) => {
+const transformCartItemsMultiMenu = (cartItems, gstEnabled = true) => {
   return cartItems.map(cartItem => {
     const { add_on_ids, add_ons, add_on_qtys } = transformAddOns(cartItem);
     const variations      = transformVariations(cartItem);
@@ -477,8 +478,11 @@ const transformCartItemsMultiMenu = (cartItems) => {
     const taxType      = cartItem.item.tax_type || 'GST';          // "GST" | "VAT"
     const taxAmountPerUnit = parseFloat(((itemPrice * taxPercent) / 100).toFixed(2));
     const taxAmount = taxAmountPerUnit * cartItem.quantity;        // Multiply by quantity to get total tax for this item
-    const gstTaxAmount = taxType === 'GST' ? taxAmount : 0;        
-    const vatTaxAmount = taxType === 'VAT' ? taxAmount : 0;        
+    
+    // Only calculate GST if enabled at restaurant level
+    const gstTaxAmount = (taxType === 'GST' && gstEnabled) ? taxAmount : 0;        
+    const vatTaxAmount = taxType === 'VAT' ? taxAmount : 0;
+    const effectiveTaxAmount = gstTaxAmount + vatTaxAmount;
     // ─────────────────────────────────────────────────────────────
 
     return {
@@ -497,7 +501,7 @@ const transformCartItemsMultiMenu = (cartItems) => {
       total_add_on_price: parseFloat(addOnsTotal * cartItem.quantity),        
       gst_tax_amount: gstTaxAmount,                                   
       vat_tax_amount: vatTaxAmount,                                   
-      tax_amount: taxAmount,
+      tax_amount: effectiveTaxAmount,
       discount_on_food: 0                                             
     };
   });
@@ -629,9 +633,10 @@ const buildNormalPayload = (orderData) => {
  *   - cart items have tax + price breakdown fields                 
  *   - extra root fields: total_gst/vat/service_tax, round_up, tip 
  * @param {Object} orderData - Order data
+ * @param {boolean} gstEnabled - Whether GST is enabled at restaurant level
  * @returns {Object} API payload wrapped in { data: {} }
  */
-const buildMultiMenuPayload = (orderData) => {
+const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
   const {
     cartItems,
     customerName,
@@ -647,7 +652,7 @@ const buildMultiMenuPayload = (orderData) => {
     // totalTax     // ← pre-calculated in ReviewOrder.jsx and passed in
   } = orderData;
 
-  const cart      = transformCartItemsMultiMenu(cartItems);
+  const cart      = transformCartItemsMultiMenu(cartItems, gstEnabled);
   const custPhone = extractPhoneNumber(customerPhone || '');
   const dialCode  = getDialCode(customerPhone || '');
 
@@ -742,11 +747,12 @@ const buildMultiMenuPayload = (orderData) => {
  * @param {number} orderData.totalToPay           - Final total (subtotal + tax)
  * @param {number} orderData.totalTax             - Total tax amount (for multi-menu)
  * @param {string} orderData.token                - Auth token
+ * @param {boolean} orderData.gstEnabled          - Whether GST is enabled at restaurant level
  * @returns {Promise} Order response data
  */
 export const placeOrder = async (orderData) => {
   try {
-    const { token, restaurantId, isMultipleMenuType } = orderData;
+    const { token, restaurantId, isMultipleMenuType, gstEnabled = true } = orderData;
 
     // Use flag passed from component (dynamic multi-menu detection)
     const isMultiMenu = isMultipleMenuType === true;
@@ -758,7 +764,7 @@ export const placeOrder = async (orderData) => {
 
     // ─── Select payload ──────────────────────────────────────────
     const payload = isMultiMenu
-      ? buildMultiMenuPayload(orderData)
+      ? buildMultiMenuPayload(orderData, gstEnabled)
       : buildNormalPayload(orderData);
 
     // ─── Headers — same for both ──────────────────────────────────

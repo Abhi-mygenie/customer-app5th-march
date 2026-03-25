@@ -488,8 +488,12 @@ const ReviewOrder = () => {
     let totalGst = 0;
     let totalVat = 0;
 
+    // CHECK: Is GST enabled at restaurant level?
+    const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
+    
     // Debug: Log cart items and their tax info
     console.log('=== TAX DEBUG START ===');
+    console.log('GST Status (restaurant level):', isGstEnabled);
     console.log('Cart items (new):', cartItems.length);
     console.log('Previous order items:', previousOrderItems?.length || 0);
 
@@ -517,8 +521,12 @@ const ReviewOrder = () => {
       console.log(`  - Tax: ${taxPercent}% (${taxType})`);
       console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
 
-      if (taxType === 'GST') totalGst += totalTaxForItem;
-      if (taxType === 'VAT') totalVat += totalTaxForItem;
+      // Only add GST if enabled at restaurant level
+      if (taxType === 'GST' && isGstEnabled) {
+        totalGst += totalTaxForItem;
+      } else if (taxType === 'VAT') {
+        totalVat += totalTaxForItem;
+      }
     });
 
     // Calculate tax for PREVIOUS items (in edit mode)
@@ -569,8 +577,12 @@ const ReviewOrder = () => {
         console.log(`  - Tax: ${taxPercent}% (${taxType})`);
         console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
 
-        if (taxType === 'GST') totalGst += totalTaxForItem;
-        if (taxType === 'VAT') totalVat += totalTaxForItem;
+        // Only add GST if enabled at restaurant level
+        if (taxType === 'GST' && isGstEnabled) {
+          totalGst += totalTaxForItem;
+        } else if (taxType === 'VAT') {
+          totalVat += totalTaxForItem;
+        }
       });
     }
 
@@ -588,7 +600,7 @@ const ReviewOrder = () => {
     console.log('=== TAX DEBUG END ===');
 
     return { cgst, sgst, totalGst, vat: totalVat, totalTax };
-  }, [cartItems, previousOrderItems]);
+  }, [cartItems, previousOrderItems, restaurant?.gst_status]);
 
   const { cgst, sgst, totalGst, vat, totalTax } = taxBreakdown;
 
@@ -878,6 +890,10 @@ const ReviewOrder = () => {
         // If a network error occurs (no response), this flag tells the catch block
         // that the request may have reached the server even though we got no response.
         orderDispatchedRef.current = true;
+        
+        // Check if GST is enabled at restaurant level
+        const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
+        
         response = await placeOrder({
           cartItems,
           customerName,
@@ -894,7 +910,9 @@ const ReviewOrder = () => {
           token,
           // Points redemption
           pointsRedeemed: pointsToRedeem,
-          pointsDiscount: pointsDiscount
+          pointsDiscount: pointsDiscount,
+          // GST status
+          gstEnabled: isGstEnabled
         });
       }
 

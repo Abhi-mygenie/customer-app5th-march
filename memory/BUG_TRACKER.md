@@ -1023,6 +1023,96 @@ Low — Changes are additive. Uses same calculation pattern as cart items.
 
 ---
 
+## BUG-013: GST calculated even when disabled at restaurant level (gst_status)
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-013 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Tax Calculation / GST |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All restaurants with GST disabled. Customers were charged GST even when restaurant had `gst_status = false`. |
+
+### Summary
+GST was being calculated based solely on item-level `item.tax` field, without checking the restaurant-level `gst_status` field from `/web/restaurant-info` API. If a restaurant had GST disabled (`gst_status = false`), GST should not be applied regardless of item-level tax settings.
+
+### Root Cause
+The tax calculation code in `ReviewOrder.jsx` and `orderService.js` used:
+```javascript
+const taxPercent = parseFloat(cartItem.item.tax) || 0;
+if (taxType === 'GST') totalGst += totalTaxForItem;  // No gst_status check!
+```
+
+This always calculated GST if the item had a non-zero `tax` value, ignoring the restaurant's `gst_status` setting.
+
+### Fix Applied
+**Files Modified**:
+- `/app/frontend/src/pages/ReviewOrder.jsx`
+- `/app/frontend/src/api/services/orderService.js`
+
+**Change 1 — ReviewOrder.jsx (tax calculation):**
+```javascript
+// Added gst_status check
+const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
+
+// Only add GST if enabled at restaurant level
+if (taxType === 'GST' && isGstEnabled) {
+  totalGst += totalTaxForItem;
+} else if (taxType === 'VAT') {
+  totalVat += totalTaxForItem;
+}
+```
+
+**Change 2 — orderService.js (transformCartItemsMultiMenu):**
+```javascript
+const transformCartItemsMultiMenu = (cartItems, gstEnabled = true) => {
+  // Only calculate GST if enabled
+  const gstTaxAmount = (taxType === 'GST' && gstEnabled) ? taxAmount : 0;
+};
+```
+
+**Change 3 — orderService.js (placeOrder):**
+```javascript
+export const placeOrder = async (orderData) => {
+  const { gstEnabled = true } = orderData;
+  const payload = buildMultiMenuPayload(orderData, gstEnabled);
+};
+```
+
+**Change 4 — ReviewOrder.jsx (placeOrder call):**
+```javascript
+const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
+response = await placeOrder({
+  // ... other fields
+  gstEnabled: isGstEnabled
+});
+```
+
+### Tax Calculation Logic After Fix
+
+| `gst_status` | `item.tax` | `item.tax_type` | Result |
+|--------------|------------|-----------------|--------|
+| `true` | `5` | `GST` | ✅ Calculate 5% GST |
+| `true` | `0` | `GST` | No GST (0%) |
+| `false` | `5` | `GST` | ❌ **Skip GST** (disabled) |
+| `false` | `5` | `VAT` | ✅ Calculate 5% VAT (VAT not affected by gst_status) |
+
+### Verification
+- Frontend compiles with no errors
+- GST only calculated when `restaurant.gst_status === true`
+- VAT calculation unchanged (always calculated if item has VAT)
+- gstEnabled passed through placeOrder → buildMultiMenuPayload → transformCartItemsMultiMenu
+
+### Regression Risk
+Low — Added check is additive. If `gst_status` is missing/undefined, defaults to `true` (backward compatible).
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
