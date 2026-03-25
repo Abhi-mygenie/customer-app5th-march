@@ -1,6 +1,31 @@
 # API Mapping Document
 
-## Last Updated: March 25, 2026 (Session 2)
+## Last Updated: March 25, 2026 (Session 3 - Transform & Refactor v1)
+
+---
+
+## IMPORTANT: Transformer Layer
+
+As of March 25, 2026, all API data flows through a **Transformer Layer**:
+
+```
+RECEIVE: API Response → orderTransformer.ts → Component
+SEND:    Component → helpers.js → orderService.ts → API
+```
+
+See `/app/memory/ARCHITECTURE.md` for full details.
+
+### Key Property Mappings (API → Internal)
+
+| API Field (snake_case) | Internal (camelCase) | Notes |
+|------------------------|---------------------|-------|
+| `food_status` | `status`, `foodStatus` | Always read snake_case first |
+| `unit_price` | `price`, `unitPrice` | Base price per unit |
+| `food_id` | `foodId` | Item ID |
+| `food_details.name` | `name` | Flattened |
+| `food_level_notes` | `notes` | Cooking instructions |
+| `add_ons` | `addons` | No underscore internally |
+| `variation` | `variations` | Plural internally |
 
 ---
 

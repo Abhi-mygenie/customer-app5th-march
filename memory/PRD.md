@@ -351,6 +351,34 @@
 - `/app/frontend/src/pages/OrderSuccess.jsx`
 - `/app/frontend/src/context/CartContext.js`
 
+### Mar 25, 2026 - Transform & Refactor v1 Bug Fixes ✅
+**Goal**: Fix all bugs introduced by TypeScript migration
+
+**Bugs Fixed:**
+| Bug ID | Issue | Root Cause |
+|--------|-------|------------|
+| BUG-023 | Item price wrong (₹136 vs ₹88) | Module resolution (.js vs .ts) |
+| BUG-024 | `table_id: 'undefined'` | Property name mismatch |
+| BUG-025 | `air_bnb_id` missing | Incomplete payload |
+| BUG-026 | All items "Yet to be confirmed" | snake_case vs camelCase |
+| BUG-027 | LandingPage cache stale | isChecked never reset |
+| BUG-028 | Multi-menu broken | Missing functions |
+
+**Functions Added to helpers.js:**
+- `extractPhoneNumber(phone)` - Remove country code
+- `getDialCode(phone)` - Extract country code
+- `transformCartItemForMultiMenu(item, gst)` - Multi-menu item format
+- `transformCartItemsForMultiMenu(items, gst)` - All items
+- `buildMultiMenuPayload(orderData, gst)` - Complete payload
+
+**Architecture Established:**
+- RECEIVE: `API → orderTransformer.ts → Component`
+- SEND: `Component → helpers.js → orderService.ts → API`
+- JS wrappers for TypeScript files (bundler compatibility)
+
+**Documentation Created:**
+- `/app/memory/CHANGELOG_TRANSFORM_V1.md` - Detailed change log
+- `/app/memory/ARCHITECTURE.md` - Architecture documentation
 
 ---
 

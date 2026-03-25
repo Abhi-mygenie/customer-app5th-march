@@ -1,10 +1,23 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 25, 2026 (Session 2)
+## Last Updated: March 25, 2026 (Session 3 - Transform & Refactor v1)
 
 ---
 
-## Quick Summary - This Session (BUG-015 to BUG-022)
+## Quick Summary - Session 3 (BUG-023 to BUG-028)
+
+| Bug ID | Summary | Status |
+|--------|---------|--------|
+| BUG-023 | Item price wrong on OrderSuccess (₹136 instead of ₹88) | ✅ Fixed |
+| BUG-024 | `table_id: 'undefined'` SQL error | ✅ Fixed |
+| BUG-025 | `air_bnb_id` missing from payload | ✅ Fixed |
+| BUG-026 | All items show "Yet to be confirmed" status | ✅ Fixed |
+| BUG-027 | LandingPage cache not invalidating for paid orders | ✅ Fixed |
+| BUG-028 | Multi-menu orders broken after refactor | ✅ Fixed |
+
+---
+
+## Quick Summary - Session 2 (BUG-015 to BUG-022)
 
 | Bug ID | Summary | Status |
 |--------|---------|--------|
@@ -18,6 +31,83 @@
 | BUG-022 | Stale previousOrderItems causing wrong totals after order paid on POS | ✅ Fixed |
 
 ---
+
+## Session 3 Bug Details (Transform & Refactor v1)
+
+### BUG-023: Item price wrong on OrderSuccess
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-023 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | ✅ Fixed |
+| **Root Cause** | Module resolution - bundler used old `.js` file instead of new `.ts` |
+| **Fix** | Created JS wrapper that re-exports from TypeScript file |
+
+### BUG-024: `table_id: 'undefined'` SQL error
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-024 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | ✅ Fixed |
+| **Root Cause** | New TS file used `tableId` but ReviewOrder passes `tableNumber` |
+| **Fix** | Accept both: `tableId || tableNumber || ''` |
+
+### BUG-025: `air_bnb_id` missing from payload
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-025 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | ✅ Fixed |
+| **Root Cause** | New TS payload missing required field |
+| **Fix** | Added `air_bnb_id: ''` to both placeOrder and updateCustomerOrder |
+
+### BUG-026: All items show "Yet to be confirmed" status
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-026 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | ✅ Fixed |
+| **Root Cause** | Transformer read `api.foodStatus` (camelCase) but API returns `food_status` (snake_case) |
+| **Fix** | Read `(api as any).food_status ?? api.foodStatus` |
+
+### BUG-027: LandingPage cache not invalidating
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-027 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | ✅ Fixed |
+| **Root Cause** | `tableStatusCheck.isChecked` never reset on component remount |
+| **Fix** | Reset state on mount + clear cart when paid order detected |
+
+### BUG-028: Multi-menu orders broken
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-028 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | ✅ Fixed |
+| **Root Cause** | New TS file missing multi-menu functions: `buildMultiMenuPayload`, `transformCartItemsForMultiMenu` |
+| **Fix** | Added all multi-menu functions to helpers.js |
+
+---
+
 
 ## Legend
 
