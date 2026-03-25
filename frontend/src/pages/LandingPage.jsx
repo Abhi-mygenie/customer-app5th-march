@@ -230,7 +230,22 @@ const LandingPage = () => {
       // Fetch order details from API
       const orderDetails = await getOrderDetails(tableStatusCheck.existingOrderId);
 
-      // Start edit mode with previous items
+      // CHECK: If order is "yet to be confirmed" (fOrderStatus === 7), redirect to OrderSuccess
+      if (orderDetails.fOrderStatus === 7) {
+        const actualRestaurantId = restaurant?.id || restaurantId;
+        navigate(`/${actualRestaurantId}/order-success`, {
+          state: {
+            orderData: {
+              orderId: tableStatusCheck.existingOrderId,
+              totalToPay: orderDetails.billSummary?.grandTotal || 0,
+              billSummary: orderDetails.billSummary,
+            }
+          }
+        });
+        return;  // Don't enter edit mode
+      }
+
+      // Start edit mode with previous items (only for confirmed orders: fOrderStatus 1, 2, 5)
       startEditOrder(
         tableStatusCheck.existingOrderId,
         orderDetails.previousItems,

@@ -798,6 +798,73 @@ Low — Changes are additive guards. Existing edit/update flow unchanged. Fail-s
 
 ---
 
+## BUG-010: Edit Order button shown on LandingPage even when order is "yet to be confirmed"
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-010 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | LandingPage / Edit Order Flow |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All dine-in customers who scan QR while their order is still "yet to be confirmed". They see Edit Order button and can enter edit mode, causing confusion. |
+
+### Summary
+When a customer scans QR code on a table with an existing order that is "yet to be confirmed" (fOrderStatus === 7), the LandingPage shows "EDIT ORDER" button. Clicking it enters edit mode, but the order shouldn't be editable until restaurant confirms it.
+
+### Root Cause
+`checkTableStatus()` API only returns `{ isOccupied, orderId }` — it does NOT return `fOrderStatus`. The LandingPage showed Edit Order button purely based on `isOccupied = true`, without checking if the order was confirmed.
+
+### Fix Applied
+**File Modified**: `/app/frontend/src/pages/LandingPage.jsx`
+
+**Change in `handleEditOrderClick()` function:**
+```javascript
+const handleEditOrderClick = async () => {
+  const orderDetails = await getOrderDetails(tableStatusCheck.existingOrderId);
+
+  // NEW: If order is "yet to be confirmed", redirect to OrderSuccess
+  if (orderDetails.fOrderStatus === 7) {
+    navigate(`/${restaurantId}/order-success`, {
+      state: {
+        orderData: {
+          orderId: tableStatusCheck.existingOrderId,
+          totalToPay: orderDetails.billSummary?.grandTotal || 0,
+          billSummary: orderDetails.billSummary,
+        }
+      }
+    });
+    return;  // Don't enter edit mode
+  }
+
+  // Only enter edit mode for confirmed orders (fOrderStatus 1, 2, 5)
+  startEditOrder(...);
+};
+```
+
+### Flow After Fix
+| fOrderStatus | Meaning | Action on Edit Order Click |
+|--------------|---------|---------------------------|
+| `7` | Yet to be confirmed | → Redirect to OrderSuccess |
+| `1` | Confirmed | → Enter edit mode ✅ |
+| `2` | Preparing | → Enter edit mode ✅ |
+| `5` | Served | → Enter edit mode ✅ |
+
+### Verification
+- Frontend compiles with no errors
+- User clicking "Edit Order" with fOrderStatus === 7 is redirected to OrderSuccess
+- User sees "Yet to be confirmed" message on OrderSuccess page
+- Edit mode only accessible for confirmed orders
+
+### Regression Risk
+Low — Single check point in `handleEditOrderClick`. Uses existing `getOrderDetails` API which already returns `fOrderStatus`.
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
