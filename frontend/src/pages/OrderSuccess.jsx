@@ -133,7 +133,7 @@ const OrderSuccess = () => {
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
   const { stations } = useStations(numericRestaurantId);
   const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showOrderStatusTracker, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill } = useRestaurantConfig();
-  const { tableNo: scannedTableNo, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
+  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
   const { startEditOrder, clearCart, clearEditMode } = useCart();
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [showItems, setShowItems] = useState(true);
@@ -377,8 +377,32 @@ const OrderSuccess = () => {
 
     setIsLoadingEdit(true);
     try {
+      // FIRST: Check if table is still occupied with an active order
+      if (scannedTableId) {
+        const token = await getStoredToken();
+        const tableStatus = await checkTableStatus(scannedTableId, restaurantId, token);
+        
+        // If table is FREE (no active order), redirect to landing page for fresh order
+        if (!tableStatus.isOccupied || !tableStatus.orderId) {
+          clearEditMode();
+          clearCart();
+          toast('Table is now free. Starting fresh order.', { icon: 'ℹ️' });
+          navigate(`/${restaurantId}`, { replace: true });
+          return;
+        }
+      }
+
       // Fetch order details from API
       const orderDetails = await getOrderDetails(orderData.orderId);
+      
+      // Check if order is cancelled or paid
+      if (orderDetails.fOrderStatus === 3 || orderDetails.fOrderStatus === 6) {
+        clearEditMode();
+        clearCart();
+        toast(orderDetails.fOrderStatus === 3 ? 'This order was cancelled.' : 'This order has been paid.', { icon: 'ℹ️' });
+        navigate(`/${restaurantId}`, { replace: true });
+        return;
+      }
       
       // Start edit mode with previous items (including cancelled for visibility)
       startEditOrder(
