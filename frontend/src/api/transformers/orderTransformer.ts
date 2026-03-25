@@ -131,6 +131,20 @@ export const transformPreviousOrderItem = (api: ApiOrderDetailItem): PreviousOrd
   const addonsTotal = calculateAddonsTotal(addons);
   const fullPrice = basePrice + variationsTotal + addonsTotal;
 
+  // DEBUG: Log transformer calculation
+  console.log('=== TRANSFORMER DEBUG ===', {
+    itemName: api.food_details?.name,
+    'api.unit_price': api.unit_price,
+    'api.price (DO NOT USE - includes qty)': (api as any).price,
+    'api.food_details.price': api.food_details?.price,
+    'api.quantity': api.quantity,
+    'CALCULATED basePrice': basePrice,
+    'CALCULATED variationsTotal': variationsTotal,
+    'CALCULATED addonsTotal': addonsTotal,
+    'CALCULATED fullPrice (per unit)': fullPrice,
+    'EXPECTED DISPLAY: fullPrice * qty': fullPrice * (api.quantity || 1),
+  });
+
   return {
     id: api.id,
     foodId: api.food_id,
