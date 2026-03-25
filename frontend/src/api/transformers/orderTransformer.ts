@@ -99,6 +99,9 @@ export const transformOrderItem = (api: ApiOrderDetailItem): OrderItem => {
   const variations = transformVariations(api.variation);
   const addons = transformAddons(api.add_ons);
   const fullPrice = calculateFullPrice(basePrice, variations, addons);
+  
+  // API returns food_status (snake_case), not foodStatus (camelCase)
+  const itemStatus = (api as any).food_status ?? api.foodStatus;
 
   return {
     id: api.id,
@@ -110,7 +113,7 @@ export const transformOrderItem = (api: ApiOrderDetailItem): OrderItem => {
     fullPrice,
     quantity: api.quantity || 1,
     veg: api.food_details?.veg === 1 || api.food_details?.veg === true,
-    status: api.foodStatus,
+    status: itemStatus,
     notes: api.food_level_notes || undefined,
     variations,
     addons,
@@ -130,6 +133,9 @@ export const transformPreviousOrderItem = (api: ApiOrderDetailItem): PreviousOrd
   const variationsTotal = calculateVariationsTotal(variations);
   const addonsTotal = calculateAddonsTotal(addons);
   const fullPrice = basePrice + variationsTotal + addonsTotal;
+  
+  // API returns food_status (snake_case), not foodStatus (camelCase)
+  const itemStatus = (api as any).food_status ?? api.foodStatus;
 
   return {
     id: api.id,
@@ -141,8 +147,8 @@ export const transformPreviousOrderItem = (api: ApiOrderDetailItem): PreviousOrd
     fullPrice,
     quantity: api.quantity || 1,
     veg: api.food_details?.veg === 1 || api.food_details?.veg === true,
-    status: api.foodStatus,
-    foodStatus: api.foodStatus,
+    status: itemStatus,
+    foodStatus: itemStatus,
     notes: api.food_level_notes || undefined,
     variations,
     addons,
@@ -173,7 +179,9 @@ export const transformOrderDetails = (api: ApiOrderDetailsResponse): OrderDetail
   const subtotalWithoutTax = parseFloat(api.order_sub_total_without_tax || '') || subtotal;
 
   // Determine fOrderStatus from first item or default
-  const fOrderStatus = api.details?.[0]?.foodStatus || ORDER_STATUS.YET_TO_CONFIRM;
+  // API returns food_status (snake_case), not foodStatus (camelCase)
+  const firstItem = api.details?.[0];
+  const fOrderStatus = (firstItem as any)?.food_status ?? firstItem?.foodStatus ?? ORDER_STATUS.YET_TO_CONFIRM;
 
   return {
     orderId: api.order_id,
