@@ -96,6 +96,26 @@ const isConfigEnabled = (restaurant, key) => {
   return val === 'Y' || val === 'y' || val === true || val === '1';
 };
 
+// Helper: Extract variation labels from API response
+// API returns variations as: [{ values: { label: "60ml", optionPrice: "40" } }]
+// or as: [{ values: [{ label: "60ml", optionPrice: "40" }] }]
+const getVariationLabels = (variations) => {
+  if (!variations || variations.length === 0) return '';
+  return variations.map(v => {
+    if (v.values) {
+      const vals = Array.isArray(v.values) ? v.values : [v.values];
+      return vals.map(val => val.label || '').filter(Boolean).join(', ');
+    }
+    return v.label || v.name || '';
+  }).filter(Boolean).join(', ');
+};
+
+// Helper: Extract addon labels from API response
+const getAddonLabels = (addons) => {
+  if (!addons || addons.length === 0) return '';
+  return addons.map(a => `${a.name || 'Addon'} x${a.quantity || 1}`).join(', ');
+};
+
 // Order status steps mapped to f_order_status values
 // 7 → Order Placed, 1 → Confirmed, 2 → Preparing, 5 → Served
 const ORDER_STATUSES = [
@@ -495,19 +515,14 @@ const OrderSuccess = () => {
                       </span>
                       <div className="order-success-item-details">
                         <span className="order-success-item-name">{item.name || 'Item'}</span>
-                        {item.variations && item.variations.length > 0 && (
+                        {item.variations && item.variations.length > 0 && getVariationLabels(item.variations) && (
                           <span className="order-success-item-customization" data-testid={`item-variants-${index}`}>
-                            Variants: {item.variations.map(v => {
-                              if (v.values?.label) {
-                                return Array.isArray(v.values.label) ? v.values.label.join(', ') : v.values.label;
-                              }
-                              return v.label || v.name || '';
-                            }).filter(Boolean).join(', ')}
+                            Variants: {getVariationLabels(item.variations)}
                           </span>
                         )}
                         {item.add_ons && item.add_ons.length > 0 && (
                           <span className="order-success-item-customization" data-testid={`item-addons-${index}`}>
-                            Addons: {item.add_ons.map(a => `${a.name} x${a.quantity || 1}`).join(', ')}
+                            Addons: {getAddonLabels(item.add_ons)}
                           </span>
                         )}
                         {item.foodLevelNotes && (

@@ -1167,6 +1167,95 @@ Low — Uses API values with fallback. Old orders without new fields will use lo
 
 ---
 
+## BUG-015: Variation name not displayed on OrderSuccess page (BUG-012 incomplete fix)
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-015 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Order Success Page / Item Display |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All customers viewing OrderSuccess page. Variation names not displayed even though price was correctly included. |
+
+### Summary
+BUG-012 fixed variation/addon display and pricing in `PreviousOrderItems.jsx` and `ReviewOrder.jsx`, but the same fix was not applied to `OrderSuccess.jsx`. The variation label extraction logic in OrderSuccess was using a different (broken) pattern that didn't match the API response structure.
+
+### Root Cause
+`OrderSuccess.jsx` used this logic to extract variation labels:
+```javascript
+if (v.values?.label) {
+  return Array.isArray(v.values.label) ? v.values.label.join(', ') : v.values.label;
+}
+```
+
+This expected `v.values.label` directly, but the API returns `v.values` as an object with a `label` property (e.g., `{ label: "60ml", optionPrice: "40" }`), or as an array of such objects.
+
+The fixed logic in `PreviousOrderItems.jsx` correctly handles both cases:
+```javascript
+const vals = Array.isArray(v.values) ? v.values : [v.values];
+return vals.map(val => val.label || '').filter(Boolean).join(', ');
+```
+
+### Fix Applied
+**File Modified**: `/app/frontend/src/pages/OrderSuccess.jsx`
+
+**Change 1 — Added helper functions (after isConfigEnabled)**:
+```javascript
+// Helper: Extract variation labels from API response
+const getVariationLabels = (variations) => {
+  if (!variations || variations.length === 0) return '';
+  return variations.map(v => {
+    if (v.values) {
+      const vals = Array.isArray(v.values) ? v.values : [v.values];
+      return vals.map(val => val.label || '').filter(Boolean).join(', ');
+    }
+    return v.label || v.name || '';
+  }).filter(Boolean).join(', ');
+};
+
+// Helper: Extract addon labels from API response
+const getAddonLabels = (addons) => {
+  if (!addons || addons.length === 0) return '';
+  return addons.map(a => `${a.name || 'Addon'} x${a.quantity || 1}`).join(', ');
+};
+```
+
+**Change 2 — Updated JSX to use helper functions**:
+```jsx
+{item.variations && item.variations.length > 0 && getVariationLabels(item.variations) && (
+  <span className="order-success-item-customization">
+    Variants: {getVariationLabels(item.variations)}
+  </span>
+)}
+{item.add_ons && item.add_ons.length > 0 && (
+  <span className="order-success-item-customization">
+    Addons: {getAddonLabels(item.add_ons)}
+  </span>
+)}
+```
+
+### What was already working
+- **Price calculation**: Variations and addons were correctly included in item price (lines 182-199)
+- **Addon display**: Addons were showing correctly (same `a.name x${a.quantity}` format)
+
+### What was broken
+- **Variation label display**: Labels not extracted correctly from API response structure
+
+### Verification
+- Variation names now display correctly (e.g., "Variants: 60ml")
+- Addon names continue to display correctly (e.g., "Addons: coconut x1, garlic x1")
+- Price calculations unchanged (already correct)
+
+### Regression Risk
+None — Logic matches the verified fix in PreviousOrderItems.jsx. Helper functions are pure and isolated.
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
