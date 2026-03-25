@@ -46,6 +46,29 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.edit-mode-banner-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.edit-mode-banner-view-bill {
+  background: var(--text-white, #fff);
+  border: none;
+  color: var(--color-primary, #ff6b35);
+  padding: 6px 14px;
+  border-radius: var(--radius-button, 6px);
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-mode-banner-view-bill:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
 /* Error Message */
 .error-message {
   padding: var(--spacing-lg);

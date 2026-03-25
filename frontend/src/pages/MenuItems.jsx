@@ -568,13 +568,22 @@ const MenuItems = () => {
                 <span className="edit-mode-banner-text">
                   Adding items to Order #{editingOrderId}
                 </span>
-                <button 
-                  className="edit-mode-banner-cancel"
-                  onClick={clearCart}
-                  data-testid="clear-new-items-btn"
-                >
-                  Clear New Items
-                </button>
+                <div className="edit-mode-banner-buttons">
+                  <button 
+                    className="edit-mode-banner-view-bill"
+                    onClick={() => navigate(`/${restaurantId}/order-success`)}
+                    data-testid="view-bill-btn"
+                  >
+                    View Bill
+                  </button>
+                  <button 
+                    className="edit-mode-banner-cancel"
+                    onClick={clearCart}
+                    data-testid="clear-new-items-btn"
+                  >
+                    Clear New Items
+                  </button>
+                </div>
               </div>
             </div>
           )}
