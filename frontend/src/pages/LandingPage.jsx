@@ -245,6 +245,19 @@ const LandingPage = () => {
         return;  // Don't enter edit mode
       }
 
+      // CHECK: If order is cancelled or paid, don't allow edit
+      if (orderDetails.fOrderStatus === 3 || orderDetails.fOrderStatus === 6) {
+        toast(orderDetails.fOrderStatus === 3 ? 'This order was cancelled.' : 'This order has been paid.', { icon: 'ℹ️' });
+        // Table should be available now - just go to menu for new order
+        const actualRestaurantId = restaurant?.id || restaurantId;
+        if (isMultipleMenu(restaurant)) {
+          navigate(`/${actualRestaurantId}/stations`);
+        } else {
+          navigate(`/${actualRestaurantId}/menu`);
+        }
+        return;
+      }
+
       // Start edit mode with previous items (only for confirmed orders: fOrderStatus 1, 2, 5)
       startEditOrder(
         tableStatusCheck.existingOrderId,

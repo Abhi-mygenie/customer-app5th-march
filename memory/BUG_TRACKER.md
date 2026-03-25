@@ -865,6 +865,92 @@ Low — Single check point in `handleEditOrderClick`. Uses existing `getOrderDet
 
 ---
 
+## BUG-011: Edit mode persists after order is paid/cancelled - allows update on closed order
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-011 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Edit Order / ReviewOrder |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All customers who enter edit mode and whose order gets paid/cancelled before they update. Could result in duplicate orders or API errors. |
+
+### Summary
+When a user enters edit mode and their order gets paid/cancelled via POS before they click "Update Order", the system would still try to call `updateCustomerOrder()` on the closed order. The table status check only ran for new orders, not for updates.
+
+### Root Cause
+```javascript
+if (isEditMode && editingOrderId) {
+  // ❌ NO STATUS CHECK - directly calls update API
+  response = await updateCustomerOrder({ orderId: editingOrderId, ... });
+} else {
+  // ✅ Has table status check
+  const tableStatus = await checkTableStatus(...);
+  response = await placeOrder({ ... });
+}
+```
+
+The edit mode branch bypassed all status checks.
+
+### Fix Applied
+**Files Modified**:
+- `/app/frontend/src/pages/ReviewOrder.jsx`
+- `/app/frontend/src/pages/LandingPage.jsx`
+
+**Change 1 — ReviewOrder.jsx (edit mode branch):**
+Before calling `updateCustomerOrder()`, verify order is still active:
+```javascript
+if (isEditMode && editingOrderId) {
+  const currentOrderDetails = await getOrderDetails(editingOrderId);
+  if (currentOrderDetails.fOrderStatus === 3 || currentOrderDetails.fOrderStatus === 6) {
+    // Order is cancelled/paid - clear edit mode, fall through to place new order
+    toast('Order has been completed. Placing as new order.');
+    clearEditMode();
+  } else {
+    // Order still active - proceed with update
+    response = await updateCustomerOrder({ ... });
+  }
+}
+
+if (!response) {
+  // Place new order (table check runs here)
+  ...
+}
+```
+
+**Change 2 — LandingPage.jsx (handleEditOrderClick):**
+Added check for paid/cancelled orders:
+```javascript
+if (orderDetails.fOrderStatus === 3 || orderDetails.fOrderStatus === 6) {
+  toast(orderDetails.fOrderStatus === 3 ? 'This order was cancelled.' : 'This order has been paid.');
+  navigate(`/${restaurantId}/menu`);  // Go to menu for new order
+  return;
+}
+```
+
+### Flow After Fix
+| Order Status | LandingPage (Edit Click) | ReviewOrder (Update Click) |
+|--------------|--------------------------|---------------------------|
+| `7` (Yet to confirm) | → Redirect to OrderSuccess | N/A |
+| `1, 2, 5` (Active) | → Enter edit mode | → Update order |
+| `3` (Cancelled) | → Toast + Go to menu | → Clear edit, place new order |
+| `6` (Paid) | → Toast + Go to menu | → Clear edit, place new order |
+
+### Verification
+- Frontend compiles with no errors
+- Edit mode with paid/cancelled order → gracefully handled
+- Falls through to new order flow with table status check
+
+### Regression Risk
+Low — Added verification before update. On API error, falls back to attempting update (fail-safe).
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]

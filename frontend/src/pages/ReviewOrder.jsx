@@ -10,7 +10,7 @@ import { useScannedTable } from '../hooks/useScannedTable';
 import { useAuth } from '../context/AuthContext';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { getAuthToken, isTokenExpired } from '../utils/authToken';
-import { placeOrder, updateCustomerOrder, checkTableStatus } from '../api/services/orderService';
+import { placeOrder, updateCustomerOrder, checkTableStatus, getOrderDetails } from '../api/services/orderService';
 import OrderItemCard from '../components/OrderItemCard/OrderItemCard';
 import PreviousOrderItems from '../components/PreviousOrderItems/PreviousOrderItems';
 import { IoArrowBackOutline, IoGiftOutline, IoPersonOutline } from "react-icons/io5";
@@ -765,30 +765,66 @@ const ReviewOrder = () => {
 
       // Check if we're in edit mode
       if (isEditMode && editingOrderId) {
-        // Update existing order with new items
-        response = await updateCustomerOrder({
-          orderId: editingOrderId,
-          cartItems,
-          restaurantId,
-          tableId: finalTableId,
-          orderType: scannedOrderType || 'dinein',
-          paymentType: 'postpaid',
-          orderNote: specialInstructions,
-          authToken: token,
-          customerName,
-          customerPhone: customerPhone || '',
-          totalToPay: roundedTotal,
-          subtotal: subtotalAfterDiscount,
-          totalTax: adjustedTotalTax,
-          pointsDiscount,
-          pointsRedeemed: pointsToRedeem,
-        });
+        // VERIFY: Check if original order is still active before updating
+        try {
+          const currentOrderDetails = await getOrderDetails(editingOrderId);
+          if (currentOrderDetails.fOrderStatus === 3 || currentOrderDetails.fOrderStatus === 6) {
+            // Order is cancelled or paid - can't update, clear edit mode and place as new
+            toast('Order has been completed. Placing as new order.', { icon: 'ℹ️' });
+            clearEditMode();
+            // Don't return - fall through to place new order
+          } else {
+            // Order is still active - proceed with update
+            response = await updateCustomerOrder({
+              orderId: editingOrderId,
+              cartItems,
+              restaurantId,
+              tableId: finalTableId,
+              orderType: scannedOrderType || 'dinein',
+              paymentType: 'postpaid',
+              orderNote: specialInstructions,
+              authToken: token,
+              customerName,
+              customerPhone: customerPhone || '',
+              totalToPay: roundedTotal,
+              subtotal: subtotalAfterDiscount,
+              totalTax: adjustedTotalTax,
+              pointsDiscount,
+              pointsRedeemed: pointsToRedeem,
+            });
 
-        // Clear edit mode after successful update
-        clearEditMode();
-        
-        toast.success('Order updated successfully!');
-      } else {
+            // Clear edit mode after successful update
+            clearEditMode();
+            
+            toast.success('Order updated successfully!');
+          }
+        } catch (orderCheckErr) {
+          console.error('Failed to verify order status:', orderCheckErr);
+          // On error, try to update anyway (fail-safe)
+          response = await updateCustomerOrder({
+            orderId: editingOrderId,
+            cartItems,
+            restaurantId,
+            tableId: finalTableId,
+            orderType: scannedOrderType || 'dinein',
+            paymentType: 'postpaid',
+            orderNote: specialInstructions,
+            authToken: token,
+            customerName,
+            customerPhone: customerPhone || '',
+            totalToPay: roundedTotal,
+            subtotal: subtotalAfterDiscount,
+            totalTax: adjustedTotalTax,
+            pointsDiscount,
+            pointsRedeemed: pointsToRedeem,
+          });
+          clearEditMode();
+          toast.success('Order updated successfully!');
+        }
+      }
+      
+      // Place new order (either not in edit mode, or edit mode was cleared due to paid/cancelled order)
+      if (!response) {
         // NEW: Check table status before placing new order (prevent duplicate orders)
         if (finalTableId && String(finalTableId) !== '0') {
           try {
