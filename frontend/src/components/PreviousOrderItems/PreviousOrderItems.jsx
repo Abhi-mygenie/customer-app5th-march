@@ -115,13 +115,10 @@ const PreviousOrderItems = ({ items, orderId }) => {
           const fullPrice = item.fullPrice ?? item.price ?? 0;
           
           // Use transformer's getVariationLabels with transformed variations
-          // Fallback to _rawVariations for backward compatibility
-          const variationLabels = getVariationLabels(item.variations || []) || 
-            (item._rawVariations ? getVariationLabels(item._rawVariations) : null);
+          const variationLabels = getVariationLabels(item.variations || []);
           
           // Use transformer's getAddonLabels with transformed addons
-          const addonLabels = getAddonLabels(item.addons || []) ||
-            (item._rawAddons ? getAddonLabels(item._rawAddons) : null);
+          const addonLabels = getAddonLabels(item.addons || []);
           
           return (
             <div 

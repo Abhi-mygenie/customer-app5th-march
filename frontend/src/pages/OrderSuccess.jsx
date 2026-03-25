@@ -195,9 +195,6 @@ const OrderSuccess = () => {
           // Use transformed variations/addons
           variations: item.variations || [],
           addons: item.addons || [],
-          // Fallback to raw API data for edge cases
-          _rawVariations: item._rawVariations || [],
-          _rawAddons: item._rawAddons || [],
           notes: item.notes || '',
           orderNote: item.orderNote || '',
         }));
@@ -519,12 +516,6 @@ const OrderSuccess = () => {
                         {item.addons && item.addons.length > 0 && (
                           <span className="order-success-item-customization" data-testid={`item-addons-${index}`}>
                             Addons: {getAddonLabels(item.addons)}
-                          </span>
-                        )}
-                        {/* Fallback to raw API data for edge cases */}
-                        {(!item.addons || item.addons.length === 0) && item._rawAddons && item._rawAddons.length > 0 && (
-                          <span className="order-success-item-customization" data-testid={`item-addons-raw-${index}`}>
-                            Addons: {getAddonLabels(item._rawAddons)}
                           </span>
                         )}
                         {(item.notes || item.foodLevelNotes) && (

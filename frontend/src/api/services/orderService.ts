@@ -163,9 +163,6 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
           tax: item.tax,
           tax_type: item.taxType,
         },
-        // Keep raw API data for edge cases (will be removed in future)
-        _rawVariations: detail.variation || [],
-        _rawAddons: detail.add_ons || [],
         orderNote: (detail as any).order_note || '',
       };
     });
