@@ -9,12 +9,12 @@
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Total JS/JSX/TS Files | 138 | - |
-| Total Lines of Code | ~22,500 | - |
-| TypeScript Coverage | ~15% | 🟡 In progress |
-| Console.log Statements | 103 | ⚠️ Needs cleanup |
-| Large Files (>500 lines) | 7 | ⚠️ Needs refactoring |
-| Unused UI Components | 11 | ⚠️ Dead code |
+| Total JS/JSX/TS Files | 156 | - |
+| Total Lines of Code | ~24,136 | - |
+| TypeScript Coverage | ~4.5% | 🟡 In progress (7 TS files) |
+| Console.log Statements | 72 | ⚠️ Needs cleanup |
+| Large Files (>500 lines) | 9 | ⚠️ Needs refactoring |
+| Unused UI Components | 46 | ⚠️ Dead code (shadcn/ui) |
 | CSS Class Conflicts | 18+ | ⚠️ Potential issues |
 | Hardcoded Credentials | 2 | 🔴 Security risk |
 
@@ -270,15 +270,17 @@ export const getAddonLabels = (addons) => { ... };
 
 | File | Lines | Issue | Status |
 |------|-------|-------|--------|
-| `ReviewOrder.jsx` | 1,602 | Too many responsibilities | 🔲 Pending (parked) |
+| `ReviewOrder.jsx` | 1,623 | Too many responsibilities | 🔲 Pending (parked) |
 | `AdminSettings.jsx` | 1,323 | Potentially dead code | 🔲 Verify usage |
-| `orderService.ts` | ~600 | Refactored from 1,184 | ✅ DONE |
 | `MenuOrderTab.jsx` | 922 | Complex drag-drop logic | 🔲 Pending |
-| `MenuItems.jsx` | 804 | UI + business logic mixed | 🔲 Pending |
-| `OrderSuccess.jsx` | 703 | Uses transformers now | ✅ IMPROVED |
-| `LandingPage.jsx` | 614 | Cache bug fixed | ✅ IMPROVED |
+| `MenuItems.jsx` | 819 | UI + business logic mixed | 🔲 Pending |
+| `OrderSuccess.jsx` | 711 | Uses transformers now | ✅ IMPROVED |
+| `LandingPage.jsx` | 658 | Cache bug fixed | ✅ IMPROVED |
+| `Login.jsx` | 558 | Auth flow | 🔲 Review |
+| `CartContext.js` | 543 | State management | 🔲 Consider splitting |
+| `ContentTab.jsx` | 505 | Admin content | 🔲 Pending |
 
-> **Note (Session 4):** `orderService.js` split into:
+> **Note (Session 4):** `orderService.js` was split into:
 > - `orderService.ts` (~600 lines) - Main TypeScript service
 > - `orderTransformer.ts` (~200 lines) - RECEIVE transformations
 > - `cartTransformer.ts` (~100 lines) - Cart transformations
