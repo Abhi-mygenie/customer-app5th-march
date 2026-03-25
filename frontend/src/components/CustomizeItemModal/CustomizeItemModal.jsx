@@ -198,7 +198,7 @@ const CustomizeItemModal = ({
           <div className="customize-modal-header">
             <div className="customize-modal-header-info">
               <h2 className="customize-modal-title">{item.name}</h2>
-              <span className="customize-modal-item-price">₹{parseFloat(item.price || 0).toFixed(0)}</span>
+              <span className="customize-modal-item-price">₹{parseFloat(item.price || 0).toFixed(2)}</span>
             </div>
             <button className="customize-modal-close" onClick={onClose} aria-label="Close">
               <span>×</span>
@@ -242,7 +242,7 @@ const CustomizeItemModal = ({
                             />
                             <span className="customize-variation-label">{value.label}</span>
                             <span className="customize-variation-price">
-                              {optionPrice > 0 ? `+₹${optionPrice.toFixed(0)}` : '+₹0'}
+                              {optionPrice > 0 ? `+₹${optionPrice.toFixed(2)}` : '+₹0'}
                             </span>
                           </label>
                         );
@@ -310,7 +310,7 @@ const CustomizeItemModal = ({
               onClick={handleAddToCartClick}
               disabled={!isRequiredVariationsSelected}
             >
-              Add To Cart ₹{priceCalculation.total.toFixed(0)}
+              Add To Cart ₹{priceCalculation.total.toFixed(2)}
             </button>
           </div>
         </div>

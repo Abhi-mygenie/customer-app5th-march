@@ -534,7 +534,7 @@ const OrderSuccess = () => {
                     </div>
                     <div className="order-success-item-right">
                       <span className="order-success-item-price">
-                        ₹{((item.price || 0) * (item.quantity || 1)).toFixed(0)}
+                        ₹{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
                       </span>
                       {showFoodStatus && fOrderStatus !== 7 && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
                     </div>

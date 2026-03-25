@@ -110,7 +110,7 @@ const CartBar = () => {
           <div className="cart-bar-item-count">{itemText}</div>
           <div className="cart-bar-total-price">
             {isEditMode 
-              ? `₹${newItemsPrice.toFixed(0)} + ₹${previousItemsPrice.toFixed(0)} = ₹${grandTotal.toFixed(0)}`
+              ? `₹${newItemsPrice.toFixed(2)} + ₹${previousItemsPrice.toFixed(2)} = ₹${grandTotal.toFixed(2)}`
               : `₹${totalPrice.toFixed(2)}`
             }
           </div>

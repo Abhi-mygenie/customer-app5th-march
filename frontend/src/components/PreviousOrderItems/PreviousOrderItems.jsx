@@ -195,7 +195,7 @@ const PreviousOrderItems = ({ items, orderId }) => {
               <div className="previous-order-item-right">
                 <span className="previous-order-item-quantity">x{item.quantity || 1}</span>
                 <span className="previous-order-item-price">
-                  ₹{(fullPrice * (item.quantity || 1)).toFixed(0)}
+                  ₹{(fullPrice * (item.quantity || 1)).toFixed(2)}
                 </span>
                 {showFoodStatus && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
               </div>
