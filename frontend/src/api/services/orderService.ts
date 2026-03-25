@@ -23,6 +23,9 @@ import {
   transformCartItemForApi,
   transformCartItemsForApi,
   calculateCartItemPrice,
+  extractPhoneNumber,
+  getDialCode,
+  buildMultiMenuPayload,
 } from '../transformers/helpers';
 
 // Import types
@@ -239,17 +242,47 @@ const transformCartItems = (cartItems: any[], gstEnabled = true) => {
 };
 
 // ============================================
-// Place Order
+// Place Order (handles both normal and multi-menu)
 // ============================================
 export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse> => {
   try {
     const formData = new FormData();
     const gstEnabled = orderData.gstEnabled !== false;
+    const isMultiMenu = orderData.isMultipleMenuType === true;
+
+    // Use different payload structure for multi-menu restaurants
+    if (isMultiMenu) {
+      // Multi-menu uses a different payload structure with tax calculations per item
+      const multiMenuPayload = buildMultiMenuPayload(orderData, gstEnabled);
+      formData.append('data', JSON.stringify(multiMenuPayload.data));
+
+      const endpoint = ENDPOINTS.PLACE_ORDER_AUTOPAID 
+        ? ENDPOINTS.PLACE_ORDER_AUTOPAID() 
+        : ENDPOINTS.PLACE_ORDER();
+
+      const response = await apiClient.post(endpoint, formData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${orderData.authToken}`,
+          'zoneId': '[1]',
+          'X-localization': 'en',
+          'latitude': '0',
+          'longitude': '0'
+        }
+      });
+
+      return response.data;
+    }
+
+    // Normal (non-multi-menu) order flow
     const cart = transformCartItems(orderData.cartItems || [], gstEnabled);
+    const custPhone = extractPhoneNumber(orderData.customerPhone || '');
+    const dialCode = getDialCode(orderData.customerPhone || '') || orderData.dialCode || '+91';
 
     const payloadData = {
       address_id: '',
-      dial_code: orderData.dialCode || '+91',
+      dial_code: dialCode,
       payment_id: '',
       payment_type: orderData.paymentType || 'postpaid',
       delivery_charge: '0',
@@ -264,7 +297,7 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       coupon_discount_title: null,
       distance: 1,
       cust_name: orderData.customerName || '',
-      cust_phone: orderData.customerPhone || '',
+      cust_phone: custPhone || orderData.customerPhone || '',
       schedule_at: null,
       order_amount: Math.ceil(orderData.totalToPay || 0),
       order_note: orderData.orderNote || orderData.specialInstructions || '',

@@ -205,3 +205,207 @@ export const transformCartItemForApi = (cartItem) => {
 export const transformCartItemsForApi = (cartItems) => {
   return cartItems.map(transformCartItemForApi);
 };
+
+
+// ============================================
+// Phone Utility Functions
+// ============================================
+
+/**
+ * Extract phone number without country code
+ * @param {string} phoneNumber - Full phone number with or without country code
+ * @returns {string} Phone number without country code
+ */
+export const extractPhoneNumber = (phoneNumber) => {
+  if (!phoneNumber || phoneNumber.trim() === '') {
+    return '';
+  }
+
+  let custPhone = phoneNumber;
+  if (phoneNumber.startsWith('+91')) {
+    custPhone = phoneNumber.replace('+91', '');
+  } else if (phoneNumber.startsWith('+')) {
+    // Remove any country code
+    custPhone = phoneNumber.replace(/^\+\d+/, '');
+  }
+  return custPhone;
+};
+
+/**
+ * Get dial code from phone number
+ * @param {string} phoneNumber - Full phone number
+ * @returns {string} Dial code (default: '+91')
+ */
+export const getDialCode = (phoneNumber) => {
+  if (!phoneNumber || phoneNumber.trim() === '') {
+    return '+91';
+  }
+
+  if (phoneNumber.startsWith('+91')) {
+    return '+91';
+  }
+  return phoneNumber.split(' ')[0] || '+91';
+};
+
+// ============================================
+// Multi-Menu SEND Helpers (Cart → API for Multi-Menu)
+// ============================================
+
+/**
+ * Transform cart item for multi-menu API format
+ * Includes tax calculations per item (GST/VAT)
+ * @param {Object} cartItem - Cart item from CartContext
+ * @param {boolean} gstEnabled - Whether GST is enabled at restaurant level
+ * @returns {Object} API-formatted cart item for multi-menu
+ */
+export const transformCartItemForMultiMenu = (cartItem, gstEnabled = true) => {
+  const variations = transformVariationsForApi(cartItem);
+  const { add_on_ids, add_ons, add_on_qtys } = transformAddonsForApi(cartItem);
+  const itemPrice = calculateCartItemPrice(cartItem);
+  
+  // Calculate variations and addons totals
+  const variationsTotal = (cartItem.variations || []).reduce((sum, v) => 
+    sum + (parseFloat(v.optionPrice || v.price) || 0), 0
+  );
+  const addonsTotal = (cartItem.add_ons || []).reduce((sum, a) => 
+    sum + ((parseFloat(a.price) || 0) * (a.quantity || 1)), 0
+  );
+
+  // Tax calculation per item
+  const taxPercent = parseFloat(cartItem.item?.tax) || 0;
+  const taxType = cartItem.item?.tax_type || 'GST';
+  const taxAmountPerUnit = parseFloat(((itemPrice * taxPercent) / 100).toFixed(2));
+  const taxAmount = taxAmountPerUnit * (cartItem.quantity || 1);
+  
+  // Only calculate GST if enabled at restaurant level
+  const gstTaxAmount = (taxType === 'GST' && gstEnabled) ? taxAmount : 0;
+  const vatTaxAmount = taxType === 'VAT' ? taxAmount : 0;
+  const effectiveTaxAmount = gstTaxAmount + vatTaxAmount;
+
+  return {
+    food_id: parseInt(cartItem.id || cartItem.itemId) || 0,
+    food_level_notes: cartItem.foodLevelNotes || cartItem.cookingInstructions || '',
+    station: cartItem.item?.station || cartItem.station || 'OTHER',
+    item_campaign_id: null,
+    price: itemPrice.toFixed(2),
+    variant: '',
+    variations,
+    quantity: cartItem.quantity || 1,
+    add_on_ids,
+    add_ons,
+    add_on_qtys,
+    total_variation_price: parseFloat(variationsTotal * (cartItem.quantity || 1)),
+    total_add_on_price: parseFloat(addonsTotal * (cartItem.quantity || 1)),
+    gst_tax_amount: gstTaxAmount,
+    vat_tax_amount: vatTaxAmount,
+    tax_amount: effectiveTaxAmount,
+    discount_on_food: 0
+  };
+};
+
+/**
+ * Transform array of cart items to multi-menu API format
+ * @param {Array} cartItems - Array of cart items from CartContext
+ * @param {boolean} gstEnabled - Whether GST is enabled at restaurant level
+ * @returns {Array} Array of API-formatted cart items for multi-menu
+ */
+export const transformCartItemsForMultiMenu = (cartItems, gstEnabled = true) => {
+  return cartItems.map(item => transformCartItemForMultiMenu(item, gstEnabled));
+};
+
+/**
+ * Build complete payload for multi-menu order
+ * @param {Object} orderData - Order data from ReviewOrder
+ * @param {boolean} gstEnabled - Whether GST is enabled
+ * @returns {Object} Complete API payload for multi-menu order
+ */
+export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
+  const {
+    cartItems,
+    customerName,
+    customerPhone,
+    tableNumber,
+    tableId,
+    specialInstructions,
+    orderNote,
+    couponCode,
+    restaurantId,
+    subtotal,
+    totalToPay,
+    pointsRedeemed = 0,
+    pointsDiscount = 0,
+  } = orderData;
+
+  const cart = transformCartItemsForMultiMenu(cartItems, gstEnabled);
+  const custPhone = extractPhoneNumber(customerPhone || '');
+  const dialCode = getDialCode(customerPhone || '');
+
+  // Root level tax amounts (sum from all items)
+  const totalGstTaxAmount = parseFloat(
+    cart.reduce((sum, item) => sum + (item.gst_tax_amount || 0), 0).toFixed(2)
+  );
+  const totalVatTaxAmount = parseFloat(
+    cart.reduce((sum, item) => sum + (item.vat_tax_amount || 0), 0).toFixed(2)
+  );
+  const rootTaxAmount = parseFloat((totalGstTaxAmount + totalVatTaxAmount).toFixed(2));
+
+  return {
+    data: {
+      cart,
+      coupon_discount_amount: 0,
+      coupon_discount_title: null,
+      order_amount: parseFloat((totalToPay || 0).toFixed(2)),
+      dial_code: dialCode,
+      otp: '',
+      address_id: '',
+      order_type: 'dinein',
+      payment_method: 'cash_on_delivery',
+      payment_id: '',
+      fcm_token: '',
+      order_note: specialInstructions || orderNote || '',
+      coupon_code: couponCode !== '0' ? (couponCode || '') : '',
+      restaurant_id: parseInt(restaurantId) || 0,
+      distance: 1,
+      delivery_charge: '0',
+      schedule_at: null,
+      discount_amount: pointsDiscount,
+      tax_amount: rootTaxAmount,
+      order_sub_total_amount: parseFloat((subtotal || 0).toFixed(2)),
+      order_sub_total_without_tax: parseFloat((subtotal || 0).toFixed(2)),
+      address: '',
+      latitude: '',
+      longitude: '',
+      pincode: '',
+      air_bnb_id: '',
+      payment_type: 'prepaid',
+      contact_person_name: '',
+      contact_person_number: '',
+      address_type: '',
+      road: '',
+      house: '',
+      table_id: String(tableId || tableNumber || '0'),
+      floor: '',
+      dm_tips: '',
+      subscription_order: '0',
+      subscription_type: 'daily',
+      subscription_days: '[]',
+      subscription_quantity: '1',
+      subscription_start_at: '',
+      subscription_end_at: '',
+      cust_phone: custPhone || '',
+      cust_name: customerName || '',
+      cust_email: '',
+      estimatedTime: '',
+      discount_type: pointsRedeemed > 0 ? 'Loyality' : '',
+      points_redeemed: pointsRedeemed,
+      points_discount: pointsDiscount,
+      // Multi-menu specific root fields
+      total_gst_tax_amount: totalGstTaxAmount,
+      total_vat_tax_amount: totalVatTaxAmount,
+      total_service_tax_amount: 0,
+      service_gst_tax_amount: 0,
+      round_up: 0,
+      tip_tax_amount: 0
+    }
+  };
+};
