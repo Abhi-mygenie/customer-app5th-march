@@ -482,6 +482,25 @@ GET https://preprod.mygenie.online/api/v1/customer/check-table-status?table_id={
 | `is_available` | boolean | `false` | ✅ YES | `tableStatus.isAvailable` |
 | `order_id` | int | `695591` | ✅ YES | `tableStatus.orderId` |
 
+### Usage in App
+
+| Location | When Called | Action If Table FREE |
+|----------|-------------|---------------------|
+| `LandingPage.jsx` (on load) | QR scan / page visit | Auto-redirect to OrderSuccess if active order |
+| `LandingPage.jsx` (handleEditOrderClick) | Click EDIT ORDER | Check order status, enter edit mode |
+| `OrderSuccess.jsx` (fetchOrderStatus) | Page load | Redirect to landing if table freed on POS |
+| `OrderSuccess.jsx` (handleEditOrder) | Click EDIT ORDER | Redirect to landing for fresh order |
+| `ReviewOrder.jsx` (handlePlaceOrder - new) | Place NEW order | Block if table occupied by ANOTHER order |
+| `ReviewOrder.jsx` (handlePlaceOrder - update) | UPDATE existing order | Redirect to landing if table freed |
+
+### Response Interpretation
+
+| `is_available` | `order_id` | Meaning | Action |
+|----------------|------------|---------|--------|
+| `true` | `null` | Table is FREE | Allow new order / Redirect from edit mode |
+| `false` | `123456` | Table occupied by order 123456 | Show EDIT ORDER or block new order |
+| `false` | `null` | Invalid state | Treat as available |
+
 ---
 
 ## 6. Menu Master API

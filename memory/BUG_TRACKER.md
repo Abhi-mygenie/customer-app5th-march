@@ -4,14 +4,18 @@
 
 ---
 
-## Quick Summary - This Session (BUG-015 to BUG-018)
+## Quick Summary - This Session (BUG-015 to BUG-022)
 
 | Bug ID | Summary | Status |
 |--------|---------|--------|
 | BUG-015 | Variation labels not displayed on OrderSuccess page | ✅ Fixed |
 | BUG-016 | Variation labels not displayed in PreviousOrderItems | ✅ Fixed |
 | BUG-017 | Update Order sends wrong variation names ("CHOICE OF") | ✅ Fixed |
-| BUG-018 | QR scan doesn't auto-redirect to OrderSuccess for active orders | ✅ Fixed |
+| BUG-018 | QR scan auto-redirect to OrderSuccess for active orders | ✅ Fixed |
+| BUG-019 | "View Bill" button in edit mode banner (UX improvement) | ✅ Fixed |
+| BUG-020 | Item prices rounded to ceiling (.toFixed(0)) instead of showing decimals | ✅ Fixed |
+| BUG-021 | "View Bill" button not passing orderId to OrderSuccess | ✅ Fixed |
+| BUG-022 | Stale previousOrderItems causing wrong totals after order paid on POS | ✅ Fixed |
 
 ---
 
@@ -1431,6 +1435,191 @@ if (cartItem.item?.variations && cartItem.item.variations.length > 0) {
 
 ### Verification
 Now both Place Order and Update Order use the same logic to extract variation group names from the original menu item structure.
+
+---
+
+## BUG-019: "View Bill" button missing in edit mode banner
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-019 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Customer Impact** | Users editing orders couldn't navigate to OrderSuccess to view bill/pay without adding items |
+
+### Summary
+When in edit mode on the menu page, users had no way to go to the OrderSuccess page (to view bill or proceed with payment) without adding new items first. Only "Clear New Items" button was available.
+
+### Fix Applied
+**File:** `/app/frontend/src/pages/MenuItems.jsx`
+
+Added "View Bill" button next to "Clear New Items" in the edit mode banner:
+```jsx
+<div className="edit-mode-banner-buttons">
+  <button onClick={() => navigate(`/${restaurantId}/order-success`, {
+    state: { orderData: { orderId: editingOrderId } }
+  })}>View Bill</button>
+  <button onClick={clearCart}>Clear New Items</button>
+</div>
+```
+
+**File:** `/app/frontend/src/pages/MenuItems.css`
+Added styling for the new button.
+
+---
+
+## BUG-020: Item prices rounded to ceiling instead of showing decimals
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-020 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Customer Impact** | Item prices displayed as whole numbers (₹200) instead of actual price (₹199.50), causing confusion and trust issues |
+
+### Summary
+Item prices were being displayed with `.toFixed(0)` (rounds to nearest integer) instead of `.toFixed(2)` (2 decimal places). Only the final Grand Total should be ceiling-rounded, not individual item prices.
+
+### Root Cause
+Multiple files used `.toFixed(0)` for visual cleanliness:
+- `OrderSuccess.jsx` line 537
+- `PreviousOrderItems.jsx` line 198
+- `CartBar.jsx` line 113
+- `CustomizeItemModal.jsx` lines 201, 245, 313
+
+### Fix Applied
+Changed all `.toFixed(0)` to `.toFixed(2)` in:
+- `/app/frontend/src/pages/OrderSuccess.jsx`
+- `/app/frontend/src/components/PreviousOrderItems/PreviousOrderItems.jsx`
+- `/app/frontend/src/components/CartBar/CartBar.jsx`
+- `/app/frontend/src/components/CustomizeItemModal/CustomizeItemModal.jsx`
+
+### Rounding Rules (Corrected)
+| Level | Rounding | Format |
+|-------|----------|--------|
+| Item Price | ❌ NO rounding | `.toFixed(2)` |
+| Variation/Addon Price | ❌ NO rounding | `.toFixed(2)` |
+| Item Total | ❌ NO rounding | `.toFixed(2)` |
+| Subtotal | ❌ NO rounding | `.toFixed(2)` |
+| Tax | ❌ NO rounding | `.toFixed(2)` |
+| **Grand Total** | ✅ Ceiling round | `Math.ceil()` |
+
+---
+
+## BUG-021: "View Bill" button not passing orderId to OrderSuccess
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-021 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | Fixed |
+| **Customer Impact** | Clicking "View Bill" showed blank OrderSuccess page |
+
+### Summary
+The "View Bill" button in the edit mode banner was navigating to OrderSuccess without passing the `orderId` in navigation state. OrderSuccess requires `orderId` to fetch order details.
+
+### Root Cause
+Initial implementation:
+```javascript
+onClick={() => navigate(`/${restaurantId}/order-success`)}  // No state!
+```
+
+OrderSuccess expects:
+```javascript
+const orderId = location.state?.orderData?.orderId;  // undefined!
+if (!orderId) return;  // Exits early
+```
+
+### Fix Applied
+**File:** `/app/frontend/src/pages/MenuItems.jsx`
+
+```javascript
+onClick={() => navigate(`/${restaurantId}/order-success`, {
+  state: {
+    orderData: {
+      orderId: editingOrderId
+    }
+  }
+})}
+```
+
+---
+
+## BUG-022: Stale previousOrderItems causing wrong totals after order paid on POS
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-022 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | Fixed |
+| **Customer Impact** | After POS clears/pays an order, new orders on same table showed inflated totals (old order amount added) |
+
+### Summary
+When an order was paid/cleared on POS, but user returned to web app:
+1. Old `previousOrderItems` from CartContext persisted
+2. User clicked "Edit Order" → detected as paid → navigated to menu
+3. But `clearEditMode()` was NOT called
+4. New order included old items in total calculation
+
+**Example:** Old order ₹484 paid on POS. User adds ₹60 item. Shows ₹544 instead of ₹63.
+
+### Root Cause
+Two missing checks:
+
+**Issue A:** `handleEditOrder` in OrderSuccess.jsx didn't call `checkTableStatus` first
+- Allowed entering edit mode even when table was free
+
+**Issue B:** `handlePlaceOrder` (update path) in ReviewOrder.jsx didn't verify table status
+- Updated order without checking if table was still occupied
+
+### Fix Applied
+
+**Fix A - OrderSuccess.jsx (`handleEditOrder`):**
+```javascript
+// FIRST: Check if table is still occupied
+const tableStatus = await checkTableStatus(scannedTableId, restaurantId, token);
+if (!tableStatus.isOccupied || !tableStatus.orderId) {
+  clearEditMode();
+  clearCart();
+  navigate(`/${restaurantId}`, { replace: true });  // Fresh order
+  return;
+}
+// Then check order status...
+```
+
+**Fix B - ReviewOrder.jsx (`handlePlaceOrder` - update path):**
+```javascript
+// FIRST: Check table status before updating
+const tableStatus = await checkTableStatus(finalTableId, restaurantId, token);
+if (!tableStatus.isOccupied || !tableStatus.orderId) {
+  clearEditMode();
+  clearCart();
+  navigate(`/${restaurantId}`, { replace: true });
+  return;
+}
+// Then check order status and update...
+```
+
+### New Flow
+```
+EDIT ORDER (from OrderSuccess):
+1. checkTableStatus → If FREE → redirect to landing
+2. getOrderDetails → If paid/cancelled → redirect to landing
+3. startEditOrder → Navigate to menu
+
+UPDATE ORDER (from ReviewOrder):
+1. checkTableStatus → If FREE → redirect to landing
+2. getOrderDetails → If paid/cancelled → place as new order
+3. updateCustomerOrder
+```
 
 ---
 

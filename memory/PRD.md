@@ -215,6 +215,40 @@
 - Only redirects if order is active (not cancelled/paid)
 - Files modified: `LandingPage.jsx`
 
+### Mar 25, 2026 - View Bill Button in Edit Mode (BUG-019)
+- Added "View Bill" button in edit mode banner on MenuItems page
+- Allows users to navigate to OrderSuccess without adding new items
+- Button passes `editingOrderId` in navigation state
+- Files modified: `MenuItems.jsx`, `MenuItems.css`
+
+### Mar 25, 2026 - Item Price Decimal Display Fix (BUG-020)
+- Changed all item-level `.toFixed(0)` to `.toFixed(2)`
+- Item prices now show decimals (₹199.50 instead of ₹200)
+- Only Grand Total uses ceiling rounding (`Math.ceil`)
+- Files modified: `OrderSuccess.jsx`, `PreviousOrderItems.jsx`, `CartBar.jsx`, `CustomizeItemModal.jsx`
+
+### Mar 25, 2026 - View Bill Navigation Fix (BUG-021)
+- Fixed "View Bill" button not passing orderId to OrderSuccess
+- Now passes `{ orderData: { orderId: editingOrderId } }` in navigation state
+- Files modified: `MenuItems.jsx`
+
+### Mar 25, 2026 - Table Status Check Before Edit/Update (BUG-022)
+- Added `checkTableStatus` as FIRST check when clicking EDIT ORDER from OrderSuccess
+- Added `checkTableStatus` before UPDATE ORDER in ReviewOrder
+- If table is FREE → `clearEditMode()`, `clearCart()`, redirect to landing page
+- Prevents stale `previousOrderItems` from causing wrong totals
+- Files modified: `OrderSuccess.jsx`, `ReviewOrder.jsx`
+
+### Mar 25, 2026 - Filter "Aggregator" from Station Selection
+- Added "Aggregator" to `STANDARD_MENUS` filter in `useMenuData.js`
+- Aggregator menus no longer appear in station selection page
+- Files modified: `useMenuData.js`
+
+### Mar 25, 2026 - Silent Table Reassignment Redirect
+- Removed toast message "Your table has been reassigned"
+- Now silently redirects to landing page when table is freed on POS
+- Files modified: `OrderSuccess.jsx`
+
 ### Mar 25, 2026 - Documentation API Endpoints
 - Added `/api/docs/bug-tracker`, `/api/docs/api-mapping`, `/api/docs/code-audit`, `/api/docs/prd`
 - Serves markdown files from `/app/memory/` as plain text for browser viewing
@@ -258,6 +292,14 @@
 | BUG-016 | PreviousOrderItems variation label display | ✅ Fixed |
 | BUG-017 | Update Order variation name mapping | ✅ Fixed |
 | BUG-018 | QR scan auto-redirect to OrderSuccess | ✅ Fixed |
+| BUG-019 | View Bill button in edit mode banner | ✅ Fixed |
+| BUG-020 | Item price decimal display | ✅ Fixed |
+| BUG-021 | View Bill navigation (orderId missing) | ✅ Fixed |
+| BUG-022 | Table status check before edit/update | ✅ Fixed |
+| - | Filter "Aggregator" from station selection | ✅ Fixed |
+| - | Silent table reassignment redirect | ✅ Fixed |
+| - | iOS Safari auto-zoom fix | ✅ Fixed |
+| - | Documentation API endpoints | ✅ Added |
 | - | iOS Safari auto-zoom fix | ✅ Fixed |
 | - | Documentation API endpoints | ✅ Added |
 
