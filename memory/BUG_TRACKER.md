@@ -1113,6 +1113,60 @@ Low — Added check is additive. If `gst_status` is missing/undefined, defaults 
 
 ---
 
+## BUG-014: Bill Summary showing incorrect totals for previously ordered items
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-014 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Order Details / Bill Summary |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All customers viewing OrderSuccess page. Local calculation didn't match POS total for orders with multiple batches. |
+
+### Summary
+When viewing order details on OrderSuccess page, the Item Total and Subtotal were calculated locally from visible items only. This caused mismatch with POS total when order had items from previous batches (edit order scenario).
+
+**Example:**
+- POS Grand Total: ₹3580
+- Local calculation: ₹2580 (missing ₹1000 from previous batch)
+
+### Root Cause
+The API previously only returned `order_amount` (grand total). Item Total and Subtotal had to be calculated locally, but we only had access to visible items, not all items from previous batches.
+
+### Fix Applied
+**New API Fields Added:**
+- `order_sub_total_amount` → Item Total
+- `order_sub_total_without_tax` → Subtotal
+- `order_amount` → Grand Total (existed)
+
+**File Modified:** `/app/frontend/src/api/services/orderService.js`
+
+```javascript
+// Use API values if available, fallback to local calculation
+const apiItemTotal = parseFloat(firstDetail.order_sub_total_amount) || 0;
+const apiSubtotal = parseFloat(firstDetail.order_sub_total_without_tax) || 0;
+const orderAmount = parseFloat(firstDetail.order_amount) || 0;
+
+const finalItemTotal = apiItemTotal > 0 ? apiItemTotal : calculatedItemTotal;
+const finalSubtotal = apiSubtotal > 0 ? apiSubtotal : calculatedSubtotal;
+const finalGrandTotal = orderAmount > 0 ? orderAmount : calculatedGrandTotal;
+```
+
+### Verification
+- Frontend compiles with no errors
+- Bill summary now uses API values directly
+- Fallback to local calculation if API returns 0 (backward compatible)
+
+### Regression Risk
+Low — Uses API values with fallback. Old orders without new fields will use local calculation.
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]

@@ -930,18 +930,30 @@ export const getOrderDetails = async (orderId) => {
     const sgst = parseFloat((totalGst / 2).toFixed(2));
     const totalTax = parseFloat((totalGst + totalVat).toFixed(2));
 
-    // Subtotal after discount
-    const subtotal = parseFloat((itemTotal - orderDiscount).toFixed(2));
-
-    // Grand Total = subtotal + tax (calculated forward, not from API's order_amount)
-    const grandTotal = parseFloat((subtotal + totalTax).toFixed(2));
-
     // Extract order-level status from first detail item
     const fOrderStatus = firstDetail.f_order_status ?? null;
     const restaurantOrderId = firstDetail.restaurant_order_id ?? null;
 
-    // order_amount from API (current total, reflects cancellations)
+    // === NEW API FIELDS MAPPING ===
+    // order_amount = Grand Total (already existed)
+    // order_sub_total_amount = Item Total (NEW)
+    // order_sub_total_without_tax = Subtotal (NEW)
     const orderAmount = parseFloat(firstDetail.order_amount) || 0;
+    const apiItemTotal = parseFloat(firstDetail.order_sub_total_amount) || 0;
+    const apiSubtotal = parseFloat(firstDetail.order_sub_total_without_tax) || 0;
+
+    // Use API values if available, otherwise fall back to local calculation
+    const finalItemTotal = apiItemTotal > 0 ? apiItemTotal : parseFloat(itemTotal.toFixed(2));
+    const finalSubtotal = apiSubtotal > 0 ? apiSubtotal : parseFloat((itemTotal - orderDiscount).toFixed(2));
+    const finalGrandTotal = orderAmount > 0 ? orderAmount : parseFloat((finalSubtotal + totalTax).toFixed(2));
+
+    // Debug: Log API vs calculated values
+    console.log('[OrderService] === BILL SUMMARY DEBUG ===');
+    console.log('[OrderService] API order_amount (Grand Total):', orderAmount);
+    console.log('[OrderService] API order_sub_total_amount (Item Total):', apiItemTotal);
+    console.log('[OrderService] API order_sub_total_without_tax (Subtotal):', apiSubtotal);
+    console.log('[OrderService] Calculated itemTotal:', itemTotal);
+    console.log('[OrderService] Final values - itemTotal:', finalItemTotal, 'subtotal:', finalSubtotal, 'grandTotal:', finalGrandTotal);
 
     return {
       orderId: orderId,
@@ -953,16 +965,18 @@ export const getOrderDetails = async (orderId) => {
       tableNo: orderData.table_no,
       restaurant: orderData.restaurant,
       deliveryCharge: orderData.delivery_charge,
-      // Bill summary - calculated from item-level tax data (same as ReviewOrder)
+      // Bill summary - using NEW API fields with fallback to local calculation
       billSummary: {
-        itemTotal: parseFloat(itemTotal.toFixed(2)),
+        itemTotal: finalItemTotal,
         discount: orderDiscount,
-        subtotal: subtotal,
+        subtotal: finalSubtotal,
         cgst: cgst,
         sgst: sgst,
         vat: totalVat,
         totalTax: totalTax,
-        grandTotal: grandTotal,
+        grandTotal: finalGrandTotal,
+        // Keep original API value for reference
+        originalOrderAmount: orderAmount,
       }
     };
   } catch (error) {

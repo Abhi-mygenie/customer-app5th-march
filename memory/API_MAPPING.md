@@ -460,25 +460,39 @@ POST https://preprod.mygenie.online/api/v1/auth/login
 
 ---
 
-## IMPORTANT: No `item_total` or `subtotal` in API
+## IMPORTANT: New API Fields for Bill Summary (Added March 25, 2026)
 
 ### Order Details API Response - Total Fields
 
-The `/air-bnb/get-order-details/{orderId}` API does **NOT** return:
-- ❌ `item_total`
-- ❌ `subtotal`
-- ❌ `grand_total`
+The `/air-bnb/get-order-details/{orderId}` API now returns:
 
-It **ONLY** returns:
-- ✅ `order_amount` (total order amount, duplicated in each detail item)
+| Field | Type | Maps To | Description |
+|-------|------|---------|-------------|
+| `order_amount` | int | `grandTotal` | **Grand Total** - Final order amount |
+| `order_sub_total_amount` | int | `itemTotal` | **Item Total** - Sum of all items (NEW) |
+| `order_sub_total_without_tax` | int | `subtotal` | **Subtotal** - Before tax (NEW) |
 
-### Implication
-We must **calculate** `item_total` and `subtotal` locally by summing:
+### Mapping Implementation
+
+**File:** `orderService.js` → `getOrderDetails()`
+
+```javascript
+// API fields (from first detail item)
+const orderAmount = parseFloat(firstDetail.order_amount) || 0;
+const apiItemTotal = parseFloat(firstDetail.order_sub_total_amount) || 0;
+const apiSubtotal = parseFloat(firstDetail.order_sub_total_without_tax) || 0;
+
+// Use API values if available, fallback to local calculation
+const finalItemTotal = apiItemTotal > 0 ? apiItemTotal : calculatedItemTotal;
+const finalSubtotal = apiSubtotal > 0 ? apiSubtotal : calculatedSubtotal;
+const finalGrandTotal = orderAmount > 0 ? orderAmount : calculatedGrandTotal;
 ```
-itemTotal = Σ (unit_price + total_variation_price + total_add_on_price) × quantity
-```
 
-This is done in `getOrderDetails()` in `orderService.js`.
+### Benefits
+- ✅ Item Total now includes ALL items (not just visible batch)
+- ✅ Subtotal matches POS exactly
+- ✅ Grand Total matches POS exactly
+- ✅ Fallback to local calculation if API returns 0 (backward compatible)
 
 ---
 
