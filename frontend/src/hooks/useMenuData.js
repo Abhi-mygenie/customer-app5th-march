@@ -149,7 +149,7 @@ export const useMenuSections = (stationId, restaurantId) => {
 };
 
 // Standard menus that every restaurant has — everything else is a "station"
-const STANDARD_MENUS = ['Normal', 'Party', 'Premium'];
+const STANDARD_MENUS = ['Normal', 'Party', 'Premium', 'Aggregator'];
 
 /**
  * Convert 24h time string "HH:mm:ss" or "HH:mm" to human-readable "h AM/PM"
