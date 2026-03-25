@@ -592,6 +592,109 @@ Low — Additive change. If `orderDetails.orderAmount` is missing, falls back to
 
 ---
 
+## BUG-008: Edit Order button shown when order is yet to be confirmed (fOrderStatus === 7)
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-008 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Order Success Page / Edit Order |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All dine-in customers. Edit Order button was shown immediately after placing order, even when restaurant hasn't confirmed yet. Editing an unconfirmed order could cause sync issues with POS. |
+
+### Summary
+When a customer places an order and lands on OrderSuccess page, the Edit Order button was shown immediately based only on table presence (`hasTable`). However, orders with `fOrderStatus === 7` (Yet to be confirmed) should NOT be editable — the restaurant needs to confirm the order first before customer can add more items.
+
+### Steps to Reproduce
+1. Scan QR code on a table
+2. Add items to cart and place order
+3. Land on OrderSuccess page
+4. **Expected**: Show "Yet to be confirmed" message, no Edit button
+5. **Actual (before fix)**: Edit Order button shown immediately
+
+### Root Cause
+The `showEditOrder` variable was set purely based on table presence:
+```javascript
+const showEditOrder = hasTable;  // No status check
+```
+
+This ignored the `fOrderStatus` value, allowing edit attempts on unconfirmed orders.
+
+### Fix Applied
+**Files Modified**:
+- `/app/frontend/src/pages/OrderSuccess.jsx`
+- `/app/frontend/src/pages/OrderSuccess.css`
+
+**Change 1 — Logic variables (Lines 406-413)**:
+```javascript
+// Before
+const showEditOrder = hasTable;
+
+// After
+const showYetToBeConfirmed = hasTable && fOrderStatus === 7;
+const showEditOrder = hasTable && fOrderStatus !== 7 && fOrderStatus !== null;
+```
+
+**Change 2 — UI element (Lines 640-646)**:
+```jsx
+{showYetToBeConfirmed && (
+  <div className="order-success-pending-msg" data-testid="order-pending-confirmation">
+    <IoTimeOutline />
+    <span>Yet to be confirmed</span>
+  </div>
+)}
+```
+
+**Change 3 — CSS styling**:
+```css
+.order-success-pending-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  background: #FFF8E6;
+  border: 1.5px solid #F59E0B;
+  border-radius: var(--radius-button, 8px);
+  color: #B45309;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+```
+
+### Edit Order Logic Summary
+
+| fOrderStatus | Status | UI Display |
+|--------------|--------|------------|
+| `7` | Yet to be confirmed | "Yet to be confirmed" message (no edit) |
+| `1` | Confirmed | Edit Order button |
+| `2` | Preparing | Edit Order button |
+| `5` | Served | Edit Order button |
+| `3` | Cancelled | Redirects to landing (existing) |
+| `6` | Paid | Redirects to landing (existing) |
+
+### Verification
+- Frontend compiles with no errors (only pre-existing eslint warnings)
+- `IoTimeOutline` icon already imported
+- Amber/warning color scheme matches UX pattern for pending states
+
+### Regression Risk
+Low — Additive change. Existing redirect logic for Cancelled/Paid untouched. Edit button still works for confirmed orders (1, 2, 5).
+
+### Notes
+- `fOrderStatus` defaults to `null` initially, then updates from API polling
+- When `fOrderStatus === null` (loading), neither edit button nor pending message shows (safe default)
+- Once API returns status, appropriate UI renders
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
