@@ -807,6 +807,27 @@ const ReviewOrder = () => {
 
       // Check if we're in edit mode
       if (isEditMode && editingOrderId) {
+        // FIRST: Check if table is still occupied before updating
+        if (finalTableId && String(finalTableId) !== '0') {
+          try {
+            const tableStatus = await checkTableStatus(finalTableId, restaurantId, token);
+            
+            // If table is FREE, redirect to landing page for fresh order
+            if (!tableStatus.isOccupied || !tableStatus.orderId) {
+              clearEditMode();
+              clearCart();
+              toast('Table is now free. Redirecting to start fresh order.', { icon: 'ℹ️' });
+              setIsPlacingOrder(false);
+              isPlacingOrderRef.current = false;
+              navigate(`/${restaurantId}`, { replace: true });
+              return;
+            }
+          } catch (tableCheckErr) {
+            console.error('Table status check failed:', tableCheckErr);
+            // Continue with order on error (fail-safe)
+          }
+        }
+
         // VERIFY: Check if original order is still active before updating
         try {
           const currentOrderDetails = await getOrderDetails(editingOrderId);
