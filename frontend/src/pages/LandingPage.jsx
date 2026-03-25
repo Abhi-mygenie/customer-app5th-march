@@ -24,7 +24,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated } = useAuth();
-  const { startEditOrder } = useCart();
+  const { startEditOrder, clearCart } = useCart();
   const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
@@ -59,11 +59,23 @@ const LandingPage = () => {
     }
   }, [restaurantId, fetchConfig]);
 
+  // Reset table status check on component mount to ensure fresh check every time
+  // This fixes the stale cache bug where paid orders still appeared active
+  useEffect(() => {
+    setTableStatusCheck({
+      isLoading: false,
+      isOccupied: false,
+      existingOrderId: null,
+      isChecked: false,
+      error: null,
+    });
+  }, []); // Empty deps = runs on mount only
+
   // Check table status on load (only for non-multi-menu restaurants with scanned table)
   // If table has an active order, auto-redirect to OrderSuccess
   useEffect(() => {
     const checkTable = async () => {
-      // Skip if: no table scanned, or is multi-menu restaurant, or already checked
+      // Skip if: no table scanned, or is multi-menu restaurant, or already checked this session
       if (!isScanned || !scannedTableId || !restaurantId) return;
       if (isMultipleMenu(restaurant)) return;
       if (tableStatusCheck.isChecked) return;
@@ -117,7 +129,11 @@ const LandingPage = () => {
               });
               return; // Don't update state, we're navigating away
             }
-            // If order is cancelled/paid, fall through to show Browse Menu
+            
+            // Order is cancelled or paid - clear any stale cart data
+            // This prevents users from accidentally adding items to a paid order
+            clearCart();
+            
           } catch (orderErr) {
             console.error('Failed to fetch order details for auto-redirect:', orderErr);
             // On error, fall through to show Edit Order button (user can retry manually)
@@ -145,7 +161,7 @@ const LandingPage = () => {
     };
 
     checkTable();
-  }, [isScanned, scannedTableId, restaurantId, restaurant, tableStatusCheck.isChecked, navigate]);
+  }, [isScanned, scannedTableId, restaurantId, restaurant, tableStatusCheck.isChecked, navigate, clearCart]);
 
   // Theme colors now controlled by local admin config only (not POS)
 
