@@ -571,7 +571,13 @@ const MenuItems = () => {
                 <div className="edit-mode-banner-buttons">
                   <button 
                     className="edit-mode-banner-view-bill"
-                    onClick={() => navigate(`/${restaurantId}/order-success`)}
+                    onClick={() => navigate(`/${restaurantId}/order-success`, {
+                      state: {
+                        orderData: {
+                          orderId: editingOrderId
+                        }
+                      }
+                    })}
                     data-testid="view-bill-btn"
                   >
                     View Bill
