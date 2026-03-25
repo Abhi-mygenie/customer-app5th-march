@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 25, 2026 (Session 3 - Transform & Refactor v1)
+## Last Updated: March 25, 2026 (Session 4 - Cleanup & Documentation)
 
 ---
 
@@ -87,19 +87,6 @@ const baseUrl = subdomain ? `https://${subdomain}/${restaurantId}` : '';
 | BUG-012 | 🔴 P0 | Variations/Add-ons not displayed, price wrong | ✅ Fixed |
 | BUG-013 | 🟡 P1 | GST calculated when disabled at restaurant | ✅ Fixed |
 | BUG-014 | 🔴 P0 | Bill Summary showing incorrect totals | ✅ Fixed |
-
----
-
-| Bug ID | Summary | Status |
-|--------|---------|--------|
-| BUG-015 | Variation labels not displayed on OrderSuccess page | ✅ Fixed |
-| BUG-016 | Variation labels not displayed in PreviousOrderItems | ✅ Fixed |
-| BUG-017 | Update Order sends wrong variation names ("CHOICE OF") | ✅ Fixed |
-| BUG-018 | QR scan auto-redirect to OrderSuccess for active orders | ✅ Fixed |
-| BUG-019 | "View Bill" button in edit mode banner (UX improvement) | ✅ Fixed |
-| BUG-020 | Item prices rounded to ceiling (.toFixed(0)) instead of showing decimals | ✅ Fixed |
-| BUG-021 | "View Bill" button not passing orderId to OrderSuccess | ✅ Fixed |
-| BUG-022 | Stale previousOrderItems causing wrong totals after order paid on POS | ✅ Fixed |
 
 ---
 
