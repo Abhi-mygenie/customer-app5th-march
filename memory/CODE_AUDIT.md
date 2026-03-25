@@ -471,6 +471,48 @@ if (!HARDCODED_PHONE || !HARDCODED_PASSWORD) {
 
 ---
 
+## 11. 🔴 CRITICAL HARDCODINGS
+
+> **WARNING:** These are restaurant-specific hardcodings that bypass normal logic. 
+> Any changes to these require careful testing with the specific restaurant.
+
+### 11.1 Restaurant 716 - Skip Table Status Check
+
+| Field | Details |
+|-------|---------|
+| **Restaurant** | 716 (Hyatt Centric Candolim Goa) |
+| **File** | `pages/ReviewOrder.jsx` |
+| **Line** | ~893 |
+| **Condition** | `String(restaurantId) === '716'` |
+| **Date Added** | March 25, 2026 (Session 4) |
+
+**What it does:**
+- Skips table occupancy check before placing NEW orders
+- Allows multiple orders on the same table/room
+
+**Why it's needed:**
+- Restaurant 716 business model allows multiple separate orders per table
+- They do NOT use the "Edit Order" flow
+- Normal restaurants: 1 active order per table (must edit existing)
+- Restaurant 716: Multiple orders per table (always new order)
+
+**Code Location:**
+```javascript
+// ReviewOrder.jsx - handlePlaceOrder()
+const skipTableCheckFor716 = String(restaurantId) === '716';
+
+if (!skipTableCheckFor716 && finalTableId && String(finalTableId) !== '0') {
+  // Table status check - SKIPPED for 716
+}
+```
+
+**Impact if removed:**
+- Restaurant 716 users will see "This table already has an active order" error
+- Unable to place orders on occupied tables
+- Business operations blocked
+
+---
+
 ## Appendix: API Field Mapping Reference
 
 See `/app/memory/API_MAPPING.md` for complete API field documentation.
@@ -481,6 +523,7 @@ See `/app/memory/API_MAPPING.md` for complete API field documentation.
 
 | Date | Session | Changes |
 |------|---------|---------|
-| Mar 25, 2026 | Session 4 | Deleted 46 unused Shadcn UI components (-2,862 lines), updated all metrics |
+| Mar 25, 2026 | Session 4 | Added Section 11: Critical Hardcodings (Restaurant 716) |
+| Mar 25, 2026 | Session 4 | Deleted 46 unused Shadcn UI components (-2,862 lines) |
 | Mar 25, 2026 | Session 4 | Updated for TypeScript refactor, added architecture section |
 | Mar 25, 2026 | Session 2 | Initial audit created |

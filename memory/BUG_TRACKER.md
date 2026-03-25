@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 25, 2026 (Session 4 - Cleanup & Documentation)
+## Last Updated: March 25, 2026 (Session 4 - Restaurant 716 Fix)
 
 ---
 
@@ -9,6 +9,60 @@
 | Bug ID | Summary | Priority | Status |
 |--------|---------|----------|--------|
 | BUG-029 | QR Code URL empty when subdomain not set | 🟡 P1 | Parked |
+
+---
+
+## Quick Summary - Session 4 (BUG-030)
+
+| Bug ID | Severity | Summary | Status |
+|--------|----------|---------|--------|
+| BUG-030 | 🔴 P0 | Restaurant 716 unable to place orders on occupied table | ✅ Fixed |
+
+---
+
+## BUG-030: Restaurant 716 Unable to Place Orders on Occupied Table
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-030 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical (Business Blocking) |
+| **Status** | ✅ Fixed |
+| **File** | `/app/frontend/src/pages/ReviewOrder.jsx` |
+| **Line** | ~893 |
+
+**Problem:**
+- Restaurant 716 (Hyatt Centric) allows multiple orders per table
+- Table status check was blocking ALL new orders on occupied tables
+- User saw: "This table already has an active order. Please edit the existing order instead."
+- User was stuck - couldn't place order, couldn't edit existing
+
+**Root Cause:**
+```javascript
+// ReviewOrder.jsx - This check applied to ALL restaurants
+if (finalTableId && String(finalTableId) !== '0') {
+  const tableStatus = await checkTableStatus(...);
+  if (tableStatus.isOccupied) {
+    // BLOCKED - even for restaurant 716
+  }
+}
+```
+
+**Fix Applied:**
+```javascript
+// Skip table check for restaurant 716 (allows multiple orders per table)
+const skipTableCheckFor716 = String(restaurantId) === '716';
+
+if (!skipTableCheckFor716 && finalTableId && String(finalTableId) !== '0') {
+  // Table check only for non-716 restaurants
+}
+```
+
+**⚠️ CRITICAL HARDCODING:**
+- This is a restaurant-specific exception
+- Documented in `CODE_AUDIT.md` Section 11
+- Removing this will break Restaurant 716 operations
 
 ---
 

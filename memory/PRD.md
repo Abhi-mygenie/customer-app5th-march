@@ -1,6 +1,6 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 25, 2026 (Session 4 - Code Cleanup Complete)
+## Last Updated: March 25, 2026 (Session 4 - Restaurant 716 Fix)
 
 ---
 
@@ -13,7 +13,7 @@
 | [CHANGELOG_TRANSFORM_V1.md](./CHANGELOG_TRANSFORM_V1.md) | Transform & Refactor changes |
 | [BUG_TRACKER.md](./BUG_TRACKER.md) | Bug history and fixes |
 | [API_MAPPING.md](./API_MAPPING.md) | API field mappings |
-| [CODE_AUDIT.md](./CODE_AUDIT.md) | Code quality assessment |
+| [CODE_AUDIT.md](./CODE_AUDIT.md) | Code quality + Critical Hardcodings (Section 11) |
 
 ---
 
@@ -24,11 +24,22 @@
 | Order Flow | ✅ Working |
 | Transform Layer | ✅ Complete |
 | Multi-menu Support | ✅ Restored |
+| Restaurant 716 Fix | ✅ Fixed (BUG-030) |
 | Code Cleanup | ✅ -2,862 lines (Session 4) |
 | Documentation | ✅ Updated |
 | P0 Bugs | ✅ None |
 | P1 Bugs | 🟡 1 (QR URL - Parked) |
 | Quality Score | 7.5/10 |
+
+---
+
+## 🔴 Critical Hardcodings
+
+| Restaurant | File | Behavior |
+|------------|------|----------|
+| **716** (Hyatt Centric) | `ReviewOrder.jsx` | Skip table status check - allows multiple orders per table |
+
+> See `CODE_AUDIT.md` Section 11 for full documentation.
 
 ---
 

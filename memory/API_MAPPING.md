@@ -540,6 +540,24 @@ GET https://preprod.mygenie.online/api/v1/customer/check-table-status?table_id={
 | `ReviewOrder.jsx` (handlePlaceOrder - new) | Place NEW order | Block if table occupied by ANOTHER order |
 | `ReviewOrder.jsx` (handlePlaceOrder - update) | UPDATE existing order | Redirect to landing if table freed |
 
+### 🔴 CRITICAL: Restaurant 716 Exception
+
+> **Restaurant 716 (Hyatt Centric) SKIPS the table status check when placing NEW orders.**
+> This allows multiple orders on the same table/room.
+
+| Setting | Normal Restaurants | Restaurant 716 |
+|---------|-------------------|----------------|
+| Table occupied check | ✅ Blocks new order | ❌ SKIPPED |
+| Multiple orders/table | ❌ Not allowed | ✅ Allowed |
+| Edit Order flow | ✅ Required | ❌ Not used |
+
+**Code:** `ReviewOrder.jsx` line ~893
+```javascript
+const skipTableCheckFor716 = String(restaurantId) === '716';
+```
+
+See `CODE_AUDIT.md` Section 11 for full documentation.
+
 ### Response Interpretation
 
 | `is_available` | `order_id` | Meaning | Action |

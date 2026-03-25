@@ -888,8 +888,14 @@ const ReviewOrder = () => {
       
       // Place new order (either not in edit mode, or edit mode was cleared due to paid/cancelled order)
       if (!response) {
+        // CRITICAL HARDCODING: Restaurant 716 (Hyatt Centric) allows multiple orders per table
+        // Skip table status check for 716 - they don't use edit order flow
+        // See: CODE_AUDIT.md Section 11 for documentation
+        const skipTableCheckFor716 = String(restaurantId) === '716';
+        
         // NEW: Check table status before placing new order (prevent duplicate orders)
-        if (finalTableId && String(finalTableId) !== '0') {
+        // Skip for restaurant 716 which allows multiple orders on same table
+        if (!skipTableCheckFor716 && finalTableId && String(finalTableId) !== '0') {
           try {
             const tableStatus = await checkTableStatus(finalTableId, restaurantId, token);
             if (tableStatus.isOccupied && tableStatus.orderId) {
