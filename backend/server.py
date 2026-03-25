@@ -1423,51 +1423,39 @@ api_router.include_router(dietary_router)  # Add dietary tags router
 
 @api_router.get("/docs/bug-tracker")
 async def get_bug_tracker():
-    """Download the BUG_TRACKER.md file"""
+    """View the BUG_TRACKER.md file in browser"""
     file_path = Path("/app/memory/BUG_TRACKER.md")
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Bug tracker file not found")
-    return FileResponse(
-        path=str(file_path),
-        filename="BUG_TRACKER.md",
-        media_type="text/markdown"
-    )
+    content = file_path.read_text()
+    return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
 
 @api_router.get("/docs/api-mapping")
 async def get_api_mapping():
-    """Download the API_MAPPING.md file"""
+    """View the API_MAPPING.md file in browser"""
     file_path = Path("/app/memory/API_MAPPING.md")
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="API mapping file not found")
-    return FileResponse(
-        path=str(file_path),
-        filename="API_MAPPING.md",
-        media_type="text/markdown"
-    )
+    content = file_path.read_text()
+    return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
 
 @api_router.get("/docs/code-audit")
 async def get_code_audit():
-    """Download the CODE_AUDIT.md file"""
+    """View the CODE_AUDIT.md file in browser"""
     file_path = Path("/app/memory/CODE_AUDIT.md")
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Code audit file not found")
-    return FileResponse(
-        path=str(file_path),
-        filename="CODE_AUDIT.md",
-        media_type="text/markdown"
-    )
+    content = file_path.read_text()
+    return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
 
 @api_router.get("/docs/prd")
 async def get_prd():
-    """Download the PRD.md file"""
+    """View the PRD.md file in browser"""
     file_path = Path("/app/memory/PRD.md")
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="PRD file not found")
-    return FileResponse(
-        path=str(file_path),
-        filename="PRD.md",
-        media_type="text/markdown"
-    )
+    content = file_path.read_text()
+    return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
 
 app.include_router(api_router)
 
