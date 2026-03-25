@@ -1,6 +1,6 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 24, 2026
+## Last Updated: March 25, 2026
 
 ---
 
@@ -9,7 +9,7 @@
 - **Default Branch**: `6marchv1`
 - **Database**: MongoDB at `mongodb://mygenie_admin:QplazmMzalpq@52.66.232.149:27017/mygenie`
 - **Tech Stack**: React (Frontend) + FastAPI (Backend) + MongoDB
-- **Preview URL**: https://order-success-fix.preview.emergentagent.com
+- **Preview URL**: https://customer-5th-march.preview.emergentagent.com
 
 ---
 
@@ -143,17 +143,54 @@
 - "Earn rewards on this order!" prompt no longer hidden behind fixed Place Order button
 - File modified: `ReviewOrder.css`
 
+### Mar 25, 2026 - Edit Order Status-Based Logic (BUG-008)
+- Edit Order button on OrderSuccess only shows when `fOrderStatus !== 7`
+- When `fOrderStatus === 7` (yet to be confirmed), shows "Yet to be confirmed" message instead
+- Added `.order-success-pending-msg` styling with amber/warning theme
+- Files modified: `OrderSuccess.jsx`, `OrderSuccess.css`
+
+### Mar 25, 2026 - Multiple Orders Prevention (BUG-009)
+- Added table status check before placing new order in ReviewOrder.jsx
+- If table already occupied → blocks order, shows error, redirects to landing
+- "Clear Cart" in edit mode renamed to "Clear New Items" — only clears cart, stays in edit mode
+- Blocked Home navigation and logout when in edit mode (HamburgerMenu)
+- Files modified: `ReviewOrder.jsx`, `MenuItems.jsx`, `HamburgerMenu.jsx`
+
+### Mar 25, 2026 - LandingPage Edit Order Redirect for Unconfirmed Orders (BUG-010)
+- When clicking "Edit Order" on LandingPage, now checks `fOrderStatus`
+- If `fOrderStatus === 7` → redirects to OrderSuccess (not edit mode)
+- If `fOrderStatus === 3 or 6` (cancelled/paid) → shows toast, navigates to menu
+- File modified: `LandingPage.jsx`
+
+### Mar 25, 2026 - Edit Mode Order Status Verification (BUG-011)
+- Before calling `updateCustomerOrder()`, verifies order is still active
+- If order is paid/cancelled → clears edit mode, falls through to place new order
+- New order flow has existing table status check
+- Files modified: `ReviewOrder.jsx`, `LandingPage.jsx`
+
+### Mar 25, 2026 - iOS Safari Auto-Zoom Fix
+- Set textarea font-size to 16px in CookingInstructionsModal and ReviewOrder
+- Prevents iOS Safari from auto-zooming when input fields are focused
+- Files modified: `CookingInstructionsModal.css`, `ReviewOrder.css`
+
+### Mar 25, 2026 - Variations/Add-ons Display & Price Fix (BUG-012)
+- `getPreviousOrderTotal()` now calculates: basePrice + variationsTotal + addonsTotal
+- `PreviousOrderItems.jsx` now displays variations and add-ons under each item
+- Price display uses full calculated price (not just unitPrice)
+- Tax calculation for previous items uses full price
+- Files modified: `CartContext.js`, `PreviousOrderItems.jsx`, `PreviousOrderItems.css`, `ReviewOrder.jsx`
+
 ---
 
 ## Pending Implementation / Next Actions
 
 ### P0 - Critical
 1. **Fix QR code broken URLs** - baseUrl empty, subdomain/restaurantId not populated in QR codes
-2. ~~**Order Success page total_round display**~~ ✅ Done (Mar 25) — Uses `order_amount` from API, local calc in brackets
 
 ### P1 - High Priority
 1. **Remove silent env fallbacks** - Security concern with hardcoded credentials in `authToken.js`
 2. **Fix weak JWT secret with fallback** in backend
+3. **Duplicate order prevention (race condition)** - Two browsers scanning same QR simultaneously can still place separate orders. Consider backend deduplication (1 order per table per 60 seconds)
 
 ### P2 - Backlog
 1. ~~Wire up real menu-master API data (image, description, opening_time, closing_time)~~ ✅ Done (Mar 24) — description & timing wired, images still null in POS
@@ -166,6 +203,16 @@
 4. Dynamic station images (blocked — POS API returns null for images)
 5. Undo/redo for menu reordering
 6. Implement ~131 unimplemented restaurant-info API keys (service charges, timing, payment options, etc.)
+
+### Recently Fixed (Mar 25, 2026)
+| Bug ID | Summary | Status |
+|--------|---------|--------|
+| BUG-008 | Edit Order visibility based on fOrderStatus | ✅ Fixed |
+| BUG-009 | Multiple orders on same table prevention | ✅ Fixed |
+| BUG-010 | Redirect unconfirmed orders to OrderSuccess | ✅ Fixed |
+| BUG-011 | Edit mode on paid/cancelled orders | ✅ Fixed |
+| BUG-012 | Variations/Add-ons display & price fix | ✅ Fixed |
+| - | iOS Safari auto-zoom fix | ✅ Fixed |
 
 ---
 
