@@ -60,8 +60,8 @@
 .previous-order-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 6px 8px;
+  align-items: flex-start;
+  padding: 8px 8px;
   background-color: transparent;
   border-radius: 0;
   border: none;
@@ -74,12 +74,28 @@
   border-bottom: none;
 }
 
+.previous-order-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
 .previous-order-item-name {
   font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-primary, #333);
-  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.previous-order-item-customization {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 0.7rem;
+  color: var(--text-secondary, #666);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

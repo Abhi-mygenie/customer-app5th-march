@@ -523,19 +523,49 @@ const ReviewOrder = () => {
 
     // Calculate tax for PREVIOUS items (in edit mode)
     // Exclude cancelled items (foodStatus === 3)
+    // Include variations and add-ons in price calculation
     if (previousOrderItems && previousOrderItems.length > 0) {
       previousOrderItems.forEach((prevItem, index) => {
         if (prevItem.foodStatus === 3) return; // Skip cancelled items
         
-        const itemPrice = parseFloat(prevItem.unitPrice || prevItem.price) || 0;
+        // Base price
+        const basePrice = parseFloat(prevItem.unitPrice || prevItem.price) || 0;
+        
+        // Calculate variations total
+        let variationsTotal = 0;
+        if (prevItem.variations && prevItem.variations.length > 0) {
+          prevItem.variations.forEach(v => {
+            if (v.values) {
+              const vals = Array.isArray(v.values) ? v.values : [v.values];
+              vals.forEach(val => {
+                variationsTotal += parseFloat(val.optionPrice) || 0;
+              });
+            }
+            if (v.optionPrice) {
+              variationsTotal += parseFloat(v.optionPrice) || 0;
+            }
+          });
+        }
+        
+        // Calculate add-ons total
+        let addonsTotal = 0;
+        if (prevItem.add_ons && prevItem.add_ons.length > 0) {
+          prevItem.add_ons.forEach(a => {
+            addonsTotal += (parseFloat(a.price) || 0) * (a.quantity || 1);
+          });
+        }
+        
+        // Full item price = base + variations + addons
+        const fullItemPrice = basePrice + variationsTotal + addonsTotal;
         const quantity = prevItem.quantity || 1;
         const taxPercent = parseFloat(prevItem.item?.tax) || 0;
         const taxType = prevItem.item?.tax_type || 'GST';
-        const totalTaxForItem = parseFloat(((itemPrice * quantity * taxPercent) / 100).toFixed(2));
+        const totalTaxForItem = parseFloat(((fullItemPrice * quantity * taxPercent) / 100).toFixed(2));
 
         // Debug: Log each previous item's tax info
         console.log(`Previous Item ${index + 1}: ${prevItem.item?.name?.substring(0, 20)}`);
-        console.log(`  - Price: ₹${itemPrice}, Qty: ${quantity}`);
+        console.log(`  - Base: ₹${basePrice}, Vars: ₹${variationsTotal}, Addons: ₹${addonsTotal}`);
+        console.log(`  - Full Price: ₹${fullItemPrice}, Qty: ${quantity}`);
         console.log(`  - Tax: ${taxPercent}% (${taxType})`);
         console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
 

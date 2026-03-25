@@ -443,6 +443,7 @@ export const CartProvider = ({ children, restaurantId }) => {
 
   /**
    * Calculate total price including previous order items (for display)
+   * Includes base price + variations + add-ons
    */
   const getPreviousOrderTotal = useCallback(() => {
     if (!previousOrderItems || previousOrderItems.length === 0) return 0;
@@ -450,8 +451,38 @@ export const CartProvider = ({ children, restaurantId }) => {
     // Exclude cancelled items (foodStatus === 3) from total
     return previousOrderItems.reduce((total, item) => {
       if (item.foodStatus === 3) return total; // Skip cancelled items
-      const price = parseFloat(item.unitPrice) || parseFloat(item.price) || 0;
-      return total + (price * item.quantity);
+      
+      // Base price
+      const basePrice = parseFloat(item.unitPrice) || parseFloat(item.price) || 0;
+      
+      // Calculate variations total from variation[].values[].optionPrice
+      let variationsTotal = 0;
+      if (item.variations && item.variations.length > 0) {
+        item.variations.forEach(v => {
+          if (v.values) {
+            const vals = Array.isArray(v.values) ? v.values : [v.values];
+            vals.forEach(val => {
+              variationsTotal += parseFloat(val.optionPrice) || 0;
+            });
+          }
+          // Fallback: direct optionPrice on variation
+          if (v.optionPrice) {
+            variationsTotal += parseFloat(v.optionPrice) || 0;
+          }
+        });
+      }
+      
+      // Calculate add-ons total
+      let addonsTotal = 0;
+      if (item.add_ons && item.add_ons.length > 0) {
+        item.add_ons.forEach(a => {
+          addonsTotal += (parseFloat(a.price) || 0) * (a.quantity || 1);
+        });
+      }
+      
+      // Full item price = (base + variations + addons) * quantity
+      const fullUnitPrice = basePrice + variationsTotal + addonsTotal;
+      return total + (fullUnitPrice * (item.quantity || 1));
     }, 0);
   }, [previousOrderItems]);
 

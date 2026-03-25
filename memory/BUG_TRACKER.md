@@ -951,6 +951,78 @@ Low — Added verification before update. On API error, falls back to attempting
 
 ---
 
+## BUG-012: Variations/Add-ons not displayed and price incorrect for previously ordered items
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-012 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Edit Order / Previous Items Display |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All customers editing orders. Variations/add-ons not shown, prices incorrect, totals don't match. |
+
+### Summary
+When viewing previously ordered items (on OrderSuccess page or in Edit Mode), variations and add-ons were:
+1. Not displayed in the UI
+2. Not included in price calculations
+3. Causing total mismatch between cart and after-order views
+
+**Example:**
+- Cart (new order): Cabo White Rum = ₹150 (base) + ₹100 (variant) = **₹250**
+- After order: Cabo White Rum = ₹150 (base only) - **Missing ₹100!**
+
+### Root Cause
+Multiple files used `unitPrice` directly without adding variations/add-ons:
+
+1. `CartContext.js` - `getPreviousOrderTotal()`: Used `item.unitPrice` directly
+2. `PreviousOrderItems.jsx`: Used `item.unitPrice` for display, no variations UI
+3. `ReviewOrder.jsx` - tax calculation: Used base price only for previous items
+
+The API returns `unit_price` as base price only. Variations/add-ons are in separate fields that need to be summed.
+
+### Fix Applied
+**Files Modified**:
+- `/app/frontend/src/context/CartContext.js`
+- `/app/frontend/src/components/PreviousOrderItems/PreviousOrderItems.jsx`
+- `/app/frontend/src/components/PreviousOrderItems/PreviousOrderItems.css`
+- `/app/frontend/src/pages/ReviewOrder.jsx`
+
+**Change 1 — CartContext.js `getPreviousOrderTotal()`:**
+```javascript
+// Now calculates: basePrice + variationsTotal + addonsTotal
+const fullUnitPrice = basePrice + variationsTotal + addonsTotal;
+return total + (fullUnitPrice * quantity);
+```
+
+**Change 2 — PreviousOrderItems.jsx:**
+- Added `calculateFullItemPrice()` helper function
+- Added `getVariationLabels()` and `getAddonLabels()` for display
+- UI now shows variations and add-ons under each item
+- Price calculation includes all components
+
+**Change 3 — ReviewOrder.jsx tax calculation:**
+```javascript
+// Previous items tax now calculated on full price
+const fullItemPrice = basePrice + variationsTotal + addonsTotal;
+const totalTaxForItem = ((fullItemPrice * quantity * taxPercent) / 100);
+```
+
+### Verification
+- Frontend compiles with no errors
+- Previous items show variations/add-ons in UI
+- Prices include all components
+- Totals match between cart and edit mode views
+
+### Regression Risk
+Low — Changes are additive. Uses same calculation pattern as cart items.
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
