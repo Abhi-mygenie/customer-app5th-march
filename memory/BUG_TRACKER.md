@@ -1330,6 +1330,52 @@ const getVariationLabels = (variations) => {
 
 ---
 
+## BUG-017: Variation names incorrect in Update Order API payload
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-017 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Customer Impact** | Variation names sent as "CHOICE OF" instead of actual names (e.g., "Choice Of Size") when updating orders |
+
+### Summary
+When updating an order, variation group names were always sent as "CHOICE OF" instead of the actual names like "Choice Of Size". This was because the `updateCustomerOrder` function tried to get the name from the selected variation object (`v.variationName || v.name`), but selected variations only contain `{ label, optionPrice }`.
+
+### Root Cause
+**Place Order** uses `transformVariations()` which correctly gets names from `cartItem.item.variations` (original menu structure).
+
+**Update Order** had inline logic that looked for `v.variationName || v.name` on the selected variation object - which doesn't have these properties.
+
+### Fix Applied
+**File:** `/app/frontend/src/api/services/orderService.js` (lines 1026-1041)
+
+Changed from:
+```javascript
+const name = v.variationName || v.name || 'CHOICE OF';
+```
+
+To:
+```javascript
+// Find the variation group name from original item variations
+let name = 'CHOICE OF'; // fallback
+if (cartItem.item?.variations && cartItem.item.variations.length > 0) {
+  const matchingGroup = cartItem.item.variations.find(origVar => 
+    origVar.values?.some(val => val.label === v.label)
+  );
+  if (matchingGroup) {
+    name = matchingGroup.name || 'CHOICE OF';
+  }
+}
+```
+
+### Verification
+Now both Place Order and Update Order use the same logic to extract variation group names from the original menu item structure.
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]

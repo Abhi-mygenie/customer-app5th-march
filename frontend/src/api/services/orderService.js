@@ -1024,10 +1024,21 @@ export const updateCustomerOrder = async ({
       // Transform variations
       let variations = [];
       if (cartItem.variations && cartItem.variations.length > 0) {
-        // Group variations by name
+        // Group variations by name - use cartItem.item.variations to get correct group names
         const variationGroups = {};
+        
         cartItem.variations.forEach(v => {
-          const name = v.variationName || v.name || 'CHOICE OF';
+          // Find the variation group name from original item variations
+          let name = 'CHOICE OF'; // fallback
+          if (cartItem.item?.variations && cartItem.item.variations.length > 0) {
+            const matchingGroup = cartItem.item.variations.find(origVar => 
+              origVar.values?.some(val => val.label === v.label)
+            );
+            if (matchingGroup) {
+              name = matchingGroup.name || 'CHOICE OF';
+            }
+          }
+          
           if (!variationGroups[name]) {
             variationGroups[name] = [];
           }
