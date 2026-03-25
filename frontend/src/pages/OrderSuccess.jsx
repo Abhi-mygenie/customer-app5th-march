@@ -181,46 +181,23 @@ const OrderSuccess = () => {
       }
 
       if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
-        // DEBUG: Log raw data from orderService
-        console.log('=== ORDER SUCCESS DEBUG ===');
-        console.log('Raw orderDetails.previousItems:', orderDetails.previousItems);
-        
         // Use transformer properties directly - no manual re-mapping needed
-        const updatedItems = orderDetails.previousItems.map((item, idx) => {
-          // DEBUG: Log each item's price fields
-          console.log(`Item ${idx} (${item.name}):`, {
-            'item.price (basePrice from transformer)': item.price,
-            'item.fullPrice (base + variations + addons)': item.fullPrice,
-            'item.unitPrice (legacy alias)': item.unitPrice,
-            'item.quantity': item.quantity,
-            'item.variations': item.variations,
-            'item.variationsTotal': item.variationsTotal,
-            'item.addons': item.addons,
-            'item.addonsTotal': item.addonsTotal,
-            'CALCULATED: fullPrice * qty': (item.fullPrice ?? item.price ?? 0) * (item.quantity || 1),
-          });
-          
-          return {
-            id: item.id,
-            name: item.name || item.item?.name || 'Item',
-            // Use fullPrice from transformer (already includes variations + addons)
-            price: item.fullPrice ?? item.price ?? 0,
-            quantity: item.quantity || 1,
-            veg: item.veg ?? (item.item?.veg === true || item.item?.veg === 1),
-            // Use status from transformer, fallback to foodStatus
-            status: item.status,
-            foodStatus: item.status ?? item.foodStatus,
-            // Use transformed variations/addons
-            variations: item.variations || [],
-            addons: item.addons || [],
-            notes: item.notes || '',
-            orderNote: item.orderNote || '',
-          };
-        });
-        
-        console.log('Mapped updatedItems:', updatedItems);
-        console.log('=== END DEBUG ===');
-        
+        const updatedItems = orderDetails.previousItems.map(item => ({
+          id: item.id,
+          name: item.name || item.item?.name || 'Item',
+          // Use fullPrice from transformer (already includes variations + addons)
+          price: item.fullPrice ?? item.price ?? 0,
+          quantity: item.quantity || 1,
+          veg: item.veg ?? (item.item?.veg === true || item.item?.veg === 1),
+          // Use status from transformer, fallback to foodStatus
+          status: item.status,
+          foodStatus: item.status ?? item.foodStatus,
+          // Use transformed variations/addons
+          variations: item.variations || [],
+          addons: item.addons || [],
+          notes: item.notes || '',
+          orderNote: item.orderNote || '',
+        }));
         setLiveOrderItems(updatedItems);
         
         // Update order-level status from API
