@@ -1484,6 +1484,15 @@ async def get_changelog():
     content = file_path.read_text()
     return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
 
+@api_router.get("/docs/test-cases")
+async def get_test_cases():
+    """View the TEST_CASES.md file in browser"""
+    file_path = Path("/app/memory/TEST_CASES.md")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="TEST_CASES file not found")
+    content = file_path.read_text()
+    return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
+
 app.include_router(api_router)
 
 # CORS Middleware

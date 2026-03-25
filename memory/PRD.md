@@ -14,6 +14,7 @@
 | [BUG_TRACKER.md](./BUG_TRACKER.md) | Bug history and fixes |
 | [API_MAPPING.md](./API_MAPPING.md) | API field mappings |
 | [CODE_AUDIT.md](./CODE_AUDIT.md) | Code quality + Critical Hardcodings (Section 11) |
+| [TEST_CASES.md](./TEST_CASES.md) | **Test cases & Pre-release checklist** |
 
 ---
 
