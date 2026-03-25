@@ -1416,26 +1416,9 @@ api_router.include_router(config_router)
 api_router.include_router(upload_router)
 api_router.include_router(air_bnb_router)  # Add air-bnb router
 api_router.include_router(dietary_router)  # Add dietary tags router
-app.include_router(api_router)
-
-# CORS Middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # ============================================
-# Documentation Endpoints
+# Documentation Endpoints (must be before app.include_router)
 # ============================================
 
 @api_router.get("/docs/bug-tracker")
@@ -1485,6 +1468,24 @@ async def get_prd():
         filename="PRD.md",
         media_type="text/markdown"
     )
+
+app.include_router(api_router)
+
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
