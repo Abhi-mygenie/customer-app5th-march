@@ -43,18 +43,52 @@ const baseUrl = subdomain ? `https://${subdomain}/${restaurantId}` : '';
 
 ## Quick Summary - Session 3 (BUG-023 to BUG-028)
 
-| Bug ID | Summary | Status |
-|--------|---------|--------|
-| BUG-023 | Item price wrong on OrderSuccess (₹136 instead of ₹88) | ✅ Fixed |
-| BUG-024 | `table_id: 'undefined'` SQL error | ✅ Fixed |
-| BUG-025 | `air_bnb_id` missing from payload | ✅ Fixed |
-| BUG-026 | All items show "Yet to be confirmed" status | ✅ Fixed |
-| BUG-027 | LandingPage cache not invalidating for paid orders | ✅ Fixed |
-| BUG-028 | Multi-menu orders broken after refactor | ✅ Fixed |
+| Bug ID | Severity | Summary | Status |
+|--------|----------|---------|--------|
+| BUG-023 | 🔴 P0 | Item price wrong on OrderSuccess (₹136 instead of ₹88) | ✅ Fixed |
+| BUG-024 | 🔴 P0 | `table_id: 'undefined'` SQL error | ✅ Fixed |
+| BUG-025 | 🔴 P0 | `air_bnb_id` missing from payload | ✅ Fixed |
+| BUG-026 | 🟡 P1 | All items show "Yet to be confirmed" status | ✅ Fixed |
+| BUG-027 | 🔴 P0 | LandingPage cache not invalidating for paid orders | ✅ Fixed |
+| BUG-028 | 🔴 P0 | Multi-menu orders broken after refactor | ✅ Fixed |
 
 ---
 
 ## Quick Summary - Session 2 (BUG-015 to BUG-022)
+
+| Bug ID | Severity | Summary | Status |
+|--------|----------|---------|--------|
+| BUG-015 | 🟡 P1 | Variation name not displayed on OrderSuccess | ✅ Fixed |
+| BUG-016 | 🟡 P1 | Variation labels not displayed in PreviousOrderItems | ✅ Fixed |
+| BUG-017 | 🔴 P0 | Variation names incorrect in Update Order API | ✅ Fixed |
+| BUG-018 | 🟡 P1 | QR scan doesn't auto-redirect to OrderSuccess | ✅ Fixed |
+| BUG-019 | 🟢 P2 | "View Bill" button missing in edit mode | ✅ Fixed |
+| BUG-020 | 🔴 P0 | Item prices rounded to ceiling (wrong decimals) | ✅ Fixed |
+| BUG-021 | 🟡 P1 | "View Bill" button not passing orderId | ✅ Fixed |
+| BUG-022 | 🔴 P0 | Stale previousOrderItems causing wrong totals | ✅ Fixed |
+
+---
+
+## Quick Summary - Session 1 (BUG-001 to BUG-014)
+
+| Bug ID | Severity | Summary | Status |
+|--------|----------|---------|--------|
+| BUG-001 | 🟡 P1 | Customer stuck on OrderSuccess after table merge | ✅ Fixed |
+| BUG-002 | 🔴 P0 | Place Order button permanently locked | ✅ Fixed |
+| BUG-003 | 🟡 P1 | `foodFor` URL param not supported | ✅ Fixed |
+| BUG-004 | 🟢 P2 | Egg filter button color mismatch | ✅ Fixed |
+| BUG-005 | 🟢 P2 | "Earn rewards" prompt hidden behind button | ✅ Fixed |
+| BUG-006 | 🔴 P0 | `updateCustomerOrder` sends hardcoded zero | ✅ Fixed |
+| BUG-007 | 🟡 P1 | OrderSuccess grand total reverts after poll | ✅ Fixed |
+| BUG-008 | 🟡 P1 | Edit Order shown when yet to be confirmed | ✅ Fixed |
+| BUG-009 | 🔴 P0 | Multiple orders created for same table | ✅ Fixed |
+| BUG-010 | 🟡 P1 | Edit Order shown on LandingPage incorrectly | ✅ Fixed |
+| BUG-011 | 🔴 P0 | Edit mode persists after order paid/cancelled | ✅ Fixed |
+| BUG-012 | 🔴 P0 | Variations/Add-ons not displayed, price wrong | ✅ Fixed |
+| BUG-013 | 🟡 P1 | GST calculated when disabled at restaurant | ✅ Fixed |
+| BUG-014 | 🔴 P0 | Bill Summary showing incorrect totals | ✅ Fixed |
+
+---
 
 | Bug ID | Summary | Status |
 |--------|---------|--------|
