@@ -1,6 +1,6 @@
 # API Mapping Document
 
-## Last Updated: March 25, 2026
+## Last Updated: March 25, 2026 (Session 2)
 
 ---
 
@@ -394,6 +394,77 @@ POST https://preprod.mygenie.online/api/v1/customer/order/update-customer-order
 | `discount_amount` | float | `pointsDiscount` | Discount from loyalty points |
 | `points_redeemed` | int | `pointsToRedeem` | Number of points redeemed |
 | `points_discount` | float | `pointsDiscount` | Discount value from points |
+
+---
+
+## 4c. Variation Format: REQUEST vs RESPONSE (IMPORTANT)
+
+### ⚠️ Format Asymmetry
+
+The API accepts and returns variations in **DIFFERENT formats**:
+
+| Direction | `values` Structure | Example |
+|-----------|-------------------|---------|
+| **REQUEST** (Place/Update) | `{ label: ["Bottle"] }` | Object with label array |
+| **RESPONSE** (Get Details) | `[{ label: "Bottle", optionPrice: "6000" }]` | Array of objects |
+
+### REQUEST Format (What we SEND)
+```json
+{
+  "cart": [{
+    "variations": [
+      {
+        "name": "Choice Of Size",
+        "values": { "label": ["Bottle"] }
+      }
+    ]
+  }]
+}
+```
+
+### RESPONSE Format (What we RECEIVE)
+```json
+{
+  "details": [{
+    "variation": [
+      {
+        "name": "Choice Of Size",
+        "type": "single",
+        "min": 0,
+        "max": 0,
+        "required": "on",
+        "values": [
+          { "label": "Bottle", "optionPrice": "6000" }
+        ]
+      }
+    ]
+  }]
+}
+```
+
+### Key Differences
+
+| Aspect | REQUEST | RESPONSE |
+|--------|---------|----------|
+| Field name | `variations` | `variation` (no 's') |
+| `values` type | Object `{ label: [] }` | Array `[{ label, optionPrice }]` |
+| `label` type | Array of strings | Single string per object |
+| Extra fields | None | `type`, `min`, `max`, `required`, `optionPrice` |
+
+### Code Handling (Fixed in BUG-015, BUG-016, BUG-017)
+
+**Reading from API (getVariationLabels):**
+```javascript
+// values is an ARRAY of objects
+const vals = Array.isArray(v.values) ? v.values : [v.values];
+return vals.map(val => val.label || '').filter(Boolean).join(', ');
+```
+
+**Writing to API (transformVariations, updateCustomerOrder):**
+```javascript
+// values is an OBJECT with label array
+return { name: "Choice Of Size", values: { label: ["Bottle"] } };
+```
 
 ---
 

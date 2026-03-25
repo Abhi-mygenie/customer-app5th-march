@@ -1,6 +1,16 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 24, 2026
+## Last Updated: March 25, 2026 (Session 2)
+
+---
+
+## Quick Summary - This Session (BUG-015 to BUG-017)
+
+| Bug ID | Summary | Status |
+|--------|---------|--------|
+| BUG-015 | Variation labels not displayed on OrderSuccess page | ✅ Fixed |
+| BUG-016 | Variation labels not displayed in PreviousOrderItems | ✅ Fixed |
+| BUG-017 | Update Order sends wrong variation names ("CHOICE OF") | ✅ Fixed |
 
 ---
 

@@ -1,6 +1,6 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 25, 2026
+## Last Updated: March 25, 2026 (Session 2)
 
 ---
 
@@ -180,6 +180,39 @@
 - Tax calculation for previous items uses full price
 - Files modified: `CartContext.js`, `PreviousOrderItems.jsx`, `PreviousOrderItems.css`, `ReviewOrder.jsx`
 
+### Mar 25, 2026 - GST Status Flag Implementation (BUG-013)
+- Added `gst_status` check from restaurant settings to enable/disable GST globally
+- If `gst_status === false`, skip ALL GST calculation
+- Files modified: `ReviewOrder.jsx`
+
+### Mar 25, 2026 - API Fields Mapping for Totals (BUG-014)
+- Mapped `order_sub_total_amount`, `order_sub_total_without_tax` from API response
+- Added these fields to Place Order and Update Order payloads
+- Files modified: `orderService.js`, `OrderSuccess.jsx`
+
+### Mar 25, 2026 - OrderSuccess Variation Label Fix (BUG-015)
+- Fixed variation labels not displaying on OrderSuccess page
+- Added `getVariationLabels()` and `getAddonLabels()` helper functions
+- API returns `values` as array `[{label, optionPrice}]`, code was expecting object
+- Files modified: `OrderSuccess.jsx`
+
+### Mar 25, 2026 - PreviousOrderItems Variation Label Fix (BUG-016)
+- Fixed variation labels not displaying in ReviewOrder's PreviousOrderItems
+- Updated `getVariationLabels()` to correctly handle `values[]` array from API
+- Same root cause as BUG-015 - API structure mismatch
+- Files modified: `PreviousOrderItems.jsx`
+
+### Mar 25, 2026 - Update Order Variation Name Fix (BUG-017)
+- Fixed variation group names sent as "CHOICE OF" instead of actual names in Update Order
+- `updateCustomerOrder` now uses `cartItem.item.variations` to find correct group names
+- Same logic as `transformVariations()` used in Place Order
+- Files modified: `orderService.js`
+
+### Mar 25, 2026 - Documentation API Endpoints
+- Added `/api/docs/bug-tracker`, `/api/docs/api-mapping`, `/api/docs/code-audit`, `/api/docs/prd`
+- Serves markdown files from `/app/memory/` as plain text for browser viewing
+- Files modified: `server.py`
+
 ---
 
 ## Pending Implementation / Next Actions
@@ -212,7 +245,23 @@
 | BUG-010 | Redirect unconfirmed orders to OrderSuccess | ✅ Fixed |
 | BUG-011 | Edit mode on paid/cancelled orders | ✅ Fixed |
 | BUG-012 | Variations/Add-ons display & price fix | ✅ Fixed |
+| BUG-013 | GST Status flag implementation | ✅ Fixed |
+| BUG-014 | API fields mapping for totals | ✅ Fixed |
+| BUG-015 | OrderSuccess variation label display | ✅ Fixed |
+| BUG-016 | PreviousOrderItems variation label display | ✅ Fixed |
+| BUG-017 | Update Order variation name mapping | ✅ Fixed |
 | - | iOS Safari auto-zoom fix | ✅ Fixed |
+| - | Documentation API endpoints | ✅ Added |
+
+---
+
+## Documentation URLs
+| Document | URL |
+|----------|-----|
+| Bug Tracker | https://customer-5th-march.preview.emergentagent.com/api/docs/bug-tracker |
+| API Mapping | https://customer-5th-march.preview.emergentagent.com/api/docs/api-mapping |
+| Code Audit | https://customer-5th-march.preview.emergentagent.com/api/docs/code-audit |
+| PRD | https://customer-5th-march.preview.emergentagent.com/api/docs/prd |
 
 ---
 
