@@ -296,29 +296,29 @@ GET https://preprod.mygenie.online/api/v1/air-bnb/get-order-details/{orderId}
 
 ## 4. Place Order API
 
+### Endpoint (Normal)
+```
+POST https://preprod.mygenie.online/api/v1/customer/order/place
+```
+
 ### Endpoint (Multi-menu)
 ```
 POST https://preprod.mygenie.online/api/v1/customer/order/autopaid-place-prepaid-order
 ```
 
-### Request Payload
+### Request Payload - Key Fields
 
-| Field | Type | Used? | Notes |
-|-------|------|-------|-------|
-| `restaurant_id` | int | ✅ YES | Restaurant ID |
-| `table_id` | string | ✅ YES | Table ID |
-| `order_type` | string | ✅ YES | `"dinein"`, `"takeaway"`, `"delivery"` |
-| `payment_type` | string | ✅ YES | `"postpaid"`, `"prepaid"` |
-| `cart` | array | ✅ YES | Cart items with variations, add-ons, tax |
-| `order_amount` | int | ✅ YES | Total amount (rounded) |
-| `coupon_discount_amount` | int | ✅ YES | Coupon discount |
-| `points_redeemed` | int | ✅ YES | Points redeemed |
-| `points_discount` | float | ✅ YES | Points discount value |
-| `total_gst` | float | ✅ YES | Total GST |
-| `total_vat` | float | ✅ YES | Total VAT |
-| `guest_name` | string | ✅ YES | Customer name |
-| `guest_number` | string | ✅ YES | Customer phone |
-| `order_note` | string | ✅ YES | Special instructions |
+| Field | Type | Value | Description |
+|-------|------|-------|-------------|
+| `order_amount` | float | `totalToPay` | **Grand Total** (with tax, rounded) |
+| `order_sub_total_amount` | float | `subtotal` | **Item Total** (sum of items after discount) |
+| `order_sub_total_without_tax` | float | `subtotal` | **Subtotal** (before tax) - NEW |
+| `tax_amount` | float | `totalTax` | Total tax amount |
+| `discount_amount` | float | `pointsDiscount` | Discount from loyalty points |
+| `points_redeemed` | int | `pointsToRedeem` | Number of points redeemed |
+| `points_discount` | float | `pointsDiscount` | Discount value from points |
+| `total_gst_tax_amount` | float | `totalGst` | Total GST (multi-menu only) |
+| `total_vat_tax_amount` | float | `totalVat` | Total VAT (multi-menu only) |
 
 ### Cart Item Structure (in request)
 
@@ -338,6 +338,28 @@ POST https://preprod.mygenie.online/api/v1/customer/order/autopaid-place-prepaid
 | `total_add_on_price` | float | ✅ YES | Total add-on price |
 | `food_level_notes` | string | ✅ YES | Cooking instructions |
 | `station` | string | ✅ YES | Kitchen station |
+
+---
+
+## 4b. Update Order API
+
+### Endpoint
+```
+POST https://preprod.mygenie.online/api/v1/customer/order/update-customer-order
+```
+
+### Request Payload - Key Fields
+
+| Field | Type | Value | Description |
+|-------|------|-------|-------------|
+| `order_id` | int | `orderId` | Existing order ID to update |
+| `order_amount` | float | `totalToPay` | **Grand Total** (with tax, rounded) |
+| `order_sub_total_amount` | float | `subtotal` | **Item Total** (sum of items after discount) |
+| `order_sub_total_without_tax` | float | `subtotal` | **Subtotal** (before tax) - NEW |
+| `tax_amount` | float | `totalTax` | Total tax amount |
+| `discount_amount` | float | `pointsDiscount` | Discount from loyalty points |
+| `points_redeemed` | int | `pointsToRedeem` | Number of points redeemed |
+| `points_discount` | float | `pointsDiscount` | Discount value from points |
 
 ---
 

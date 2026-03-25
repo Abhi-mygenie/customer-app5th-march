@@ -590,6 +590,7 @@ const buildNormalPayload = (orderData) => {
       discount_amount: pointsDiscount,
       tax_amount: 0,
       order_sub_total_amount: parseFloat(subtotal.toFixed(2)),
+      order_sub_total_without_tax: parseFloat(subtotal.toFixed(2)),
       address: '',
       latitude: '',
       longitude: '',
@@ -692,6 +693,7 @@ const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       discount_amount: pointsDiscount,
       tax_amount: rootTaxAmount,                                    //  sum of gst + vat taxes
       order_sub_total_amount: parseFloat(subtotal.toFixed(2)),
+      order_sub_total_without_tax: parseFloat(subtotal.toFixed(2)),
       address: '',
       latitude: '',
       longitude: '',
@@ -1107,6 +1109,7 @@ export const updateCustomerOrder = async ({
       discount_amount: parseFloat(Number(pointsDiscount).toFixed(2)),
       tax_amount: parseFloat(Number(totalTax).toFixed(2)),
       order_sub_total_amount: parseFloat(Number(subtotal).toFixed(2)),
+      order_sub_total_without_tax: parseFloat(Number(subtotal).toFixed(2)),
       road: '',
       house: '',
       floor: '',
