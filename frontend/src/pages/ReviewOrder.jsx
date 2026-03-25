@@ -10,7 +10,7 @@ import { useScannedTable } from '../hooks/useScannedTable';
 import { useAuth } from '../context/AuthContext';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { getAuthToken, isTokenExpired } from '../utils/authToken';
-import { placeOrder, updateCustomerOrder } from '../api/services/orderService';
+import { placeOrder, updateCustomerOrder, checkTableStatus } from '../api/services/orderService';
 import OrderItemCard from '../components/OrderItemCard/OrderItemCard';
 import PreviousOrderItems from '../components/PreviousOrderItems/PreviousOrderItems';
 import { IoArrowBackOutline, IoGiftOutline, IoPersonOutline } from "react-icons/io5";
@@ -789,6 +789,24 @@ const ReviewOrder = () => {
         
         toast.success('Order updated successfully!');
       } else {
+        // NEW: Check table status before placing new order (prevent duplicate orders)
+        if (finalTableId && String(finalTableId) !== '0') {
+          try {
+            const tableStatus = await checkTableStatus(finalTableId, restaurantId, token);
+            if (tableStatus.isOccupied && tableStatus.orderId) {
+              // Table already has an active order - block new order
+              toast.error('This table already has an active order. Please edit the existing order instead.');
+              setIsPlacingOrder(false);
+              isPlacingOrderRef.current = false;
+              navigate(`/${restaurantId}`);
+              return;
+            }
+          } catch (tableCheckErr) {
+            console.error('Table status check failed:', tableCheckErr);
+            // Continue with order on error (fail-safe)
+          }
+        }
+
         // Place new order
         // SECURITY: Mark that the API call is about to be dispatched.
         // If a network error occurs (no response), this flag tells the catch block

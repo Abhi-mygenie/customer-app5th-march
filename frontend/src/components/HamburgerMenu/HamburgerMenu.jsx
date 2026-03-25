@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { useRestaurantId } from '../../utils/useRestaurantId';
 import { useRestaurantConfig } from '../../context/RestaurantConfigContext';
 import { useRestaurantDetails, useStations } from '../../hooks/useMenuData';
@@ -35,6 +36,7 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
   const { stations } = useStations(numericRestaurantId);
   const { isAuthenticated, user, isCustomer, isRestaurant, logout } = useAuth();
   const { navMenuOrder } = useRestaurantConfig();
+  const { isEditMode } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -72,11 +74,23 @@ const HamburgerMenu = ({ restaurantName, phone }) => {
   }, [isOpen]);
 
   const handleNavigation = (path) => {
+    // In edit mode, block navigation to Home - user must complete order
+    if (isEditMode && (path === menuBasePath || path === '/' || path === `/${restaurantId}`)) {
+      toast('Please complete or update your order first', { icon: '⚠️' });
+      setIsOpen(false);
+      return;
+    }
     setIsOpen(false);
     navigate(path);
   };
 
   const handleLogout = () => {
+    // Block logout in edit mode
+    if (isEditMode) {
+      toast('Please complete or update your order before logging out', { icon: '⚠️' });
+      setIsOpen(false);
+      return;
+    }
     setIsOpen(false);
     logout();
     toast.success('Logged out successfully');

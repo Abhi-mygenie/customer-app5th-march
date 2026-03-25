@@ -695,6 +695,109 @@ Low — Additive change. Existing redirect logic for Cancelled/Paid untouched. E
 
 ---
 
+## BUG-009: Multiple orders created for same table (duplicate order prevention)
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-009 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P0 - Critical |
+| **Status** | Fixed |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | Abhi-mygenie |
+| **Related Feature** | Order Placement / Edit Mode |
+| **Branch** | 6marchv1 |
+| **Customer Impact** | All dine-in customers. Multiple orders could be created for the same table through various escape routes, causing confusion for both customers and kitchen staff. |
+
+### Summary
+Multiple bugs allowed duplicate orders to be created for the same table:
+1. **Different browsers**: Two customers scanning same QR could each place separate orders
+2. **Clear Cart in edit mode**: Clicking "Clear Cart" exited edit mode, allowing new order
+3. **Sidebar navigation**: Clicking "Home" or "Menu" in sidebar escaped edit mode
+4. **No edit mode lock**: User could navigate away and place new order
+
+### Scenarios Fixed
+
+| Scenario | Before | After |
+|----------|--------|-------|
+| Browser A & B scan same table | Both can place orders | Second blocked with error |
+| Click "Clear Cart" in edit mode | Exits edit mode | Only clears NEW items, stays in edit mode |
+| Click "Home" in sidebar (edit mode) | Navigates to landing | Blocked with warning |
+| Click "Menu" in sidebar (edit mode) | Can browse and place new order | Allowed (stays in edit mode) |
+
+### Root Cause
+1. **No table status check at order placement** — `ReviewOrder.jsx` didn't verify table availability before `placeOrder()`
+2. **"Clear Cart" called `clearEditMode()`** — Should have called `clearCart()` only
+3. **Sidebar navigation unrestricted** — No edit mode awareness
+
+### Fix Applied
+**Files Modified**:
+- `/app/frontend/src/pages/ReviewOrder.jsx`
+- `/app/frontend/src/pages/MenuItems.jsx`
+- `/app/frontend/src/components/HamburgerMenu/HamburgerMenu.jsx`
+
+**Change 1 — Table status check before new order (ReviewOrder.jsx)**:
+```javascript
+// Before placing NEW order, check if table already occupied
+if (finalTableId && String(finalTableId) !== '0') {
+  const tableStatus = await checkTableStatus(finalTableId, restaurantId, token);
+  if (tableStatus.isOccupied && tableStatus.orderId) {
+    toast.error('This table already has an active order. Please edit the existing order instead.');
+    navigate(`/${restaurantId}`);
+    return;
+  }
+}
+```
+
+**Change 2 — Clear Cart only clears NEW items (MenuItems.jsx)**:
+```javascript
+// Before
+onClick={clearEditMode}  // Exited edit mode
+>Clear Cart</button>
+
+// After  
+onClick={clearCart}  // Only clears new cart items, stays in edit mode
+>Clear New Items</button>
+```
+
+**Change 3 — Block Home navigation in edit mode (HamburgerMenu.jsx)**:
+```javascript
+const handleNavigation = (path) => {
+  // Block navigation to Home in edit mode
+  if (isEditMode && (path === menuBasePath || path === '/')) {
+    toast('Please complete or update your order first', { icon: '⚠️' });
+    return;
+  }
+  navigate(path);
+};
+```
+
+### Edit Mode Lock Rules
+```
+✅ ALLOWED in Edit Mode:
+   - Navigate to Menu (preserves edit mode)
+   - Add items to cart
+   - Clear NEW items (previous order items preserved)
+   - Go to ReviewOrder → Update Order
+
+❌ BLOCKED in Edit Mode:
+   - Navigate to Home/Landing
+   - Logout
+   - Place NEW order (auto-redirected to edit existing)
+```
+
+### Verification
+- Frontend compiles with no errors
+- Table status checked before every new order placement
+- Edit mode persists through menu navigation
+- "Clear New Items" only clears cart, not previous order items
+
+### Regression Risk
+Low — Changes are additive guards. Existing edit/update flow unchanged. Fail-safe on API errors (allows order to proceed).
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]

@@ -138,7 +138,7 @@ const MenuItems = () => {
   }, [restaurantId, fetchConfig]);
 
   // Cart functionality
-  const { addToCart, updateQuantity, getTotalQuantityForItem, cartItems, isEditMode, editingOrderId, clearEditMode } = useCart();
+  const { addToCart, updateQuantity, getTotalQuantityForItem, cartItems, isEditMode, editingOrderId, clearCart } = useCart();
 
   // Get current time in seconds since midnight (updates every 60 seconds) - for item availability
   const currentTimeInSeconds = useCurrentTime();
@@ -570,10 +570,10 @@ const MenuItems = () => {
                 </span>
                 <button 
                   className="edit-mode-banner-cancel"
-                  onClick={clearEditMode}
-                  data-testid="cancel-edit-mode-btn"
+                  onClick={clearCart}
+                  data-testid="clear-new-items-btn"
                 >
-                  Clear Cart
+                  Clear New Items
                 </button>
               </div>
             </div>
