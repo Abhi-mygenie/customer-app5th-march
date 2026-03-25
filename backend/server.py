@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, PlainTextResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -1432,6 +1433,58 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# ============================================
+# Documentation Endpoints
+# ============================================
+
+@api_router.get("/docs/bug-tracker")
+async def get_bug_tracker():
+    """Download the BUG_TRACKER.md file"""
+    file_path = Path("/app/memory/BUG_TRACKER.md")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Bug tracker file not found")
+    return FileResponse(
+        path=str(file_path),
+        filename="BUG_TRACKER.md",
+        media_type="text/markdown"
+    )
+
+@api_router.get("/docs/api-mapping")
+async def get_api_mapping():
+    """Download the API_MAPPING.md file"""
+    file_path = Path("/app/memory/API_MAPPING.md")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="API mapping file not found")
+    return FileResponse(
+        path=str(file_path),
+        filename="API_MAPPING.md",
+        media_type="text/markdown"
+    )
+
+@api_router.get("/docs/code-audit")
+async def get_code_audit():
+    """Download the CODE_AUDIT.md file"""
+    file_path = Path("/app/memory/CODE_AUDIT.md")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Code audit file not found")
+    return FileResponse(
+        path=str(file_path),
+        filename="CODE_AUDIT.md",
+        media_type="text/markdown"
+    )
+
+@api_router.get("/docs/prd")
+async def get_prd():
+    """Download the PRD.md file"""
+    file_path = Path("/app/memory/PRD.md")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="PRD file not found")
+    return FileResponse(
+        path=str(file_path),
+        filename="PRD.md",
+        media_type="text/markdown"
+    )
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
