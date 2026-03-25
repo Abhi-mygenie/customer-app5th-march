@@ -1457,6 +1457,33 @@ async def get_prd():
     content = file_path.read_text()
     return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
 
+@api_router.get("/docs/roadmap")
+async def get_roadmap():
+    """View the ROADMAP.md file in browser"""
+    file_path = Path("/app/memory/ROADMAP.md")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="ROADMAP file not found")
+    content = file_path.read_text()
+    return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
+
+@api_router.get("/docs/architecture")
+async def get_architecture():
+    """View the ARCHITECTURE.md file in browser"""
+    file_path = Path("/app/memory/ARCHITECTURE.md")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="ARCHITECTURE file not found")
+    content = file_path.read_text()
+    return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
+
+@api_router.get("/docs/changelog")
+async def get_changelog():
+    """View the CHANGELOG_TRANSFORM_V1.md file in browser"""
+    file_path = Path("/app/memory/CHANGELOG_TRANSFORM_V1.md")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="CHANGELOG file not found")
+    content = file_path.read_text()
+    return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
+
 app.include_router(api_router)
 
 # CORS Middleware
