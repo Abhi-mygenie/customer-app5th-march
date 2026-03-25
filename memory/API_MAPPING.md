@@ -675,3 +675,24 @@ const finalGrandTotal = orderAmount > 0 ? orderAmount : calculatedGrandTotal;
 4. **VAT status not checked** - `vat.status` ignored, always calculates if item has VAT
 5. **Item discounts not applied** - `discount`, `discount_type` fields ignored
 6. **No item_total/subtotal from API** - Must calculate locally, may cause mismatch with POS
+
+---
+
+## Planned Improvements
+
+See [ROADMAP.md](./ROADMAP.md) for full details.
+
+| Task | Issue Resolved |
+|------|----------------|
+| P2-3: Fix Inclusive Tax | Issue #1 above |
+| P2-4: Restaurant Tax Settings | Issues #2, #3, #4 above |
+
+---
+
+## Document History
+
+| Date | Session | Changes |
+|------|---------|---------|
+| Mar 25, 2026 | Session 3 | Added transformer layer docs, property mappings |
+| Mar 25, 2026 | Session 2 | Initial comprehensive mapping |
+

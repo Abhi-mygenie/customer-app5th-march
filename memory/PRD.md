@@ -1,6 +1,32 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 25, 2026 (Session 3 - TypeScript Migration)
+## Last Updated: March 25, 2026 (Session 3 - Transform & Refactor v1 Complete)
+
+---
+
+## Quick Links
+
+| Document | Purpose |
+|----------|---------|
+| [ROADMAP.md](./ROADMAP.md) | Upcoming tasks, priorities, detailed steps |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture, data flow |
+| [CHANGELOG_TRANSFORM_V1.md](./CHANGELOG_TRANSFORM_V1.md) | Transform & Refactor changes |
+| [BUG_TRACKER.md](./BUG_TRACKER.md) | Bug history and fixes |
+| [API_MAPPING.md](./API_MAPPING.md) | API field mappings |
+| [CODE_AUDIT.md](./CODE_AUDIT.md) | Code quality assessment |
+
+---
+
+## Current Status
+
+| Area | Status |
+|------|--------|
+| Order Flow | ✅ Working |
+| Transform Layer | ✅ Complete |
+| Multi-menu Support | ✅ Restored |
+| Documentation | ✅ Updated |
+| P0 Bugs | ✅ None |
+| P1 Bugs | 🟡 1 (QR URL - Parked) |
 
 ---
 

@@ -4,6 +4,43 @@
 
 ---
 
+## Open Issues
+
+| Bug ID | Summary | Priority | Status |
+|--------|---------|----------|--------|
+| BUG-029 | QR Code URL empty when subdomain not set | 🟡 P1 | Parked |
+
+---
+
+## BUG-029: QR Code URL Empty
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-029 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | - |
+| **Severity** | P1 - Important |
+| **Status** | 🟡 Parked |
+| **File** | `/app/frontend/src/pages/admin/AdminQRPage.jsx` |
+| **Line** | 118 |
+
+**Problem:**
+```javascript
+const baseUrl = subdomain ? `https://${subdomain}/${restaurantId}` : '';
+// If subdomain undefined, QR codes have empty URLs
+```
+
+**Impact:**
+- QR codes generated with empty URLs
+- Admin QR page only - customer flow unaffected
+
+**Reason Parked:**
+- Not blocking customer orders
+- Only affects Admin QR generation
+- Can fix when Admin features prioritized
+
+---
+
 ## Quick Summary - Session 3 (BUG-023 to BUG-028)
 
 | Bug ID | Summary | Status |
