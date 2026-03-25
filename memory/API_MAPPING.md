@@ -167,6 +167,18 @@ POST https://preprod.mygenie.online/api/v1/web/restaurant-product
 
 ### Variations Structure
 
+#### Field Usage Summary
+
+| Field | Used? | Purpose |
+|-------|-------|---------|
+| `name` | ✅ YES | Display - variation group name |
+| `type` | ❌ NO | Not used (always "single" or "multiple") |
+| `min` | ❌ NO | Not used (minimum selections) |
+| `max` | ❌ NO | Not used (maximum selections) |
+| `required` | ❌ NO | Not used (selection requirement) |
+| `values[].label` | ✅ YES | Display - option label |
+| `values[].optionPrice` | ✅ YES | Price calculation - additional cost |
+
 ```json
 {
   "variations": [
@@ -191,7 +203,17 @@ POST https://preprod.mygenie.online/api/v1/web/restaurant-product
 }
 ```
 
+> **Note:** Fields like `type`, `min`, `max`, `required` exist in the API structure but are NOT currently consumed by the app. These may be needed for future validation logic (e.g., enforcing minimum/maximum selections).
+
 ### Add-ons Structure
+
+#### Field Usage Summary
+
+| Field | Used? | Purpose |
+|-------|-------|---------|
+| `id` | ✅ YES | Identification |
+| `name` | ✅ YES | Display - add-on name |
+| `price` | ✅ YES | Price calculation |
 
 ```json
 {
@@ -693,6 +715,7 @@ See [ROADMAP.md](./ROADMAP.md) for full details.
 
 | Date | Session | Changes |
 |------|---------|---------|
+| Mar 25, 2026 | Session 4 | Added field usage summary tables for Variations & Add-ons |
 | Mar 25, 2026 | Session 3 | Added transformer layer docs, property mappings |
 | Mar 25, 2026 | Session 2 | Initial comprehensive mapping |
 
