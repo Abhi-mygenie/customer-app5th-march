@@ -9,6 +9,8 @@ import { useCart } from '../context/CartContext';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { getOrderDetails, checkTableStatus } from '../api/services/orderService';
 import { getStoredToken } from '../utils/authToken';
+// Import centralized transformers - SINGLE SOURCE OF TRUTH for label formatting
+import { getVariationLabels, getAddonLabels } from '../api/transformers/helpers';
 import Header from '../components/Header/Header';
 import { IoCheckmarkCircle, IoCallOutline, IoChevronDownOutline, IoChevronUpOutline, IoTimeOutline, IoCheckmarkOutline, IoCheckmarkDoneOutline, IoCloseOutline } from 'react-icons/io5';
 import { RiBillLine } from 'react-icons/ri';
@@ -19,11 +21,11 @@ import './OrderSuccess.css';
 /**
  * Maps food_status numeric value to status string
  * 1 → Preparing, 2 → Ready, 3 → Cancelled, 5 → Served, 6 → Paid, 7 → Yet to be confirmed
- * Status always comes from API - no defaults needed
+ * Uses item.status (from transformer) or item.foodStatus (legacy)
  */
 const mapFoodOrderStatus = (item) => {
-  // Use foodStatus (numeric) from API's food_status field
-  const fStatus = item?.foodStatus;
+  // Use status from transformer, fallback to foodStatus for legacy
+  const fStatus = item?.status ?? item?.foodStatus;
   if (fStatus !== undefined && fStatus !== null) {
     const statusMap = {
       1: 'preparing',
@@ -96,25 +98,8 @@ const isConfigEnabled = (restaurant, key) => {
   return val === 'Y' || val === 'y' || val === true || val === '1';
 };
 
-// Helper: Extract variation labels from API response
-// API returns variations as: [{ values: { label: "60ml", optionPrice: "40" } }]
-// or as: [{ values: [{ label: "60ml", optionPrice: "40" }] }]
-const getVariationLabels = (variations) => {
-  if (!variations || variations.length === 0) return '';
-  return variations.map(v => {
-    if (v.values) {
-      const vals = Array.isArray(v.values) ? v.values : [v.values];
-      return vals.map(val => val.label || '').filter(Boolean).join(', ');
-    }
-    return v.label || v.name || '';
-  }).filter(Boolean).join(', ');
-};
-
-// Helper: Extract addon labels from API response
-const getAddonLabels = (addons) => {
-  if (!addons || addons.length === 0) return '';
-  return addons.map(a => `${a.name || 'Addon'} x${a.quantity || 1}`).join(', ');
-};
+// NOTE: getVariationLabels and getAddonLabels are now imported from '../api/transformers'
+// This ensures consistent label formatting across the app
 
 // Order status steps mapped to f_order_status values
 // 7 → Order Placed, 1 → Confirmed, 2 → Preparing, 5 → Served
@@ -196,40 +181,26 @@ const OrderSuccess = () => {
       }
 
       if (orderDetails?.previousItems && orderDetails.previousItems.length > 0) {
-        const updatedItems = orderDetails.previousItems.map(item => {
-          // Calculate total unit price including variations and addons
-          const basePrice = parseFloat(item.unitPrice || item.price) || 0;
-          // Calculate variation total from variation[].values[].optionPrice
-          let variationsTotal = 0;
-          if (item.variations && item.variations.length > 0) {
-            item.variations.forEach(v => {
-              if (v.values) {
-                const vals = Array.isArray(v.values) ? v.values : [v.values];
-                vals.forEach(val => {
-                  variationsTotal += parseFloat(val.optionPrice) || 0;
-                });
-              }
-            });
-          }
-          let addonsTotal = 0;
-          if (item.add_ons && item.add_ons.length > 0) {
-            item.add_ons.forEach(a => {
-              addonsTotal += (parseFloat(a.price) || 0) * (a.quantity || 1);
-            });
-          }
-          return {
-            id: item.id,
-            name: item.item?.name || 'Item',
-            price: basePrice + variationsTotal + addonsTotal,
-            quantity: item.quantity || 1,
-            veg: item.item?.veg === true || item.item?.veg === 1,
-            foodStatus: item.foodStatus,
-            variations: item.variations || [],
-            add_ons: item.add_ons || [],
-            foodLevelNotes: item.foodLevelNotes || '',
-            orderNote: item.orderNote || '',
-          };
-        });
+        // Use transformer properties directly - no manual re-mapping needed
+        const updatedItems = orderDetails.previousItems.map(item => ({
+          id: item.id,
+          name: item.name || item.item?.name || 'Item',
+          // Use fullPrice from transformer (already includes variations + addons)
+          price: item.fullPrice ?? item.price ?? 0,
+          quantity: item.quantity || 1,
+          veg: item.veg ?? (item.item?.veg === true || item.item?.veg === 1),
+          // Use status from transformer, fallback to foodStatus
+          status: item.status,
+          foodStatus: item.status ?? item.foodStatus,
+          // Use transformed variations/addons
+          variations: item.variations || [],
+          addons: item.addons || [],
+          // Fallback to raw API data for edge cases
+          _rawVariations: item._rawVariations || [],
+          _rawAddons: item._rawAddons || [],
+          notes: item.notes || '',
+          orderNote: item.orderNote || '',
+        }));
         setLiveOrderItems(updatedItems);
         
         // Update order-level status from API
@@ -538,19 +509,27 @@ const OrderSuccess = () => {
                       </span>
                       <div className="order-success-item-details">
                         <span className="order-success-item-name">{item.name || 'Item'}</span>
+                        {/* Use transformed variations from transformer */}
                         {item.variations && item.variations.length > 0 && getVariationLabels(item.variations) && (
                           <span className="order-success-item-customization" data-testid={`item-variants-${index}`}>
                             Variants: {getVariationLabels(item.variations)}
                           </span>
                         )}
-                        {item.add_ons && item.add_ons.length > 0 && (
+                        {/* Use addons from transformer (not add_ons) */}
+                        {item.addons && item.addons.length > 0 && (
                           <span className="order-success-item-customization" data-testid={`item-addons-${index}`}>
-                            Addons: {getAddonLabels(item.add_ons)}
+                            Addons: {getAddonLabels(item.addons)}
                           </span>
                         )}
-                        {item.foodLevelNotes && (
+                        {/* Fallback to raw API data for edge cases */}
+                        {(!item.addons || item.addons.length === 0) && item._rawAddons && item._rawAddons.length > 0 && (
+                          <span className="order-success-item-customization" data-testid={`item-addons-raw-${index}`}>
+                            Addons: {getAddonLabels(item._rawAddons)}
+                          </span>
+                        )}
+                        {(item.notes || item.foodLevelNotes) && (
                           <span className="order-success-item-customization" data-testid={`item-cooking-${index}`}>
-                            🍳 {item.foodLevelNotes}
+                            🍳 {item.notes || item.foodLevelNotes}
                           </span>
                         )}
                       </div>

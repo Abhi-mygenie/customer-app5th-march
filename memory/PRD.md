@@ -1,6 +1,6 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 25, 2026 (Session 2)
+## Last Updated: March 25, 2026 (Session 3 - TypeScript Migration)
 
 ---
 
@@ -8,7 +8,7 @@
 - **Repository**: https://github.com/Abhi-mygenie/customer-app5th-march.git
 - **Default Branch**: `6marchv1`
 - **Database**: MongoDB at `mongodb://mygenie_admin:QplazmMzalpq@52.66.232.149:27017/mygenie`
-- **Tech Stack**: React (Frontend) + FastAPI (Backend) + MongoDB
+- **Tech Stack**: React (Frontend) + FastAPI (Backend) + MongoDB + TypeScript (API Layer)
 - **Preview URL**: https://customer-5th-march.preview.emergentagent.com
 
 ---
@@ -302,6 +302,55 @@
 | - | Documentation API endpoints | ✅ Added |
 | - | iOS Safari auto-zoom fix | ✅ Fixed |
 | - | Documentation API endpoints | ✅ Added |
+
+### Mar 25, 2026 - TypeScript Transformer Integration (Phase 2) ✅
+**Goal**: Centralize API data transformation to prevent variable mapping bugs
+
+**Completed:**
+1. **Updated `orderService.ts`** - Now returns transformed data with standardized properties:
+   - `name` instead of nested `item.name`
+   - `fullPrice` (pre-calculated: base + variations + addons)
+   - `variations[]` with `{ name, values: [{ label, price }] }` structure
+   - `addons[]` with `{ id, name, price, quantity }` structure
+   - `status` instead of `foodStatus`
+   - Added `_rawVariations` and `_rawAddons` for backward compatibility
+
+2. **Created `/api/transformers/helpers.js`** - JavaScript exports for JSX component compatibility:
+   - `getVariationLabels(variations)` - Formats variation labels for display
+   - `getAddonLabels(addons)` - Formats addon labels for display
+   - `calculateVariationsTotal(variations)` - Sum of variation prices
+   - `calculateAddonsTotal(addons)` - Sum of addon prices
+
+3. **Updated `PreviousOrderItems.jsx`**:
+   - Removed duplicate `calculateFullItemPrice()`, `getVariationLabels()`, `getAddonLabels()`
+   - Now imports from centralized transformers
+   - Uses `item.fullPrice` instead of manual calculation
+   - Uses `item.name` directly (not `item.item?.name`)
+
+4. **Updated `OrderSuccess.jsx`**:
+   - Removed duplicate helper functions
+   - Imports `getVariationLabels`, `getAddonLabels` from transformers
+   - Uses `item.addons` (not `item.add_ons`)
+   - Uses transformer properties for item mapping
+
+5. **Updated `CartContext.js`**:
+   - `getPreviousOrderTotal()` now uses `fullPrice` from transformer
+   - Fallback to manual calculation for backward compatibility
+   - Simplified variation/addon total calculation
+
+**Benefits:**
+- Eliminated ~100 lines of duplicate code
+- Single source of truth for API data transformation
+- Consistent property names across components
+- Prevents future variable mapping bugs
+
+**Files Modified:**
+- `/app/frontend/src/api/services/orderService.ts`
+- `/app/frontend/src/api/transformers/helpers.js` (new)
+- `/app/frontend/src/components/PreviousOrderItems/PreviousOrderItems.jsx`
+- `/app/frontend/src/pages/OrderSuccess.jsx`
+- `/app/frontend/src/context/CartContext.js`
+
 
 ---
 

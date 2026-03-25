@@ -128,6 +128,7 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
     const orderDiscount = parseFloat((firstDetail as any).order_discount) || 0;
 
     // Transform previous items using centralized transformer
+    // Returns CLEAN transformed data - components should use these standardized properties
     const previousItems = details.map(detail => {
       const item = transformPreviousOrderItem(detail);
       const isCancelled = detail.foodStatus === ORDER_STATUS.CANCELLED;
@@ -145,15 +146,14 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
         if (taxType === 'VAT') totalVat += totalTaxForItem;
       }
       
-      // Return in legacy format for backward compatibility
+      // Return transformed item with standardized properties
+      // Components should use: name, price, fullPrice, variations[], addons[]
       return {
-        id: item.id,
-        foodId: item.foodId,
+        ...item,
+        // Legacy aliases for backward compatibility during migration
         orderId: (detail as any).order_id,
-        quantity: item.quantity,
-        unitPrice: item.price,
-        price: item.fullPrice,
-        item: {
+        unitPrice: item.price,           // Alias: use 'price' instead
+        item: {                           // Legacy nested structure
           id: item.foodId,
           name: item.name,
           description: item.description || '',
@@ -163,11 +163,10 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
           tax: item.tax,
           tax_type: item.taxType,
         },
-        variations: detail.variation || [],
-        add_ons: detail.add_ons || [],
-        foodLevelNotes: item.notes || '',
+        // Keep raw API data for edge cases (will be removed in future)
+        _rawVariations: detail.variation || [],
+        _rawAddons: detail.add_ons || [],
         orderNote: (detail as any).order_note || '',
-        foodStatus: item.status,
       };
     });
 
@@ -384,7 +383,7 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
 
     formData.append('data', JSON.stringify(payloadData));
 
-    const response = await apiClient.post(ENDPOINTS.PLACE_ORDER, formData, {
+    const response = await apiClient.post(ENDPOINTS.PLACE_ORDER(), formData, {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'multipart/form-data',
