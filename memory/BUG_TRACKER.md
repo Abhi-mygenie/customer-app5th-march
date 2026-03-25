@@ -1256,6 +1256,80 @@ None — Logic matches the verified fix in PreviousOrderItems.jsx. Helper functi
 
 ---
 
+## BUG-016: Variation labels not displayed in PreviousOrderItems (BUG-012 incomplete)
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-016 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Related Bug** | BUG-012, BUG-015 |
+| **Customer Impact** | Variation names not showing in ReviewOrder page (PreviousOrderItems component) |
+
+### Summary
+BUG-012 attempted to fix variation display but used incorrect logic that didn't match the actual API structure. The code expected `v.values.label` directly, but the API returns `v.values` as an **array** of objects.
+
+### Root Cause Analysis
+
+**Actual API Response (confirmed via live API call):**
+```json
+"variation": [
+  {
+    "name": "CHOICE OF SIZE",
+    "values": [                    // <-- ARRAY of objects!
+      { "label": "30ML", "optionPrice": "0" }
+    ]
+  }
+]
+```
+
+**Broken code in PreviousOrderItems.jsx (BUG-012):**
+```javascript
+if (v.values?.label) {  // ❌ v.values is ARRAY, has no .label property
+  return Array.isArray(v.values.label) ? v.values.label.join(', ') : v.values.label;
+}
+```
+
+**Why it failed:**
+- `v.values` = `[{ label: "30ML" }]` (array)
+- `v.values?.label` = `undefined` (arrays don't have `.label`)
+- Falls through to fallback which returns empty
+
+### Fix Applied
+**File Modified**: `/app/frontend/src/components/PreviousOrderItems/PreviousOrderItems.jsx`
+
+```javascript
+const getVariationLabels = (variations) => {
+  if (!variations || variations.length === 0) return null;
+  
+  // API returns: variation: [{ name: "CHOICE OF SIZE", values: [{ label: "30ML", optionPrice: "0" }] }]
+  // We need to extract labels from values[] array
+  const labels = variations.map(v => {
+    if (v.values) {
+      // values is an ARRAY of objects with label property
+      const vals = Array.isArray(v.values) ? v.values : [v.values];
+      return vals.map(val => val.label || '').filter(Boolean).join(', ');
+    }
+    // Fallback for other formats
+    return v.label || v.name || v.option_name || '';
+  }).filter(Boolean);
+  
+  return labels.length > 0 ? labels.join(', ') : null;
+};
+```
+
+### Files Updated
+- `/app/frontend/src/components/PreviousOrderItems/PreviousOrderItems.jsx` - Fixed getVariationLabels()
+- `/app/memory/API_MAPPING.md` - Updated with correct variation structure (confirmed from live API)
+
+### Related Fixes
+- **BUG-015**: Fixed same issue in `OrderSuccess.jsx` (already had correct logic)
+- **BUG-012**: Original incomplete fix
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]

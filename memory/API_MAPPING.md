@@ -236,9 +236,43 @@ GET https://preprod.mygenie.online/api/v1/air-bnb/get-order-details/{orderId}
 | `food_status` | int | `3` | ✅ YES | `item.foodStatus` | 1=Confirmed, 2=Preparing, 3=Cancelled, 5=Served |
 | `f_order_status` | int | `3` | ✅ YES | `fOrderStatus` | Order status |
 | **Customization** ||||||
-| `variation` | array | `[...]` | ✅ YES | `item.variations` | Selected variations |
-| `add_ons` | array | `[...]` | ✅ YES | `item.add_ons` | Selected add-ons |
+| `variation` | array | `[...]` | ✅ YES | `item.variations` | Selected variations (see structure below) |
+| `add_ons` | array | `[...]` | ✅ YES | `item.add_ons` | Selected add-ons (see structure below) |
 | `food_level_notes` | string | `""` | ✅ YES | `item.foodLevelNotes` | Cooking instructions |
+
+#### Variation Structure (CONFIRMED from live API)
+```json
+"variation": [
+  {
+    "name": "CHOICE OF SIZE",      // Variation group name (e.g., "Size", "Spice Level")
+    "type": "single",              // Selection type: "single" or "multiple"
+    "min": "0",                    // Minimum selections required
+    "max": "0",                    // Maximum selections allowed
+    "required": "on",              // Whether selection is required
+    "values": [                    // ARRAY of selected option(s)
+      {
+        "label": "30ML",           // Display label for the selected option
+        "optionPrice": "0"         // Additional price for this option
+      }
+    ]
+  }
+]
+```
+
+**Important:** `values` is always an **ARRAY** even for single selections.
+
+#### Add-ons Structure (CONFIRMED from live API)
+```json
+"add_ons": [
+  {
+    "id": 10670,                   // Add-on ID
+    "name": "coconut",             // Add-on name
+    "price": 60,                   // Price per unit
+    "quantity": 1                  // Quantity selected
+  }
+]
+```
+
 | **Food Details (nested)** ||||||
 | `food_details.id` | int | `125229` | ✅ YES | `item.item.id` | Food ID |
 | `food_details.name` | string | `"Pizza"` | ✅ YES | `item.item.name` | Food name |

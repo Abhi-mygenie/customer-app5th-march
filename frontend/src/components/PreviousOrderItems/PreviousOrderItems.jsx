@@ -110,13 +110,15 @@ const calculateFullItemPrice = (item) => {
 const getVariationLabels = (variations) => {
   if (!variations || variations.length === 0) return null;
   
+  // API returns: variation: [{ name: "CHOICE OF SIZE", values: [{ label: "30ML", optionPrice: "0" }] }]
+  // We need to extract labels from values[] array
   const labels = variations.map(v => {
-    if (v.values?.label) {
-      return Array.isArray(v.values.label) ? v.values.label.join(', ') : v.values.label;
+    if (v.values) {
+      // values is an ARRAY of objects with label property
+      const vals = Array.isArray(v.values) ? v.values : [v.values];
+      return vals.map(val => val.label || '').filter(Boolean).join(', ');
     }
-    if (v.values?.name) {
-      return Array.isArray(v.values) ? v.values.map(val => val.name || val.label).join(', ') : v.values.name;
-    }
+    // Fallback for other formats
     return v.label || v.name || v.option_name || '';
   }).filter(Boolean);
   
