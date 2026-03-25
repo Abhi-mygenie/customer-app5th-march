@@ -10,6 +10,30 @@
 3. [Order Details API](#3-order-details-api)
 4. [Place Order API](#4-place-order-api)
 5. [Check Table Status API](#5-check-table-status-api)
+6. [Menu Master API](#6-menu-master-api)
+7. [Table Config API](#7-table-config-api)
+8. [Auth Login API](#8-auth-login-api)
+
+---
+
+## API Endpoints Summary
+
+| # | Endpoint | Method | Status | Used In |
+|---|----------|--------|--------|---------|
+| 1 | `/auth/login` | POST | ✅ Active | `authToken.js` |
+| 2 | `/web/restaurant-info` | POST | ✅ Active | `useMenuData.js`, `restaurantService.js` |
+| 3 | `/web/restaurant-product` | POST | ✅ Active | `useMenuData.js` |
+| 4 | `/web/menu-master` | POST | ✅ Active | `useMenuData.js` |
+| 5 | `/web/table-config` | POST | ✅ Active | `useMenuData.js` |
+| 6 | `/air-bnb/get-order-details/{id}` | GET | ✅ Active | `orderService.js` |
+| 7 | `/customer/order/place` | POST | ✅ Active | `orderService.js` |
+| 8 | `/customer/order/autopaid-place-prepaid-order` | POST | ✅ Active | `orderService.js` |
+| 9 | `/customer/check-table-status` | GET | ✅ Active | `orderService.js` |
+| 10 | `/restaurants/{id}/menu` | - | ❌ Dead | `endpoints.js` (never called) |
+| 11 | `/restaurants/{id}/menu/sections` | - | ❌ Dead | `endpoints.js` (never called) |
+| 12 | `/restaurants/{id}/stations` | - | ❌ Dead | `endpoints.js` (never called) |
+| 13 | `/restaurants/{id}/stations/{sid}` | - | ❌ Dead | `endpoints.js` (never called) |
+| 14 | `/restaurants/{id}/stations/{sid}/categories` | - | ❌ Dead | `endpoints.js` (never called) |
 
 ---
 
@@ -321,15 +345,7 @@ POST https://preprod.mygenie.online/api/v1/customer/order/autopaid-place-prepaid
 
 ### Endpoint
 ```
-POST https://preprod.mygenie.online/api/v1/air-bnb/check-table-status
-```
-
-### Request
-```json
-{
-  "table_id": "3794",
-  "restaurant_id": "675"
-}
+GET https://preprod.mygenie.online/api/v1/customer/check-table-status?table_id={tableId}&restaurant_id={restaurantId}
 ```
 
 ### Response Fields
@@ -338,6 +354,86 @@ POST https://preprod.mygenie.online/api/v1/air-bnb/check-table-status
 |-------|------|---------|-------|-----------|
 | `is_available` | boolean | `false` | ✅ YES | `tableStatus.isAvailable` |
 | `order_id` | int | `695591` | ✅ YES | `tableStatus.orderId` |
+
+---
+
+## 6. Menu Master API
+
+### Endpoint
+```
+POST https://preprod.mygenie.online/api/v1/web/menu-master
+```
+
+### Request
+```json
+{
+  "restaurant_id": "675"
+}
+```
+
+### Response Fields
+
+| Field | Type | Example | Used? | Mapped To |
+|-------|------|---------|-------|-----------|
+| `menus` | array | `[...]` | ✅ YES | `stations` |
+| `menus[].id` | int | `1234` | ✅ YES | `station.id` |
+| `menus[].menu_name` | string | `"BAR"` | ✅ YES | `station.name` |
+| `menus[].menu_description` | string | `"..."` | ✅ YES | `station.description` |
+| `menus[].opening_time` | string | `"10:00"` | ✅ YES | `station.opening_time` |
+| `menus[].closing_time` | string | `"23:00"` | ✅ YES | `station.closing_time` |
+| `menus[].image` | string | `null` | ✅ YES | `station.image` (usually null) |
+
+---
+
+## 7. Table Config API
+
+### Endpoint
+```
+POST https://preprod.mygenie.online/api/v1/web/table-config
+```
+
+### Request
+```json
+{
+  "restaurant_id": "675"
+}
+```
+
+### Response Fields
+
+| Field | Type | Example | Used? | Mapped To |
+|-------|------|---------|-------|-----------|
+| `tables` | array | `[...]` | ✅ YES | `tableConfig` |
+| `tables[].id` | int | `3794` | ✅ YES | `table.id` |
+| `tables[].table_no` | string | `"3"` | ✅ YES | `table.tableNo` |
+| `tables[].qr_code` | string | `"..."` | ✅ YES | `table.qrCode` |
+| `rooms` | array | `[...]` | ✅ YES | `roomConfig` |
+| `rooms[].id` | int | `1001` | ✅ YES | `room.id` |
+| `rooms[].room_no` | string | `"101"` | ✅ YES | `room.roomNo` |
+
+---
+
+## 8. Auth Login API
+
+### Endpoint
+```
+POST https://preprod.mygenie.online/api/v1/auth/login
+```
+
+### Request
+```json
+{
+  "phone": "+919579504871",
+  "password": "Qplazm@10"
+}
+```
+
+### Response Fields
+
+| Field | Type | Example | Used? | Mapped To |
+|-------|------|---------|-------|-----------|
+| `token` | string | `"eyJhbG..."` | ✅ YES | Stored in localStorage |
+| `user` | object | `{...}` | ❌ NO | Not used |
 
 ---
 
@@ -364,6 +460,28 @@ POST https://preprod.mygenie.online/api/v1/air-bnb/check-table-status
 
 ---
 
+## IMPORTANT: No `item_total` or `subtotal` in API
+
+### Order Details API Response - Total Fields
+
+The `/air-bnb/get-order-details/{orderId}` API does **NOT** return:
+- ❌ `item_total`
+- ❌ `subtotal`
+- ❌ `grand_total`
+
+It **ONLY** returns:
+- ✅ `order_amount` (total order amount, duplicated in each detail item)
+
+### Implication
+We must **calculate** `item_total` and `subtotal` locally by summing:
+```
+itemTotal = Σ (unit_price + total_variation_price + total_add_on_price) × quantity
+```
+
+This is done in `getOrderDetails()` in `orderService.js`.
+
+---
+
 ## Known Issues
 
 1. **`tax_calc` not implemented** - All prices treated as exclusive
@@ -371,3 +489,4 @@ POST https://preprod.mygenie.online/api/v1/air-bnb/check-table-status
 3. **Service charges not implemented** - Fields exist but not calculated
 4. **VAT status not checked** - `vat.status` ignored, always calculates if item has VAT
 5. **Item discounts not applied** - `discount`, `discount_type` fields ignored
+6. **No item_total/subtotal from API** - Must calculate locally, may cause mismatch with POS
