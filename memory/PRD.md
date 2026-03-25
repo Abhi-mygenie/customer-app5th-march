@@ -208,6 +208,13 @@
 - Same logic as `transformVariations()` used in Place Order
 - Files modified: `orderService.js`
 
+### Mar 25, 2026 - QR Scan Auto-Redirect to OrderSuccess (BUG-018)
+- When scanning QR for table with active order, now auto-redirects to OrderSuccess
+- Previously showed "EDIT ORDER" button requiring manual click
+- Fetches order details on page load to check `fOrderStatus`
+- Only redirects if order is active (not cancelled/paid)
+- Files modified: `LandingPage.jsx`
+
 ### Mar 25, 2026 - Documentation API Endpoints
 - Added `/api/docs/bug-tracker`, `/api/docs/api-mapping`, `/api/docs/code-audit`, `/api/docs/prd`
 - Serves markdown files from `/app/memory/` as plain text for browser viewing
@@ -250,6 +257,7 @@
 | BUG-015 | OrderSuccess variation label display | ✅ Fixed |
 | BUG-016 | PreviousOrderItems variation label display | ✅ Fixed |
 | BUG-017 | Update Order variation name mapping | ✅ Fixed |
+| BUG-018 | QR scan auto-redirect to OrderSuccess | ✅ Fixed |
 | - | iOS Safari auto-zoom fix | ✅ Fixed |
 | - | Documentation API endpoints | ✅ Added |
 

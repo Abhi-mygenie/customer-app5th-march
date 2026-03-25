@@ -4,13 +4,14 @@
 
 ---
 
-## Quick Summary - This Session (BUG-015 to BUG-017)
+## Quick Summary - This Session (BUG-015 to BUG-018)
 
 | Bug ID | Summary | Status |
 |--------|---------|--------|
 | BUG-015 | Variation labels not displayed on OrderSuccess page | ✅ Fixed |
 | BUG-016 | Variation labels not displayed in PreviousOrderItems | ✅ Fixed |
 | BUG-017 | Update Order sends wrong variation names ("CHOICE OF") | ✅ Fixed |
+| BUG-018 | QR scan doesn't auto-redirect to OrderSuccess for active orders | ✅ Fixed |
 
 ---
 
@@ -1337,6 +1338,53 @@ const getVariationLabels = (variations) => {
 ### Related Fixes
 - **BUG-015**: Fixed same issue in `OrderSuccess.jsx` (already had correct logic)
 - **BUG-012**: Original incomplete fix
+
+---
+
+## BUG-018: QR scan doesn't auto-redirect to OrderSuccess for active orders
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-018 |
+| **Date Reported** | 2026-03-25 |
+| **Date Fixed** | 2026-03-25 |
+| **Severity** | P1 - High |
+| **Status** | Fixed |
+| **Customer Impact** | Users scanning QR for table with active order see "EDIT ORDER" button instead of being auto-redirected to OrderSuccess |
+
+### Summary
+When a user scans a QR code for a table that already has an active order, they should be automatically redirected to the OrderSuccess page. Instead, they were seeing the LandingPage with an "EDIT ORDER" button, requiring a manual click.
+
+### Root Cause
+The `checkTable()` useEffect in LandingPage.jsx only checked if the table was occupied and set state accordingly. It did not:
+1. Fetch order details to check `fOrderStatus`
+2. Auto-navigate to OrderSuccess for active orders
+
+### Fix Applied
+**File:** `/app/frontend/src/pages/LandingPage.jsx`
+
+Added auto-redirect logic in the `checkTable()` useEffect:
+```javascript
+// If table has an active order, auto-redirect to OrderSuccess
+if (result.isOccupied && result.orderId) {
+  const orderDetails = await getOrderDetails(result.orderId);
+  
+  // Only redirect if order is active (not cancelled=3, not paid=6)
+  if (orderDetails.fOrderStatus !== 3 && orderDetails.fOrderStatus !== 6) {
+    navigate(`/${numericRestaurantId}/order-success`, {
+      state: { orderData: { orderId: result.orderId, ... } }
+    });
+    return;
+  }
+}
+```
+
+### New Flow
+1. User scans QR → LandingPage loads
+2. `checkTableStatus` API called → finds order exists
+3. `getOrderDetails` API called → checks `fOrderStatus`
+4. If active order → **Auto-redirect to OrderSuccess** ✅
+5. If cancelled/paid → Show Browse Menu button
 
 ---
 

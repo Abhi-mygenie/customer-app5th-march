@@ -60,6 +60,7 @@ const LandingPage = () => {
   }, [restaurantId, fetchConfig]);
 
   // Check table status on load (only for non-multi-menu restaurants with scanned table)
+  // If table has an active order, auto-redirect to OrderSuccess
   useEffect(() => {
     const checkTable = async () => {
       // Skip if: no table scanned, or is multi-menu restaurant, or already checked
@@ -96,6 +97,33 @@ const LandingPage = () => {
           return;
         }
 
+        // If table has an active order, auto-redirect to OrderSuccess
+        if (result.isOccupied && result.orderId) {
+          try {
+            // Fetch order details to check status
+            const orderDetails = await getOrderDetails(result.orderId);
+            
+            // Only redirect if order is active (not cancelled=3, not paid=6)
+            if (orderDetails.fOrderStatus !== 3 && orderDetails.fOrderStatus !== 6) {
+              // Auto-redirect to OrderSuccess page
+              navigate(`/${numericRestaurantId}/order-success`, {
+                state: {
+                  orderData: {
+                    orderId: result.orderId,
+                    totalToPay: orderDetails.billSummary?.grandTotal || 0,
+                    billSummary: orderDetails.billSummary,
+                  }
+                }
+              });
+              return; // Don't update state, we're navigating away
+            }
+            // If order is cancelled/paid, fall through to show Browse Menu
+          } catch (orderErr) {
+            console.error('Failed to fetch order details for auto-redirect:', orderErr);
+            // On error, fall through to show Edit Order button (user can retry manually)
+          }
+        }
+
         setTableStatusCheck({
           isLoading: false,
           isOccupied: result.isOccupied,
@@ -117,7 +145,7 @@ const LandingPage = () => {
     };
 
     checkTable();
-  }, [isScanned, scannedTableId, restaurantId, restaurant, tableStatusCheck.isChecked]);
+  }, [isScanned, scannedTableId, restaurantId, restaurant, tableStatusCheck.isChecked, navigate]);
 
   // Theme colors now controlled by local admin config only (not POS)
 
