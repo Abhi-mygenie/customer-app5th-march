@@ -129,6 +129,8 @@ const OrderSuccess = () => {
   const [fOrderStatus, setFOrderStatus] = useState(null);
   const [restaurantOrderId, setRestaurantOrderId] = useState(null);
   const [liveOrderAmount, setLiveOrderAmount] = useState(null);
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
 
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
@@ -146,6 +148,59 @@ const OrderSuccess = () => {
       setBillSummary(passedBillSummary);
     }
   }, [passedBillSummary, billSummary]);
+
+  // Verify Razorpay payment if payment data exists
+  useEffect(() => {
+    const verifyPayment = async () => {
+      // Check if this is a Razorpay payment that needs verification
+      if (!orderData?.isPaid || !orderData?.paymentId || !orderData?.razorpayOrderId || !orderData?.razorpaySignature) {
+        return;
+      }
+
+      // Don't verify again if already verified
+      if (paymentVerified) return;
+
+      setIsVerifyingPayment(true);
+      console.log('[Payment] Verifying payment:', {
+        razorpay_order_id: orderData.razorpayOrderId,
+        razorpay_payment_id: orderData.paymentId,
+        razorpay_signature: orderData.razorpaySignature
+      });
+
+      try {
+        const response = await fetch('https://preprod.mygenie.online/api/v1/razor-pay/verify-payment', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            razorpay_order_id: orderData.razorpayOrderId,
+            razorpay_payment_id: orderData.paymentId,
+            razorpay_signature: orderData.razorpaySignature
+          })
+        });
+
+        const result = await response.json();
+        console.log('[Payment] Verification result:', result);
+
+        if (result.status === 'success') {
+          setPaymentVerified(true);
+          toast.success('Payment verified successfully!');
+        } else {
+          console.error('[Payment] Verification failed:', result.message);
+          toast.error(result.message || 'Payment verification failed');
+        }
+      } catch (error) {
+        console.error('[Payment] Verification error:', error);
+        toast.error('Payment verification failed. Please contact support.');
+      } finally {
+        setIsVerifyingPayment(false);
+      }
+    };
+
+    verifyPayment();
+  }, [orderData, paymentVerified]);
 
   // Fetch order details and update item statuses
   const fetchOrderStatus = async (isInitial = false) => {
