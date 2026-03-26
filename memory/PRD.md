@@ -46,3 +46,45 @@
 ## Admin Credentials
 - Restaurant 709 (Young Monk): email=owner@youngmonk.com, password=admin123
 - Customer test: phone=7505242126, restaurant_id=709
+
+---
+
+## Parked Features / Planned Implementation
+
+### PARKED-001: Retry Payment Button (Razorpay)
+
+**Status:** Planned  
+**Priority:** P1  
+**Date Parked:** March 26, 2026
+
+**Description:**  
+Add "PAY ₹XXX" button on Order Success page when payment verification fails.
+
+**Flow:**
+```
+1. On Order Success page load → Call /verify-payment
+2. If status: "failed" → Show "PAY ₹XXX" button
+3. User clicks "PAY":
+   - Call /create-razor-order with order_id
+   - Get fresh Razorpay order_id
+   - Open Razorpay SDK
+   - On success → Verify again → Update UI
+   - On cancel → Stay on page, button remains
+```
+
+**UI States:**
+| State | Display |
+|-------|---------|
+| isVerifyingPayment: true | "Verifying payment..." spinner |
+| paymentVerified: true | "Payment Verified ✅" badge |
+| paymentVerified: false + isPaid: true | "PAY ₹XXX" button |
+| isPaid: false (COD) | Normal success page |
+
+**Files to Modify:**
+- `/app/frontend/src/pages/OrderSuccess.jsx`
+
+**Data Required:**
+- order_id (from orderData)
+- razorpay_key (from restaurant config)
+- total_amount (from orderData)
+
