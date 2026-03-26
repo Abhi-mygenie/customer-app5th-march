@@ -682,8 +682,52 @@
 
 | ID | Name | Type | Special Notes |
 |----|------|------|---------------|
+| 478 | 18march | Normal | Used for POS token refresh testing |
 | 675 | Test Restaurant | Normal | Standard flow |
 | 716 | Hyatt Centric | Multi-menu | Multiple orders per table allowed |
+
+---
+
+## 15. Admin Login & POS Token Test Cases
+
+### TC-120: Admin Login - POS Token Refresh
+| Field | Details |
+|-------|---------|
+| **ID** | TC-120 |
+| **Priority** | P0 - Critical |
+| **Steps** | 1. Admin logs in with email + password<br>2. Check db.users for updated mygenie_token |
+| **Expected** | `mygenie_token` and `mygenie_token_updated_at` updated in database |
+| **Related Bugs** | BUG-031 |
+
+### TC-121: QR Page - After Fresh Login
+| Field | Details |
+|-------|---------|
+| **ID** | TC-121 |
+| **Priority** | P0 - Critical |
+| **Preconditions** | Admin just logged in (fresh token) |
+| **Steps** | 1. Login as admin<br>2. Navigate to QR Codes page |
+| **Expected** | QR codes load successfully |
+| **Related Bugs** | BUG-031 |
+
+### TC-122: QR Page - Session Expired Error Display
+| Field | Details |
+|-------|---------|
+| **ID** | TC-122 |
+| **Priority** | P1 |
+| **Preconditions** | POS token manually expired in DB |
+| **Steps** | 1. Navigate to QR Codes page with expired token |
+| **Expected** | Shows "Your POS session has expired" with "Go to Dashboard" button |
+| **Related Bugs** | BUG-031 |
+
+### TC-123: Login Failure - POS Token Refresh Fails
+| Field | Details |
+|-------|---------|
+| **ID** | TC-123 |
+| **Priority** | P2 |
+| **Preconditions** | POS API is down or unreachable |
+| **Steps** | 1. Admin logs in |
+| **Expected** | Login succeeds (using old token), warning logged |
+| **Notes** | App should not block login if POS refresh fails |
 
 ---
 
@@ -691,4 +735,5 @@
 
 | Date | Session | Changes |
 |------|---------|---------|
+| Mar 26, 2026 | Session 5 | Added Admin Login & POS Token test cases (TC-120 to TC-123) |
 | Mar 25, 2026 | Session 4 | Initial test cases document created |

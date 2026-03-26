@@ -321,6 +321,65 @@ def verify_otp(phone: str, otp: str) -> bool:
     return False
 
 # ============================================
+# POS Token Refresh Helper
+# ============================================
+
+async def refresh_pos_token(email: str, password: str, user_id: str) -> Optional[str]:
+    """
+    Call POS API login to get fresh mygenie_token and update in database.
+    Returns new token on success, None on failure.
+    """
+    import httpx
+    
+    # Use the same MYGENIE_API_URL defined later, but we need it here
+    pos_api_url = os.environ.get("MYGENIE_API_URL", "https://preprod.mygenie.online/api/v1")
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as http_client:
+            response = await http_client.post(
+                f"{pos_api_url}/auth/login",
+                json={
+                    "phone_or_email": email,
+                    "password": password
+                },
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                # POS API returns token in data.token or data.data.token
+                new_token = None
+                if data.get("data") and data["data"].get("token"):
+                    new_token = data["data"]["token"]
+                elif data.get("token"):
+                    new_token = data["token"]
+                
+                if new_token:
+                    # Update token in database
+                    await db.users.update_one(
+                        {"id": user_id},
+                        {
+                            "$set": {
+                                "mygenie_token": new_token,
+                                "mygenie_token_updated_at": datetime.now(timezone.utc),
+                                "last_login": datetime.now(timezone.utc)
+                            }
+                        }
+                    )
+                    logging.info(f"[Auth] Refreshed POS token for user {user_id}")
+                    return new_token
+            else:
+                logging.warning(f"[Auth] POS login failed with status {response.status_code}: {response.text[:200]}")
+                
+    except Exception as e:
+        logging.warning(f"[Auth] Failed to refresh POS token: {str(e)}")
+    
+    return None
+
+# ============================================
 # Auth Routes
 # ============================================
 
@@ -478,6 +537,13 @@ async def unified_login(request: LoginRequest):
         
         if not verify_password(request.password, password_hash):
             raise HTTPException(status_code=401, detail="Invalid password")
+        
+        # Refresh POS token on every login
+        # This ensures mygenie_token is always fresh for POS API calls
+        user_email = user.get("email", identifier)
+        new_pos_token = await refresh_pos_token(user_email, request.password, user["id"])
+        if not new_pos_token:
+            logging.warning(f"[Auth] Could not refresh POS token for {user_email}, using existing token")
         
         token = create_token(user["id"], "restaurant")
         return LoginResponse(
@@ -757,7 +823,12 @@ async def get_table_config(user: dict = Depends(get_restaurant_user)):
                 },
             )
 
-            if response.status_code != 200:
+            if response.status_code == 401:
+                raise HTTPException(
+                    status_code=401, 
+                    detail="POS session expired. Please logout and login again to refresh your session."
+                )
+            elif response.status_code != 200:
                 raise HTTPException(status_code=response.status_code, detail="POS API error")
 
             data = response.json()

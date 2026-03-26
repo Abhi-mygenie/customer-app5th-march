@@ -154,12 +154,34 @@ const AdminQRPage = () => {
   }
 
   if (error) {
+    const isSessionExpired = error.toLowerCase().includes("expired") || 
+                             error.toLowerCase().includes("session") ||
+                             error.includes("401");
+    
     return (
       <div className="admin-page" data-testid="admin-qr-page">
         <h1 className="admin-page-title"><IoQrCodeOutline /> QR Codes</h1>
         <div className="qr-error">
-          <p>{error}</p>
-          <button className="qr-retry-btn" onClick={fetchData}><IoRefresh /> Retry</button>
+          {isSessionExpired ? (
+            <>
+              <p style={{ fontSize: '1.1rem', marginBottom: '8px' }}>⚠️ Your POS session has expired</p>
+              <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '16px' }}>
+                Please logout and login again to refresh your session.
+              </p>
+              <button 
+                className="qr-retry-btn" 
+                onClick={() => window.location.href = `/${window.location.pathname.split('/')[1]}/admin`}
+                style={{ backgroundColor: '#dc3545', marginRight: '10px' }}
+              >
+                Go to Dashboard
+              </button>
+            </>
+          ) : (
+            <>
+              <p>{error}</p>
+              <button className="qr-retry-btn" onClick={fetchData}><IoRefresh /> Retry</button>
+            </>
+          )}
         </div>
       </div>
     );

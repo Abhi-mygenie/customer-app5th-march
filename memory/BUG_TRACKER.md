@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 25, 2026 (Session 4 - Restaurant 716 Fix)
+## Last Updated: March 26, 2026 (Session 5 - POS Token Refresh Fix)
 
 ---
 
@@ -9,6 +9,44 @@
 | Bug ID | Summary | Priority | Status |
 |--------|---------|----------|--------|
 | BUG-029 | QR Code URL empty when subdomain not set | 🟡 P1 | Parked |
+
+---
+
+## Quick Summary - Session 5 (BUG-031)
+
+| Bug ID | Severity | Summary | Status |
+|--------|----------|---------|--------|
+| BUG-031 | 🔴 P0 | POS token not refreshed on login - QR page fails | ✅ Fixed |
+
+---
+
+## BUG-031: POS Token Not Refreshed on Admin Login
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-031 |
+| **Date Reported** | 2026-03-26 |
+| **Date Fixed** | 2026-03-26 |
+| **Severity** | P0 - Critical (Business Blocking) |
+| **Status** | ✅ Fixed |
+| **Affected Restaurant** | 18march (restaurant_id: 478) |
+
+**Problem:**
+- Admin logs in successfully
+- Goes to QR Codes page → Shows "POS API error"
+- Root cause: `mygenie_token` stored in database was expired
+- Token was set once during onboarding and never refreshed
+
+**Fix Applied:**
+
+1. **Backend - `server.py`**
+   - Added `refresh_pos_token()` helper function
+   - Modified `unified_login()` to call POS API login and refresh token
+   - Better error handling in `get_table_config()` for 401 errors
+
+2. **Frontend - `AdminQRPage.jsx`**
+   - Better error display for session expired scenarios
+   - Shows "Please logout and login again" message
 
 ---
 
