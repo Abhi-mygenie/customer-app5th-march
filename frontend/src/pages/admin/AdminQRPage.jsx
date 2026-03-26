@@ -48,10 +48,11 @@ const OrderTypeCard = ({ label, icon: Icon, url, filename }) => {
   );
 };
 
-const TableQRCard = ({ item, type, url }) => {
+const TableQRCard = ({ item, url, selectedMenu }) => {
   const canvasRef = useRef(null);
-  const label = type === 'room' ? `Room ${item.table_no}` : `Table ${item.table_no}`;
-  const filename = type === 'room' ? `room-${item.table_no}` : `table-${item.table_no}`;
+  const isRoom = item.rtype === 'RM';
+  const label = isRoom ? `Room ${item.table_no}` : `Table ${item.table_no}`;
+  const filename = `${isRoom ? 'room' : 'table'}-${item.table_no}-${selectedMenu}`;
 
   const handleDownload = () => {
     const canvas = canvasRef.current?.querySelector('canvas');
@@ -60,6 +61,8 @@ const TableQRCard = ({ item, type, url }) => {
       if (blob) saveAs(blob, `${filename}.png`);
     });
   };
+
+  if (!url) return null;
 
   return (
     <div className="qr-card qr-card-sm" data-testid={`qr-card-${filename}`}>
@@ -70,6 +73,7 @@ const TableQRCard = ({ item, type, url }) => {
       <div className="qr-canvas-wrap" ref={canvasRef}>
         <QRCodeCanvas value={url} size={160} level="H" includeMargin />
       </div>
+      <span className="qr-menu-label">{selectedMenu}</span>
       <button className="qr-download-btn" onClick={handleDownload} data-testid={`download-${filename}`}>
         <IoDownloadOutline /> PNG
       </button>
@@ -86,6 +90,11 @@ const AdminQRPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [zipping, setZipping] = useState(false);
+  
+  // New filter states
+  const [selectedType, setSelectedType] = useState('all'); // 'all' | 'table' | 'room'
+  const [selectedMenu, setSelectedMenu] = useState('Normal'); // Default menu master
+  const [menuMasters, setMenuMasters] = useState([]);
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -106,43 +115,71 @@ const AdminQRPage = () => {
         throw new Error(err.detail || 'Failed to fetch table config');
       }
       const data = await res.json();
-      setTables(data.tables || []);
-      setRooms(data.rooms || []);
+      const allTables = data.tables || [];
+      const allRooms = data.rooms || [];
+      
+      setTables(allTables);
+      setRooms(allRooms);
       setSubdomain(data.subdomain || '');
       setRestaurantId(String(data.restaurant_id || ''));
+      
+      // Extract unique menu masters from qr_code_urls
+      const allMenus = new Set();
+      [...allTables, ...allRooms].forEach(item => {
+        Object.keys(item.qr_code_urls || {}).forEach(menu => allMenus.add(menu));
+      });
+      const menuList = [...allMenus];
+      setMenuMasters(menuList);
+      
+      // Set default selected menu if available
+      if (menuList.length > 0 && !menuList.includes(selectedMenu)) {
+        setSelectedMenu(menuList[0]);
+      }
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, selectedMenu]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const baseUrl = subdomain ? `https://${subdomain}/${restaurantId}` : '';
+  // Get QR URL from API response based on selected menu
+  const getQRUrl = (item) => {
+    return item.qr_code_urls?.[selectedMenu] || '';
+  };
 
-  const buildTableUrl = (item, type) =>
-    `${baseUrl}?tableId=${item.id}&tableName=${item.table_no}&type=${type}&orderType=dinein`;
+  // Filter items based on selected type
+  const getFilteredItems = () => {
+    if (selectedType === 'table') return tables;
+    if (selectedType === 'room') return rooms;
+    return [...tables, ...rooms];
+  };
+
+  const filteredItems = getFilteredItems();
 
   // Bulk download helper: renders each QR to a canvas and adds to ZIP
-  const handleBulkDownload = async (items, type) => {
+  const handleBulkDownload = async (items) => {
     if (items.length === 0) return;
     setZipping(true);
     try {
       const zip = new JSZip();
-      const folder = zip.folder(type === 'room' ? 'rooms' : 'tables');
+      const folderName = selectedType === 'room' ? 'rooms' : selectedType === 'table' ? 'tables' : 'qr-codes';
+      const folder = zip.folder(`${folderName}-${selectedMenu}`);
 
       for (const item of items) {
-        const url = buildTableUrl(item, type);
+        const url = getQRUrl(item);
+        if (!url) continue;
         const blob = await renderQRToBlob(url);
-        const name = type === 'room' ? `room-${item.table_no}.png` : `table-${item.table_no}.png`;
+        const prefix = item.rtype === 'RM' ? 'room' : 'table';
+        const name = `${prefix}-${item.table_no}-${selectedMenu}.png`;
         folder.file(name, blob);
       }
 
       const content = await zip.generateAsync({ type: 'blob' });
-      saveAs(content, `${type === 'room' ? 'room' : 'table'}-qr-codes.zip`);
+      saveAs(content, `${folderName}-${selectedMenu}-qr-codes.zip`);
     } catch (e) {
       console.error('ZIP generation failed:', e);
     } finally {
@@ -193,6 +230,11 @@ const AdminQRPage = () => {
     );
   }
 
+  // Get counts for display
+  const tableCount = tables.length;
+  const roomCount = rooms.length;
+  const filteredCount = filteredItems.length;
+
   return (
     <div className="admin-page" data-testid="admin-qr-page">
       <h1 className="admin-page-title"><IoQrCodeOutline /> QR Codes</h1>
@@ -200,86 +242,88 @@ const AdminQRPage = () => {
         Generate and download QR codes for your restaurant. Customers scan these to place orders.
       </p>
 
-      {/* Section A: Order Type QR Codes */}
-      <div className="admin-section">
-        <h2 className="admin-section-title">Order Type QR Codes</h2>
-        <div className="qr-grid qr-grid-3" data-testid="order-type-qr-grid">
-          <OrderTypeCard
-            label="Dine-In"
-            icon={IoRestaurantOutline}
-            url={`${baseUrl}?orderType=dinein`}
-            filename="dinein-qr"
-          />
-          <OrderTypeCard
-            label="Delivery"
-            icon={IoBicycleOutline}
-            url={`${baseUrl}?orderType=delivery`}
-            filename="delivery-qr"
-          />
-          <OrderTypeCard
-            label="Take Away"
-            icon={IoBagHandleOutline}
-            url={`${baseUrl}?orderType=take_away`}
-            filename="takeaway-qr"
-          />
+      {/* Filters Section */}
+      <div className="qr-filters" data-testid="qr-filters">
+        <div className="qr-filter-group">
+          <label className="qr-filter-label">Type:</label>
+          <div className="qr-filter-tabs">
+            <button 
+              className={`qr-filter-tab ${selectedType === 'all' ? 'active' : ''}`}
+              onClick={() => setSelectedType('all')}
+              data-testid="filter-all"
+            >
+              All ({tableCount + roomCount})
+            </button>
+            <button 
+              className={`qr-filter-tab ${selectedType === 'table' ? 'active' : ''}`}
+              onClick={() => setSelectedType('table')}
+              data-testid="filter-tables"
+            >
+              <IoGridOutline /> Tables ({tableCount})
+            </button>
+            <button 
+              className={`qr-filter-tab ${selectedType === 'room' ? 'active' : ''}`}
+              onClick={() => setSelectedType('room')}
+              data-testid="filter-rooms"
+            >
+              <IoBedOutline /> Rooms ({roomCount})
+            </button>
+          </div>
+        </div>
+        
+        <div className="qr-filter-group">
+          <label className="qr-filter-label">Menu:</label>
+          <select 
+            className="qr-filter-select"
+            value={selectedMenu}
+            onChange={(e) => setSelectedMenu(e.target.value)}
+            data-testid="filter-menu"
+          >
+            {menuMasters.map(menu => (
+              <option key={menu} value={menu}>{menu}</option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Section B: Table QR Codes */}
-      {tables.length > 0 && (
-        <div className="admin-section">
-          <div className="qr-section-header">
-            <h2 className="admin-section-title"><IoGridOutline /> Table QR Codes ({tables.length})</h2>
-            <button
-              className="qr-bulk-btn"
-              onClick={() => handleBulkDownload(tables, 'table')}
-              disabled={zipping}
-              data-testid="bulk-download-tables"
-            >
-              <IoCloudDownloadOutline /> {zipping ? 'Zipping...' : 'Download All as ZIP'}
-            </button>
-          </div>
-          <div className="qr-grid qr-grid-4" data-testid="table-qr-grid">
-            {tables
+      {/* QR Codes Grid */}
+      <div className="admin-section">
+        <div className="qr-section-header">
+          <h2 className="admin-section-title">
+            {selectedType === 'table' ? <IoGridOutline /> : selectedType === 'room' ? <IoBedOutline /> : null}
+            {' '}QR Codes ({filteredCount}) - {selectedMenu} Menu
+          </h2>
+          <button
+            className="qr-bulk-btn"
+            onClick={() => handleBulkDownload(filteredItems)}
+            disabled={zipping || filteredCount === 0}
+            data-testid="bulk-download"
+          >
+            <IoCloudDownloadOutline /> {zipping ? 'Zipping...' : 'Download All as ZIP'}
+          </button>
+        </div>
+        
+        {filteredCount === 0 ? (
+          <div className="qr-empty">No tables or rooms found.</div>
+        ) : (
+          <div className="qr-grid qr-grid-4" data-testid="qr-grid">
+            {filteredItems
               .sort((a, b) => {
                 const numA = parseInt(a.table_no.replace(/\D/g, ''), 10) || 0;
                 const numB = parseInt(b.table_no.replace(/\D/g, ''), 10) || 0;
                 return numA - numB;
               })
-              .map((t) => (
-                <TableQRCard key={t.id} item={t} type="table" url={buildTableUrl(t, 'table')} />
+              .map((item) => (
+                <TableQRCard 
+                  key={item.id} 
+                  item={item} 
+                  url={getQRUrl(item)}
+                  selectedMenu={selectedMenu}
+                />
               ))}
           </div>
-        </div>
-      )}
-
-      {/* Section C: Room QR Codes */}
-      {rooms.length > 0 && (
-        <div className="admin-section">
-          <div className="qr-section-header">
-            <h2 className="admin-section-title"><IoBedOutline /> Room QR Codes ({rooms.length})</h2>
-            <button
-              className="qr-bulk-btn"
-              onClick={() => handleBulkDownload(rooms, 'room')}
-              disabled={zipping}
-              data-testid="bulk-download-rooms"
-            >
-              <IoCloudDownloadOutline /> {zipping ? 'Zipping...' : 'Download All as ZIP'}
-            </button>
-          </div>
-          <div className="qr-grid qr-grid-4" data-testid="room-qr-grid">
-            {rooms
-              .sort((a, b) => {
-                const numA = parseInt(a.table_no.replace(/\D/g, ''), 10) || 0;
-                const numB = parseInt(b.table_no.replace(/\D/g, ''), 10) || 0;
-                return numA - numB;
-              })
-              .map((r) => (
-                <TableQRCard key={r.id} item={r} type="room" url={buildTableUrl(r, 'room')} />
-              ))}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Refresh */}
       <div className="qr-footer">
