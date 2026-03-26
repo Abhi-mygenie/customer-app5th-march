@@ -514,6 +514,25 @@ const OrderSuccess = () => {
             <span className="order-success-total">₹{liveOrderAmount || orderData.totalToPay || '0.00'}</span>
           </div>
 
+          {/* Payment Status - Only show for Razorpay payments */}
+          {orderData?.isPaid && (
+            <div className={`order-success-payment-status ${paymentVerified ? 'payment-success' : 'payment-pending'}`}>
+              {isVerifyingPayment ? (
+                <span className="payment-verifying">Verifying payment...</span>
+              ) : paymentVerified ? (
+                <>
+                  <IoCheckmarkCircle className="payment-icon success" />
+                  <span>Payment Successful</span>
+                </>
+              ) : (
+                <>
+                  <IoCloseOutline className="payment-icon failed" />
+                  <span>Payment Pending</span>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Table Number - inline */}
           {showTableNumber && (
             <div className="order-success-table-row">

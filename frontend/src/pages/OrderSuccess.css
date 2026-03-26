@@ -808,3 +808,43 @@
   font-weight: 700;
   color: var(--color-primary, #f97316);
 }
+
+/* Payment Status Styles */
+.order-success-payment-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.order-success-payment-status.payment-success {
+  background-color: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+.order-success-payment-status.payment-pending {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.payment-icon {
+  font-size: 16px;
+}
+
+.payment-icon.success {
+  color: #16a34a;
+}
+
+.payment-icon.failed {
+  color: #ef4444;
+}
+
+.payment-verifying {
+  color: #f97316;
+  font-style: italic;
+}
