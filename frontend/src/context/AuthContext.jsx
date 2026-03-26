@@ -145,6 +145,7 @@ export const AuthProvider = ({ children }) => {
     setUserType(null);
     setToken(null);
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('pos_token');  // Clear POS token on logout
   };
 
   // Direct setter for auth state (used when Login.jsx handles its own fetch)

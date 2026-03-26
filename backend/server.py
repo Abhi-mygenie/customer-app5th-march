@@ -61,6 +61,7 @@ class LoginResponse(BaseModel):
     success: bool
     user_type: str  # "customer" or "restaurant"
     token: str
+    pos_token: Optional[str] = None  # POS API token for admin operations (QR, etc.)
     user: dict
     restaurant_context: Optional[dict] = None  # Restaurant info for customer
 
@@ -324,10 +325,13 @@ def verify_otp(phone: str, otp: str) -> bool:
 # POS Token Refresh Helper
 # ============================================
 
-async def refresh_pos_token(email: str, password: str, user_id: str) -> Optional[str]:
+async def refresh_pos_token(email: str, password: str) -> Optional[str]:
     """
-    Call POS API login to get fresh mygenie_token and update in database.
+    Call POS API vendoremployee login to get fresh POS token.
     Returns new token on success, None on failure.
+    
+    NOTE: Token is NOT stored in database - it's returned to frontend
+    and stored in localStorage for admin operations (QR, etc.)
     """
     import httpx
     
@@ -336,10 +340,11 @@ async def refresh_pos_token(email: str, password: str, user_id: str) -> Optional
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as http_client:
+            # Use vendoremployee login endpoint with email field
             response = await http_client.post(
-                f"{pos_api_url}/auth/login",
+                f"{pos_api_url}/auth/vendoremployee/login",
                 json={
-                    "phone_or_email": email,
+                    "email": email,
                     "password": password
                 },
                 headers={
@@ -350,32 +355,17 @@ async def refresh_pos_token(email: str, password: str, user_id: str) -> Optional
             
             if response.status_code == 200:
                 data = response.json()
-                # POS API returns token in data.token or data.data.token
-                new_token = None
-                if data.get("data") and data["data"].get("token"):
-                    new_token = data["data"]["token"]
-                elif data.get("token"):
-                    new_token = data["token"]
+                # POS API returns token directly in response.token
+                new_token = data.get("token")
                 
                 if new_token:
-                    # Update token in database
-                    await db.users.update_one(
-                        {"id": user_id},
-                        {
-                            "$set": {
-                                "mygenie_token": new_token,
-                                "mygenie_token_updated_at": datetime.now(timezone.utc),
-                                "last_login": datetime.now(timezone.utc)
-                            }
-                        }
-                    )
-                    logging.info(f"[Auth] Refreshed POS token for user {user_id}")
+                    logging.info(f"[Auth] Got fresh POS token for {email}")
                     return new_token
             else:
-                logging.warning(f"[Auth] POS login failed with status {response.status_code}: {response.text[:200]}")
+                logging.warning(f"[Auth] POS vendoremployee login failed with status {response.status_code}: {response.text[:200]}")
                 
     except Exception as e:
-        logging.warning(f"[Auth] Failed to refresh POS token: {str(e)}")
+        logging.warning(f"[Auth] Failed to get POS token: {str(e)}")
     
     return None
 
@@ -539,17 +529,18 @@ async def unified_login(request: LoginRequest):
             raise HTTPException(status_code=401, detail="Invalid password")
         
         # Refresh POS token on every login
-        # This ensures mygenie_token is always fresh for POS API calls
+        # This ensures pos_token is always fresh for POS API calls (QR, etc.)
         user_email = user.get("email", identifier)
-        new_pos_token = await refresh_pos_token(user_email, request.password, user["id"])
-        if not new_pos_token:
-            logging.warning(f"[Auth] Could not refresh POS token for {user_email}, using existing token")
+        pos_token = await refresh_pos_token(user_email, request.password)
+        if not pos_token:
+            logging.warning(f"[Auth] Could not get POS token for {user_email}")
         
         token = create_token(user["id"], "restaurant")
         return LoginResponse(
             success=True,
             user_type="restaurant",
             token=token,
+            pos_token=pos_token,  # Return POS token to frontend for localStorage
             user={
                 "id": user["id"],
                 "restaurant_id": user.get("restaurant_id", ""),
@@ -800,14 +791,18 @@ async def get_order_details(order_id: str):
         raise HTTPException(status_code=503, detail=f"MyGenie API unavailable: {str(e)}")
 
 @api_router.get("/table-config")
-async def get_table_config(user: dict = Depends(get_restaurant_user)):
-    """Fetch table/room config from POS API using stored mygenie_token"""
+async def get_table_config(
+    user: dict = Depends(get_restaurant_user),
+    x_pos_token: Optional[str] = Header(None, alias="X-POS-Token")
+):
+    """Fetch table/room config from POS API using POS token from header"""
     import httpx
     from urllib.parse import unquote, urlparse
 
-    mygenie_token = user.get("mygenie_token")
+    # Use token from header (preferred) or fallback to db.users (legacy)
+    mygenie_token = x_pos_token or user.get("mygenie_token")
     if not mygenie_token:
-        raise HTTPException(status_code=400, detail="No POS token found for this restaurant")
+        raise HTTPException(status_code=400, detail="No POS token provided. Please logout and login again.")
 
     # Derive v2 base URL from MYGENIE_API_URL (replace /api/v1 with /api/v2)
     base_url = MYGENIE_API_URL.replace("/api/v1", "")

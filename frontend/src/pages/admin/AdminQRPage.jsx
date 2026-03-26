@@ -92,8 +92,14 @@ const AdminQRPage = () => {
     setLoading(true);
     setError(null);
     try {
+      // Get POS token from localStorage (stored during login)
+      const posToken = localStorage.getItem('pos_token');
+      
       const res = await fetch(`${API_URL}/api/table-config`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'X-POS-Token': posToken || ''  // Pass POS token for POS API calls
+        },
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));

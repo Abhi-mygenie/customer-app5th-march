@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 26, 2026 (Session 5 - POS Token Refresh + TS Fix)
+## Last Updated: March 26, 2026 (Session 5 - POS Token Architecture Fix)
 
 ---
 
@@ -12,12 +12,72 @@
 
 ---
 
-## Quick Summary - Session 5 (BUG-031, BUG-032)
+## Quick Summary - Session 5 (BUG-031, BUG-032, BUG-033)
 
 | Bug ID | Severity | Summary | Status |
 |--------|----------|---------|--------|
 | BUG-031 | 🔴 P0 | POS token not refreshed on login - QR page fails | ✅ Fixed |
 | BUG-032 | 🔴 P0 | TypeScript compilation error - Property 'data' does not exist | ✅ Fixed |
+| BUG-033 | 🔴 P0 | POS token architecture - store in localStorage not database | ✅ Fixed |
+
+---
+
+## BUG-033: POS Token Architecture Redesign
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-033 |
+| **Date Reported** | 2026-03-26 |
+| **Date Fixed** | 2026-03-26 |
+| **Severity** | P0 - Critical (Business Blocking) |
+| **Status** | ✅ Fixed |
+
+**Problem:**
+- POS token (`mygenie_token`) was stored in `db.users` during onboarding
+- Token was never refreshed, became stale/expired
+- QR page failed with "POS API error" (401 Unauthorized)
+- Wrong POS login endpoint was used (`/auth/login` instead of `/auth/vendoremployee/login`)
+
+**Root Cause:**
+- Token stored in database instead of localStorage
+- Token not cleared on logout
+- Wrong POS API endpoint for admin login
+
+**Architecture Change:**
+
+| Aspect | Before (Wrong) | After (Correct) |
+|--------|----------------|-----------------|
+| POS token storage | `db.users.mygenie_token` | `localStorage['pos_token']` |
+| When token obtained | Once during onboarding | Every admin login |
+| POS login endpoint | `/api/v1/auth/login` | `/api/v1/auth/vendoremployee/login` |
+| Payload format | `{"phone_or_email": ...}` | `{"email": ...}` |
+| Cleared on logout | No | Yes |
+
+**Files Changed:**
+
+| File | Change |
+|------|--------|
+| `server.py` | `LoginResponse` model - added `pos_token` field |
+| `server.py` | `refresh_pos_token()` - changed endpoint and payload, removed DB storage |
+| `server.py` | `unified_login()` - return `pos_token` to frontend |
+| `server.py` | `/api/table-config` - accept `X-POS-Token` header |
+| `Login.jsx` | Store `pos_token` in localStorage after login |
+| `AuthContext.jsx` | Clear `pos_token` on logout |
+| `AdminQRPage.jsx` | Pass `X-POS-Token` header to API |
+
+**New Flow:**
+```
+Login → Our Backend verifies password + calls POS vendoremployee/login
+      → Returns {app_token, pos_token}
+      → Frontend stores both in localStorage
+      
+QR Page → Gets pos_token from localStorage
+        → Passes X-POS-Token header to our backend
+        → Backend uses it for POS API call
+        → QR codes load successfully
+        
+Logout → Clears auth_token and pos_token from localStorage
+```
 
 ---
 

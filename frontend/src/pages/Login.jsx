@@ -62,6 +62,11 @@ const Login = () => {
       if (!res.ok) throw new Error(data.detail || 'Login failed');
 
       setAuth(data.token, data.user, data.user_type);
+      
+      // Store POS token for admin operations (QR, etc.)
+      if (data.pos_token) {
+        localStorage.setItem('pos_token', data.pos_token);
+      }
 
       if (data.user_type === 'restaurant') {
         navigate('/admin/settings');

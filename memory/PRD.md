@@ -1,6 +1,6 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 26, 2026 (Session 5 - POS Token Refresh Fix)
+## Last Updated: March 26, 2026 (Session 5 - POS Token Architecture Fix)
 
 ---
 
@@ -12,7 +12,7 @@
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture, data flow |
 | [CHANGELOG_TRANSFORM_V1.md](./CHANGELOG_TRANSFORM_V1.md) | Transform & Refactor changes |
 | [BUG_TRACKER.md](./BUG_TRACKER.md) | Bug history and fixes |
-| [API_MAPPING.md](./API_MAPPING.md) | API field mappings |
+| [API_MAPPING.md](./API_MAPPING.md) | API field mappings + Token Architecture |
 | [CODE_AUDIT.md](./CODE_AUDIT.md) | Code quality + Critical Hardcodings (Section 11) |
 | [TEST_CASES.md](./TEST_CASES.md) | **Test cases & Pre-release checklist** |
 
@@ -26,7 +26,7 @@
 | Transform Layer | ✅ Complete |
 | Multi-menu Support | ✅ Restored |
 | Restaurant 716 Fix | ✅ Fixed (BUG-030) |
-| POS Token Refresh | ✅ Fixed (BUG-031) |
+| POS Token Architecture | ✅ Fixed (BUG-033) |
 | Code Cleanup | ✅ -2,862 lines (Session 4) |
 | Documentation | ✅ Updated |
 | P0 Bugs | ✅ None |

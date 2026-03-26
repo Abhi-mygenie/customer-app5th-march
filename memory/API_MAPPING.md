@@ -1,6 +1,27 @@
 # API Mapping Document
 
-## Last Updated: March 25, 2026 (Session 3 - Transform & Refactor v1)
+## Last Updated: March 26, 2026 (Session 5 - POS Token Architecture)
+
+---
+
+## IMPORTANT: Token Architecture (Updated Session 5)
+
+### Two Token Types
+
+| Token | Storage | Purpose | Obtained |
+|-------|---------|---------|----------|
+| `auth_token` | localStorage | Our backend API auth | On login (our backend) |
+| `pos_token` | localStorage | POS API auth (admin ops) | On login (POS vendoremployee/login) |
+| `order_auth_token` | localStorage | POS API auth (customer orders) | Hardcoded credentials in authToken.js |
+
+### Admin Login Flow
+```
+1. Frontend → Our Backend /api/auth/login
+2. Our Backend → Verify password (db.users)
+3. Our Backend → POS API /auth/vendoremployee/login
+4. Our Backend → Return {token, pos_token, user}
+5. Frontend → Store auth_token, pos_token in localStorage
+```
 
 ---
 
@@ -729,10 +750,52 @@ See [ROADMAP.md](./ROADMAP.md) for full details.
 
 ---
 
+## 9. Vendor Employee Login API (NEW - Session 5)
+
+### Endpoint
+```
+POST https://preprod.mygenie.online/api/v1/auth/vendoremployee/login
+```
+
+### Purpose
+Admin login to get POS token for admin operations (QR codes, table config, etc.)
+
+### Request
+```json
+{
+    "email": "owner@restaurant.com",
+    "password": "xxxxx"
+}
+```
+
+### Response
+```json
+{
+    "token": "ru5XDqaKlr0k6uDEgrL5n...",
+    "name": "Owner Name",
+    "email": "owner@restaurant.com",
+    "restaurant_id": 478,
+    "permissions": ["order_edit", "delivery_man", "clear_payment"]
+}
+```
+
+### Used In
+| File | Purpose |
+|------|---------|
+| `server.py` (`refresh_pos_token()`) | Called during admin login to get fresh POS token |
+
+### Notes
+- This is different from `/auth/login` which is for customer orders
+- Token returned to frontend and stored in `localStorage['pos_token']`
+- Cleared on logout
+
+---
+
 ## Document History
 
 | Date | Session | Changes |
 |------|---------|---------|
+| Mar 26, 2026 | Session 5 | Added Token Architecture section, Vendor Employee Login API |
 | Mar 25, 2026 | Session 4 | Added field usage summary tables for Variations & Add-ons |
 | Mar 25, 2026 | Session 3 | Added transformer layer docs, property mappings |
 | Mar 25, 2026 | Session 2 | Initial comprehensive mapping |

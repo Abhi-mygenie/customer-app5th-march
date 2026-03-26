@@ -735,5 +735,6 @@
 
 | Date | Session | Changes |
 |------|---------|---------|
+| Mar 26, 2026 | Session 5 | Updated POS token flow test cases for localStorage architecture |
 | Mar 26, 2026 | Session 5 | Added Admin Login & POS Token test cases (TC-120 to TC-123) |
 | Mar 25, 2026 | Session 4 | Initial test cases document created |
