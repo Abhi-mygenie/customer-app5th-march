@@ -954,10 +954,56 @@ const ReviewOrder = () => {
           order_id: response.order_id,
           total_amount: response.total_amount
         });
-        // TODO: Step 2 - Open Razorpay SDK here
+        
+        // Open Razorpay checkout
+        const options = {
+          key: restaurant.razorpay.razorpay_key,
+          amount: response.total_amount * 100, // Razorpay expects amount in paise
+          currency: 'INR',
+          name: restaurant?.name || 'Restaurant',
+          description: `Order #${response.order_id}`,
+          order_id: response.razorpay_id, // Razorpay order ID from POS
+          handler: function (paymentResponse) {
+            // Payment successful
+            console.log('[Razorpay] Payment success:', paymentResponse);
+            // Clear cart and navigate to success page
+            clearCart();
+            navigate(`/${restaurantId}/order-success`, {
+              state: {
+                orderData: {
+                  orderId: response.order_id,
+                  totalToPay: response.total_amount,
+                  paymentId: paymentResponse.razorpay_payment_id,
+                  razorpayOrderId: paymentResponse.razorpay_order_id,
+                  razorpaySignature: paymentResponse.razorpay_signature,
+                  isPaid: true
+                }
+              }
+            });
+          },
+          prefill: {
+            name: customerName || '',
+            contact: customerPhone || ''
+          },
+          theme: {
+            color: restaurant?.primaryColor || '#E8531E'
+          },
+          modal: {
+            ondismiss: function () {
+              console.log('[Razorpay] Payment modal closed');
+              toast.error('Payment cancelled');
+              setIsPlacingOrder(false);
+              isPlacingOrderRef.current = false;
+            }
+          }
+        };
+
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
+        return; // Don't proceed to success page yet - wait for payment
       }
 
-      // Clear cart after successful order
+      // Clear cart after successful order (non-payment flow)
       clearCart();
 
       // Prepare new items for order success page
