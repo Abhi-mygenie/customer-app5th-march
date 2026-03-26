@@ -800,3 +800,135 @@ Admin login to get POS token for admin operations (QR codes, table config, etc.)
 | Mar 25, 2026 | Session 3 | Added transformer layer docs, property mappings |
 | Mar 25, 2026 | Session 2 | Initial comprehensive mapping |
 
+
+---
+
+## 10. Razorpay Payment APIs (NEW - Session 7)
+
+### 10a. Create Razorpay Order
+
+**Endpoint:**
+```
+POST https://preprod.mygenie.online/api/v1/razor-pay/create-razor-order
+```
+
+**Purpose:**
+Get actual Razorpay order_id for SDK after placing order.
+
+**Request:**
+```json
+{
+  "order_id": "695753"  // POS order ID from place order response
+}
+```
+
+**Response:**
+```json
+{
+  "key": "rzp_live_9lMs01gisZhwQX",
+  "order_id": "order_SVqGm8v5ZpyLxO",  // Actual Razorpay order ID for SDK
+  "amount": 473,
+  "amount_in_paise": 47300
+}
+```
+
+**Used In:**
+| File | Purpose |
+|------|---------|
+| `ReviewOrder.jsx` | After place order, before opening Razorpay SDK |
+
+---
+
+### 10b. Verify Payment
+
+**Endpoint:**
+```
+POST https://preprod.mygenie.online/api/v1/razor-pay/verify-payment
+```
+
+**Purpose:**
+Verify payment after Razorpay SDK callback.
+
+**Request:**
+```json
+{
+  "razorpay_order_id": "order_SVqGm8v5ZpyLxO",
+  "razorpay_payment_id": "pay_XXXXXXX",
+  "razorpay_signature": "signature_xxxxx"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "status": "success",
+  "message": "Payment verified"
+}
+```
+
+**Response (Failure):**
+```json
+{
+  "status": "failed",
+  "message": "Signature verification failed"
+}
+```
+
+**Used In:**
+| File | Purpose |
+|------|---------|
+| `OrderSuccess.jsx` | On page load, verify payment |
+
+---
+
+## 11. Table Config API - QR URLs (Updated - Session 7)
+
+### Endpoint
+```
+GET https://preprod.mygenie.online/api/v2/vendoremployee/restaurant-settings/table-config
+Authorization: Bearer {pos_token}
+```
+
+### Response - QR Code URLs (NEW)
+
+Each table/room now includes pre-built QR URLs for each menu master:
+
+```json
+{
+  "tables": [
+    {
+      "id": 6182,
+      "table_no": "e3",
+      "rtype": "RM",
+      "qr_code_urls": {
+        "Normal": "https://restaurant.mygenie.online/478?tableId=6182&tableName=e3&type=room&orderType=dinein&foodFor=Normal",
+        "Party": "https://restaurant.mygenie.online/478?tableId=6182&tableName=e3&type=room&orderType=dinein&foodFor=Party",
+        "Premium": "https://restaurant.mygenie.online/478?tableId=6182&tableName=e3&type=room&orderType=dinein&foodFor=Premium"
+      }
+    }
+  ]
+}
+```
+
+**Key Fields:**
+| Field | Type | Purpose |
+|-------|------|---------|
+| `qr_code_urls` | object | Map of menu master → QR URL |
+| `foodFor` | URL param | Menu master filter for customer app |
+
+**Used In:**
+| File | Purpose |
+|------|---------|
+| `AdminQRPage.jsx` | Generate QR codes with correct URLs |
+
+---
+
+## Document History
+
+| Date | Session | Changes |
+|------|---------|---------|
+| Mar 26, 2026 | Session 7 | Added Razorpay APIs (create-razor-order, verify-payment), Updated Table Config with qr_code_urls |
+| Mar 26, 2026 | Session 5 | Added Token Architecture section, Vendor Employee Login API |
+| Mar 25, 2026 | Session 4 | Added field usage summary tables for Variations & Add-ons |
+| Mar 25, 2026 | Session 3 | Added transformer layer docs, property mappings |
+| Mar 25, 2026 | Session 2 | Initial comprehensive mapping |

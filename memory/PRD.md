@@ -1,6 +1,6 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 26, 2026 (Session 6 - Fresh Setup)
+## Last Updated: March 26, 2026 (Session 7 - Razorpay & QR Enhancements)
 
 ---
 
@@ -22,8 +22,51 @@
 | Multi-menu Support | ✅ Restored |
 | Restaurant 716 Fix | ✅ Fixed (BUG-030) |
 | POS Token Architecture | ✅ Fixed (BUG-033) |
+| Razorpay Payment Integration | ✅ Complete (Session 7) |
+| QR Code Filters | ✅ Complete (Session 7) |
 | P0 Bugs | ✅ None |
 | P1 Bugs | 🟡 1 (QR URL - Parked) |
+
+---
+
+## Session 7 Completed Features
+
+### 1. Razorpay Payment Integration ✅
+
+**Flow:**
+```
+1. Check restaurant.razorpay.razorpay_key exists → Show "Pay & Proceed"
+2. Place Order API → { order_id, razorpay_id, total_amount }
+3. Create Razorpay Order API → { order_id: "order_XXXXX" }
+4. Open Razorpay SDK with actual order_id
+5. Payment Success → Navigate to Order Success page
+6. Verify Payment API → Confirm payment
+```
+
+**Files Changed:**
+- `/app/frontend/public/index.html` - Added Razorpay SDK script
+- `/app/frontend/src/pages/ReviewOrder.jsx` - Button logic + payment flow
+- `/app/frontend/src/pages/OrderSuccess.jsx` - Payment verification + status UI
+- `/app/frontend/src/pages/OrderSuccess.css` - Payment status styles
+
+**Test Restaurant:**
+- Restaurant 510 (Mygenie Dev) - has Razorpay configured
+- Credentials: owner@devmygenie.com / Qplazm@10
+
+### 2. QR Code Page Enhancements ✅
+
+**New Filters:**
+- Type filter: All / Tables / Rooms
+- Menu Master filter: Dropdown with available menus (Normal, Party, Premium, etc.)
+
+**Changes:**
+- Uses QR URLs directly from POS API (`qr_code_urls[selectedMenu]`)
+- Removed manual URL building
+- Bulk download includes selected menu in filename
+
+**Files Changed:**
+- `/app/frontend/src/pages/admin/AdminQRPage.jsx`
+- `/app/frontend/src/pages/admin/AdminPages.css`
 
 ---
 
@@ -45,6 +88,7 @@
 
 ## Admin Credentials
 - Restaurant 709 (Young Monk): email=owner@youngmonk.com, password=admin123
+- Restaurant 510 (Mygenie Dev): email=owner@devmygenie.com, password=Qplazm@10
 - Customer test: phone=7505242126, restaurant_id=709
 
 ---

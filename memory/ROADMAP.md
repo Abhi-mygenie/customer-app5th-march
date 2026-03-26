@@ -1,6 +1,6 @@
 # Project Roadmap
 
-## Last Updated: March 25, 2026
+## Last Updated: March 26, 2026 (Session 7)
 
 ---
 
@@ -19,6 +19,8 @@ This document outlines all pending tasks, their priorities, risks, and recommend
 | Multi-menu Support | ✅ Restored |
 | Documentation | ✅ Updated |
 | Backup Cleanup | ✅ Done |
+| Razorpay Payment Integration | ✅ Complete (Session 7) |
+| QR Code Page Filters | ✅ Complete (Session 7) |
 
 ---
 

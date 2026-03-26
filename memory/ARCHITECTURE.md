@@ -249,3 +249,118 @@ const status = (api as any).food_status ?? api.foodStatus;
 3. **Strict Types**: Remove `any` types
 4. **Custom Hooks**: Extract `useOrderCalculations`, `usePreviousOrder`
 5. **Component Decomposition**: Split ReviewOrder.jsx (1600+ lines)
+
+---
+
+## Payment Flow Architecture (NEW - Session 7)
+
+### Razorpay Payment Integration
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         REVIEW ORDER PAGE                                    │
+│                                                                             │
+│  Check: restaurant.razorpay.razorpay_key exists?                            │
+│         │                                                                   │
+│         ├── NO  → Button: "Place Order" (existing COD flow)                 │
+│         │                                                                   │
+│         └── YES → Button: "Pay & Proceed" (Razorpay flow)                   │
+│                   │                                                         │
+│                   ▼                                                         │
+│         1. Place Order API → { order_id, razorpay_id, total_amount }        │
+│                   │                                                         │
+│                   ▼                                                         │
+│         2. Create Razorpay Order API → { order_id: "order_XXXXX" }          │
+│                   │                                                         │
+│                   ▼                                                         │
+│         3. Open Razorpay SDK with actual order_id                           │
+│                   │                                                         │
+│                   ├── Success → Navigate to Order Success                   │
+│                   └── Cancel → Stay on page, show error toast               │
+└─────────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ORDER SUCCESS PAGE                                   │
+│                                                                             │
+│  On Load (if isPaid: true):                                                 │
+│         │                                                                   │
+│         ▼                                                                   │
+│  4. Verify Payment API                                                      │
+│         │                                                                   │
+│         ├── status: "success" → Show "Payment Successful" (green)           │
+│         └── status: "failed" → Show "Payment Pending" (red)                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Payment Data Flow
+
+| Step | Component | Data |
+|------|-----------|------|
+| 1 | ReviewOrder.jsx | Sends: order payload |
+| 1 | Place Order API | Returns: `{ order_id, razorpay_id, total_amount }` |
+| 2 | ReviewOrder.jsx | Sends: `{ order_id }` |
+| 2 | Create Razorpay Order | Returns: `{ order_id: "order_XXX", amount_in_paise }` |
+| 3 | Razorpay SDK | Returns: `{ razorpay_payment_id, razorpay_order_id, razorpay_signature }` |
+| 4 | OrderSuccess.jsx | Sends: `{ razorpay_order_id, razorpay_payment_id, razorpay_signature }` |
+| 4 | Verify Payment | Returns: `{ status: "success/failed" }` |
+
+### Files Involved
+
+| File | Responsibility |
+|------|----------------|
+| `ReviewOrder.jsx` | Button logic, place order, create razorpay order, open SDK |
+| `OrderSuccess.jsx` | Verify payment, show payment status |
+| `index.html` | Razorpay SDK script |
+
+---
+
+## QR Code Architecture (Updated - Session 7)
+
+### QR Code Generation Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ADMIN QR PAGE                                        │
+│                                                                             │
+│  Filters:                                                                   │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  Type: [All] [Tables] [Rooms]     Menu: [Normal ▼]                  │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Data Flow:                                                                 │
+│  1. Fetch /api/table-config → Returns tables/rooms with qr_code_urls       │
+│  2. Extract menu masters from qr_code_urls keys                            │
+│  3. Filter by type (all/table/room)                                        │
+│  4. Use qr_code_urls[selectedMenu] for QR generation                       │
+│  5. qrcode.react renders QR codes client-side                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### QR URL Structure (from POS API)
+
+```
+https://{subdomain}.mygenie.online/{restaurantId}
+  ?tableId={id}
+  &tableName={table_no}
+  &type={room|table}
+  &orderType=dinein
+  &foodFor={MenuMaster}  ← Menu filter
+```
+
+### Key Change (Session 7)
+
+| Before | After |
+|--------|-------|
+| Building URLs manually | Using `qr_code_urls` from POS API directly |
+| No menu filtering | Filter by menu master from dropdown |
+| Separate table/room sections | Combined with type filter |
+
+---
+
+## Document History
+
+| Date | Session | Changes |
+|------|---------|---------|
+| Mar 26, 2026 | Session 7 | Added Payment Flow Architecture, Updated QR Code Architecture |
+| Mar 25, 2026 | Session 3 | Initial architecture documentation |

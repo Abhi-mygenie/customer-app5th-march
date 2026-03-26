@@ -738,3 +738,129 @@
 | Mar 26, 2026 | Session 5 | Updated POS token flow test cases for localStorage architecture |
 | Mar 26, 2026 | Session 5 | Added Admin Login & POS Token test cases (TC-120 to TC-123) |
 | Mar 25, 2026 | Session 4 | Initial test cases document created |
+
+---
+
+## 16. Razorpay Payment Test Cases (NEW - Session 7)
+
+### TC-130: Payment Button - Restaurant With Razorpay
+| Field | Details |
+|-------|---------|
+| **ID** | TC-130 |
+| **Priority** | P0 - Critical |
+| **Restaurant** | 510 (Mygenie Dev) - has Razorpay configured |
+| **Steps** | 1. Add items to cart<br>2. Go to Review Order |
+| **Expected** | Button shows "Pay & Proceed ₹XXX" |
+
+### TC-131: Payment Button - Restaurant Without Razorpay
+| Field | Details |
+|-------|---------|
+| **ID** | TC-131 |
+| **Priority** | P0 - Critical |
+| **Restaurant** | 709 (Young Monk) - no Razorpay |
+| **Steps** | 1. Add items to cart<br>2. Go to Review Order |
+| **Expected** | Button shows "Place Order ₹XXX" (COD flow) |
+
+### TC-132: Razorpay SDK Opens
+| Field | Details |
+|-------|---------|
+| **ID** | TC-132 |
+| **Priority** | P0 - Critical |
+| **Restaurant** | 510 |
+| **Steps** | 1. Click "Pay & Proceed" |
+| **Expected** | Razorpay checkout modal opens |
+
+### TC-133: Payment Success - Redirect to OrderSuccess
+| Field | Details |
+|-------|---------|
+| **ID** | TC-133 |
+| **Priority** | P0 - Critical |
+| **Steps** | 1. Complete payment in Razorpay |
+| **Expected** | Redirects to Order Success page with payment details |
+
+### TC-134: Payment Cancel - Stay on Page
+| Field | Details |
+|-------|---------|
+| **ID** | TC-134 |
+| **Priority** | P1 |
+| **Steps** | 1. Click "Pay & Proceed"<br>2. Close Razorpay modal |
+| **Expected** | Stays on Review Order page, shows "Payment cancelled" toast |
+
+### TC-135: Payment Verification - Success
+| Field | Details |
+|-------|---------|
+| **ID** | TC-135 |
+| **Priority** | P0 - Critical |
+| **Steps** | 1. Complete payment<br>2. View Order Success page |
+| **Expected** | Shows "Payment Successful" badge (green) |
+
+### TC-136: Payment Verification - Pending
+| Field | Details |
+|-------|---------|
+| **ID** | TC-136 |
+| **Priority** | P1 |
+| **Steps** | 1. Complete payment<br>2. Verification fails |
+| **Expected** | Shows "Payment Pending" badge (red) |
+
+---
+
+## 17. QR Code Filter Test Cases (NEW - Session 7)
+
+### TC-140: Type Filter - All
+| Field | Details |
+|-------|---------|
+| **ID** | TC-140 |
+| **Priority** | P1 |
+| **Steps** | 1. Go to Admin QR page<br>2. Click "All" filter |
+| **Expected** | Shows all tables AND rooms |
+
+### TC-141: Type Filter - Tables Only
+| Field | Details |
+|-------|---------|
+| **ID** | TC-141 |
+| **Priority** | P1 |
+| **Steps** | 1. Click "Tables" filter |
+| **Expected** | Shows only tables (rtype: TB) |
+
+### TC-142: Type Filter - Rooms Only
+| Field | Details |
+|-------|---------|
+| **ID** | TC-142 |
+| **Priority** | P1 |
+| **Steps** | 1. Click "Rooms" filter |
+| **Expected** | Shows only rooms (rtype: RM) |
+
+### TC-143: Menu Master Dropdown
+| Field | Details |
+|-------|---------|
+| **ID** | TC-143 |
+| **Priority** | P1 |
+| **Steps** | 1. Check Menu dropdown |
+| **Expected** | Shows all available menu masters (Normal, Party, Premium, etc.) |
+
+### TC-144: QR Code Uses Correct URL
+| Field | Details |
+|-------|---------|
+| **ID** | TC-144 |
+| **Priority** | P0 - Critical |
+| **Steps** | 1. Select "Party" menu<br>2. Download QR code<br>3. Scan QR |
+| **Expected** | URL contains `foodFor=Party` |
+
+### TC-145: Bulk Download - Filtered
+| Field | Details |
+|-------|---------|
+| **ID** | TC-145 |
+| **Priority** | P1 |
+| **Steps** | 1. Filter by Tables<br>2. Select "Premium" menu<br>3. Download All as ZIP |
+| **Expected** | ZIP contains only tables, filenames include "Premium" |
+
+---
+
+## Document History
+
+| Date | Session | Changes |
+|------|---------|---------|
+| Mar 26, 2026 | Session 7 | Added Razorpay Payment Test Cases (TC-130 to TC-136), QR Filter Test Cases (TC-140 to TC-145) |
+| Mar 26, 2026 | Session 5 | Updated POS token flow test cases for localStorage architecture |
+| Mar 26, 2026 | Session 5 | Added Admin Login & POS Token test cases (TC-120 to TC-123) |
+| Mar 25, 2026 | Session 4 | Initial test cases document created |
