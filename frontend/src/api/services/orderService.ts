@@ -253,7 +253,7 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
     // Use different payload structure for multi-menu restaurants
     if (isMultiMenu) {
       // Multi-menu uses a different payload structure with tax calculations per item
-      const multiMenuPayload = buildMultiMenuPayload(orderData, gstEnabled);
+      const multiMenuPayload = buildMultiMenuPayload(orderData, gstEnabled) as { data: any };
       formData.append('data', JSON.stringify(multiMenuPayload.data));
 
       const endpoint = ENDPOINTS.PLACE_ORDER_AUTOPAID 
