@@ -943,6 +943,20 @@ const ReviewOrder = () => {
         });
       }
 
+      // DEBUG: Log full response to verify razorpay_id
+      console.log('[PlaceOrder Response]', response);
+
+      // Check if razorpay_id exists - payment flow needed
+      if (response?.razorpay_id && restaurant?.razorpay?.razorpay_key) {
+        console.log('[Razorpay] Payment required:', {
+          razorpay_id: response.razorpay_id,
+          razorpay_key: restaurant.razorpay.razorpay_key,
+          order_id: response.order_id,
+          total_amount: response.total_amount
+        });
+        // TODO: Step 2 - Open Razorpay SDK here
+      }
+
       // Clear cart after successful order
       clearCart();
 
