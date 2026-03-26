@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 26, 2026 (Session 5 - POS Token Refresh Fix)
+## Last Updated: March 26, 2026 (Session 5 - POS Token Refresh + TS Fix)
 
 ---
 
@@ -12,11 +12,67 @@
 
 ---
 
-## Quick Summary - Session 5 (BUG-031)
+## Quick Summary - Session 5 (BUG-031, BUG-032)
 
 | Bug ID | Severity | Summary | Status |
 |--------|----------|---------|--------|
 | BUG-031 | 🔴 P0 | POS token not refreshed on login - QR page fails | ✅ Fixed |
+| BUG-032 | 🔴 P0 | TypeScript compilation error - Property 'data' does not exist | ✅ Fixed |
+
+---
+
+## BUG-032: TypeScript Compilation Error in orderService.ts
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-032 |
+| **Date Reported** | 2026-03-26 |
+| **Date Fixed** | 2026-03-26 |
+| **Severity** | P0 - Critical (App won't compile) |
+| **Status** | ✅ Fixed |
+| **File** | `/app/frontend/src/api/services/orderService.ts` |
+| **Line** | 257 |
+
+**Error Message:**
+```
+TS2339: Property 'data' does not exist on type 'Object'.
+```
+
+**Problem:**
+- `buildMultiMenuPayload()` function returns a generic `Object` type
+- TypeScript doesn't know the object has a `.data` property
+- Accessing `multiMenuPayload.data` causes compilation error
+- App fails to start
+
+**Root Cause:**
+```typescript
+// helpers.js returns Object type (no TypeScript definition)
+export const buildMultiMenuPayload = (orderData, gstEnabled) => {
+  return {
+    data: { ... }  // TypeScript doesn't know this structure
+  };
+};
+
+// orderService.ts tries to access .data
+const multiMenuPayload = buildMultiMenuPayload(orderData, gstEnabled);
+formData.append('data', JSON.stringify(multiMenuPayload.data));  // ❌ TS Error
+```
+
+**Fix Applied:**
+```typescript
+// Added type assertion to tell TypeScript the expected shape
+const multiMenuPayload = buildMultiMenuPayload(orderData, gstEnabled) as { data: any };
+formData.append('data', JSON.stringify(multiMenuPayload.data));  // ✅ Works
+```
+
+**Why This Fix:**
+- Type assertion `as { data: any }` tells TypeScript "trust me, this object has a data property"
+- Proper fix would be to add TypeScript types to `helpers.js` (convert to `.ts`)
+- This is a quick fix that unblocks the app; full TS migration is in backlog (P2-5)
+
+**Related:**
+- This is part of the mixed JS/TS codebase challenge documented in `ARCHITECTURE.md`
+- Full TypeScript migration planned in `ROADMAP.md` as P2-5
 
 ---
 
