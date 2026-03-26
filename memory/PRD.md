@@ -88,3 +88,26 @@ Add "PAY ₹XXX" button on Order Success page when payment verification fails.
 - razorpay_key (from restaurant config)
 - total_amount (from orderData)
 
+
+### PARKED-002: Payment Status Persistence on Refresh
+
+**Status:** Planned  
+**Priority:** P2  
+**Date Parked:** March 26, 2026
+
+**Issue:**  
+On page refresh, `location.state` is lost → payment status not re-verified.
+
+**Options:**
+| Option | Approach |
+|--------|----------|
+| A | Store payment data in sessionStorage |
+| B | Fetch payment_status from /order-details API (Recommended) |
+| C | Re-verify using stored razorpay IDs |
+
+**Recommendation:** Option B - Backend should return payment_status in order details API.
+
+**Files to Modify:**
+- `/app/frontend/src/pages/OrderSuccess.jsx`
+- Possibly POS `/order-details` API
+
