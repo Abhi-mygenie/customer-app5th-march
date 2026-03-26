@@ -50,7 +50,7 @@
 - **Default Branch**: `6marchv1`
 - **Database**: MongoDB at `mongodb://mygenie_admin:QplazmMzalpq@52.66.232.149:27017/mygenie`
 - **Tech Stack**: React (Frontend) + FastAPI (Backend) + MongoDB + TypeScript (API Layer)
-- **Preview URL**: https://customer-5th-march.preview.emergentagent.com
+- **Preview URL**: https://dual-token-auth.preview.emergentagent.com
 
 ---
 
@@ -426,10 +426,10 @@
 ## Documentation URLs
 | Document | URL |
 |----------|-----|
-| Bug Tracker | https://customer-5th-march.preview.emergentagent.com/api/docs/bug-tracker |
-| API Mapping | https://customer-5th-march.preview.emergentagent.com/api/docs/api-mapping |
-| Code Audit | https://customer-5th-march.preview.emergentagent.com/api/docs/code-audit |
-| PRD | https://customer-5th-march.preview.emergentagent.com/api/docs/prd |
+| Bug Tracker | https://dual-token-auth.preview.emergentagent.com/api/docs/bug-tracker |
+| API Mapping | https://dual-token-auth.preview.emergentagent.com/api/docs/api-mapping |
+| Code Audit | https://dual-token-auth.preview.emergentagent.com/api/docs/code-audit |
+| PRD | https://dual-token-auth.preview.emergentagent.com/api/docs/prd |
 
 ---
 

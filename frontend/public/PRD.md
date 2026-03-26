@@ -9,7 +9,7 @@
 - **Default Branch**: `6marchv1`
 - **Database**: MongoDB at `mongodb://mygenie_admin:QplazmMzalpq@52.66.232.149:27017/mygenie`
 - **Tech Stack**: React (Frontend) + FastAPI (Backend) + MongoDB
-- **Preview URL**: https://order-success-fix.preview.emergentagent.com
+- **Preview URL**: https://dual-token-auth.preview.emergentagent.com
 
 ---
 

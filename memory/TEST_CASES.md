@@ -675,7 +675,7 @@
 
 | Environment | URL | Purpose |
 |-------------|-----|---------|
-| Preview | https://customer-5th-march.preview.emergentagent.com | Development testing |
+| Preview | https://dual-token-auth.preview.emergentagent.com | Development testing |
 | Production | TBD | Live environment |
 
 ### Test Restaurants
