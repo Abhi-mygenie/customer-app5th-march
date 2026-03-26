@@ -1616,7 +1616,9 @@ const ReviewOrder = () => {
               ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
               : (isEditMode 
                   ? `Update Order ₹${roundedTotal.toFixed(2)}` 
-                  : `Place Order ₹${roundedTotal.toFixed(2)}`
+                  : (restaurant?.razorpay?.razorpay_key 
+                      ? `Pay & Proceed ₹${roundedTotal.toFixed(2)}`
+                      : `Place Order ₹${roundedTotal.toFixed(2)}`)
                 )
             }
           </button>
