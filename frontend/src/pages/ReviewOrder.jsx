@@ -955,52 +955,78 @@ const ReviewOrder = () => {
           total_amount: response.total_amount
         });
         
-        // Open Razorpay checkout
-        const options = {
-          key: restaurant.razorpay.razorpay_key,
-          amount: response.total_amount * 100, // Razorpay expects amount in paise
-          currency: 'INR',
-          name: restaurant?.name || 'Restaurant',
-          description: `Order #${response.order_id}`,
-          order_id: response.razorpay_id, // Razorpay order ID from POS
-          handler: function (paymentResponse) {
-            // Payment successful
-            console.log('[Razorpay] Payment success:', paymentResponse);
-            // Clear cart and navigate to success page
-            clearCart();
-            navigate(`/${restaurantId}/order-success`, {
-              state: {
-                orderData: {
-                  orderId: response.order_id,
-                  totalToPay: response.total_amount,
-                  paymentId: paymentResponse.razorpay_payment_id,
-                  razorpayOrderId: paymentResponse.razorpay_order_id,
-                  razorpaySignature: paymentResponse.razorpay_signature,
-                  isPaid: true
-                }
-              }
-            });
-          },
-          prefill: {
-            name: customerName || '',
-            contact: customerPhone || ''
-          },
-          theme: {
-            color: restaurant?.primaryColor || '#E8531E'
-          },
-          modal: {
-            ondismiss: function () {
-              console.log('[Razorpay] Payment modal closed');
-              toast.error('Payment cancelled');
-              setIsPlacingOrder(false);
-              isPlacingOrderRef.current = false;
-            }
+        // Step 3: Create Razorpay order to get actual order_id
+        try {
+          const createOrderResponse = await fetch('https://preprod.mygenie.online/api/v1/razor-pay/create-razor-order', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ order_id: String(response.order_id) })
+          });
+          
+          const razorpayOrder = await createOrderResponse.json();
+          console.log('[Razorpay] Create order response:', razorpayOrder);
+          
+          if (razorpayOrder.error) {
+            throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
           }
-        };
+          
+          // Open Razorpay checkout with actual order_id
+          const options = {
+            key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
+            amount: razorpayOrder.amount_in_paise || (response.total_amount * 100),
+            currency: 'INR',
+            name: restaurant?.name || 'Restaurant',
+            description: `Order #${response.order_id}`,
+            order_id: razorpayOrder.order_id, // Actual Razorpay order ID (order_XXXXX)
+            handler: function (paymentResponse) {
+              // Payment successful
+              console.log('[Razorpay] Payment success:', paymentResponse);
+              // Clear cart and navigate to success page
+              clearCart();
+              navigate(`/${restaurantId}/order-success`, {
+                state: {
+                  orderData: {
+                    orderId: response.order_id,
+                    totalToPay: response.total_amount,
+                    paymentId: paymentResponse.razorpay_payment_id,
+                    razorpayOrderId: paymentResponse.razorpay_order_id,
+                    razorpaySignature: paymentResponse.razorpay_signature,
+                    isPaid: true
+                  }
+                }
+              });
+            },
+            prefill: {
+              name: customerName || '',
+              contact: customerPhone || ''
+            },
+            theme: {
+              color: restaurant?.primaryColor || '#E8531E'
+            },
+            modal: {
+              ondismiss: function () {
+                console.log('[Razorpay] Payment modal closed');
+                toast.error('Payment cancelled');
+                setIsPlacingOrder(false);
+                isPlacingOrderRef.current = false;
+              }
+            }
+          };
 
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
-        return; // Don't proceed to success page yet - wait for payment
+          const razorpay = new window.Razorpay(options);
+          razorpay.open();
+          return; // Don't proceed to success page yet - wait for payment
+          
+        } catch (razorpayError) {
+          console.error('[Razorpay] Failed to create order:', razorpayError);
+          toast.error('Payment initialization failed. Please try again.');
+          setIsPlacingOrder(false);
+          isPlacingOrderRef.current = false;
+          return;
+        }
       }
 
       // Clear cart after successful order (non-payment flow)
