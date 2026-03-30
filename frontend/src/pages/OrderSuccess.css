@@ -791,7 +791,7 @@
 
 .bill-row-total {
   padding-top: 8px;
-  border-top: 2px solid var(--color-primary, #f97316);
+  border-top: 2px solid var(--color-primary, #61B4E5);
   margin-top: 8px;
 }
 
@@ -806,7 +806,7 @@
   font-family: var(--font-body);
   font-size: 15px;
   font-weight: 700;
-  color: var(--color-primary, #f97316);
+  color: var(--color-primary, #61B4E5);
 }
 
 /* Payment Status Styles */
@@ -845,6 +845,6 @@
 }
 
 .payment-verifying {
-  color: #f97316;
+  color: #61B4E5;
   font-style: italic;
 }

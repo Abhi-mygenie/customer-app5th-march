@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
+import { DEFAULT_THEME } from '../constants/theme';
 import { 
   IoLogOutOutline, 
   IoSaveOutline, 
@@ -78,12 +79,12 @@ const AdminSettings = () => {
     logoUrl: '',
     backgroundImageUrl: '',          // Desktop background image
     mobileBackgroundImageUrl: '',    // Mobile background image (portrait 9:16)
-    primaryColor: '#F26B33',
-    secondaryColor: '#329937',
-    buttonTextColor: '#ffffff',
-    backgroundColor: '#ffffff',
-    textColor: '#4A4A4A',
-    textSecondaryColor: '#6B7280',
+    primaryColor: DEFAULT_THEME.primaryColor,
+    secondaryColor: DEFAULT_THEME.secondaryColor,
+    buttonTextColor: DEFAULT_THEME.buttonTextColor,
+    backgroundColor: DEFAULT_THEME.backgroundColor,
+    textColor: DEFAULT_THEME.textColor,
+    textSecondaryColor: DEFAULT_THEME.textSecondaryColor,
     // Branding - Typography
     fontHeading: 'Poppins',
     fontBody: 'Poppins',
@@ -685,14 +686,14 @@ const AdminSettings = () => {
                   <input
                     type="color"
                     className="form-color"
-                    value={config.primaryColor || '#61B4E5'}
+                    value={config.primaryColor || DEFAULT_THEME.primaryColor}
                     onChange={(e) => handleChange('primaryColor', e.target.value)}
                     data-testid="input-primaryColor"
                   />
                   <input
                     type="text"
                     className="form-input color-text"
-                    value={config.primaryColor || '#61B4E5'}
+                    value={config.primaryColor || DEFAULT_THEME.primaryColor}
                     onChange={(e) => handleChange('primaryColor', e.target.value)}
                   />
                 </div>
@@ -705,14 +706,14 @@ const AdminSettings = () => {
                   <input
                     type="color"
                     className="form-color"
-                    value={config.secondaryColor || '#4fa3d1'}
+                    value={config.secondaryColor || DEFAULT_THEME.secondaryColor}
                     onChange={(e) => handleChange('secondaryColor', e.target.value)}
                     data-testid="input-secondaryColor"
                   />
                   <input
                     type="text"
                     className="form-input color-text"
-                    value={config.secondaryColor || '#4fa3d1'}
+                    value={config.secondaryColor || DEFAULT_THEME.secondaryColor}
                     onChange={(e) => handleChange('secondaryColor', e.target.value)}
                   />
                 </div>
@@ -727,14 +728,14 @@ const AdminSettings = () => {
                   <input
                     type="color"
                     className="form-color"
-                    value={config.buttonTextColor || '#ffffff'}
+                    value={config.buttonTextColor || DEFAULT_THEME.buttonTextColor}
                     onChange={(e) => handleChange('buttonTextColor', e.target.value)}
                     data-testid="input-buttonTextColor"
                   />
                   <input
                     type="text"
                     className="form-input color-text"
-                    value={config.buttonTextColor || '#ffffff'}
+                    value={config.buttonTextColor || DEFAULT_THEME.buttonTextColor}
                     onChange={(e) => handleChange('buttonTextColor', e.target.value)}
                   />
                 </div>
@@ -747,14 +748,14 @@ const AdminSettings = () => {
                   <input
                     type="color"
                     className="form-color"
-                    value={config.backgroundColor || '#ffffff'}
+                    value={config.backgroundColor || DEFAULT_THEME.backgroundColor}
                     onChange={(e) => handleChange('backgroundColor', e.target.value)}
                     data-testid="input-backgroundColor"
                   />
                   <input
                     type="text"
                     className="form-input color-text"
-                    value={config.backgroundColor || '#ffffff'}
+                    value={config.backgroundColor || DEFAULT_THEME.backgroundColor}
                     onChange={(e) => handleChange('backgroundColor', e.target.value)}
                   />
                 </div>
@@ -769,14 +770,14 @@ const AdminSettings = () => {
                   <input
                     type="color"
                     className="form-color"
-                    value={config.textColor || '#333333'}
+                    value={config.textColor || DEFAULT_THEME.textColor}
                     onChange={(e) => handleChange('textColor', e.target.value)}
                     data-testid="input-textColor"
                   />
                   <input
                     type="text"
                     className="form-input color-text"
-                    value={config.textColor || '#333333'}
+                    value={config.textColor || DEFAULT_THEME.textColor}
                     onChange={(e) => handleChange('textColor', e.target.value)}
                   />
                 </div>
@@ -789,14 +790,14 @@ const AdminSettings = () => {
                   <input
                     type="color"
                     className="form-color"
-                    value={config.textSecondaryColor || '#666666'}
+                    value={config.textSecondaryColor || DEFAULT_THEME.textSecondaryColor}
                     onChange={(e) => handleChange('textSecondaryColor', e.target.value)}
                     data-testid="input-textSecondaryColor"
                   />
                   <input
                     type="text"
                     className="form-input color-text"
-                    value={config.textSecondaryColor || '#666666'}
+                    value={config.textSecondaryColor || DEFAULT_THEME.textSecondaryColor}
                     onChange={(e) => handleChange('textSecondaryColor', e.target.value)}
                   />
                 </div>

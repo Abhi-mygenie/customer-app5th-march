@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useAdminConfig } from '../../context/AdminConfigContext';
 import { IoColorPaletteOutline, IoCloudUploadOutline } from 'react-icons/io5';
+import { DEFAULT_THEME } from '../../constants/theme';
 import './AdminPages.css';
 
 const AdminBrandingPage = () => {
@@ -148,12 +149,12 @@ const AdminBrandingPage = () => {
         
         <div className="admin-form-grid three-col">
           {[
-            { key: 'primaryColor', label: 'Primary Color', hint: 'Buttons, links, accents', default: '#F26B33' },
-            { key: 'secondaryColor', label: 'Secondary Color', hint: 'Hover states, gradients', default: '#329937' },
-            { key: 'buttonTextColor', label: 'Button Text', hint: 'Text on buttons', default: '#ffffff' },
-            { key: 'backgroundColor', label: 'Background', hint: 'Page background', default: '#ffffff' },
-            { key: 'textColor', label: 'Text Color', hint: 'Main body text', default: '#4A4A4A' },
-            { key: 'textSecondaryColor', label: 'Secondary Text', hint: 'Descriptions, hints', default: '#6B7280' },
+            { key: 'primaryColor', label: 'Primary Color', hint: 'Buttons, links, accents', default: DEFAULT_THEME.primaryColor },
+            { key: 'secondaryColor', label: 'Secondary Color', hint: 'Hover states, gradients', default: DEFAULT_THEME.secondaryColor },
+            { key: 'buttonTextColor', label: 'Button Text', hint: 'Text on buttons', default: DEFAULT_THEME.buttonTextColor },
+            { key: 'backgroundColor', label: 'Background', hint: 'Page background', default: DEFAULT_THEME.backgroundColor },
+            { key: 'textColor', label: 'Text Color', hint: 'Main body text', default: DEFAULT_THEME.textColor },
+            { key: 'textSecondaryColor', label: 'Secondary Text', hint: 'Descriptions, hints', default: DEFAULT_THEME.textSecondaryColor },
           ].map(({ key, label, hint, default: defaultVal }) => (
             <div className="admin-form-group" key={key}>
               <label className="admin-form-label">{label}</label>

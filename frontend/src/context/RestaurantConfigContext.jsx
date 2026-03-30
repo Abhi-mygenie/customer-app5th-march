@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { DEFAULT_THEME } from '../constants/theme';
 
 const RestaurantConfigContext = createContext(null);
 
@@ -192,9 +193,9 @@ export const RestaurantConfigProvider = ({ children }) => {
   useEffect(() => {
     const root = document.documentElement;
     
-    // Primary Color
-    {
-      const primary = config.primaryColor || '#F26B33';
+    // Primary Color - only override CSS default if config has value
+    if (config.primaryColor) {
+      const primary = config.primaryColor;
       root.style.setProperty('--color-primary', primary);
       root.style.setProperty('--text-link', primary);
       root.style.setProperty('--border-primary', primary);
@@ -207,28 +208,28 @@ export const RestaurantConfigProvider = ({ children }) => {
     }
     
     // Secondary Color (for hover states, gradients)
-    {
-      const secondary = config.secondaryColor || '#329937';
+    if (config.secondaryColor) {
+      const secondary = config.secondaryColor;
       root.style.setProperty('--color-primary-dark', secondary);
       root.style.setProperty('--text-link-hover', secondary);
     }
     
     // Button Text Color
-    root.style.setProperty('--button-text-color', config.buttonTextColor || '#FFFFFF');
+    root.style.setProperty('--button-text-color', config.buttonTextColor || DEFAULT_THEME.buttonTextColor);
     
     // Background Color
-    root.style.setProperty('--bg-primary', config.backgroundColor || '#FFFFFF');
+    root.style.setProperty('--bg-primary', config.backgroundColor || DEFAULT_THEME.backgroundColor);
     
     // Text Color (for body text, descriptions, etc.)
     {
-      const textColor = config.textColor || '#4A4A4A';
+      const textColor = config.textColor || DEFAULT_THEME.textColor;
       root.style.setProperty('--text-color', textColor);
       root.style.setProperty('--text-primary', textColor);
     }
     
     // Text Secondary Color (for secondary text)
     {
-      const textSecondary = config.textSecondaryColor || '#6B7280';
+      const textSecondary = config.textSecondaryColor || DEFAULT_THEME.textSecondaryColor;
       root.style.setProperty('--text-secondary-color', textSecondary);
       root.style.setProperty('--text-secondary', textSecondary);
     }

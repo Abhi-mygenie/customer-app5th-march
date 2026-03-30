@@ -14,6 +14,7 @@ import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import HamburgerMenu from '../components/HamburgerMenu/HamburgerMenu';
 import LandingCustomerCapture, { isPhoneValid } from '../components/LandingCustomerCapture/LandingCustomerCapture';
+import { DEFAULT_THEME } from '../constants/theme';
 import { MdOutlineTableRestaurant, MdOutlineRestaurantMenu, MdOutlineEdit } from 'react-icons/md';
 import { FaDoorOpen } from 'react-icons/fa';
 import { IoCallOutline, IoPersonOutline } from 'react-icons/io5';
@@ -376,8 +377,8 @@ const LandingPage = () => {
   const displayTagline = configTagline;
 
   // Button colors from local config only (no POS fallback)
-  const btnColor = configPrimaryColor || '#61B4E5';
-  const btnTextColor = configButtonTextColor || '#FFFFFF';
+  const btnColor = configPrimaryColor || DEFAULT_THEME.primaryColor;
+  const btnTextColor = configButtonTextColor || DEFAULT_THEME.buttonTextColor;
 
   const showCustomerCapture = configShowLandingCustomerCapture && !isAuthenticated;
 

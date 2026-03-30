@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
+import { DEFAULT_THEME } from '../constants/theme';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -53,12 +54,12 @@ const defaultConfig = {
   logoUrl: '',
   backgroundImageUrl: '',
   mobileBackgroundImageUrl: '',
-  primaryColor: '#F26B33',
-  secondaryColor: '#329937',
-  buttonTextColor: '#ffffff',
-  backgroundColor: '#ffffff',
-  textColor: '#4A4A4A',
-  textSecondaryColor: '#6B7280',
+  primaryColor: DEFAULT_THEME.primaryColor,
+  secondaryColor: DEFAULT_THEME.secondaryColor,
+  buttonTextColor: DEFAULT_THEME.buttonTextColor,
+  backgroundColor: DEFAULT_THEME.backgroundColor,
+  textColor: DEFAULT_THEME.textColor,
+  textSecondaryColor: DEFAULT_THEME.textSecondaryColor,
   // Branding - Typography
   fontHeading: 'Poppins',
   fontBody: 'Poppins',

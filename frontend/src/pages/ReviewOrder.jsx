@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { getAuthToken, isTokenExpired } from '../utils/authToken';
 import { placeOrder, updateCustomerOrder, checkTableStatus, getOrderDetails } from '../api/services/orderService';
+import { DEFAULT_THEME } from '../constants/theme';
 import OrderItemCard from '../components/OrderItemCard/OrderItemCard';
 import PreviousOrderItems from '../components/PreviousOrderItems/PreviousOrderItems';
 import { IoArrowBackOutline, IoGiftOutline, IoPersonOutline } from "react-icons/io5";
@@ -1004,7 +1005,7 @@ const ReviewOrder = () => {
               contact: customerPhone || ''
             },
             theme: {
-              color: restaurant?.primaryColor || '#E8531E'
+              color: restaurant?.primaryColor || DEFAULT_THEME.primaryColor
             },
             modal: {
               ondismiss: function () {
