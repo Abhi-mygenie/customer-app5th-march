@@ -932,3 +932,30 @@ Each table/room now includes pre-built QR URLs for each menu master:
 | Mar 25, 2026 | Session 4 | Added field usage summary tables for Variations & Add-ons |
 | Mar 25, 2026 | Session 3 | Added transformer layer docs, property mappings |
 | Mar 25, 2026 | Session 2 | Initial comprehensive mapping |
+
+---
+
+## Update: Razorpay Endpoints Centralized (Session 8)
+
+**Date:** March 31, 2026
+
+The Razorpay endpoints are now part of the centralized `endpoints.js` configuration:
+
+```javascript
+// In /app/frontend/src/api/config/endpoints.js
+RAZORPAY_CREATE_ORDER: () => `${API_BASE_URL}/razor-pay/create-razor-order`,
+RAZORPAY_VERIFY_PAYMENT: () => `${API_BASE_URL}/razor-pay/verify-payment`,
+```
+
+**Usage:**
+```javascript
+import { ENDPOINTS } from '../api/config/endpoints';
+
+// Create Razorpay order
+const response = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), { ... });
+
+// Verify payment
+const response = await fetch(ENDPOINTS.RAZORPAY_VERIFY_PAYMENT(), { ... });
+```
+
+This resolves CRITICAL-006 from Audit V1.

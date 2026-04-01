@@ -2012,3 +2012,35 @@ UPDATE ORDER (from ReviewOrder):
 ### Notes
 
 -->
+
+---
+
+## BUG-034: Hardcoded Razorpay POS API URLs (CRITICAL-006)
+
+**Status:** ✅ FIXED  
+**Priority:** CRITICAL  
+**Date Reported:** March 31, 2026  
+**Date Fixed:** March 31, 2026  
+**Found By:** Code Audit V1
+
+### Description
+Razorpay payment endpoints were hardcoded with `https://preprod.mygenie.online/api/v1/razor-pay/...` instead of using the centralized ENDPOINTS pattern.
+
+### Root Cause
+Razorpay integration was added without following existing codebase patterns for API endpoint management.
+
+### Impact
+- Hardcoded preprod URL would fail in production
+- Inconsistent with rest of codebase
+- Manual changes needed for environment switching
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `/app/frontend/src/api/config/endpoints.js` | Added `RAZORPAY_CREATE_ORDER`, `RAZORPAY_VERIFY_PAYMENT` |
+| `/app/frontend/src/pages/ReviewOrder.jsx` | Import ENDPOINTS, use `ENDPOINTS.RAZORPAY_CREATE_ORDER()` |
+| `/app/frontend/src/pages/OrderSuccess.jsx` | Import ENDPOINTS, use `ENDPOINTS.RAZORPAY_VERIFY_PAYMENT()` |
+
+### Testing
+- Razorpay payment flow should work as before
+- URLs now sourced from centralized config

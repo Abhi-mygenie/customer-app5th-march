@@ -1,6 +1,6 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 26, 2026 (Session 7 - Razorpay & QR Enhancements)
+## Last Updated: March 31, 2026 (Session 8 - Audit Fixes & Theme Consistency)
 
 ---
 
@@ -155,3 +155,55 @@ On page refresh, `location.state` is lost → payment status not re-verified.
 - `/app/frontend/src/pages/OrderSuccess.jsx`
 - Possibly POS `/order-details` API
 
+
+---
+
+## Session 8 Completed (March 31, 2026)
+
+### 1. Theme Color Consistency Fix ✅
+
+**Issue:** Inconsistent fallback colors causing orange flash on cache clear for Restaurant 716.
+
+**Files Created:**
+- `/app/frontend/src/constants/theme.js` - Single source of truth for default colors
+
+**Files Updated (JS - 6 files):**
+- `RestaurantConfigContext.jsx` - Import DEFAULT_THEME, conditional CSS override
+- `LandingPage.jsx` - Use DEFAULT_THEME for button colors
+- `ReviewOrder.jsx` - Use DEFAULT_THEME for Razorpay theme
+- `AdminSettings.jsx` - Use DEFAULT_THEME for color inputs
+- `AdminConfigContext.jsx` - Use DEFAULT_THEME for defaults
+- `AdminBrandingPage.jsx` - Use DEFAULT_THEME for color pickers
+
+**Files Updated (CSS - 5 files):**
+- `PasswordSetup.css`, `OrderSuccess.css`, `AdminPages.css`, `StationCard.css`, `LandingCustomerCapture.css`
+- All fallbacks changed from orange variants to `#61B4E5` (blue)
+
+### 2. CRITICAL-006 Fix: Hardcoded Razorpay URLs ✅
+
+**Issue:** Razorpay endpoints hardcoded with preprod URL instead of using ENDPOINTS pattern.
+
+**Files Changed:**
+| File | Change |
+|------|--------|
+| `endpoints.js` | Added `RAZORPAY_CREATE_ORDER`, `RAZORPAY_VERIFY_PAYMENT` |
+| `ReviewOrder.jsx` | Use `ENDPOINTS.RAZORPAY_CREATE_ORDER()` |
+| `OrderSuccess.jsx` | Use `ENDPOINTS.RAZORPAY_VERIFY_PAYMENT()` |
+
+### 3. Code Audit V1 ✅
+
+**Document Created:** `/app/memory/AUDIT_V1.md`
+
+**Findings:**
+- Critical Issues: 6 (1 resolved)
+- High Priority: 7
+- Medium: 7
+- Low: 7
+
+**Key Issues Identified:**
+- CRITICAL-001: Hardcoded credentials in authToken.js
+- CRITICAL-002: Weak JWT secret fallback
+- CRITICAL-003: CORS wildcard configuration
+- CRITICAL-004: No rate limiting
+- CRITICAL-005: Razorpay live keys exposure
+- CRITICAL-006: Hardcoded POS API URL ✅ FIXED

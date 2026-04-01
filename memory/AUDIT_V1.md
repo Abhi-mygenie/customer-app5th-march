@@ -12,7 +12,7 @@
 This codebase has **several critical security vulnerabilities and architectural issues** that MUST be fixed before production deployment at scale. The code quality is inconsistent, with some well-structured sections and others that are dangerous for production use.
 
 **Total Issues Found: 29**
-- Critical: 6
+- Critical: 5 (1 resolved)
 - High: 7
 - Medium: 7
 - Low: 7
@@ -123,7 +123,7 @@ allow_origins=os.environ.get('CORS_ORIGINS', '*').split(',')
 
 ---
 
-### CRITICAL-006: Hardcoded POS API URL
+### CRITICAL-006: Hardcoded POS API URL ✅ RESOLVED
 
 **Location:** Multiple files (ReviewOrder.jsx, OrderSuccess.jsx)
 
@@ -139,6 +139,9 @@ fetch('https://preprod.mygenie.online/api/v1/razor-pay/create-razor-order', ...
 - Order data going to wrong environment
 
 **Fix:** Use `process.env.REACT_APP_POS_API_URL`
+
+**Status:** ✅ RESOLVED (March 31, 2026)
+**Resolution:** Added RAZORPAY_CREATE_ORDER and RAZORPAY_VERIFY_PAYMENT to endpoints.js. Updated ReviewOrder.jsx and OrderSuccess.jsx to use ENDPOINTS pattern.
 
 ---
 
@@ -478,7 +481,7 @@ setInterval(..., 60000); // What is 60000?
 - [ ] Fix JWT secret fallback
 - [ ] Fix CORS wildcard
 - [ ] Add rate limiting
-- [ ] Move API URLs to environment variables
+- [x] Move API URLs to environment variables (CRITICAL-006 FIXED)
 - [ ] Add error boundaries
 
 ### Should Do (P1):
