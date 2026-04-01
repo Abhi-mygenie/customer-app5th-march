@@ -12,6 +12,7 @@ import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { getAuthToken, isTokenExpired } from '../utils/authToken';
 import { placeOrder, updateCustomerOrder, checkTableStatus, getOrderDetails } from '../api/services/orderService';
 import { DEFAULT_THEME } from '../constants/theme';
+import { ENDPOINTS } from '../api/config/endpoints';
 import OrderItemCard from '../components/OrderItemCard/OrderItemCard';
 import PreviousOrderItems from '../components/PreviousOrderItems/PreviousOrderItems';
 import { IoArrowBackOutline, IoGiftOutline, IoPersonOutline } from "react-icons/io5";
@@ -958,7 +959,7 @@ const ReviewOrder = () => {
         
         // Step 3: Create Razorpay order to get actual order_id
         try {
-          const createOrderResponse = await fetch('https://preprod.mygenie.online/api/v1/razor-pay/create-razor-order', {
+          const createOrderResponse = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
             method: 'POST',
             headers: {
               'Accept': 'application/json',

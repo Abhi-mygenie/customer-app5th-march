@@ -41,6 +41,10 @@ export const ENDPOINTS = {
   
   // Table Status Check endpoint (for edit order detection)
   CHECK_TABLE_STATUS: (tableId, restaurantId) => `${API_BASE_URL}/customer/check-table-status?table_id=${tableId}&restaurant_id=${restaurantId}`,
+
+  // Razorpay Payment endpoints
+  RAZORPAY_CREATE_ORDER: () => `${API_BASE_URL}/razor-pay/create-razor-order`,
+  RAZORPAY_VERIFY_PAYMENT: () => `${API_BASE_URL}/razor-pay/verify-payment`,
 };
 
 export default ENDPOINTS;

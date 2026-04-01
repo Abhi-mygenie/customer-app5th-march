@@ -9,6 +9,7 @@ import { useCart } from '../context/CartContext';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { getOrderDetails, checkTableStatus } from '../api/services/orderService';
 import { getStoredToken } from '../utils/authToken';
+import { ENDPOINTS } from '../api/config/endpoints';
 // Import centralized transformers - SINGLE SOURCE OF TRUTH for label formatting
 import { getVariationLabels, getAddonLabels } from '../api/transformers/helpers';
 import Header from '../components/Header/Header';
@@ -168,7 +169,7 @@ const OrderSuccess = () => {
       });
 
       try {
-        const response = await fetch('https://preprod.mygenie.online/api/v1/razor-pay/verify-payment', {
+        const response = await fetch(ENDPOINTS.RAZORPAY_VERIFY_PAYMENT(), {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
