@@ -284,35 +284,8 @@ export const RestaurantConfigProvider = ({ children }) => {
         root.style.setProperty('--radius-container-xl', radii.xl);
       }
     }
-    
-    return () => {
-      // Cleanup
-      root.style.removeProperty('--color-primary');
-      root.style.removeProperty('--color-primary-dark');
-      root.style.removeProperty('--color-primary-darker');
-      root.style.removeProperty('--color-primary-darkest');
-      root.style.removeProperty('--text-link');
-      root.style.removeProperty('--text-link-hover');
-      root.style.removeProperty('--border-primary');
-      root.style.removeProperty('--button-text-color');
-      root.style.removeProperty('--bg-primary');
-      root.style.removeProperty('--text-color');
-      root.style.removeProperty('--text-primary');
-      root.style.removeProperty('--text-secondary-color');
-      root.style.removeProperty('--text-secondary');
-      root.style.removeProperty('--font-heading');
-      root.style.removeProperty('--font-body');
-      root.style.removeProperty('--radius-button');
-      root.style.removeProperty('--radius-badge');
-      root.style.removeProperty('--radius-container-sm');
-      root.style.removeProperty('--radius-container-md');
-      root.style.removeProperty('--radius-container-lg');
-      root.style.removeProperty('--radius-container-xl');
-      root.style.removeProperty('--text-blue-hero');
-      root.style.removeProperty('--text-blue-dark');
-      root.style.removeProperty('--text-blue-medium');
-      root.style.removeProperty('--text-blue-light');
-    };
+    // Note: No cleanup function - CSS variables should persist across navigation
+    // Removing them caused brand colors to reset to blue defaults on page transitions
   }, [config.primaryColor, config.secondaryColor, config.buttonTextColor, config.backgroundColor, config.fontHeading, config.fontBody, config.borderRadius]);
 
   // Helper: check boolean with default true
