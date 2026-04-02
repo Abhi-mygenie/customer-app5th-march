@@ -1,6 +1,6 @@
 # Customer App - Project Documentation
 
-## Last Updated: March 31, 2026 (Session 8 - Audit Fixes & Theme Consistency)
+## Last Updated: March 31, 2026 (Session 9 - Razorpay payment_type Fix)
 
 ---
 
@@ -23,6 +23,7 @@
 | Restaurant 716 Fix | ✅ Fixed (BUG-030) |
 | POS Token Architecture | ✅ Fixed (BUG-033) |
 | Razorpay Payment Integration | ✅ Complete (Session 7) |
+| Razorpay payment_type Fix | ✅ Complete (Session 9 - BUG-034) |
 | QR Code Filters | ✅ Complete (Session 7) |
 | P0 Bugs | ✅ None |
 | P1 Bugs | 🟡 1 (QR URL - Parked) |
@@ -155,6 +156,37 @@ On page refresh, `location.state` is lost → payment status not re-verified.
 - `/app/frontend/src/pages/OrderSuccess.jsx`
 - Possibly POS `/order-details` API
 
+
+---
+
+## Session 9 Completed (March 31, 2026)
+
+### 1. BUG-034: Razorpay payment_type Fix ✅
+
+**Issue:** All orders (including Razorpay) were created with `payment_type: 'postpaid'`
+
+**Root Cause:**
+- `placeOrder()` in `ReviewOrder.jsx` did not pass `paymentType` parameter
+- `orderService.ts` defaulted to `'postpaid'`
+
+**Fix Applied:**
+```jsx
+const isRazorpayEnabled = !!restaurant?.razorpay?.razorpay_key;
+// Pass to placeOrder:
+paymentType: isRazorpayEnabled ? 'prepaid' : 'postpaid'
+```
+
+**Files Changed:**
+| File | Line | Change |
+|------|------|--------|
+| `ReviewOrder.jsx` | 926 | Main placeOrder call - added paymentType |
+| `ReviewOrder.jsx` | 1136 | Retry placeOrder call - added paymentType |
+
+### 2. BUG-035: f_order_status for Razorpay (Pending)
+
+**Status:** Identified, awaiting user confirmation
+
+**Issue:** `f_order_status` defaults to `7` for all orders. Should be `8` for Razorpay.
 
 ---
 

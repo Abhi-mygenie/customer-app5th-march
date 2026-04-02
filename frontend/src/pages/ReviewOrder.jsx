@@ -923,6 +923,9 @@ const ReviewOrder = () => {
         // Check if GST is enabled at restaurant level
         const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
         
+        // Determine payment type: 'prepaid' for Razorpay, 'postpaid' for COD
+        const isRazorpayEnabled = !!restaurant?.razorpay?.razorpay_key;
+        
         response = await placeOrder({
           cartItems,
           customerName,
@@ -941,7 +944,9 @@ const ReviewOrder = () => {
           pointsRedeemed: pointsToRedeem,
           pointsDiscount: pointsDiscount,
           // GST status
-          gstEnabled: isGstEnabled
+          gstEnabled: isGstEnabled,
+          // Payment type: prepaid for Razorpay, postpaid for COD
+          paymentType: isRazorpayEnabled ? 'prepaid' : 'postpaid'
         });
       }
 
@@ -1133,6 +1138,9 @@ const ReviewOrder = () => {
             toast.success('Order updated successfully!');
           } else {
             // Retry order placement
+            // Determine payment type: 'prepaid' for Razorpay, 'postpaid' for COD
+            const isRazorpayEnabledRetry = !!restaurant?.razorpay?.razorpay_key;
+            
             retryResponse = await placeOrder({
               cartItems,
               customerName,
@@ -1149,7 +1157,9 @@ const ReviewOrder = () => {
               token: newToken,
               // Points redemption
               pointsRedeemed: pointsToRedeem,
-              pointsDiscount: pointsDiscount
+              pointsDiscount: pointsDiscount,
+              // Payment type: prepaid for Razorpay, postpaid for COD
+              paymentType: isRazorpayEnabledRetry ? 'prepaid' : 'postpaid'
             });
           }
 

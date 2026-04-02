@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 26, 2026 (Session 5 - POS Token Architecture Fix)
+## Last Updated: March 31, 2026 (Session 9 - Razorpay payment_type Fix)
 
 ---
 
@@ -9,6 +9,82 @@
 | Bug ID | Summary | Priority | Status |
 |--------|---------|----------|--------|
 | BUG-029 | QR Code URL empty when subdomain not set | 🟡 P1 | Parked |
+| BUG-035 | f_order_status not set for Razorpay orders | 🔴 P0 | Pending |
+
+---
+
+## Quick Summary - Session 9 (BUG-034, BUG-035)
+
+| Bug ID | Severity | Summary | Status |
+|--------|----------|---------|--------|
+| BUG-034 | 🔴 P0 | Incorrect payment_type for Razorpay orders | ✅ Fixed |
+| BUG-035 | 🔴 P0 | f_order_status not set to 8 for Razorpay | 🟡 Pending |
+
+---
+
+## BUG-034: Incorrect payment_type for Razorpay Orders
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-034 |
+| **Date Reported** | 2026-03-31 |
+| **Date Fixed** | 2026-03-31 |
+| **Severity** | P0 - Critical |
+| **Status** | ✅ Fixed |
+| **File** | `/app/frontend/src/pages/ReviewOrder.jsx` |
+
+**Problem:**
+- All orders (including Razorpay) were being created with `payment_type: 'postpaid'`
+- POS expects `payment_type: 'prepaid'` for Razorpay transactions
+- Caused incorrect order status mapping in POS backend
+
+**Root Cause:**
+- `placeOrder()` call in `ReviewOrder.jsx` did NOT pass `paymentType` parameter
+- `orderService.ts` defaulted to `'postpaid'` when `paymentType` not provided
+
+**Fix Applied:**
+```jsx
+// Added before placeOrder call:
+const isRazorpayEnabled = !!restaurant?.razorpay?.razorpay_key;
+
+// Added to placeOrder payload:
+paymentType: isRazorpayEnabled ? 'prepaid' : 'postpaid'
+```
+
+**Files Changed:**
+- `/app/frontend/src/pages/ReviewOrder.jsx` (Line 926 + Line 1136)
+
+---
+
+## BUG-035: f_order_status Not Set for Razorpay Orders
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-035 |
+| **Date Reported** | 2026-03-31 |
+| **Severity** | P0 - Critical |
+| **Status** | 🟡 Pending |
+
+**Problem:**
+- `f_order_status` should be `8` for Razorpay orders (payment pending)
+- Currently defaults to `7` (YET_TO_CONFIRM) for all orders
+- POS needs to distinguish between COD and Razorpay orders
+
+**Root Cause:**
+- `orderService.ts` Line 191: `f_order_status` defaults to `ORDER_STATUS.YET_TO_CONFIRM` (7)
+- `placeOrder()` does not pass `f_order_status` parameter
+
+**Proposed Fix:**
+```jsx
+// In ReviewOrder.jsx placeOrder call:
+f_order_status: isRazorpayEnabled ? 8 : 7
+```
+
+**Files to Modify:**
+- `/app/frontend/src/pages/ReviewOrder.jsx`
+- `/app/frontend/src/api/services/orderService.ts`
+
+**Awaiting:** User confirmation to implement
 
 ---
 
