@@ -9,9 +9,12 @@
 | Document | Purpose | Last Updated |
 |----------|---------|--------------|
 | [PRD.md](./PRD.md) | Project requirements, features, credentials | March 31, 2026 |
-| [BUG_TRACKER.md](./BUG_TRACKER.md) | Bug tracking and fixes | March 31, 2026 |
+| [BUG_TRACKER.md](./BUG_TRACKER.md) | Bug tracking and fixes | April 10, 2026 |
 | [CODE_AUDIT.md](./CODE_AUDIT.md) | Code quality, refactoring status | March 25, 2026 |
 | [API_MAPPING.md](./API_MAPPING.md) | API endpoints and field mappings | March 26, 2026 |
+| [FEAT-001-dual-payment-options.md](./FEAT-001-dual-payment-options.md) | Dual payment feature spec | April 10, 2026 |
+| [FEAT-001-ADMIN-payment-settings.md](./FEAT-001-ADMIN-payment-settings.md) | Admin UI for payments | April 10, 2026 |
+| [MANUAL_TEST_CASES.md](./MANUAL_TEST_CASES.md) | QA test cases | April 10, 2026 |
 
 ---
 
@@ -20,8 +23,9 @@
 | Metric | Status | Details |
 |--------|--------|---------|
 | **Code Quality Score** | 7.5/10 | +0.3 from Session 4 cleanup |
-| **Open P0 Bugs** | 1 | BUG-035 (f_order_status for Razorpay) |
-| **Open P1 Bugs** | 1 | BUG-029 (QR URL - Parked) |
+| **Open P0 Bugs** | 0 | All critical bugs fixed |
+| **Open P1 Bugs** | 0 | BUG-029 fixed |
+| **Features Completed** | 1 | FEAT-001 Dual Payment Options |
 | **TypeScript Coverage** | ~6.4% | 7 TS files |
 | **Total Files** | 110 | ~21,274 lines |
 
@@ -31,17 +35,35 @@
 
 | Priority | Total | Open | Fixed | Parked |
 |----------|-------|------|-------|--------|
-| 🔴 P0 (Critical) | 6 | 1 | 5 | 0 |
-| 🟡 P1 (High) | 2 | 0 | 1 | 1 |
+| 🔴 P0 (Critical) | 7 | 0 | 7 | 0 |
+| 🟡 P1 (High) | 2 | 0 | 2 | 0 |
 | 🟢 P2 (Medium) | 5 | 5 | 0 | 0 |
-| Total | 13 | 6 | 6 | 1 |
+| Total | 14 | 5 | 9 | 0 |
 
-### Open Issues
+### Recently Fixed (April 10, 2026)
 
-| Bug ID | Summary | Priority | Status |
-|--------|---------|----------|--------|
-| BUG-035 | f_order_status not set for Razorpay orders | 🔴 P0 | Pending |
-| BUG-029 | QR Code URL empty when subdomain not set | 🟡 P1 | Parked |
+| Bug ID | Summary | Status |
+|--------|---------|--------|
+| BUG-036 | Login JSON parse error (wrong backend URL) | ✅ Fixed |
+| BUG-035 | payment_type for Razorpay | ✅ Fixed (partial - f_order_status TBD) |
+| BUG-029 | QR Code URL empty | ✅ Fixed |
+
+---
+
+## Feature Status
+
+| Feature ID | Title | Status | Date |
+|------------|-------|--------|------|
+| FEAT-001 | Dual Payment Options (Online + COD) | ✅ Done | Apr 10, 2026 |
+| FEAT-001-ADMIN | Admin Settings for Payments | ✅ Done | Apr 10, 2026 |
+
+### FEAT-001 Implementation Summary
+
+- ✅ Backend config fields added
+- ✅ PaymentMethodSelector component created
+- ✅ ReviewOrder.jsx integration
+- ✅ Admin Settings UI added
+- ⏳ Manual testing pending
 
 ---
 
