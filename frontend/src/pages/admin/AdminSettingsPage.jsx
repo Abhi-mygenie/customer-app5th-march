@@ -263,37 +263,37 @@ const AdminSettingsPage = () => {
           <div className="admin-toggle-list">
             <div className="admin-toggle-row" data-testid="online-dinein-toggle-row">
               <span className="admin-toggle-label">Dine-in Orders</span>
-              <label className="admin-toggle-switch" data-testid="online-dinein-toggle">
+              <label className="admin-master-toggle-switch" data-testid="online-dinein-toggle">
                 <input
                   type="checkbox"
                   checked={config.onlinePaymentDinein !== false}
                   onChange={(e) => updateField('onlinePaymentDinein', e.target.checked)}
                 />
-                <span className="admin-toggle-knob"></span>
+                <span className="admin-master-toggle-knob"></span>
               </label>
             </div>
 
             <div className="admin-toggle-row" data-testid="online-takeaway-toggle-row">
               <span className="admin-toggle-label">Takeaway Orders</span>
-              <label className="admin-toggle-switch" data-testid="online-takeaway-toggle">
+              <label className="admin-master-toggle-switch" data-testid="online-takeaway-toggle">
                 <input
                   type="checkbox"
                   checked={config.onlinePaymentTakeaway !== false}
                   onChange={(e) => updateField('onlinePaymentTakeaway', e.target.checked)}
                 />
-                <span className="admin-toggle-knob"></span>
+                <span className="admin-master-toggle-knob"></span>
               </label>
             </div>
 
             <div className="admin-toggle-row" data-testid="online-delivery-toggle-row">
               <span className="admin-toggle-label">Delivery Orders</span>
-              <label className="admin-toggle-switch" data-testid="online-delivery-toggle">
+              <label className="admin-master-toggle-switch" data-testid="online-delivery-toggle">
                 <input
                   type="checkbox"
                   checked={config.onlinePaymentDelivery !== false}
                   onChange={(e) => updateField('onlinePaymentDelivery', e.target.checked)}
                 />
-                <span className="admin-toggle-knob"></span>
+                <span className="admin-master-toggle-knob"></span>
               </label>
             </div>
           </div>
