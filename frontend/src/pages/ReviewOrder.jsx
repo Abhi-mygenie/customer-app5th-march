@@ -1745,20 +1745,20 @@ const ReviewOrder = () => {
               );
             })()
           )}
-        </div>
 
-        {/* Payment Method Selector (FEAT-001) */}
-        {showPaymentSelector && !isEditMode && (
-          <PaymentMethodSelector
-            showOnline={onlinePaymentEnabled}
-            showCod={codEnabled}
-            selected={paymentMethod}
-            onSelect={setPaymentMethod}
-            onlineLabel={payOnlineLabel}
-            codLabel={payAtCounterLabel}
-            disabled={isPlacingOrder}
-          />
-        )}
+          {/* Payment Method Selector (FEAT-001) */}
+          {showPaymentSelector && !isEditMode && (
+            <PaymentMethodSelector
+              showOnline={onlinePaymentEnabled}
+              showCod={codEnabled}
+              selected={paymentMethod}
+              onSelect={setPaymentMethod}
+              onlineLabel={payOnlineLabel}
+              codLabel={payAtCounterLabel}
+              disabled={isPlacingOrder}
+            />
+          )}
+        </div>
 
         {/* Place Order Button */}
         <div className="review-order-footer">
