@@ -110,6 +110,13 @@ const defaultConfig = {
   itemTimings: {},
   // Menu Order
   menuOrder: null,
+  // Payment Options (FEAT-001)
+  codEnabled: false,
+  onlinePaymentDinein: true,
+  onlinePaymentTakeaway: true,
+  onlinePaymentDelivery: true,
+  payOnlineLabel: '',
+  payAtCounterLabel: '',
 };
 
 export const AdminConfigProvider = ({ children }) => {
