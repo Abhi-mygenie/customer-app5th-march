@@ -8,7 +8,7 @@
 
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
-| BUG-036 | Login JSON parse error | 🔴 P0 | 🔍 Debugging | Apr 10 | - | Console logs added |
+| BUG-036 | Login JSON parse error | 🔴 P0 | ✅ Fixed | Apr 10 | Apr 10 | Wrong backend URL in .env |
 | BUG-035 | f_order_status not set for Razorpay | 🔴 P0 | ⚠️ Partial | Mar 31 | Apr 10 | payment_type fixed, f_order_status TBD |
 | BUG-034 | Incorrect payment_type for Razorpay | 🔴 P0 | ✅ Fixed | Mar 31 | Mar 31 | Session 9 |
 | BUG-033 | POS token architecture redesign | 🔴 P0 | ✅ Fixed | Mar 26 | Mar 26 | localStorage now |
@@ -22,11 +22,10 @@
 | Metric | Count |
 |--------|-------|
 | **Total Bugs** | 14 |
-| **Open (P0)** | 1 |
+| **Open (P0)** | 0 |
 | **Open (P1)** | 0 |
-| **Fixed** | 7 |
+| **Fixed** | 8 |
 | **Partial** | 1 |
-| **Debugging** | 1 |
 
 **Legend:** 🔴 P0 Critical | 🟡 P1 High | 🟢 P2 Medium | ✅ Fixed | ⚠️ Partial | 🔍 Debugging | ⏳ Pending | ⏸️ Parked
 
@@ -38,10 +37,10 @@
 |-------|---------|
 | **Bug ID** | BUG-036 |
 | **Date Reported** | 2026-04-10 |
-| **Date Fixed** | - |
+| **Date Fixed** | 2026-04-10 |
 | **Severity** | P0 - Critical |
-| **Status** | 🔍 Debugging |
-| **File** | `/app/frontend/src/pages/Login.jsx` |
+| **Status** | ✅ Fixed |
+| **File** | `/app/frontend/.env` |
 
 **Error Message:**
 ```
@@ -50,29 +49,33 @@ Unexpected non-whitespace character after JSON at position 4 (line 1 column 5)
 
 **Problem:**
 - Login fails with JSON parse error
-- Backend may be returning invalid JSON or HTML error page
-- Affects admin login flow (owner@18march.com)
+- API returning `404 page not found` (HTML) instead of JSON
 
-**Debug Console Logs Added:**
-```javascript
-console.log('[BUG-036 DEBUG] Login Request:', { url, phone, restaurant_id, pos_id });
-console.log('[BUG-036 DEBUG] Raw Response:', rawText);
-console.log('[BUG-036 DEBUG] Response Status:', res.status);
+**Root Cause:**
+- Frontend `.env` had wrong backend URL
+- `REACT_APP_BACKEND_URL=https://app-customer-five.preview.emergentagent.com` (WRONG)
+- Should be `https://app-build-deploy.preview.emergentagent.com` (CORRECT)
+- API calls went to non-existent server → returned 404 HTML page
+
+**Fix Applied:**
+```bash
+# Updated /app/frontend/.env
+REACT_APP_BACKEND_URL=https://app-build-deploy.preview.emergentagent.com
 ```
 
-**Possible Causes:**
-1. Backend returning HTML error page instead of JSON
-2. Double JSON encoding
-3. CORS preflight issue returning non-JSON
-4. Backend crash/exception not caught properly
+**Verification:**
+```bash
+# Before fix (wrong URL)
+curl -s https://app-customer-five.preview.emergentagent.com/api/auth/login
+→ "404 page not found"
 
-**Next Steps:**
-1. Check console for `[BUG-036 DEBUG]` logs
-2. Inspect raw response text
-3. Check backend logs: `tail -f /var/log/supervisor/backend.err.log`
+# After fix (correct URL)
+curl -s https://app-build-deploy.preview.emergentagent.com/api/auth/login
+→ {"detail":"Account not found..."} (valid JSON)
+```
 
 **Files Changed:**
-- `/app/frontend/src/pages/Login.jsx` - Added debug logging
+- `/app/frontend/.env` - Corrected REACT_APP_BACKEND_URL
 
 ---
 
