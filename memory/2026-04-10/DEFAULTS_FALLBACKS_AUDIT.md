@@ -10,8 +10,8 @@
 
 | ID | Category | Severity | Title | Files Affected | Status |
 |---|---|---|---|---|---|
-| DFA-001 | API URLs | HIGH | Hardcoded preprod API URL fallbacks in frontend | 4 files | Pending |
-| DFA-002 | API URLs | HIGH | Hardcoded preprod API URL fallbacks in backend | 2 files | Pending |
+| DFA-001 | API URLs | HIGH | Hardcoded preprod API URL fallbacks in frontend | 4 files | ✅ Fixed (Apr 10) |
+| DFA-002 | API URLs | HIGH | Hardcoded preprod API URL fallbacks in backend | 2 files | ✅ Fixed (Apr 10) |
 | DFA-003 | Images | MEDIUM | Logo fallback to MyGenie generic logo | 5 files, 7 occurrences | Pending |
 | DFA-004 | Images | MEDIUM | Hardcoded "Powered by MyGenie" logo | 1 file | Pending |
 | DFA-005 | Images | LOW | onError handlers hide broken images silently | 6 files, 9 occurrences | Pending |
@@ -26,10 +26,10 @@
 
 | Severity | Count | Pending | Informational |
 |---|---|---|---|
-| HIGH | 3 | 3 | 0 |
+| HIGH | 3 | 1 | 0 |
 | MEDIUM | 5 | 5 | 0 |
 | LOW | 2 | 0 | 2 |
-| **Total** | **11** | **8** | **2** |
+| **Total** | **11** | **6** | **2** |
 
 ---
 
@@ -427,4 +427,5 @@ const skipTableCheck = config?.allowMultipleOrdersPerTable === true;
 
 | Date | Changes |
 |---|---|
+| April 10, 2026 | DFA-001 & DFA-002 fixed — removed all preprod URL fallbacks. 7 tests passed. |
 | April 10, 2026 | Initial audit created — 11 findings documented |

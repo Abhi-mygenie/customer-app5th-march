@@ -34,6 +34,11 @@ JWT_ALGORITHM = "HS256"
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+# MyGenie POS API base URL (DFA-002 fix: no fallback, fail fast)
+MYGENIE_API_URL = os.environ.get("MYGENIE_API_URL")
+if not MYGENIE_API_URL:
+    raise ValueError("CRITICAL: MYGENIE_API_URL environment variable must be set")
+
 # Create the main app
 app = FastAPI(title="Customer App API")
 
@@ -344,8 +349,8 @@ async def refresh_pos_token(email: str, password: str) -> Optional[str]:
     """
     import httpx
     
-    # Use the same MYGENIE_API_URL defined later, but we need it here
-    pos_api_url = os.environ.get("MYGENIE_API_URL", "https://preprod.mygenie.online/api/v1")
+    # DFA-002 fix: Use module-level MYGENIE_API_URL (no fallback)
+    pos_api_url = MYGENIE_API_URL
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as http_client:
@@ -774,9 +779,6 @@ async def get_customer_orders(
 
 # Air BnB router for order details (Edit Order feature)
 air_bnb_router = APIRouter(prefix="/air-bnb", tags=["Air BnB"])
-
-# MyGenie API base URL - configurable via environment variable
-MYGENIE_API_URL = os.environ.get("MYGENIE_API_URL", "https://preprod.mygenie.online/api/v1")
 
 @air_bnb_router.get("/get-order-details/{order_id}")
 async def get_order_details(order_id: str):

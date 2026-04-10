@@ -46,3 +46,10 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git branch 
 - P0: None (app running as-is per requirement)
 - P1: Production JWT secret rotation
 - P2: Redis-based OTP storage (currently in-memory)
+
+## Audit Fixes Applied (Apr 10, 2026)
+- DFA-001: Removed 4 hardcoded preprod API URL fallbacks from frontend (axios.js, endpoints.js, orderService.ts, useMenuData.js)
+- DFA-002: Removed 2 hardcoded preprod API URL fallbacks from backend (server.py refresh_pos_token, MYGENIE_API_URL)
+- Backend now fails fast with ValueError if MYGENIE_API_URL env var missing
+- Frontend logs console.error if REACT_APP_API_BASE_URL or REACT_APP_IMAGE_BASE_URL missing
+- All 7 verification tests passed (backend health, config, login, frontend load, menu images, console errors, negative fail-fast)

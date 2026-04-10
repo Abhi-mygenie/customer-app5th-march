@@ -3,7 +3,11 @@
  * All API endpoints are defined here for easy maintenance
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://preprod.mygenie.online/api/v1';
+// DFA-001 fix: No fallback — fail visibly if env var missing
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+if (!API_BASE_URL) {
+  console.error('[ENDPOINTS] CRITICAL: REACT_APP_API_BASE_URL is not set in .env. API calls will fail.');
+}
 
 export const ENDPOINTS = {
   // Auth endpoints

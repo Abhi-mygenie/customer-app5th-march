@@ -440,7 +440,7 @@ export const updateCustomerOrder = async ({
     formData.append('data', JSON.stringify(payloadData));
 
     const response = await apiClient.post(
-      `${process.env.REACT_APP_API_BASE_URL || 'https://preprod.mygenie.online/api/v1'}/customer/order/update-customer-order`,
+      `${process.env.REACT_APP_API_BASE_URL}/customer/order/update-customer-order`,
       formData,
       {
         headers: {

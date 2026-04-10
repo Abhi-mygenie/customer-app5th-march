@@ -74,7 +74,11 @@ export const useMenuSections = (stationId, restaurantId) => {
                   imageUrl = item.image;
                 } else {
                   // Construct image URL (adjust base URL as needed)
-                  const imageBaseUrl = process.env.REACT_APP_IMAGE_BASE_URL || 'https://manage.mygenie.online';
+                  // DFA-001 fix: No fallback — fail visibly if env var missing
+                  const imageBaseUrl = process.env.REACT_APP_IMAGE_BASE_URL;
+                  if (!imageBaseUrl) {
+                    console.error('[MenuData] REACT_APP_IMAGE_BASE_URL is not set. Images will not load.');
+                  }
                   imageUrl = `${imageBaseUrl}/storage/${item.image}`;
                 }
               }
