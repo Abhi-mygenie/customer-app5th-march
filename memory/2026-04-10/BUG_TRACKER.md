@@ -8,6 +8,7 @@
 
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
+| BUG-036 | Login JSON parse error | 🔴 P0 | 🔍 Debugging | Apr 10 | - | Console logs added |
 | BUG-035 | f_order_status not set for Razorpay | 🔴 P0 | ⚠️ Partial | Mar 31 | Apr 10 | payment_type fixed, f_order_status TBD |
 | BUG-034 | Incorrect payment_type for Razorpay | 🔴 P0 | ✅ Fixed | Mar 31 | Mar 31 | Session 9 |
 | BUG-033 | POS token architecture redesign | 🔴 P0 | ✅ Fixed | Mar 26 | Mar 26 | localStorage now |
@@ -20,14 +21,58 @@
 
 | Metric | Count |
 |--------|-------|
-| **Total Bugs** | 13 |
-| **Open (P0)** | 0 |
+| **Total Bugs** | 14 |
+| **Open (P0)** | 1 |
 | **Open (P1)** | 0 |
 | **Fixed** | 7 |
 | **Partial** | 1 |
-| **Parked** | 0 |
+| **Debugging** | 1 |
 
-**Legend:** 🔴 P0 Critical | 🟡 P1 High | 🟢 P2 Medium | ✅ Fixed | ⚠️ Partial | ⏳ Pending | ⏸️ Parked
+**Legend:** 🔴 P0 Critical | 🟡 P1 High | 🟢 P2 Medium | ✅ Fixed | ⚠️ Partial | 🔍 Debugging | ⏳ Pending | ⏸️ Parked
+
+---
+
+## BUG-036: Login JSON Parse Error
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-036 |
+| **Date Reported** | 2026-04-10 |
+| **Date Fixed** | - |
+| **Severity** | P0 - Critical |
+| **Status** | 🔍 Debugging |
+| **File** | `/app/frontend/src/pages/Login.jsx` |
+
+**Error Message:**
+```
+Unexpected non-whitespace character after JSON at position 4 (line 1 column 5)
+```
+
+**Problem:**
+- Login fails with JSON parse error
+- Backend may be returning invalid JSON or HTML error page
+- Affects admin login flow (owner@18march.com)
+
+**Debug Console Logs Added:**
+```javascript
+console.log('[BUG-036 DEBUG] Login Request:', { url, phone, restaurant_id, pos_id });
+console.log('[BUG-036 DEBUG] Raw Response:', rawText);
+console.log('[BUG-036 DEBUG] Response Status:', res.status);
+```
+
+**Possible Causes:**
+1. Backend returning HTML error page instead of JSON
+2. Double JSON encoding
+3. CORS preflight issue returning non-JSON
+4. Backend crash/exception not caught properly
+
+**Next Steps:**
+1. Check console for `[BUG-036 DEBUG]` logs
+2. Inspect raw response text
+3. Check backend logs: `tail -f /var/log/supervisor/backend.err.log`
+
+**Files Changed:**
+- `/app/frontend/src/pages/Login.jsx` - Added debug logging
 
 ---
 

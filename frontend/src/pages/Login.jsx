@@ -48,6 +48,14 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
+      // DEBUG: Log request details
+      console.log('[BUG-036 DEBUG] Login Request:', {
+        url: `${API_URL}/api/auth/login`,
+        phone: phone.trim(),
+        restaurant_id: restaurantId,
+        pos_id: posId
+      });
+      
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,7 +66,21 @@ const Login = () => {
           pos_id: posId,
         }),
       });
-      const data = await res.json();
+      
+      // DEBUG: Log raw response
+      const rawText = await res.text();
+      console.log('[BUG-036 DEBUG] Raw Response:', rawText);
+      console.log('[BUG-036 DEBUG] Response Status:', res.status);
+      
+      // Try to parse JSON
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseError) {
+        console.error('[BUG-036 DEBUG] JSON Parse Error:', parseError);
+        throw new Error(`Invalid JSON response: ${rawText.substring(0, 100)}`);
+      }
+      
       if (!res.ok) throw new Error(data.detail || 'Login failed');
 
       setAuth(data.token, data.user, data.user_type);
