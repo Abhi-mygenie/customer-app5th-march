@@ -7,6 +7,38 @@
 
 ---
 
+## 📊 Security & Compliance Audit Dashboard
+
+| Audit ID | Area | Risk Level | Finding | Status | Owner | Due Date |
+|----------|------|------------|---------|--------|-------|----------|
+| AUD-001 | Auth | 🔴 Critical | Hardcoded credentials in frontend | ⏳ Pending | - | - |
+| AUD-002 | Auth | 🔴 Critical | JWT secret has weak fallback | ⏳ Pending | - | - |
+| AUD-003 | Auth | 🔴 Critical | Silent auth with hardcoded creds | ⏳ Pending | - | - |
+| AUD-004 | Data | 🟠 High | No input validation on APIs | ⏳ Pending | - | - |
+| AUD-005 | Data | 🟠 High | MongoDB injection possible | ⏳ Pending | - | - |
+| AUD-006 | API | 🟠 High | No rate limiting | ⏳ Pending | - | - |
+| AUD-007 | API | 🟠 High | CORS allows all origins | ⏳ Pending | - | - |
+| AUD-008 | Logging | 🟡 Medium | Sensitive data in logs | ⏳ Pending | - | - |
+| AUD-009 | Logging | 🟢 Low | Console.logs in production | ⏳ Pending | - | - |
+| AUD-010 | Arch | 🟡 Medium | No error boundaries | ⏳ Pending | - | - |
+
+### Stats
+
+| Risk Level | Total | Resolved | Pending |
+|------------|-------|----------|---------|
+| 🔴 Critical | 5 | 1 | 4 |
+| 🟠 High | 7 | 0 | 7 |
+| 🟡 Medium | 7 | 0 | 7 |
+| 🟢 Low | 7 | 0 | 7 |
+| Architectural | 2 | 0 | 2 |
+| **Total** | **29** | **1** | **28** |
+
+**Estimated Fix Time: 3-4 weeks with 2 developers**
+
+**Legend:** 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low | ✅ Resolved | ⏳ Pending
+
+---
+
 ## Executive Summary
 
 This codebase has **several critical security vulnerabilities and architectural issues** that MUST be fixed before production deployment at scale. The code quality is inconsistent, with some well-structured sections and others that are dangerous for production use.

@@ -4,12 +4,29 @@
 
 ---
 
-## Open Issues
+## 📊 Bug Summary Dashboard
 
-| Bug ID | Summary | Priority | Status |
-|--------|---------|----------|--------|
-| BUG-029 | QR Code URL empty when subdomain not set | 🟡 P1 | Parked |
-| BUG-035 | f_order_status not set for Razorpay orders | 🔴 P0 | Pending |
+| Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
+|--------|-------|----------|--------|------------|------------|----------|
+| BUG-035 | f_order_status not set for Razorpay | 🔴 P0 | ⏳ Pending | Mar 31 | - | Awaiting confirmation |
+| BUG-034 | Incorrect payment_type for Razorpay | 🔴 P0 | ✅ Fixed | Mar 31 | Mar 31 | Session 9 |
+| BUG-033 | POS token architecture redesign | 🔴 P0 | ✅ Fixed | Mar 26 | Mar 26 | localStorage now |
+| BUG-032 | TypeScript compilation error | 🔴 P0 | ✅ Fixed | Mar 26 | Mar 26 | Property 'data' |
+| BUG-031 | POS token not refreshed on login | 🔴 P0 | ✅ Fixed | Mar 26 | Mar 26 | QR page fix |
+| BUG-030 | Restaurant 716 table check skip | 🟡 P1 | ✅ Fixed | Mar 25 | Mar 25 | Hyatt Goa |
+| BUG-029 | QR Code URL empty | 🟡 P1 | ⏸️ Parked | Mar 25 | - | Needs subdomain config |
+
+### Stats
+
+| Metric | Count |
+|--------|-------|
+| **Total Bugs** | 13 |
+| **Open (P0)** | 1 |
+| **Open (P1)** | 0 |
+| **Fixed** | 6 |
+| **Parked** | 1 |
+
+**Legend:** 🔴 P0 Critical | 🟡 P1 High | 🟢 P2 Medium | ✅ Fixed | ⏳ Pending | ⏸️ Parked
 
 ---
 

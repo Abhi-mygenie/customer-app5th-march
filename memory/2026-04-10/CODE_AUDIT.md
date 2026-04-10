@@ -5,6 +5,38 @@
 
 ---
 
+## 📊 Issues Tracking Dashboard
+
+| Issue ID | Category | Severity | Title | File(s) | Status | Effort | Session |
+|----------|----------|----------|-------|---------|--------|--------|---------|
+| CA-001 | Security | 🔴 Critical | Hardcoded credentials | authToken.js | ⏳ Pending | 1 day | - |
+| CA-002 | Security | 🔴 Critical | Weak JWT secret fallback | server.py | ⏳ Pending | 0.5 day | - |
+| CA-003 | Duplication | 🟠 High | Price calc in 6+ files | Multiple | ⏳ Pending | 2 days | - |
+| CA-004 | Duplication | 🟠 High | Tax calc in 3 files | Multiple | ⏳ Pending | 1 day | - |
+| CA-005 | Dead Code | 🟢 Low | Unused UI components (46) | components/ui/ | ✅ Fixed | - | Session 4 |
+| CA-006 | Performance | 🟡 Medium | 72+ console.logs | Multiple | ⏳ Pending | 0.5 day | - |
+| CA-007 | Maintainability | 🟡 Medium | CSS class conflicts (18+) | *.css | ⏳ Pending | 2 days | - |
+| CA-008 | Architecture | 🟠 High | ReviewOrder.jsx 1600+ lines | ReviewOrder.jsx | ⏳ Pending | 4-6 hrs | - |
+| CA-009 | Dead Code | 🟢 Low | Unused hook useApi.js | hooks/useApi.js | ⏳ Pending | 0.5 hr | - |
+| CA-010 | Dead Code | 🟡 Medium | 5 unused API endpoints | endpoints.js | ⏳ Pending | 1 hr | - |
+
+### Stats
+
+| Severity | Total | Fixed | Pending |
+|----------|-------|-------|---------|
+| 🔴 Critical | 5 | 1 | 4 |
+| 🟠 High | 7 | 0 | 7 |
+| 🟡 Medium | 7 | 0 | 7 |
+| 🟢 Low | 7 | 0 | 7 |
+| Architectural | 2 | 0 | 2 |
+| **Total** | **29** | **1** | **28** |
+
+**Code Quality Score: 7.5/10** (+0.3 from Session 4 cleanup)
+
+**Legend:** 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low | ✅ Fixed | ⏳ Pending
+
+---
+
 ## Executive Summary
 
 | Metric | Value | Status |
