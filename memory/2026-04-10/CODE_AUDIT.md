@@ -10,7 +10,7 @@
 | Issue ID | Category | Severity | Title | File(s) | Status | Effort | Session |
 |----------|----------|----------|-------|---------|--------|--------|---------|
 | CA-001 | Security | 🔴 Critical | Hardcoded credentials | authToken.js | ✅ Fixed | 0.5 hr | Apr 10 |
-| CA-002 | Security | 🔴 Critical | Weak JWT secret fallback | server.py | ⏳ Pending | 0.5 day | - |
+| CA-002 | Security | 🔴 Critical | Weak JWT secret fallback | server.py | ✅ Fixed | 0.5 hr | Apr 10 |
 | CA-003 | Duplication | 🟠 High | Price calc in 6+ files | Multiple | ⏳ Pending | 2 days | - |
 | CA-004 | Duplication | 🟠 High | Tax calc in 3 files | Multiple | ⏳ Pending | 1 day | - |
 | CA-005 | Dead Code | 🟢 Low | Unused UI components (46) | components/ui/ | ✅ Fixed | - | Session 4 |
@@ -24,14 +24,14 @@
 
 | Severity | Total | Fixed | Pending |
 |----------|-------|-------|---------|
-| 🔴 Critical | 5 | 2 | 3 |
+| 🔴 Critical | 5 | 3 | 2 |
 | 🟠 High | 7 | 0 | 7 |
 | 🟡 Medium | 7 | 0 | 7 |
 | 🟢 Low | 7 | 1 | 6 |
 | Architectural | 2 | 0 | 2 |
-| **Total** | **29** | **3** | **26** |
+| **Total** | **29** | **4** | **25** |
 
-**Code Quality Score: 7.7/10** (+0.2 from CA-001 fix)
+**Code Quality Score: 7.9/10** (+0.2 from CA-002 fix)
 
 **Legend:** 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low | ✅ Fixed | ⏳ Pending
 
@@ -431,9 +431,36 @@ if (!HARDCODED_PHONE || !HARDCODED_PASSWORD) {
 
 ---
 
-### 7.2 JWT Secret Exposure Risk
+### 7.2 JWT Secret Exposure Risk - ✅ FIXED
 
-**File:** Backend `.env` - Ensure JWT_SECRET is strong and not committed
+**File:** `/app/backend/server.py` (line 27-30)
+
+**Previous Code (INSECURE):**
+```python
+JWT_SECRET = os.environ.get('JWT_SECRET', 'customer-app-secret-key-change-in-production')
+```
+
+**Fixed Code (April 10, 2026):**
+```python
+# JWT Config (CA-002 fix - removed weak fallback)
+JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET:
+    raise ValueError("CRITICAL: JWT_SECRET environment variable must be set")
+JWT_ALGORITHM = "HS256"
+```
+
+**Changes Made:**
+1. ✅ Removed weak fallback secret from code
+2. ✅ Added validation - server fails to start if JWT_SECRET not set
+3. ✅ Tested - Admin login, token verification, OTP all working
+
+**Validation Results:**
+```
+Pre-fix:  Admin Login ✅ | Token Verify ✅
+Post-fix: Admin Login ✅ | Token Verify ✅ | Backend Running ✅
+```
+
+**Impact:** Server now fails fast if misconfigured (secure by default)
 
 ---
 
@@ -447,7 +474,8 @@ if (!HARDCODED_PHONE || !HARDCODED_PASSWORD) {
 | Large files | -1.0 | +1.0 | MEDIUM | 🔲 Parked |
 | Console.logs | -0.3 | +0.3 | LOW | 🔲 Pending |
 | CSS conflicts | -0.5 | +0.5 | MEDIUM | 🔲 Pending |
-| Hardcoded creds | -0.5 | +0.5 | CRITICAL | 🔲 Pending |
+| Hardcoded creds (CA-001) | -0.5 | +0.5 | CRITICAL | ✅ FIXED |
+| JWT Secret fallback (CA-002) | -0.5 | +0.5 | CRITICAL | ✅ FIXED |
 | Unused endpoints | -0.1 | +0.1 | LOW | 🔲 Pending |
 
 ### Quality Score Calculation
@@ -456,10 +484,11 @@ if (!HARDCODED_PHONE || !HARDCODED_PASSWORD) {
 |-------|-------|-------|
 | **Session 2** | 6.5/10 | Initial audit |
 | **Session 3** | 7.2/10 | +0.7 (TS refactor, bug fixes) |
-| **Session 4 (Current)** | **7.5/10** | +0.3 (UI cleanup -2,862 lines) |
-| After remaining HIGH priority | 8.0/10 | |
-| After MEDIUM priority | 8.7/10 | |
-| After ALL fixes | **9.2/10** | |
+| **Session 4** | 7.5/10 | +0.3 (UI cleanup -2,862 lines) |
+| **Session 10 (Current)** | **7.9/10** | +0.4 (CA-001, CA-002 security fixes) |
+| After remaining HIGH priority | 8.4/10 | |
+| After MEDIUM priority | 9.0/10 | |
+| After ALL fixes | **9.4/10** | |
 
 ---
 

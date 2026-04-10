@@ -24,8 +24,10 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# JWT Config
-JWT_SECRET = os.environ.get('JWT_SECRET', 'customer-app-secret-key-change-in-production')
+# JWT Config (CA-002 fix - removed weak fallback)
+JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET:
+    raise ValueError("CRITICAL: JWT_SECRET environment variable must be set")
 JWT_ALGORITHM = "HS256"
 
 # Upload directory
