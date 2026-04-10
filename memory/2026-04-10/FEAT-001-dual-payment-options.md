@@ -370,7 +370,124 @@ If issues arise:
 
 ---
 
-## 12. Future Enhancements (Phase 2)
+## 12. Related Bugs/Features
+
+| ID | Title | Relationship |
+|----|-------|--------------|
+| BUG-035 | f_order_status for Razorpay | `payment_type` logic reused |
+| BUG-034 | Incorrect payment_type | Fixed - prerequisite |
+| FEAT-002 | Firebase Notifications | Phase 2 - depends on this |
+
+---
+
+## 13. Security Considerations
+
+| Risk | Mitigation |
+|------|------------|
+| Payment type tampering | Validate `payment_type` on backend, don't trust frontend |
+| Razorpay key exposure | Key already in frontend (required by SDK), use test keys in dev |
+| COD fraud | Backend should enforce restaurant's payment settings |
+| Replay attacks | Razorpay signature verification already in place |
+
+**Checklist:**
+- [ ] Backend validates payment_type against restaurant settings
+- [ ] Cannot place prepaid order if Razorpay not configured
+- [ ] Cannot place COD order if codEnabled is false
+- [ ] Razorpay signature verified before marking paid
+
+---
+
+## 14. Performance Impact
+
+| Area | Impact | Notes |
+|------|--------|-------|
+| API Calls | None | No additional API calls |
+| Bundle Size | Minimal | ~1KB for selector component |
+| Render Time | None | Simple radio buttons |
+| Settings Load | None | Piggybacks on existing config API |
+
+**No performance concerns identified.**
+
+---
+
+## 15. Localization
+
+| Label Key | English (Default) | Hindi | Notes |
+|-----------|-------------------|-------|-------|
+| `paymentMethodTitle` | "Payment Method" | "भुगतान विधि" | Section header |
+| `payOnlineLabel` | "Pay Online" | "ऑनलाइन भुगतान" | Configurable |
+| `payAtCounterLabel` | "Pay at Counter" | "काउंटर पर भुगतान" | Configurable |
+| `payAndProceed` | "Pay & Proceed" | "भुगतान करें" | Button text |
+| `placeOrder` | "Place Order" | "ऑर्डर करें" | Button text |
+
+**Implementation:**
+- Labels from settings override i18n defaults
+- If settings label empty → fallback to i18n
+- Future: Add language selector to settings
+
+---
+
+## 16. A/B Testing
+
+| Variant | Description | Hypothesis |
+|---------|-------------|------------|
+| A (Control) | Online pre-selected | Current assumption |
+| B | COD pre-selected | May increase conversions for hesitant users |
+| C | No default (must select) | Forces conscious choice |
+
+**Metrics to Compare:**
+- Order completion rate
+- Payment success rate
+- Average order value
+- Time to checkout
+
+**Implementation:** Add `paymentDefaultSelection` setting: `"online"` | `"cod"` | `"none"`
+
+---
+
+## 17. Metrics to Track
+
+### 17.1 Business Metrics
+
+| Metric | Description | Target |
+|--------|-------------|--------|
+| Online Payment Adoption | % orders using online payment | Track baseline first |
+| COD to Online Conversion | % COD orders later paid via Pay Bill | > 20% |
+| Checkout Abandonment | Drop-off at payment selection | < 5% increase |
+| Order Completion Rate | Orders placed / checkout started | No regression |
+
+### 17.2 Technical Metrics
+
+| Metric | Description | Alert Threshold |
+|--------|-------------|-----------------|
+| Payment Selector Render Time | Time to show options | > 100ms |
+| Razorpay SDK Load Time | Time to load SDK | > 2s |
+| Payment API Error Rate | Failed payment attempts | > 5% |
+| Config API Latency | Settings fetch time | > 500ms |
+
+### 17.3 Tracking Implementation
+
+```javascript
+// Analytics events to add
+analytics.track('payment_method_viewed', { 
+  options_shown: ['online', 'cod'],
+  default_selection: 'online'
+});
+
+analytics.track('payment_method_selected', {
+  selected: 'cod',  // or 'online'
+  changed_from_default: true
+});
+
+analytics.track('order_placed', {
+  payment_type: 'postpaid',
+  amount: 1600
+});
+```
+
+---
+
+## 18. Future Enhancements (Phase 2)
 
 | Feature | Description |
 |---------|-------------|
@@ -385,4 +502,5 @@ If issues arise:
 | Date | Author | Changes |
 |------|--------|---------|
 | Apr 10, 2026 | AI Agent | Initial draft |
+| Apr 10, 2026 | AI Agent | Added: Related Bugs, Security, Performance, Localization, A/B Testing, Metrics |
 
