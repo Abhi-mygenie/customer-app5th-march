@@ -1,0 +1,49 @@
+[
+  {
+    "id": "4ffdf06d-1b58-4ee9-8e46-ca8695ae91c1",
+    "user_id": "pos_0001_restaurant_634",
+    "name": "test seg",
+    "filters": {
+      "customer_type": "normal"
+    },
+    "customer_count": 435,
+    "created_at": "2026-02-25T05:29:19.124726+00:00",
+    "updated_at": "2026-02-25T05:29:19.124726+00:00"
+  },
+  {
+    "id": "segment-demo-1",
+    "user_id": "demo-user-restaurant",
+    "name": "VIP Gold Members",
+    "description": "Gold tier loyalty members",
+    "filters": {
+      "tier": "Gold"
+    },
+    "customer_count": 12,
+    "created_at": "2026-01-11T06:08:00.614849",
+    "updated_at": "2026-01-11T06:08:00.614849"
+  },
+  {
+    "id": "segment-demo-2",
+    "user_id": "demo-user-restaurant",
+    "name": "Inactive Customers (30+ days)",
+    "description": "Customers who haven't visited in 30+ days",
+    "filters": {
+      "last_visit_days": "30"
+    },
+    "customer_count": 55,
+    "created_at": "2026-01-26T06:08:00.614849",
+    "updated_at": "2026-01-26T06:08:00.614849"
+  },
+  {
+    "id": "segment-demo-3",
+    "user_id": "demo-user-restaurant",
+    "name": "Corporate Clients",
+    "description": "Business and corporate customers",
+    "filters": {
+      "customer_type": "corporate"
+    },
+    "customer_count": 55,
+    "created_at": "2026-02-05T06:08:00.614849",
+    "updated_at": "2026-02-05T06:08:00.614849"
+  }
+]
