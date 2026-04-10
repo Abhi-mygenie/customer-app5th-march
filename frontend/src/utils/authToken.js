@@ -9,9 +9,15 @@ const TOKEN_EXPIRY_KEY = 'order_token_expiry';
 // Token expiration: 30 minutes
 const TOKEN_EXPIRY_TIME = 10 * 60 * 1000; // 30 minutes in milliseconds
 
-// Hardcoded credentials (move to env variables)
-const HARDCODED_PHONE = process.env.REACT_APP_LOGIN_PHONE || '+919579504871';
-const HARDCODED_PASSWORD = process.env.REACT_APP_LOGIN_PASSWORD || 'Qplazm@10';
+// Auth credentials from environment variables (CA-001 fix)
+// IMPORTANT: These must be set in .env file - no hardcoded fallbacks for security
+const HARDCODED_PHONE = process.env.REACT_APP_LOGIN_PHONE;
+const HARDCODED_PASSWORD = process.env.REACT_APP_LOGIN_PASSWORD;
+
+// Validate credentials are configured
+if (!HARDCODED_PHONE || !HARDCODED_PASSWORD) {
+  console.error('[Auth] CRITICAL: Missing REACT_APP_LOGIN_PHONE or REACT_APP_LOGIN_PASSWORD in environment');
+}
 
 /**
  * Get stored token from localStorage
