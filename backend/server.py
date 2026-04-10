@@ -209,6 +209,13 @@ class AppConfigUpdate(BaseModel):
     # Category & Item Timings (admin overrides)
     categoryTimings: Optional[dict] = None  # { "catId": { "start": "07:00", "end": "11:00" } }
     itemTimings: Optional[dict] = None  # { "itemId": { "start": "08:00", "end": "10:00" } }
+    # Payment Options Configuration (FEAT-001)
+    codEnabled: Optional[bool] = None  # Show COD/Pay at Counter option
+    onlinePaymentDinein: Optional[bool] = None  # Enable online payment for dine-in
+    onlinePaymentTakeaway: Optional[bool] = None  # Enable online payment for takeaway
+    onlinePaymentDelivery: Optional[bool] = None  # Enable online payment for delivery
+    payOnlineLabel: Optional[str] = None  # Custom label for online payment (default: "Pay Online")
+    payAtCounterLabel: Optional[str] = None  # Custom label for COD (default: "Pay at Counter")
 
 class SetPasswordRequest(BaseModel):
     phone: str
@@ -1056,6 +1063,13 @@ async def get_app_config(restaurant_id: str):
             # Category & Item Timings
             "categoryTimings": {},
             "itemTimings": {},
+            # Payment Options Configuration (FEAT-001)
+            "codEnabled": False,  # Default OFF - restaurant opts in
+            "onlinePaymentDinein": True,  # Default ON if Razorpay configured
+            "onlinePaymentTakeaway": True,
+            "onlinePaymentDelivery": True,
+            "payOnlineLabel": "Pay Online",
+            "payAtCounterLabel": "Pay at Counter",
         }
     
     return config
