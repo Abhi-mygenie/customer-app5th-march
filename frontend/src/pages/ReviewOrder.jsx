@@ -1745,8 +1745,11 @@ const ReviewOrder = () => {
               );
             })()
           )}
+        </div>
 
-          {/* Payment Method Selector (FEAT-001) */}
+        {/* Fixed Footer with Payment Selector + Button (FEAT-001) */}
+        <div className="review-order-footer">
+          {/* Payment Method Selector */}
           {showPaymentSelector && !isEditMode && (
             <PaymentMethodSelector
               showOnline={onlinePaymentEnabled}
@@ -1758,10 +1761,8 @@ const ReviewOrder = () => {
               disabled={isPlacingOrder}
             />
           )}
-        </div>
-
-        {/* Place Order Button */}
-        <div className="review-order-footer">
+          
+          {/* Place Order Button */}
           <button
             className="review-order-place-btn"
             onClick={handlePlaceOrder}

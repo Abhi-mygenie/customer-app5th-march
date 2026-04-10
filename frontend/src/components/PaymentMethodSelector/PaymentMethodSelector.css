@@ -2,15 +2,15 @@
   background-color: var(--bg-secondary, #f8f9fa);
   border: 1px solid var(--border-primary, #e0e0e0);
   border-radius: var(--radius-container-md, 12px);
-  padding: var(--spacing-md, 16px);
-  margin: var(--spacing-md, 16px) 0;
+  padding: var(--spacing-sm, 12px);
+  margin: 0;
 }
 
 .payment-method-header {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs, 8px);
-  margin-bottom: var(--spacing-sm, 12px);
+  margin-bottom: var(--spacing-xs, 8px);
 }
 
 .payment-method-icon {
@@ -27,7 +27,7 @@
 
 .payment-method-options {
   display: flex;
-  gap: var(--spacing-sm, 12px);
+  gap: var(--spacing-xs, 8px);
 }
 
 .payment-option {
@@ -35,7 +35,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs, 8px);
-  padding: var(--spacing-sm, 12px);
+  padding: var(--spacing-xs, 8px) var(--spacing-sm, 12px);
   background-color: var(--bg-primary, #ffffff);
   border: 2px solid var(--border-primary, #e0e0e0);
   border-radius: var(--radius-container-sm, 8px);

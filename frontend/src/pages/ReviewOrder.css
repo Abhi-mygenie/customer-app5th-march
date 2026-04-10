@@ -49,7 +49,7 @@
   padding: var(--spacing-sm) var(--spacing-md);
   max-width: 800px;
   margin: 0 auto;
-  padding-bottom: 110px;
+  padding-bottom: 140px; /* For footer with payment selector */
 }
 
 .review-order-section {
@@ -574,6 +574,17 @@
   z-index: var(--z-fixed);
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Payment selector in footer - compact style */
+.review-order-footer .payment-method-selector {
+  margin: 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--bg-secondary, #f8f9fa);
+  border-radius: var(--radius-container-sm, 8px);
 }
 
 .review-order-place-btn {
