@@ -926,6 +926,16 @@ const ReviewOrder = () => {
         // Determine payment type: 'prepaid' for Razorpay, 'postpaid' for COD
         const isRazorpayEnabled = !!restaurant?.razorpay?.razorpay_key;
         
+        // DEBUG: Log payment configuration before placing order
+        console.log('[BUG-035 TEST] Payment Config:', {
+          isRazorpayEnabled,
+          razorpay_key: restaurant?.razorpay?.razorpay_key,
+          paymentType: isRazorpayEnabled ? 'prepaid' : 'postpaid',
+          expectedFOrderStatus: isRazorpayEnabled ? 8 : 7,
+          restaurantId,
+          tableId: finalTableId
+        });
+        
         response = await placeOrder({
           cartItems,
           customerName,

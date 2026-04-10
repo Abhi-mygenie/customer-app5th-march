@@ -331,6 +331,15 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       points_discount: orderData.pointsDiscount || 0,
     };
 
+    // DEBUG: Log payload before sending to API
+    console.log('[BUG-035 TEST] placeOrder Payload:', {
+      payment_type: payloadData.payment_type,
+      restaurant_id: payloadData.restaurant_id,
+      table_id: payloadData.table_id,
+      order_type: payloadData.order_type,
+      order_amount: payloadData.order_amount
+    });
+
     formData.append('data', JSON.stringify(payloadData));
 
     const response = await apiClient.post(ENDPOINTS.PLACE_ORDER(), formData, {
