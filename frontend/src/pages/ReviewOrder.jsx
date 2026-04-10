@@ -23,6 +23,7 @@ import { FaDoorOpen } from "react-icons/fa";
 import ReviewOrderPriceBreakdown from '../components/ReviewOrderPriceBreakdown/ReviewOrderPriceBreakdown';
 import { RiFileList3Line } from "react-icons/ri";
 import CustomerDetails from '../components/CustomerDetails/CustomerDetails';
+import PaymentMethodSelector from '../components/PaymentMethodSelector';
 import './ReviewOrder.css';
 
 // Helper function to check if a string is purely numeric
@@ -72,7 +73,7 @@ const ReviewOrder = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, user, isCustomer } = useAuth();
-  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig } = useRestaurantConfig();
+  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig, codEnabled, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery, payOnlineLabel, payAtCounterLabel } = useRestaurantConfig();
   // console.log('restaurantId', restaurantId);
 
   // Inside ReviewOrder component, add:
@@ -152,7 +153,9 @@ const ReviewOrder = () => {
   const [roomOrTable, setRoomOrTable] = useState(null); // 'room' | 'table' | null
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [couponCode, setCouponCode] = useState('');
-
+  
+  // Payment method selection state (FEAT-001)
+  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' | 'cod'
   // Session storage key for customer info persistence during edit order
   const SESSION_CUSTOMER_KEY = 'sessionCustomerInfo';
 
@@ -435,6 +438,32 @@ const ReviewOrder = () => {
   const showSpecialInstructions = configShowSpecialInstructions;
   const showPriceBreakdown = configShowPriceBreakdown;
   const showTableInfo = configShowTableInfo;
+
+  // Payment options logic (FEAT-001)
+  const hasRazorpayKey = !!restaurant?.razorpay?.razorpay_key;
+  
+  // Determine online payment availability based on order type
+  const onlinePaymentEnabled = useMemo(() => {
+    if (!hasRazorpayKey) return false;
+    const orderType = scannedOrderType || 'dinein';
+    if (orderType === 'dinein') return onlinePaymentDinein;
+    if (orderType === 'takeaway') return onlinePaymentTakeaway;
+    if (orderType === 'delivery') return onlinePaymentDelivery;
+    return onlinePaymentDinein; // Default to dinein setting
+  }, [hasRazorpayKey, scannedOrderType, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery]);
+  
+  const showPaymentSelector = onlinePaymentEnabled && codEnabled;
+  
+  // Set default payment method based on available options
+  useEffect(() => {
+    if (onlinePaymentEnabled && !codEnabled) {
+      setPaymentMethod('online');
+    } else if (!onlinePaymentEnabled && codEnabled) {
+      setPaymentMethod('cod');
+    } else if (onlinePaymentEnabled && codEnabled) {
+      setPaymentMethod('online'); // Default to online when both available
+    }
+  }, [onlinePaymentEnabled, codEnabled]);
 
   // Validate room/table selection and number (required for multi-menu restaurants)
   const isTableNumberValid = () => {
@@ -923,15 +952,19 @@ const ReviewOrder = () => {
         // Check if GST is enabled at restaurant level
         const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
         
-        // Determine payment type: 'prepaid' for Razorpay, 'postpaid' for COD
-        const isRazorpayEnabled = !!restaurant?.razorpay?.razorpay_key;
+        // Determine payment type based on user selection (FEAT-001)
+        // 'online' → 'prepaid' (Razorpay), 'cod' → 'postpaid'
+        const selectedPaymentType = paymentMethod === 'online' ? 'prepaid' : 'postpaid';
+        const shouldTriggerRazorpay = paymentMethod === 'online' && hasRazorpayKey;
         
         // DEBUG: Log payment configuration before placing order
-        console.log('[BUG-035 TEST] Payment Config:', {
-          isRazorpayEnabled,
-          razorpay_key: restaurant?.razorpay?.razorpay_key,
-          paymentType: isRazorpayEnabled ? 'prepaid' : 'postpaid',
-          expectedFOrderStatus: isRazorpayEnabled ? 8 : 7,
+        console.log('[FEAT-001] Payment Config:', {
+          paymentMethod,
+          selectedPaymentType,
+          shouldTriggerRazorpay,
+          hasRazorpayKey,
+          codEnabled,
+          onlinePaymentEnabled,
           restaurantId,
           tableId: finalTableId
         });
@@ -955,16 +988,18 @@ const ReviewOrder = () => {
           pointsDiscount: pointsDiscount,
           // GST status
           gstEnabled: isGstEnabled,
-          // Payment type: prepaid for Razorpay, postpaid for COD
-          paymentType: isRazorpayEnabled ? 'prepaid' : 'postpaid'
+          // Payment type based on user selection (FEAT-001)
+          paymentType: selectedPaymentType
         });
       }
 
       // DEBUG: Log full response to verify razorpay_id
       console.log('[PlaceOrder Response]', response);
 
-      // Check if razorpay_id exists - payment flow needed
-      if (response?.razorpay_id && restaurant?.razorpay?.razorpay_key) {
+      // Check if Razorpay payment flow needed (only for online payment selection)
+      const shouldProcessRazorpay = paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key;
+      
+      if (shouldProcessRazorpay) {
         console.log('[Razorpay] Payment required:', {
           razorpay_id: response.razorpay_id,
           razorpay_key: restaurant.razorpay.razorpay_key,
@@ -1712,6 +1747,19 @@ const ReviewOrder = () => {
           )}
         </div>
 
+        {/* Payment Method Selector (FEAT-001) */}
+        {showPaymentSelector && !isEditMode && (
+          <PaymentMethodSelector
+            showOnline={onlinePaymentEnabled}
+            showCod={codEnabled}
+            selected={paymentMethod}
+            onSelect={setPaymentMethod}
+            onlineLabel={payOnlineLabel}
+            codLabel={payAtCounterLabel}
+            disabled={isPlacingOrder}
+          />
+        )}
+
         {/* Place Order Button */}
         <div className="review-order-footer">
           <button
@@ -1724,7 +1772,7 @@ const ReviewOrder = () => {
               ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
               : (isEditMode 
                   ? `Update Order ₹${roundedTotal.toFixed(2)}` 
-                  : (restaurant?.razorpay?.razorpay_key 
+                  : (paymentMethod === 'online' && hasRazorpayKey
                       ? `Pay & Proceed ₹${roundedTotal.toFixed(2)}`
                       : `Place Order ₹${roundedTotal.toFixed(2)}`)
                 )

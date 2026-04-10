@@ -101,6 +101,13 @@ const DEFAULT_CONFIG = {
   // Category & Item Timings
   categoryTimings: {},
   itemTimings: {},
+  // Payment Options Configuration (FEAT-001)
+  codEnabled: false,
+  onlinePaymentDinein: true,
+  onlinePaymentTakeaway: true,
+  onlinePaymentDelivery: true,
+  payOnlineLabel: 'Pay Online',
+  payAtCounterLabel: 'Pay at Counter',
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -391,6 +398,13 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Category & Item Timings
     categoryTimings: config.categoryTimings || {},
     itemTimings: config.itemTimings || {},
+    // Payment Options Configuration (FEAT-001)
+    codEnabled: config.codEnabled === true,
+    onlinePaymentDinein: config.onlinePaymentDinein !== false,
+    onlinePaymentTakeaway: config.onlinePaymentTakeaway !== false,
+    onlinePaymentDelivery: config.onlinePaymentDelivery !== false,
+    payOnlineLabel: config.payOnlineLabel || 'Pay Online',
+    payAtCounterLabel: config.payAtCounterLabel || 'Pay at Counter',
   };
 
   return (
