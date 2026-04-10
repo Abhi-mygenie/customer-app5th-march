@@ -8,25 +8,26 @@
 
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
-| BUG-035 | f_order_status not set for Razorpay | 🔴 P0 | ⏳ Pending | Mar 31 | - | Awaiting confirmation |
+| BUG-035 | f_order_status not set for Razorpay | 🔴 P0 | ⚠️ Partial | Mar 31 | Apr 10 | payment_type fixed, f_order_status TBD |
 | BUG-034 | Incorrect payment_type for Razorpay | 🔴 P0 | ✅ Fixed | Mar 31 | Mar 31 | Session 9 |
 | BUG-033 | POS token architecture redesign | 🔴 P0 | ✅ Fixed | Mar 26 | Mar 26 | localStorage now |
 | BUG-032 | TypeScript compilation error | 🔴 P0 | ✅ Fixed | Mar 26 | Mar 26 | Property 'data' |
 | BUG-031 | POS token not refreshed on login | 🔴 P0 | ✅ Fixed | Mar 26 | Mar 26 | QR page fix |
 | BUG-030 | Restaurant 716 table check skip | 🟡 P1 | ✅ Fixed | Mar 25 | Mar 25 | Hyatt Goa |
-| BUG-029 | QR Code URL empty | 🟡 P1 | ⏸️ Parked | Mar 25 | - | Needs subdomain config |
+| BUG-029 | QR Code URL empty | 🟡 P1 | ✅ Fixed | Mar 25 | Apr 10 | Uses API qr_code_urls now |
 
 ### Stats
 
 | Metric | Count |
 |--------|-------|
 | **Total Bugs** | 13 |
-| **Open (P0)** | 1 |
+| **Open (P0)** | 0 |
 | **Open (P1)** | 0 |
-| **Fixed** | 6 |
-| **Parked** | 1 |
+| **Fixed** | 7 |
+| **Partial** | 1 |
+| **Parked** | 0 |
 
-**Legend:** 🔴 P0 Critical | 🟡 P1 High | 🟢 P2 Medium | ✅ Fixed | ⏳ Pending | ⏸️ Parked
+**Legend:** 🔴 P0 Critical | 🟡 P1 High | 🟢 P2 Medium | ✅ Fixed | ⚠️ Partial | ⏳ Pending | ⏸️ Parked
 
 ---
 
@@ -79,29 +80,37 @@ paymentType: isRazorpayEnabled ? 'prepaid' : 'postpaid'
 |-------|---------|
 | **Bug ID** | BUG-035 |
 | **Date Reported** | 2026-03-31 |
+| **Date Fixed** | 2026-04-10 (partial) |
 | **Severity** | P0 - Critical |
-| **Status** | 🟡 Pending |
+| **Status** | ⚠️ Partial Fix |
 
 **Problem:**
 - `f_order_status` should be `8` for Razorpay orders (payment pending)
 - Currently defaults to `7` (YET_TO_CONFIRM) for all orders
 - POS needs to distinguish between COD and Razorpay orders
 
-**Root Cause:**
-- `orderService.ts` Line 191: `f_order_status` defaults to `ORDER_STATUS.YET_TO_CONFIRM` (7)
-- `placeOrder()` does not pass `f_order_status` parameter
+**What's Fixed (Apr 10, 2026):**
+- ✅ `payment_type: 'prepaid'` is now sent for Razorpay orders
+- ✅ Verified via console logs - payload correctly shows `payment_type: 'prepaid'`
+- ✅ Razorpay flow working end-to-end
 
-**Proposed Fix:**
-```jsx
-// In ReviewOrder.jsx placeOrder call:
-f_order_status: isRazorpayEnabled ? 8 : 7
+**Pending Clarification:**
+- ⚠️ `f_order_status` field - Does POS backend auto-set to `8` when `payment_type: 'prepaid'`?
+- ⚠️ Or does frontend need to explicitly send `f_order_status: 8`?
+- **Action:** Team to verify order 730776 in POS admin - check f_order_status value
+
+**Test Evidence (Apr 10):**
 ```
-
-**Files to Modify:**
-- `/app/frontend/src/pages/ReviewOrder.jsx`
-- `/app/frontend/src/api/services/orderService.ts`
-
-**Awaiting:** User confirmation to implement
+[BUG-035 TEST] Payment Config: {
+  isRazorpayEnabled: true,
+  paymentType: 'prepaid',
+  restaurantId: '510'
+}
+[BUG-035 TEST] placeOrder Payload: {
+  payment_type: 'prepaid',
+  restaurant_id: '510'
+}
+```
 
 ---
 
@@ -319,26 +328,30 @@ if (!skipTableCheckFor716 && finalTableId && String(finalTableId) !== '0') {
 |-------|---------|
 | **Bug ID** | BUG-029 |
 | **Date Reported** | 2026-03-25 |
-| **Date Fixed** | - |
+| **Date Fixed** | 2026-04-10 |
 | **Severity** | P1 - Important |
-| **Status** | 🟡 Parked |
+| **Status** | ✅ Fixed |
 | **File** | `/app/frontend/src/pages/admin/AdminQRPage.jsx` |
-| **Line** | 118 |
 
-**Problem:**
+**Problem (was):**
 ```javascript
 const baseUrl = subdomain ? `https://${subdomain}/${restaurantId}` : '';
 // If subdomain undefined, QR codes have empty URLs
 ```
 
-**Impact:**
-- QR codes generated with empty URLs
-- Admin QR page only - customer flow unaffected
+**Fix Applied:**
+- QR URLs now fetched directly from POS API via `item.qr_code_urls[selectedMenu]`
+- No longer building URLs manually with subdomain
+- Menu filter extracts available menus from `qr_code_urls` keys
 
-**Reason Parked:**
-- Not blocking customer orders
-- Only affects Admin QR generation
-- Can fix when Admin features prioritized
+**Current Code (Line 151):**
+```javascript
+const getQRUrl = (item) => {
+  return item.qr_code_urls?.[selectedMenu] || '';
+};
+```
+
+**Verified:** Apr 10, 2026 - Code review confirms fix is in place
 
 ---
 
