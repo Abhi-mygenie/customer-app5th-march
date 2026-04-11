@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: March 31, 2026 (Session 9 - Razorpay payment_type Fix)
+## Last Updated: April 11, 2026 (Session 10 - BUG-040/041 Fixes)
 
 ---
 
@@ -9,9 +9,9 @@
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
 | BUG-042 | 401 retry skips table status check | 🔴 P0 | ⏳ Discussion | Apr 11 | - | Needs POS-side table free/engaged API clarity |
-| BUG-041 | 401 retry wrong payment type (COD→prepaid) | 🔴 P0 | ⏳ Pending | Apr 11 | - | Uses razorpay_key existence instead of user selection |
-| BUG-040 | 401 retry skips Razorpay checkout | 🟡 P1 | ⏳ Pending | Apr 11 | - | Retry goes to success page without opening payment modal |
-| BUG-039 | Edit order missing orderDispatchedRef | 🟡 P1 | ⏳ To Discuss | Apr 11 | - | Network drop during edit shows wrong error msg |
+| BUG-041 | 401 retry wrong payment type (COD→prepaid) | 🔴 P0 | ✅ Fixed | Apr 11 | Apr 11 | Uses user's paymentMethod selection now |
+| BUG-040 | 401 retry skips Razorpay checkout | 🟡 P1 | ✅ Fixed | Apr 11 | Apr 11 | Retry now opens Razorpay modal for online payments |
+| BUG-039 | Edit order missing orderDispatchedRef | 🟡 P1 | ⏳ To Validate | Apr 11 | - | Network drop during edit shows wrong error msg |
 | BUG-038 | Razorpay success missing billSummary (points only) | 🟢 P2 | ⏳ To Validate | Apr 11 | - | pointsDiscount/pointsRedeemed lost, rest from API |
 | BUG-037 | OG/Meta shows "Hyatt Centric" hardcoded | 🟢 P2 | ⏳ Pending | Apr 11 | - | index.html meta description hardcoded, should be dynamic per restaurant |
 | BUG-036 | Login JSON parse error | 🔴 P0 | ✅ Fixed | Apr 10 | Apr 10 | Wrong backend URL in .env |
@@ -86,44 +86,16 @@ When a 401 error occurs during order placement, the retry block re-sends the ord
 |-------|---------|
 | **Bug ID** | BUG-041 |
 | **Date Reported** | 2026-04-11 |
+| **Date Fixed** | 2026-04-11 |
 | **Severity** | 🔴 P0 - High |
-| **Status** | ✅ Confirmed |
-| **File** | `ReviewOrder.jsx` lines 1062-1083 |
+| **Status** | ✅ Fixed (previous session) |
+| **File** | `ReviewOrder.jsx` lines 1120-1121 |
 
-### Problem
-Main flow: `paymentMethod === 'online' ? 'prepaid' : 'postpaid'` (user's selection)
-Retry flow: `!!restaurant?.razorpay?.razorpay_key ? 'prepaid' : 'postpaid'` (key existence)
+### Fix Applied
+Retry logic changed from `!!restaurant?.razorpay?.razorpay_key ? 'prepaid' : 'postpaid'` to `paymentMethod === 'online' ? 'prepaid' : 'postpaid'` (matches main flow).
 
-When user chose COD at a Razorpay-enabled restaurant → 401 → retry sends `prepaid` instead of `postpaid`.
-
-### Confirmed Evidence (Apr 11 — Restaurant 510)
-```
-[FEAT-001] Payment Config:
-  paymentMethod: 'cod'
-  selectedPaymentType: 'postpaid'     ← Main flow: CORRECT
-  hasRazorpayKey: true                ← Restaurant has Razorpay key
-
-placeOrder Payload:
-  payment_type: 'postpaid'            ← Sent correctly on first attempt
-
-PlaceOrder Response:
-  razorpay_id: '000526-510'           ← POS returns razorpay_id even for COD
-  order_id: 730792
-```
-
-**If 401 had occurred:** Retry would compute:
-```
-isRazorpayEnabledRetry = !!restaurant.razorpay.razorpay_key → true
-paymentType = true ? 'prepaid' : 'postpaid' → 'prepaid'  ← WRONG!
-```
-
-### Impact
-- COD order retried as prepaid → POS records wrong payment type
-- Restaurant 510 confirmed: has Razorpay key + user chose COD + main flow sent correct `postpaid`
-- All Razorpay-enabled restaurants with COD option are affected on 401 retry
-
-### Fix
-Replace retry logic with: `paymentMethod === 'online' ? 'prepaid' : 'postpaid'` (same as main flow)
+### Validated
+Console log confirms: `fixedRetrySends: 'postpaid'` when user selected COD at Razorpay-enabled restaurant.
 
 ---
 
@@ -133,33 +105,17 @@ Replace retry logic with: `paymentMethod === 'online' ? 'prepaid' : 'postpaid'` 
 |-------|---------|
 | **Bug ID** | BUG-040 |
 | **Date Reported** | 2026-04-11 |
+| **Date Fixed** | 2026-04-11 |
 | **Severity** | 🟡 P1 - High |
-| **Status** | ⏳ Pending Validation |
-| **File** | `ReviewOrder.jsx` lines 1086-1132 |
+| **Status** | ✅ Fixed |
+| **File** | `ReviewOrder.jsx` lines 1154-1246 |
 
-### Problem
-After 401 retry succeeds, code goes straight to `clearCart → navigateToSuccess`. Does NOT check if Razorpay payment flow should be triggered. User sees success page without paying.
+### Fix Applied
+Added `shouldRetryRazorpay` check after 401 retry. If user selected online payment and retry response has `razorpay_id`, opens Razorpay checkout modal (same flow as main path). Includes BUG-P2-007 fix in dismiss handler (`orderDispatchedRef.current = false`).
 
-### How to Validate
-**Option A (Code read):** In browser DevTools Sources → ReviewOrder.jsx, find the 401 retry block. After `retryResponse = await placeOrder(...)`, there is NO `shouldProcessRazorpay` check. Compare with main flow (line 876) which has: `const shouldProcessRazorpay = paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key;`
-
-**Option B (Simulated 401):** Add temporary `window.__force401Done` flag to force first placeOrder to throw 401. Steps:
-1. Select online payment at restaurant 510
-2. First call fails → retry fires
-3. Console shows `[BUG-P2-003]` with `BUG_TRIGGERED: true`
-4. Observe: success page loads WITHOUT Razorpay modal
-
-### Console Log
-```
-[BUG-P2-003] 401 RETRY SKIPS RAZORPAY VALIDATION:
-  userSelectedOnlinePayment: true
-  shouldHaveTriggeredRazorpay: true
-  BUG_TRIGGERED: true
-```
-
-### Impact
-- Order placed as prepaid in POS but payment never collected
-- Affects all Razorpay-enabled restaurants on 401 retry with online payment
+### Validated
+- Simulator moved to throw BEFORE placeOrder (realistic 401)
+- Retry creates fresh order → POS returns `razorpay_id` → Razorpay modal opens
 
 ---
 
