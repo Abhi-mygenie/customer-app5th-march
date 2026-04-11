@@ -56,6 +56,8 @@
 |------------|-------|--------|------|
 | FEAT-001 | Dual Payment Options (Online + COD) | ✅ Done | Apr 10, 2026 |
 | FEAT-001-ADMIN | Admin Settings for Payments | ✅ Done | Apr 10, 2026 |
+| FEAT-002 | Takeaway & Delivery (Phase 1-2 done) | ⏳ Phase 3 Blocked | Apr 11, 2026 |
+| FEAT-003 | Notification Popups (4 pages, 3 variants) | ✅ Done | Jan 11, 2026 |
 
 ### FEAT-001 Implementation Summary
 
@@ -102,6 +104,7 @@
 | Razorpay Integration | ✅ Complete | Session 7 |
 | Razorpay payment_type | ✅ Complete | Session 9 |
 | QR Code Filters | ✅ Complete | Session 7 |
+| FEAT-003 Notification Popups | ✅ Complete | Jan 11, 2026 |
 | Inclusive Tax Logic | 🔲 Pending | - |
 | Full TypeScript Migration | 🔲 Pending | - |
 
@@ -138,6 +141,7 @@
 
 | Session | Date | Key Changes |
 |---------|------|-------------|
+| Emergent Session | Jan 11, 2026 | FEAT-003 Notification Popups (4 pages, 3 variants, admin UI redesign, brand colors). FEAT-002 Delivery spec created (blocked). CRM endpoints investigated. |
 | Session 9 | Mar 31, 2026 | Razorpay payment_type fix (BUG-034) |
 | Session 8 | Mar 31, 2026 | Razorpay endpoints centralized |
 | Session 7 | Mar 26, 2026 | Razorpay integration, QR filters |
@@ -151,7 +155,8 @@
 
 | Environment | Credentials |
 |-------------|-------------|
-| Restaurant 709 (Young Monk) | owner@youngmonk.com / admin123 |
+| Restaurant 709 (Young Monk) | owner@youngmonk.com / Qplazm@10 |
+| Restaurant 509 (Pav & Pages) | owner@pav2.com / Qplazm@10 |
 | Restaurant 510 (Mygenie Dev) | owner@devmygenie.com / Qplazm@10 |
 | Customer Test | phone: 7505242126, restaurant_id: 709 |
 
@@ -169,4 +174,4 @@
 **Estimated Total: 3-4 weeks with 2 developers**
 
 ---
-*Last Revised: April 11, 2026 — 21:30 IST | No changes this session*
+*Last Revised: January 11, 2026 — FEAT-003 complete, FEAT-002 Delivery spec ready (blocked on backend team)*

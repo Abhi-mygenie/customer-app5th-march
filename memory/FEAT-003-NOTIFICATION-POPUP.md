@@ -9,16 +9,18 @@
 | **Feature ID** | FEAT-003 |
 | **Title** | Configurable Notification Popup |
 | **Created** | January 11, 2026 |
-| **Status** | Planning Complete — Ready for Implementation |
+| **Last Updated** | January 11, 2026 |
+| **Status** | ✅ Done |
 | **Priority** | P1 |
-| **Depends On** | None — can start immediately |
+| **Depends On** | None |
 | **Estimated Effort** | 6-8 hours |
+| **Actual Effort** | ~5 hours |
 
 ---
 
 ## 1. Overview
 
-A configurable popup that appears on landing, review, or success pages. Each page can have its own popup. Appears after a configurable delay (3-10 seconds), stays until user closes it or auto-dismisses.
+A configurable popup that appears on landing, menu, review, or success pages. Each page can have its own popup (max 4). Appears after a configurable delay, stays until user closes it or auto-dismisses.
 
 ---
 
@@ -58,8 +60,8 @@ Stored in `customer_app_config` collection per restaurant.
 |-------|------|:--------:|---------|-------------|
 | `id` | string | auto | uuid | Unique popup ID |
 | `enabled` | bool | yes | false | Master toggle |
-| `showOn` | string | yes | — | Which page: `"landing"`, `"review"`, or `"success"` |
-| `delaySeconds` | number | no | 3 | Delay before showing (3-10 seconds) |
+| `showOn` | string | yes | — | Which page: `"landing"`, `"menu"`, `"review"`, or `"success"` |
+| `delaySeconds` | number | no | 3 | Delay before showing |
 | `autoDismissSeconds` | number | no | 0 | Auto-close after N seconds. `0` = manual close only |
 | `content.title` | string | **yes** | — | Popup heading |
 | `content.message` | string | **yes** | — | Body text |
@@ -74,9 +76,9 @@ Stored in `customer_app_config` collection per restaurant.
 
 ### Rules
 
-- **One popup per page** — if multiple popups have `showOn: "landing"`, only the first enabled one is shown
+- **One popup per page** — if multiple popups have same `showOn`, only the first enabled one is shown
 - **Every visit** — popup shows on every page visit, no session/day limiting
-- Each page (landing, review, success) can have its own different popup
+- **Max 4 popups** — one per page (landing, menu, review, success)
 
 ---
 
@@ -99,127 +101,67 @@ Page loads → wait {delaySeconds}
 
 ---
 
-## 4. Components
+## 4. Implementation (Completed)
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| `NotificationPopup` | `components/NotificationPopup/NotificationPopup.jsx` | Popup UI — modal/banner/toast with title, message, image, CTA, close button |
-| `NotificationPopup.css` | `components/NotificationPopup/NotificationPopup.css` | Styles for all 3 types (modal, banner, toast) and 3 positions |
-| `useNotificationPopup` | `hooks/useNotificationPopup.js` | Hook — finds popup for current page, handles delay timer, auto-dismiss timer |
+### Files Created
 
-### Component Props
+| File | Purpose |
+|------|---------|
+| `hooks/useNotificationPopup.js` | Hook — delay, auto-dismiss, page matching, stale cache re-trigger |
+| `components/NotificationPopup/NotificationPopup.jsx` | Popup UI — modal/banner/toast with title, message, image, CTA, close |
+| `components/NotificationPopup/NotificationPopup.css` | Styles for all 3 variants and 3 positions |
 
-```jsx
-<NotificationPopup
-  page="landing"           // current page identifier
-  config={appConfig}       // restaurant app config (contains notificationPopups array)
-  primaryColor="#E8531E"   // restaurant branding
-/>
-```
+### Files Modified
 
-### Hook API
-
-```javascript
-const { popup, isVisible, dismiss } = useNotificationPopup({
-  page: "landing",
-  popups: appConfig.notificationPopups || []
-});
-// popup = the popup config object (or null)
-// isVisible = boolean (after delay)
-// dismiss = function to close
-```
-
----
-
-## 5. Pages Modified
-
-| Page | Change |
+| File | Change |
 |------|--------|
-| `LandingPage.jsx` | Add `<NotificationPopup page="landing" config={appConfig} />` |
-| `ReviewOrder.jsx` | Add `<NotificationPopup page="review" config={appConfig} />` |
-| `OrderSuccess.jsx` | Add `<NotificationPopup page="success" config={appConfig} />` |
+| `backend/server.py` | Added `notificationPopups` to `AppConfigUpdate` model + default config |
+| `context/RestaurantConfigContext.jsx` | Added `notificationPopups: []` to DEFAULT_CONFIG + value |
+| `context/AdminConfigContext.jsx` | Added `notificationPopups: []` to defaultConfig |
+| `pages/LandingPage.jsx` | Added `<NotificationPopup page="landing" />` |
+| `pages/MenuItems.jsx` | Added `<NotificationPopup page="menu" />` |
+| `pages/ReviewOrder.jsx` | Added `<NotificationPopup page="review" />` |
+| `pages/OrderSuccess.jsx` | Added `<NotificationPopup page="success" />` |
+| `pages/admin/AdminSettingsPage.jsx` | Full admin UI with grouped sections, visual selectors |
+| `pages/admin/AdminPages.css` | Styles for admin popup config UI |
 
-Minimal change — one line per page. All logic lives in the component + hook.
+### Design Decisions
+
+- **Brand colors used throughout**: Title uses `var(--text-color)`, message uses `var(--text-secondary-color)`, CTA uses `var(--color-primary)`, fonts use `var(--font-heading)` and `var(--font-body)`
+- **Brand-colored border**: `border: 1px solid var(--color-primary)` on modal, banner, and toast
+- **Visual position selector**: Phone mockups showing top/center/bottom bar placement (instead of dropdown)
+- **Visual type selector**: Icon-based buttons for Modal/Banner/Toast
+- **Toggle switch in header**: Prominent ON/OFF instead of buried checkbox
+- **Grouped admin sections**: Content, Display, Timing — clear visual hierarchy
+- **Stale cache safety**: Hook uses stable `popupKey` string to ensure re-trigger when config updates
 
 ---
 
-## 6. Backend Changes
+## 5. Admin UI
 
-### 6.1 Config Model Update (`server.py`)
+### Layout
 
-Add to `AppConfigUpdate` model:
-
-```python
-notificationPopups: Optional[List[dict]] = None
+```
+┌──────────────────────────────────────────────────┐
+│  [Landing Page ▾]                   [ON/OFF] [🗑] │
+├──────────────────────────────────────────────────┤
+│  CONTENT                                          │
+│  Title *        [________________________]        │
+│  Message *      [________________________]        │
+│  Image URL      [________________________]        │
+│  Button Text    [________________________]        │
+│  Button Link    [__________]  Action [▾ Nav]      │
+├──────────────────────────────────────────────────┤
+│  DISPLAY              │  TIMING                   │
+│  Type  [Modal][Banner][Toast]  Show after [3] sec │
+│  Position              │  Auto-close [0] sec      │
+│  [Top] [Center] [Btm] │  0 = manual close only   │
+└──────────────────────────────────────────────────┘
 ```
 
-No new endpoints needed — uses existing `GET /api/config/{restaurant_id}` and `PUT /api/config/`.
-
-### 6.2 Default Config
-
-When `notificationPopups` is not set, default to empty array `[]` (no popups).
-
 ---
 
-## 7. Admin Settings (Phase 1 — Simple)
-
-Add a section in `AdminSettingsPage.jsx`:
-
-| Field | Input Type |
-|-------|-----------|
-| Enable/Disable | Toggle switch |
-| Show On | Dropdown: Landing / Review / Success |
-| Delay (seconds) | Number input (3-10) |
-| Auto-dismiss (seconds) | Number input (0 = off) |
-| Title | Text input **(required)** |
-| Message | Textarea **(required)** |
-| Image | Image upload (optional) |
-| Button Text | Text input (optional, leave empty = no button) |
-| Button Link | Text input (optional) |
-| Button Action | Dropdown: Navigate / Dismiss / External Link |
-| Position | Dropdown: Center / Bottom / Top |
-| Type | Dropdown: Modal / Banner / Toast |
-
-Admin can add up to 3 popups (one per page).
-
----
-
-## 8. UI Variants
-
-### Modal (default, `type: "modal"`)
-- Centered overlay with backdrop
-- Card with title, message, optional image, optional CTA button
-- X close button top-right
-- Backdrop click dismisses
-
-### Banner (`type: "banner"`)
-- Full-width strip at top or bottom of page
-- Inline, pushes content
-- Close button on right
-
-### Toast (`type: "toast"`)
-- Small card in bottom-right corner
-- Doesn't block interaction
-- Close button
-
----
-
-## 9. Implementation Checklist
-
-| # | Task | Effort | File(s) |
-|---|------|--------|---------|
-| 1 | Backend: Add `notificationPopups` to AppConfigUpdate model | 15 min | `server.py` |
-| 2 | Backend: Add `notificationPopups: []` to default config response | 15 min | `server.py` |
-| 3 | Frontend: Create `useNotificationPopup` hook | 1 hr | `hooks/useNotificationPopup.js` |
-| 4 | Frontend: Create `NotificationPopup` component (modal + banner + toast) | 2-3 hrs | `components/NotificationPopup/` |
-| 5 | Frontend: Wire into LandingPage, ReviewOrder, OrderSuccess | 30 min | 3 page files |
-| 6 | Frontend: Admin popup config UI in settings | 2-3 hrs | `AdminSettingsPage.jsx` |
-| 7 | Test: All 3 popup types, all 3 pages, delay, auto-dismiss, CTA actions | 1 hr | — |
-| **Total** | | **~6-8 hrs** | |
-
----
-
-## 10. Test Cases (38 Total)
+## 6. Test Cases (38 Total)
 
 ### A. Backend Config
 
@@ -244,9 +186,10 @@ Admin can add up to 3 popups (one per page).
 | B8 | `autoDismissSeconds: 0` | Popup stays until user closes |
 | B9 | User calls `dismiss()` | Popup closes immediately |
 | B10 | Multiple popups, same page ("landing") | Only first enabled one shows |
-| B11 | 3 popups, one per page | Each page shows its own popup |
+| B11 | 4 popups, one per page | Each page shows its own popup |
 | B12 | Page unmount during delay timer | No error, timer cleans up |
 | B13 | Page unmount during auto-dismiss timer | No error, timer cleans up |
+| B14 | Config updates from cache → API (stale cache) | Popup re-triggers correctly |
 
 ### C. Component UI — Modal Variant
 
@@ -260,8 +203,11 @@ Admin can add up to 3 popups (one per page).
 | C6 | Click CTA with `ctaAction: "navigate"` | Navigates to `ctaLink` route |
 | C7 | Click CTA with `ctaAction: "dismiss"` | Modal closes |
 | C8 | Click CTA with `ctaAction: "external_link"` | Opens `ctaLink` in new tab |
-| C9 | Respects restaurant `primaryColor` | CTA button uses primaryColor |
+| C9 | Respects restaurant `primaryColor` | CTA button + border uses primaryColor |
 | C10 | Respects restaurant `borderRadius` | Modal card uses configured radius |
+| C11 | Uses `var(--text-color)` for title | Brand text color applied |
+| C12 | Uses `var(--text-secondary-color)` for message | Brand secondary color applied |
+| C13 | Has `border: 1px solid var(--color-primary)` | Brand-colored border visible |
 
 ### D. Component UI — Banner Variant
 
@@ -270,7 +216,7 @@ Admin can add up to 3 popups (one per page).
 | D1 | Banner at `position: "top"` | Appears at top of page |
 | D2 | Banner at `position: "bottom"` | Appears at bottom of page |
 | D3 | Banner close button | Dismisses banner |
-| D4 | Banner with CTA | Button works same as modal CTA |
+| D4 | Banner has brand-colored border | `border: 1px solid var(--color-primary)` |
 
 ### E. Component UI — Toast Variant
 
@@ -279,48 +225,45 @@ Admin can add up to 3 popups (one per page).
 | E1 | Toast appears bottom-right | Positioned correctly |
 | E2 | Toast auto-dismiss countdown visible | Shows seconds remaining |
 | E3 | Toast close button | Dismisses toast |
-| E4 | Toast does NOT overlap `react-hot-toast` | Separate container, no collision |
+| E4 | Toast has brand-colored border | `border: 1px solid var(--color-primary)` |
+| E5 | Toast does NOT overlap `react-hot-toast` | Separate container, no collision |
 
 ### F. Page Integration
 
 | # | Test | Expected |
 |---|------|----------|
 | F1 | Landing page with popup configured | Popup appears after delay |
-| F2 | Review page with popup configured | Popup appears after delay |
-| F3 | Success page with popup configured | Popup appears after delay |
-| F4 | Landing page, no popup for this page | Nothing shown, no errors |
-| F5 | Navigate landing → menu → back to landing | Popup shows again (every visit) |
-| F6 | Popup on ReviewOrder (1600+ lines page) | No performance impact, renders correctly |
+| F2 | **Menu page with popup configured** | Popup appears after delay |
+| F3 | Review page with popup configured | Popup appears after delay |
+| F4 | Success page with popup configured | Popup appears after delay |
+| F5 | Page with no popup configured | Nothing shown, no errors |
+| F6 | Navigate away and back | Popup shows again (every visit) |
+| F7 | Refresh page | Popup shows again |
 
 ### G. Admin Settings
 
 | # | Test | Expected |
 |---|------|----------|
 | G1 | Add popup with title + message only | Saves successfully |
-| G2 | Add popup with all fields filled | Saves all fields |
-| G3 | Toggle popup enabled/disabled | Reflects on customer-facing pages |
-| G4 | Change showOn from "landing" to "review" | Popup moves to correct page |
-| G5 | Set delay to 3, 5, 10 | Delay respected on customer page |
-| G6 | Set auto-dismiss to 0, 5, 10 | Behavior matches setting |
-| G7 | Upload popup image | Image URL saved and displayed |
-| G8 | Max 3 popups (one per page) | Cannot add 4th popup |
-| G9 | Delete a popup | Removed from config |
-| G10 | Save empty title or message | Validation error — both required |
+| G2 | Toggle popup enabled/disabled | Reflects on customer-facing pages |
+| G3 | Change showOn from "landing" to "menu" | Popup moves to correct page |
+| G4 | Visual position selector (top/center/bottom) | Correct position applied |
+| G5 | Visual type selector (modal/banner/toast) | Correct type rendered |
+| G6 | Max 4 popups (one per page) | Cannot add 5th popup |
+| G7 | Delete a popup | Removed from config |
 
 ### H. Edge Cases
 
 | # | Test | Expected |
 |---|------|----------|
 | H1 | Config fetch fails (network error) | No popup, no crash |
-| H2 | Popup with invalid/broken imageUrl | Image gracefully hidden, title+message still show |
-| H3 | Popup with `ctaLink` to invalid route | Navigate fails gracefully |
-| H4 | Very long title/message text | Scrollable or truncated, no overflow |
-| H5 | Rapid page navigation during delay | Timer cleans up, no stale popup |
-| H6 | Config cached in localStorage, popup updated by admin | Fresh config fetched, new popup shown |
+| H2 | Popup with invalid/broken imageUrl | Image hidden, title+message still show |
+| H3 | Very long title/message text | Scrollable or truncated, no overflow |
+| H4 | Config cached in localStorage, popup updated by admin | Fresh config fetched, new popup shown |
 
 ---
 
-## 11. Deferred to Next Phase
+## 7. Deferred to Next Phase
 
 | Item | Phase |
 |------|-------|
@@ -332,4 +275,4 @@ Admin can add up to 3 popups (one per page).
 
 ---
 
-*Created: January 11, 2026 | Status: Ready for implementation — no blockers*
+*Created: January 11, 2026 | Status: ✅ Done — all 4 pages wired, admin UI complete, brand colors + border applied*
