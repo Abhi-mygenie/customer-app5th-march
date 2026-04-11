@@ -11,7 +11,7 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git (branch
 
 ## What's Been Implemented
 
-### 2026-04-11 — Setup & CA-003 + CA-004 Fixes
+### 2026-04-11 — Setup & CA-003 + CA-004 + CA-008 Phase 1 Fixes
 - Cloned repo, configured env, resolved tsconfig/jsconfig conflict
 - **CA-003 Fixed**: Centralized price calculation (base + variations + addons)
   - Replaced 4 inline duplications with `calculateCartItemPrice()` from `helpers.js`
@@ -19,7 +19,12 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git (branch
 - **CA-004 Fixed**: Centralized tax calculation (GST/VAT breakdown)
   - Created `/utils/taxCalculation.js` with `calculateItemTax()` and `calculateTaxBreakdown()`
   - Replaced inline tax calc in `ReviewOrder.jsx` (~80 lines) and `orderService.ts` (~20 lines)
-  - Tested on restaurant 478: CGST ₹1.13, SGST ₹1.13, Grand Total ₹48.00 — correct
+- **CA-008 Phase 1 Fixed**: ReviewOrder.jsx component extraction (1722 → 1479 lines, -243 lines)
+  - Extracted `TableRoomSelector` — scanned table display + manual room/table dropdown with sort
+  - Extracted `LoyaltyRewardsSection` — consolidated 3 inline loyalty JSX blocks into 1 component
+  - Moved helper functions (isNumeric, sortTableNumbers) to TableRoomSelector
+  - Removed unused imports (Select, IoGiftOutline, FaDoorOpen, MdOutlineTableRestaurant)
+  - Testing: 100% frontend pass, zero regressions
 
 ### Previously Completed (Apr 10)
 - DFA-001 to DFA-004, DFA-006, DFA-007, DFA-010 (defaults/fallbacks audit fixes)
@@ -28,8 +33,8 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git (branch
 ## Prioritized Backlog
 
 ### P0 (Next)
-- DFA-011: Restaurant 716 hardcoded table check → config flag
-- CA-008: ReviewOrder.jsx 1600+ lines → split into components
+- CA-008 Phase 2: Dedup handlePlaceOrder (401 retry copy-paste, submitOrder helper, Razorpay extraction)
+- CA-008 Phase 3: Extract useOrderSubmit + useCustomerPrefill hooks
 
 ### P2
 - CA-006: 72+ console.logs → logger utility
