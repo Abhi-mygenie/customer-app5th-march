@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: April 11, 2026 (Session 10 - BUG-040/041 Fixes)
+## Last Updated: April 11, 2026 (Session 11 - FEAT-002 + Payment Fixes)
 
 ---
 
@@ -8,6 +8,8 @@
 
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
+| BUG-044 | POS returns razorpay_id for COD orders | 🔴 P0 | ⏳ POS-side bug | Apr 11 | - | POS generates razorpay_id even when payment_type=postpaid. Should only generate for PG payments |
+| BUG-043 | Refactoring broke payment defaults — orders not on dashboard | 🔴 P0 | ✅ Fixed | Apr 11 | Apr 11 | 3 bugs: paymentMethod defaulted to 'online', autopaid endpoint used for all multi-menu, helpers.js hardcoded prepaid |
 | BUG-042 | 401 retry skips table status check | 🔴 P0 | ⏳ Discussion | Apr 11 | - | Needs POS-side table free/engaged API clarity |
 | BUG-041 | 401 retry wrong payment type (COD→prepaid) | 🔴 P0 | ✅ Fixed | Apr 11 | Apr 11 | Uses user's paymentMethod selection now |
 | BUG-040 | 401 retry skips Razorpay checkout | 🟡 P1 | ✅ Fixed | Apr 11 | Apr 11 | Retry now opens Razorpay modal for online payments |
@@ -2379,3 +2381,105 @@ Razorpay integration was added without following existing codebase patterns for 
 ### Testing
 - Razorpay payment flow should work as before
 - URLs now sourced from centralized config
+
+
+---
+
+## BUG-043: Refactoring Broke Payment Defaults — Orders Not on Dashboard
+
+### Priority: 🔴 P0 — CRITICAL
+### Status: ✅ Fixed (April 11, 2026)
+### Root Cause: Previous refactoring session introduced 3 payment-related regressions
+
+### Symptoms
+- Orders placed successfully (POS returns order_id) but NOT showing on restaurant dashboard
+- All orders sent as `payment_type: "prepaid"` even for COD
+- `payment_type: "prepaid"` + `payment_method: "cash_on_delivery"` + `payment_id: ""` → contradictory payload
+- POS couldn't process: prepaid order with no payment details
+
+### 3 Root Causes Found
+
+**1. `paymentMethod` defaulted to `'online'` (ReviewOrder.jsx:153)**
+```
+const [paymentMethod, setPaymentMethod] = useState('online'); // ← WRONG
+```
+Every order defaulted to online → `selectedPaymentType = 'prepaid'` → wrong payment_type sent.
+**Fix:** Changed to `useState('cod')`.
+
+**2. Autopaid endpoint used for ALL multi-menu restaurants (orderService.ts:260)**
+```
+if (isMultiMenu) → ENDPOINTS.PLACE_ORDER_AUTOPAID()  // ← WRONG
+```
+`autopaid-place-prepaid-order` endpoint should ONLY be used for restaurant 716 (Hyatt Centric). Was gated on `isMultiMenu` instead of restaurant ID.
+**Fix:** Changed to `if (String(orderData.restaurantId) === '716')`.
+
+**3. `payment_type: 'prepaid'` hardcoded in multi-menu payload (helpers.js:380)**
+```
+payment_type: 'prepaid',  // ← WRONG
+```
+Multi-menu orders always sent prepaid regardless of user's payment choice.
+**Fix:** Changed to `orderData.paymentType || 'postpaid'`.
+
+### Correct Payment Rules
+| Field | Value | Rule |
+|-------|-------|------|
+| `payment_method` | Always `"cash_on_delivery"` | Hardcoded, never changes |
+| `payment_type` | `"prepaid"` if Razorpay chosen, `"postpaid"` if COD | Based on user's UI selection, sent upfront in payload |
+| Endpoint (716 only) | `/customer/order/autopaid-place-prepaid-order` | Only restaurant 716 |
+| Endpoint (all others) | `/customer/order/place` | All other restaurants |
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `ReviewOrder.jsx:153` | Default `paymentMethod` from `'online'` to `'cod'` |
+| `orderService.ts:260` | Endpoint gated on `restaurantId === '716'` instead of `isMultiMenu` |
+| `helpers.js:380` | `payment_type` from hardcoded `'prepaid'` to `orderData.paymentType` |
+
+---
+
+## BUG-044: POS Returns razorpay_id for COD Orders
+
+### Priority: 🔴 P0 — CRITICAL (POS-side bug)
+### Status: ⏳ Pending — POS backend team needs to fix
+### Owner: POS Backend Team
+
+### Symptoms
+- COD order placed with `payment_type: "postpaid"`, `payment_method: "cash_on_delivery"`
+- POS response includes `razorpay_id: "00392-478"` (format: `order_number-restaurant_id`)
+- This ID should NOT be generated for COD/postpaid orders
+
+### Evidence
+**Request payload (correct from our side):**
+```json
+{
+  "payment_type": "postpaid",
+  "payment_method": "cash_on_delivery",
+  "payment_id": "",
+  "order_type": "takeaway",
+  "restaurant_id": "478"
+}
+```
+
+**POS response (incorrect — razorpay_id should not be present):**
+```json
+{
+  "message": "Order placed successfully!",
+  "order_id": 730858,
+  "razorpay_id": "00392-478",
+  "total_amount": 1
+}
+```
+
+### Impact
+- `razorpay_id` in response for COD orders is misleading
+- Frontend checks `response?.razorpay_id` to decide if Razorpay checkout should open
+- Current frontend code has additional guard (`paymentMethod === 'online' && hasRazorpayKey`) so it doesn't trigger Razorpay for COD — but this is a fragile workaround
+- If any future code checks only `razorpay_id` presence, it would incorrectly trigger PG flow for COD orders
+
+### Expected Behavior
+- POS should return `razorpay_id` ONLY when `payment_type: "prepaid"`
+- For COD/postpaid orders, `razorpay_id` should be `null` or absent from response
+
+### Action Required
+- POS backend team to fix: do not generate/return `razorpay_id` for postpaid orders
+- Frontend has a workaround but POS should be the source of truth
