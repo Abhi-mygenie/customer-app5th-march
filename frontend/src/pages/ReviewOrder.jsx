@@ -875,6 +875,18 @@ const ReviewOrder = () => {
           // Payment type based on user selection (FEAT-001)
           paymentType: selectedPaymentType
         });
+
+        // ═══ TEMPORARY 401 SIMULATOR — remove after testing ═══
+        // Set window.__simulate401 = true in browser console before placing order
+        // This forces the main flow to "fail" with 401 so the retry path executes
+        if (window.__simulate401 && !window.__simulate401Done) {
+          window.__simulate401Done = true;
+          console.warn('[401 SIMULATOR] Forcing 401 to test retry path. Real response was:', response);
+          const fakeError = new Error('Simulated 401');
+          fakeError.response = { status: 401 };
+          throw fakeError;
+        }
+        // ═══ END SIMULATOR ═══
       }
 
       // DEBUG: Log full response to verify razorpay_id
@@ -1102,24 +1114,16 @@ const ReviewOrder = () => {
             toast.success('Order updated successfully!');
           } else {
             // Retry order placement
-            // Determine payment type: 'prepaid' for Razorpay, 'postpaid' for COD
-            const isRazorpayEnabledRetry = !!restaurant?.razorpay?.razorpay_key;
+            // BUG-041 FIX: Use paymentMethod (user's selection), NOT razorpay_key existence
+            const retryPaymentType = paymentMethod === 'online' ? 'prepaid' : 'postpaid';
             
-            // ═══ BUG-P2-001 VALIDATION LOG ═══
-            // Main flow uses: paymentMethod === 'online' ? 'prepaid' : 'postpaid'
-            // Retry uses: isRazorpayEnabledRetry ? 'prepaid' : 'postpaid'
-            // These CAN differ when user chose COD but restaurant has Razorpay key
-            const mainFlowPaymentType = paymentMethod === 'online' ? 'prepaid' : 'postpaid';
-            const retryPaymentType = isRazorpayEnabledRetry ? 'prepaid' : 'postpaid';
-            console.warn('[BUG-P2-001] 401 RETRY PAYMENT TYPE VALIDATION:', {
+            // ═══ BUG-P2-001 VALIDATION LOG (now showing fix works) ═══
+            const oldBuggyLogic = !!restaurant?.razorpay?.razorpay_key ? 'prepaid' : 'postpaid';
+            console.warn('[BUG-P2-001] 401 RETRY PAYMENT TYPE — FIXED:', {
               userSelectedPaymentMethod: paymentMethod,
-              mainFlowWouldSend: mainFlowPaymentType,
-              retryActuallySends: retryPaymentType,
-              hasRazorpayKey: isRazorpayEnabledRetry,
-              BUG_TRIGGERED: mainFlowPaymentType !== retryPaymentType,
-              explanation: mainFlowPaymentType !== retryPaymentType 
-                ? 'BUG CONFIRMED: User chose COD but retry sends prepaid because Razorpay key exists!'
-                : 'No mismatch in this case'
+              fixedRetrySends: retryPaymentType,
+              oldBuggyWouldHaveSent: oldBuggyLogic,
+              BUG_WOULD_HAVE_TRIGGERED: retryPaymentType !== oldBuggyLogic,
             });
 
             retryResponse = await placeOrder({
@@ -1139,8 +1143,8 @@ const ReviewOrder = () => {
               // Points redemption
               pointsRedeemed: pointsToRedeem,
               pointsDiscount: pointsDiscount,
-              // Payment type: prepaid for Razorpay, postpaid for COD
-              paymentType: isRazorpayEnabledRetry ? 'prepaid' : 'postpaid'
+              // BUG-041 FIX: payment type from user selection, not key existence
+              paymentType: retryPaymentType
             });
           }
 
