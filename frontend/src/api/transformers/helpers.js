@@ -377,7 +377,7 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       longitude: '',
       pincode: '',
       air_bnb_id: '',
-      payment_type: 'prepaid',
+      payment_type: orderData.paymentType || 'postpaid',
       contact_person_name: '',
       contact_person_number: '',
       address_type: '',

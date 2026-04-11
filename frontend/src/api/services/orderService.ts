@@ -251,14 +251,15 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
     const gstEnabled = orderData.gstEnabled !== false;
     const isMultiMenu = orderData.isMultipleMenuType === true;
 
-    // Use different payload structure for multi-menu restaurants
+    // Use autopaid endpoint ONLY for restaurant 716 (Hyatt Centric)
+    // All other restaurants (including multi-menu) use the normal place endpoint
     if (isMultiMenu) {
-      // Multi-menu uses a different payload structure with tax calculations per item
       const multiMenuPayload = buildMultiMenuPayload(orderData, gstEnabled) as { data: any };
       formData.append('data', JSON.stringify(multiMenuPayload.data));
 
-      const endpoint = ENDPOINTS.PLACE_ORDER_AUTOPAID 
-        ? ENDPOINTS.PLACE_ORDER_AUTOPAID() 
+      const is716 = String(orderData.restaurantId) === '716';
+      const endpoint = is716
+        ? ENDPOINTS.PLACE_ORDER_AUTOPAID()
         : ENDPOINTS.PLACE_ORDER();
 
       const response = await apiClient.post(endpoint, formData, {

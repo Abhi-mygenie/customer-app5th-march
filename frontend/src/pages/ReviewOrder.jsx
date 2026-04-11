@@ -150,7 +150,7 @@ const ReviewOrder = () => {
   const [couponCode, setCouponCode] = useState('');
   
   // Payment method selection state (FEAT-001)
-  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' | 'cod'
+  const [paymentMethod, setPaymentMethod] = useState('cod'); // 'online' | 'cod' — default COD, user switches to online if Razorpay configured
   // Session storage key for customer info persistence during edit order
   const SESSION_CUSTOMER_KEY = 'sessionCustomerInfo';
 
