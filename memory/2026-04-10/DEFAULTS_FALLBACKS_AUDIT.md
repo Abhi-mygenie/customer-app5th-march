@@ -12,8 +12,8 @@
 |---|---|---|---|---|---|
 | DFA-001 | API URLs | HIGH | Hardcoded preprod API URL fallbacks in frontend | 4 files | ✅ Fixed (Apr 10) |
 | DFA-002 | API URLs | HIGH | Hardcoded preprod API URL fallbacks in backend | 2 files | ✅ Fixed (Apr 10) |
-| DFA-003 | Images | MEDIUM | Logo fallback to MyGenie generic logo | 5 files, 7 occurrences | Pending |
-| DFA-004 | Images | MEDIUM | Hardcoded "Powered by MyGenie" logo | 1 file | Pending |
+| DFA-003 | Images | MEDIUM | Logo fallback to MyGenie generic logo | 5 files, 7 occurrences | ✅ Fixed (Apr 10) |
+| DFA-004 | Images | MEDIUM | Hardcoded "Powered by MyGenie" logo | 1 file | ✅ Fixed (Apr 10) |
 | DFA-005 | Images | LOW | onError handlers hide broken images silently | 6 files, 9 occurrences | Pending |
 | DFA-006 | CSS Colors | MEDIUM | Primary color mismatch across fallbacks | 3 different colors | Pending |
 | DFA-007 | CSS Fonts | MEDIUM | 55 hardcoded Montserrat font-family (not via CSS var) | MenuItems.css + others | Pending |
@@ -27,9 +27,9 @@
 | Severity | Count | Pending | Informational |
 |---|---|---|---|
 | HIGH | 3 | 1 | 0 |
-| MEDIUM | 5 | 5 | 0 |
+| MEDIUM | 5 | 3 | 0 |
 | LOW | 2 | 0 | 2 |
-| **Total** | **11** | **6** | **2** |
+| **Total** | **11** | **4** | **2** |
 
 ---
 
@@ -427,5 +427,6 @@ const skipTableCheck = config?.allowMultipleOrdersPerTable === true;
 
 | Date | Changes |
 |---|---|
+| April 10, 2026 | DFA-003 & DFA-004 fixed — removed logo fallbacks, made powered-by configurable. 25-point regression test passed. |
 | April 10, 2026 | DFA-001 & DFA-002 fixed — removed all preprod URL fallbacks. 7 tests passed. |
 | April 10, 2026 | Initial audit created — 11 findings documented |

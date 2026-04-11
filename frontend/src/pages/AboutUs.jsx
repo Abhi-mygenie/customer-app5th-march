@@ -20,7 +20,7 @@ const AboutUs = () => {
   const aboutImage = config.aboutUsImage || '';
   const aboutContent = config.aboutUsContent || '';
   const openingHours = config.openingHours || '';
-  const logoUrl = config.logoUrl || '/assets/images/ic_login_logo.png';
+  const logoUrl = config.logoUrl || null;
 
   if (loading) return <AboutUsSkeleton />;
 
@@ -44,7 +44,9 @@ const AboutUs = () => {
 
         {/* Restaurant Branding */}
         <div className="about-us-branding">
-          <img src={logoUrl} alt={restaurant?.name || 'Restaurant Logo'} className="about-us-logo" onError={(e) => { e.target.src = '/assets/images/ic_login_logo.png'; }} />
+          {logoUrl ? (
+            <img src={logoUrl} alt={restaurant?.name || 'Restaurant Logo'} className="about-us-logo" onError={(e) => { e.target.style.display = 'none'; }} />
+          ) : null}
           <h2 className="about-us-restaurant-name">{restaurant?.name || 'Restaurant'}</h2>
           {config.tagline && (
             <p className="about-us-tagline">{config.tagline}</p>

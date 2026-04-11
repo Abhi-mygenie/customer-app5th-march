@@ -26,7 +26,7 @@ const LandingPage = () => {
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated } = useAuth();
   const { startEditOrder, clearCart } = useCart();
-  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone } = useRestaurantConfig();
+  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
 
@@ -351,8 +351,8 @@ const LandingPage = () => {
   const restaurantName = restaurant?.name || 'MyGenie';
   // Tagline from local config only (not from MyGenie API)
   const tagline = configTagline || '';
-  // Logo from local config only (no POS fallback)
-  const logoUrl = configLogoUrl || '/assets/images/ic_login_logo.png';
+  // Logo from local config only (DFA-003: no fallback — no logo if not configured)
+  const logoUrl = configLogoUrl || null;
   const phone = configPhone || restaurant?.phone || '';
   // Instagram from local config only
   const instagramUrl = configInstagramUrl || '';
@@ -423,14 +423,18 @@ const LandingPage = () => {
         {/* 1. Logo */}
         {showLogo && (
           <div className="logo-section" data-testid="landing-logo">
+            {logoUrl ? (
             <img
               src={logoUrl}
               alt={restaurantName}
               className="brand-logo"
               onError={(e) => {
-                e.target.src = '/assets/images/ic_login_logo.png';
+                e.target.style.display = 'none';
               }}
             />
+            ) : (
+              <h2 className="brand-name-fallback">{restaurantName}</h2>
+            )}
           </div>
         )}
 
@@ -646,10 +650,15 @@ const LandingPage = () => {
 
       </div>
 
-      {/* 9. Powered by MyGenie */}
+      {/* 9. Powered by - Configurable (DFA-004) */}
       {showPoweredBy && (
         <footer className="landing-footer" data-testid="landing-footer">
-          <p>Powered by <img src="/assets/images/mygenie_logo.svg" alt="MyGenie" className="footer-logo" /></p>
+          <p>
+            {poweredByText}{' '}
+            {poweredByLogoUrl && (
+              <img src={poweredByLogoUrl} alt={poweredByText} className="footer-logo" onError={(e) => { e.target.style.display = 'none'; }} />
+            )}
+          </p>
         </footer>
       )}
     </div>

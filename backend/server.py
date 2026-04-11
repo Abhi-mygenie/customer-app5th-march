@@ -223,6 +223,9 @@ class AppConfigUpdate(BaseModel):
     onlinePaymentDelivery: Optional[bool] = None  # Enable online payment for delivery
     payOnlineLabel: Optional[str] = None  # Custom label for online payment (default: "Pay Online")
     payAtCounterLabel: Optional[str] = None  # Custom label for COD (default: "Pay at Counter")
+    # Powered By Configuration (DFA-004)
+    poweredByText: Optional[str] = None  # Custom "Powered by" text
+    poweredByLogoUrl: Optional[str] = None  # Custom logo URL for powered-by footer
 
 class SetPasswordRequest(BaseModel):
     phone: str
@@ -1074,6 +1077,9 @@ async def get_app_config(restaurant_id: str):
             "onlinePaymentDelivery": True,
             "payOnlineLabel": "Pay Online",
             "payAtCounterLabel": "Pay at Counter",
+            # Powered By Configuration (DFA-004)
+            "poweredByText": "Powered by",
+            "poweredByLogoUrl": "/assets/images/mygenie_logo.svg",
         }
     
     return config

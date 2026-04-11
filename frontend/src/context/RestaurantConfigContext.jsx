@@ -108,6 +108,9 @@ const DEFAULT_CONFIG = {
   onlinePaymentDelivery: true,
   payOnlineLabel: 'Pay Online',
   payAtCounterLabel: 'Pay at Counter',
+  // Powered By Configuration (DFA-004)
+  poweredByText: 'Powered by',
+  poweredByLogoUrl: '/assets/images/mygenie_logo.svg',
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -405,6 +408,9 @@ export const RestaurantConfigProvider = ({ children }) => {
     onlinePaymentDelivery: config.onlinePaymentDelivery !== false,
     payOnlineLabel: config.payOnlineLabel || 'Pay Online',
     payAtCounterLabel: config.payAtCounterLabel || 'Pay at Counter',
+    // Powered By Configuration (DFA-004)
+    poweredByText: config.poweredByText || 'Powered by',
+    poweredByLogoUrl: config.poweredByLogoUrl !== undefined ? config.poweredByLogoUrl : '/assets/images/mygenie_logo.svg',
   };
 
   return (

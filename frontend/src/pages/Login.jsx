@@ -29,7 +29,7 @@ const Login = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [devOtp, setDevOtp] = useState('');
 
-  const logoSrc = configLogoUrl || '/assets/images/ic_login_logo.png';
+  const logoSrc = configLogoUrl || null;
 
   const posId = restaurant?.pos_id || '0001';
 
@@ -325,12 +325,16 @@ const Login = () => {
 
         {/* Logo */}
         <div className="login-logo-section">
+          {logoSrc ? (
           <img
             src={logoSrc}
             alt={restaurant?.name || 'Restaurant'}
             className="login-logo"
-            onError={(e) => { e.target.src = '/assets/images/ic_login_logo.png'; }}
+            onError={(e) => { e.target.style.display = 'none'; }}
           />
+          ) : restaurant?.name ? (
+            <h2 className="login-restaurant-name-fallback">{restaurant.name}</h2>
+          ) : null}
           {restaurant?.name && (
             <p className="login-restaurant-name">{restaurant.name}</p>
           )}

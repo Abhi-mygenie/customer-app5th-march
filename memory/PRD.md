@@ -50,6 +50,8 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git branch 
 ## Audit Fixes Applied (Apr 10, 2026)
 - DFA-001: Removed 4 hardcoded preprod API URL fallbacks from frontend (axios.js, endpoints.js, orderService.ts, useMenuData.js)
 - DFA-002: Removed 2 hardcoded preprod API URL fallbacks from backend (server.py refresh_pos_token, MYGENIE_API_URL)
+- DFA-003: Removed MyGenie logo fallbacks from 5 files (7 locations). No logo = no image shown, restaurant name text displayed instead
+- DFA-004: Made "Powered by" footer configurable via `poweredByText` and `poweredByLogoUrl` config fields (backend model + defaults + frontend context + LandingPage)
 - Backend now fails fast with ValueError if MYGENIE_API_URL env var missing
 - Frontend logs console.error if REACT_APP_API_BASE_URL or REACT_APP_IMAGE_BASE_URL missing
-- All 7 verification tests passed (backend health, config, login, frontend load, menu images, console errors, negative fail-fast)
+- 25-point regression test passed covering logo, footer, layout, API, and context

@@ -14,11 +14,14 @@ const Sidebar = ({ isOpen, onClose, logoUrl, title, description, phone, onHomeCl
         {/* Header Section */}
         <div className="sidebar-header">
           <div className="sidebar-header-content">
-            <img 
-              src={logoUrl || '/assets/images/mygenie_logo.png'} 
-              alt={title || 'Logo'} 
-              className="sidebar-logo" 
-            />
+            {logoUrl ? (
+              <img 
+                src={logoUrl} 
+                alt={title || 'Logo'} 
+                className="sidebar-logo" 
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : null}
             <div className="sidebar-title-wrapper">
               <h2 className="sidebar-title">{title || 'Menu'}</h2>
               {/* {description && (
