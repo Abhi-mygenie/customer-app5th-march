@@ -4,6 +4,7 @@ import QuantitySelector from '../QuantitySelector/QuantitySelector';
 import { useCart } from '../../context/CartContext';
 // import { useRestaurantId } from '../../utils/useRestaurantId';
 import { MdModeEditOutline } from "react-icons/md";
+import { calculateCartItemPrice } from '../../api/transformers/helpers';
 import CustomizeItemModal from '../CustomizeItemModal/CustomizeItemModal';
 import RepeatItemModal from '../RepeatItemModal/RepeatItemModal';
 import CookingInstructionsModal from '../CookingInstructionsModal/CookingInstructionsModal';
@@ -21,32 +22,8 @@ const OrderItemCard = ({ cartItem, showCookingInstructions = true }) => {
   const isCustomizable = (cartItem.item.variations && cartItem.item.variations.length > 0) ||
     (cartItem.item.add_ons && cartItem.item.add_ons.length > 0);
 
-  // Calculate item price (base + variations + addons)
-  const getItemPrice = () => {
-    const basePrice = parseFloat(cartItem.item.price) || 0;
-    
-    // Calculate variations total
-    let variationsTotal = 0;
-    if (cartItem.variations && cartItem.variations.length > 0) {
-      cartItem.variations.forEach((variation) => {
-        const optionPrice = parseFloat(variation.optionPrice) || 0;
-        variationsTotal += optionPrice;
-      });
-    }
-    
-    // Calculate addons total
-    let addonsTotal = 0;
-    if (cartItem.add_ons && cartItem.add_ons.length > 0) {
-      cartItem.add_ons.forEach((addon) => {
-        const addonPrice = parseFloat(addon.price) || 0;
-        const addonQuantity = addon.quantity || 0;
-        addonsTotal += addonPrice * addonQuantity;
-      });
-    }
-    
-    const itemSubtotal = basePrice + variationsTotal + addonsTotal;
-    return itemSubtotal ;
-  };
+  // Calculate item price using centralized helper (CA-003 fix)
+  const getItemPrice = () => calculateCartItemPrice(cartItem);
 
   // Format variations display
   const formatVariations = () => {

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { calculateCartItemPrice } from '../api/transformers/helpers';
 
 const CartContext = createContext();
 
@@ -331,38 +332,12 @@ export const CartProvider = ({ children, restaurantId }) => {
 
   /**
    * Get total price of cart (including variations and add-ons)
+   * Uses centralized calculateCartItemPrice (CA-003 fix)
    */
   const getTotalPrice = useCallback(() => {
     return cart.items.reduce((total, cartItem) => {
-      // Base price
-      const basePrice = parseFloat(cartItem.item.price) || 0;
-      
-      // Calculate variations total
-      let variationsTotal = 0;
-      if (cartItem.variations && cartItem.variations.length > 0) {
-        cartItem.variations.forEach((variation) => {
-          const optionPrice = parseFloat(variation.optionPrice) || 0;
-          variationsTotal += optionPrice;
-        });
-      }
-      
-      // Calculate addons total
-      let addonsTotal = 0;
-      if (cartItem.add_ons && cartItem.add_ons.length > 0) {
-        cartItem.add_ons.forEach((addon) => {
-          const addonPrice = parseFloat(addon.price) || 0;
-          const addonQuantity = addon.quantity || 0;
-          addonsTotal += addonPrice * addonQuantity;
-        });
-      }
-      
-      // Subtotal for this item (base + variations + addons)
-      const itemSubtotal = basePrice + variationsTotal + addonsTotal;
-      
-      // Total for this item (subtotal * quantity)
-      const itemTotal = itemSubtotal * cartItem.quantity;
-      
-      return total + itemTotal;
+      const itemSubtotal = calculateCartItemPrice(cartItem);
+      return total + (itemSubtotal * cartItem.quantity);
     }, 0);
   }, [cart.items]);
 

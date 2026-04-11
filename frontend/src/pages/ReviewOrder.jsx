@@ -24,6 +24,7 @@ import ReviewOrderPriceBreakdown from '../components/ReviewOrderPriceBreakdown/R
 import { RiFileList3Line } from "react-icons/ri";
 import CustomerDetails from '../components/CustomerDetails/CustomerDetails';
 import PaymentMethodSelector from '../components/PaymentMethodSelector';
+import { calculateCartItemPrice } from '../api/transformers/helpers';
 import './ReviewOrder.css';
 
 // Helper function to check if a string is purely numeric
@@ -528,18 +529,9 @@ const ReviewOrder = () => {
     console.log('Cart items (new):', cartItems.length);
     console.log('Previous order items:', previousOrderItems?.length || 0);
 
-    // Calculate tax for NEW items (cartItems)
+    // Calculate tax for NEW items (cartItems) — CA-003 fix: use centralized price calc
     cartItems.forEach((cartItem, index) => {
-      const itemPrice = (() => {
-        const base = parseFloat(cartItem.item.price) || 0;
-        const varTotal = (cartItem.variations || []).reduce(
-          (sum, v) => sum + (parseFloat(v.optionPrice) || 0), 0
-        );
-        const addonTotal = (cartItem.add_ons || []).reduce(
-          (sum, a) => sum + ((parseFloat(a.price) || 0) * (a.quantity || 0)), 0
-        );
-        return base + varTotal + addonTotal;
-      })();
+      const itemPrice = calculateCartItemPrice(cartItem);
       
       const taxPercent = parseFloat(cartItem.item.tax) || 0;
       const taxType = cartItem.item.tax_type || 'GST';
@@ -562,40 +554,13 @@ const ReviewOrder = () => {
 
     // Calculate tax for PREVIOUS items (in edit mode)
     // Exclude cancelled items (foodStatus === 3)
-    // Include variations and add-ons in price calculation
+    // CA-003 fix: use fullPrice from transformer instead of recalculating
     if (previousOrderItems && previousOrderItems.length > 0) {
       previousOrderItems.forEach((prevItem, index) => {
         if (prevItem.foodStatus === 3) return; // Skip cancelled items
         
-        // Base price
-        const basePrice = parseFloat(prevItem.unitPrice || prevItem.price) || 0;
-        
-        // Calculate variations total
-        let variationsTotal = 0;
-        if (prevItem.variations && prevItem.variations.length > 0) {
-          prevItem.variations.forEach(v => {
-            if (v.values) {
-              const vals = Array.isArray(v.values) ? v.values : [v.values];
-              vals.forEach(val => {
-                variationsTotal += parseFloat(val.optionPrice) || 0;
-              });
-            }
-            if (v.optionPrice) {
-              variationsTotal += parseFloat(v.optionPrice) || 0;
-            }
-          });
-        }
-        
-        // Calculate add-ons total
-        let addonsTotal = 0;
-        if (prevItem.add_ons && prevItem.add_ons.length > 0) {
-          prevItem.add_ons.forEach(a => {
-            addonsTotal += (parseFloat(a.price) || 0) * (a.quantity || 1);
-          });
-        }
-        
-        // Full item price = base + variations + addons
-        const fullItemPrice = basePrice + variationsTotal + addonsTotal;
+        // Use fullPrice from transformer (already includes base + variations + addons)
+        const fullItemPrice = prevItem.fullPrice ?? prevItem.price ?? 0;
         const quantity = prevItem.quantity || 1;
         const taxPercent = parseFloat(prevItem.item?.tax) || 0;
         const taxType = prevItem.item?.tax_type || 'GST';
@@ -603,7 +568,6 @@ const ReviewOrder = () => {
 
         // Debug: Log each previous item's tax info
         console.log(`Previous Item ${index + 1}: ${prevItem.item?.name?.substring(0, 20)}`);
-        console.log(`  - Base: ₹${basePrice}, Vars: ₹${variationsTotal}, Addons: ₹${addonsTotal}`);
         console.log(`  - Full Price: ₹${fullItemPrice}, Qty: ${quantity}`);
         console.log(`  - Tax: ${taxPercent}% (${taxType})`);
         console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
