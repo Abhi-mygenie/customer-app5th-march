@@ -736,6 +736,78 @@ const ReviewOrder = () => {
       }
     }
 
+    // === CA-008 Phase 2: Shared Razorpay checkout function ===
+    // Defined BEFORE try/catch so it's accessible in both main flow and 401 retry flow
+    const openRazorpayCheckout = async (orderResponse, label = 'Razorpay') => {
+      console.log(`[${label}] Payment required:`, {
+        razorpay_id: orderResponse.razorpay_id,
+        razorpay_key: restaurant.razorpay.razorpay_key,
+        order_id: orderResponse.order_id,
+        total_amount: orderResponse.total_amount
+      });
+
+      const createOrderResponse = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: String(orderResponse.order_id) })
+      });
+
+      const razorpayOrder = await createOrderResponse.json();
+      console.log(`[${label}] Create order response:`, razorpayOrder);
+
+      if (razorpayOrder.error) {
+        throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
+      }
+
+      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay });
+
+      const options = {
+        key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
+        amount: razorpayOrder.amount_in_paise || (orderResponse.total_amount * 100),
+        currency: 'INR',
+        name: restaurant?.name || 'Restaurant',
+        description: `Order #${orderResponse.order_id}`,
+        order_id: razorpayOrder.order_id,
+        handler: function (paymentResponse) {
+          console.log(`[${label}] Payment success:`, paymentResponse);
+          clearCart();
+          navigate(`/${restaurantId}/order-success`, {
+            state: {
+              orderData: {
+                orderId: orderResponse.order_id,
+                totalToPay: orderResponse.total_amount,
+                paymentId: paymentResponse.razorpay_payment_id,
+                razorpayOrderId: paymentResponse.razorpay_order_id,
+                razorpaySignature: paymentResponse.razorpay_signature,
+                isPaid: true,
+                isEditedOrder: isEditMode,
+                billSummary
+              }
+            }
+          });
+        },
+        prefill: {
+          name: customerName || '',
+          contact: customerPhone || ''
+        },
+        theme: {
+          color: restaurant?.primaryColor || DEFAULT_THEME.primaryColor
+        },
+        modal: {
+          ondismiss: function () {
+            console.log(`[${label}] Payment modal dismissed`);
+            toast.error('Payment cancelled');
+            setIsPlacingOrder(false);
+            isPlacingOrderRef.current = false;
+            orderDispatchedRef.current = false;
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    };
+
     // Place order or Update order (if in edit mode)
     setIsPlacingOrder(true);
     try {
@@ -931,77 +1003,6 @@ const ReviewOrder = () => {
 
       // Check if Razorpay payment flow needed (only for online payment selection)
       const shouldProcessRazorpay = paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key;
-
-      // === CA-008 Phase 2: Shared Razorpay checkout function ===
-      const openRazorpayCheckout = async (orderResponse, label = 'Razorpay') => {
-        console.log(`[${label}] Payment required:`, {
-          razorpay_id: orderResponse.razorpay_id,
-          razorpay_key: restaurant.razorpay.razorpay_key,
-          order_id: orderResponse.order_id,
-          total_amount: orderResponse.total_amount
-        });
-
-        const createOrderResponse = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
-          method: 'POST',
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_id: String(orderResponse.order_id) })
-        });
-
-        const razorpayOrder = await createOrderResponse.json();
-        console.log(`[${label}] Create order response:`, razorpayOrder);
-
-        if (razorpayOrder.error) {
-          throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
-        }
-
-        const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay });
-
-        const options = {
-          key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
-          amount: razorpayOrder.amount_in_paise || (orderResponse.total_amount * 100),
-          currency: 'INR',
-          name: restaurant?.name || 'Restaurant',
-          description: `Order #${orderResponse.order_id}`,
-          order_id: razorpayOrder.order_id,
-          handler: function (paymentResponse) {
-            console.log(`[${label}] Payment success:`, paymentResponse);
-            clearCart();
-            navigate(`/${restaurantId}/order-success`, {
-              state: {
-                orderData: {
-                  orderId: orderResponse.order_id,
-                  totalToPay: orderResponse.total_amount,
-                  paymentId: paymentResponse.razorpay_payment_id,
-                  razorpayOrderId: paymentResponse.razorpay_order_id,
-                  razorpaySignature: paymentResponse.razorpay_signature,
-                  isPaid: true,
-                  isEditedOrder: isEditMode,
-                  billSummary
-                }
-              }
-            });
-          },
-          prefill: {
-            name: customerName || '',
-            contact: customerPhone || ''
-          },
-          theme: {
-            color: restaurant?.primaryColor || DEFAULT_THEME.primaryColor
-          },
-          modal: {
-            ondismiss: function () {
-              console.log(`[${label}] Payment modal dismissed`);
-              toast.error('Payment cancelled');
-              setIsPlacingOrder(false);
-              isPlacingOrderRef.current = false;
-              orderDispatchedRef.current = false;
-            }
-          }
-        };
-
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
-      };
       
       if (shouldProcessRazorpay) {
         try {
