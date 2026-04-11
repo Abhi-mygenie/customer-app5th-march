@@ -11,7 +11,7 @@ import { getOrderDetails, checkTableStatus } from '../api/services/orderService'
 import { getStoredToken } from '../utils/authToken';
 import { ENDPOINTS } from '../api/config/endpoints';
 import logger from '../utils/logger';
-import { isDineInOrRoom, showsDineInActions } from '../utils/orderTypeHelpers';
+import { isDineInOrRoom, showsDineInActions, hasAssignedTable } from '../utils/orderTypeHelpers';
 // Import centralized transformers - SINGLE SOURCE OF TRUTH for label formatting
 import { getVariationLabels, getAddonLabels } from '../api/transformers/helpers';
 import Header from '../components/Header/Header';
@@ -221,8 +221,8 @@ const OrderSuccess = () => {
       const tableIdForCheck = scannedData?.table_id;
       const orderTypeForCheck = scannedData?.order_type;
 
-      // FEAT-002-PREP: Only check table status for dine-in/room orders
-      if (tableIdForCheck && String(tableIdForCheck) !== '0' && isDineInOrRoom(orderTypeForCheck)) {
+      // Phase 1: Only check table status when a specific table was scanned
+      if (tableIdForCheck && String(tableIdForCheck) !== '0' && hasAssignedTable(tableIdForCheck)) {
         try {
           const tableCheckResult = await checkTableStatus(
             tableIdForCheck,
@@ -405,8 +405,8 @@ const OrderSuccess = () => {
 
     setIsLoadingEdit(true);
     try {
-      // FIRST: Check if table is still occupied with an active order (dine-in/room only)
-      if (scannedTableId && isDineInOrRoom(scannedOrderType)) {
+      // FIRST: Check if table is still occupied (only when a table was scanned)
+      if (scannedTableId && hasAssignedTable(scannedTableId)) {
         const token = await getStoredToken();
         const tableStatus = await checkTableStatus(scannedTableId, restaurantId, token);
         
@@ -474,14 +474,11 @@ const OrderSuccess = () => {
   const showOrderStatus = showOrderStatusTracker;
   const showCallWaiter = configShowCallWaiter && isDineInContext;
   const showPayBill = configShowPayBill && isDineInContext;
-  const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo && isDineInOrRoom(scannedOrderType);
+  const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo && hasAssignedTable(scannedTableId);
   
-  // Edit Order vs Browse Menu - based on table presence, order type, and order status
-  // FEAT-002-PREP: Only show table-based actions for dine-in/room
-  // If fOrderStatus === 7 (Yet to be confirmed) → Show "Yet to be confirmed" message, no edit
-  // If fOrderStatus === 1, 2, or 5 (Confirmed/Preparing/Served) → Show Edit Order button
-  // If no table or takeaway/delivery → Show Browse Menu
-  const hasTable = isDineInOrRoom(scannedOrderType) && isScanned && scannedTableNo;
+  // Edit Order vs Browse Menu — based on whether a table was scanned and order status
+  // Phase 1: hasTable is true only when a specific table/room was scanned (not walk-in)
+  const hasTable = hasAssignedTable(scannedTableId) && isScanned && scannedTableNo;
   const showYetToBeConfirmed = hasTable && fOrderStatus === 7;
   const showEditOrder = hasTable && fOrderStatus !== 7 && fOrderStatus !== null;
   const showBrowseMenu = !hasTable;

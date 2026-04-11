@@ -26,7 +26,7 @@ import TableRoomSelector from '../components/TableRoomSelector/TableRoomSelector
 import LoyaltyRewardsSection from '../components/LoyaltyRewardsSection/LoyaltyRewardsSection';
 import { calculateCartItemPrice } from '../api/transformers/helpers';
 import { calculateTaxBreakdown } from '../utils/taxCalculation';
-import { isDineInOrRoom } from '../utils/orderTypeHelpers';
+import { isDineInOrRoom, hasAssignedTable } from '../utils/orderTypeHelpers';
 import logger from '../utils/logger';
 import './ReviewOrder.css';
 
@@ -676,26 +676,24 @@ const ReviewOrder = () => {
 
   // Handle place order
   const handlePlaceOrder = async () => {
-    // FEAT-002-PREP: Validate room/table only for dine-in/room orders at multi-menu restaurants
-    if (isMultiMenu && isDineInOrRoom(scannedOrderType)) {
-      // Check if scanned table is available
-      const hasScannedTable = isScanned && isDineInOrRoom(scannedOrderType) && scannedTableId;
-
-      // If not scanned, validate manual selection
-      if (!hasScannedTable) {
-        if (!roomOrTable) {
-          toast('Please Select Your Room or Table');
-          return;
-        }
-        if (!tableNumber.trim()) {
-          const message = roomOrTable === 'room'
-            ? 'Please Enter Your Room Number'
-            : 'Please Enter Your Table Number';
-          toast(message);
-          return;
-        }
+    // Phase 1: Table/room validation only when a table was scanned AND it's a multi-menu restaurant
+    if (isMultiMenu && hasAssignedTable(scannedTableId)) {
+      // Table was scanned — it's auto-filled, no manual validation needed
+    } else if (isMultiMenu && !hasAssignedTable(scannedTableId) && isDineInOrRoom(scannedOrderType) && !scannedOrderType) {
+      // Legacy: multi-menu with no QR scan and no orderType — require manual table selection
+      if (!roomOrTable) {
+        toast('Please Select Your Room or Table');
+        return;
+      }
+      if (!tableNumber.trim()) {
+        const message = roomOrTable === 'room'
+          ? 'Please Enter Your Room Number'
+          : 'Please Enter Your Table Number';
+        toast(message);
+        return;
       }
     }
+    // Walk-in (dinein/takeaway/delivery with no tableId) — no table validation needed
 
     // Validate phone number only if provided (optional field)
     if (customerPhone && customerPhone.trim() !== '' && !isPhoneNumberValid) {
@@ -814,11 +812,10 @@ const ReviewOrder = () => {
     // Place order or Update order (if in edit mode)
     setIsPlacingOrder(true);
     try {
-      // FEAT-002-PREP: Use table only for dine-in/room orders
-      const orderNeedsTable = isDineInOrRoom(scannedOrderType);
-      const finalTableId = orderNeedsTable
-        ? ((isScanned && scannedTableId) ? scannedTableId : (isMultiMenu && tableNumber ? tableNumber : ''))
-        : '';  // No table for takeaway/delivery
+      // Phase 1: Table ID only when a specific table was scanned. All others get '0'.
+      const finalTableId = hasAssignedTable(scannedTableId)
+        ? scannedTableId
+        : (isMultiMenu && tableNumber && hasAssignedTable(tableNumber) ? tableNumber : '0');
 
       let response;
 
@@ -1042,11 +1039,10 @@ const ReviewOrder = () => {
           const newToken = await getAuthToken(true);
           setAuthToken(newToken);
 
-          // FEAT-002-PREP: Use table only for dine-in/room orders (same logic as main flow)
-          const retryOrderNeedsTable = isDineInOrRoom(scannedOrderType);
-          const retryTableId = retryOrderNeedsTable
-            ? ((isScanned && scannedTableId) ? scannedTableId : (isMultiMenu && tableNumber ? tableNumber : ''))
-            : '';
+          // Phase 1: Same table logic as main flow
+          const retryTableId = hasAssignedTable(scannedTableId)
+            ? scannedTableId
+            : (isMultiMenu && tableNumber && hasAssignedTable(tableNumber) ? tableNumber : '0');
 
           let retryResponse;
 
@@ -1217,6 +1213,7 @@ const ReviewOrder = () => {
           {/* Table/Room Selection — CA-008 Phase 1: extracted to component */}
           <TableRoomSelector
             isScanned={isScanned}
+            scannedTableId={scannedTableId}
             scannedTableNo={scannedTableNo}
             scannedRoomOrTable={scannedRoomOrTable}
             scannedOrderType={scannedOrderType}

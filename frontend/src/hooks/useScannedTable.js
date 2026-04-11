@@ -22,13 +22,13 @@ export const useScannedTable = () => {
     // Check URL params for new scan
     const urlTableId = searchParams.get('tableId') || searchParams.get('table_id');
     const urlTableNo = searchParams.get('tableName') || searchParams.get('table_no');
-    const urlType = searchParams.get('type'); // "table" | "room" | null
+    const urlType = searchParams.get('type'); // "table" | "room" | "walkin" | null
     const urlOrderType = searchParams.get('orderType') || searchParams.get('order_type'); // "dinein" | "delivery" | "takeaway" | null
     const urlFoodFor = searchParams.get('foodFor') || searchParams.get('food_for'); // menu filter e.g. "Normal", "Party"
     
     if (urlTableId || urlTableNo || urlOrderType) {
-      // Validate type parameter - default to 'table' if invalid/missing
-      const roomOrTable = (urlType === 'room' || urlType === 'table') 
+      // Validate type parameter — recognize table, room, and walkin
+      const roomOrTable = (urlType === 'room' || urlType === 'table' || urlType === 'walkin') 
         ? urlType 
         : null;
       

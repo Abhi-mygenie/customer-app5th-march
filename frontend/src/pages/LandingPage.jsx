@@ -9,7 +9,7 @@ import { useCart } from '../context/CartContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { checkTableStatus, getOrderDetails } from '../api/services/orderService';
-import { isDineInOrRoom, showsDineInActions } from '../utils/orderTypeHelpers';
+import { isDineInOrRoom, showsDineInActions, hasAssignedTable } from '../utils/orderTypeHelpers';
 import { getAuthToken } from '../utils/authToken';
 import logger from '../utils/logger';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
@@ -80,8 +80,8 @@ const LandingPage = () => {
     const checkTable = async () => {
       // Skip if: no table scanned, or is multi-menu restaurant, or already checked this session
       if (!isScanned || !scannedTableId || !restaurantId) return;
-      // FEAT-002-PREP: Skip table status check for takeaway/delivery orders
-      if (!isDineInOrRoom(scannedOrderType)) return;
+      // Phase 1: Table status check only when a specific table/room was scanned (not walk-in)
+      if (!hasAssignedTable(scannedTableId)) return;
       if (isMultipleMenu(restaurant)) return;
       if (tableStatusCheck.isChecked) return;
 
@@ -372,7 +372,7 @@ const LandingPage = () => {
   const showWelcome = configShowWelcomeText;
   const showDescription = configShowDescription && tagline;
   const showSocial = configShowSocialIcons && (phone || instagramUrl || facebookUrl || twitterUrl || youtubeUrl || whatsappNumber);
-  const showTable = configShowTableNumber && isScanned && scannedTableNo && isDineInOrRoom(scannedOrderType);
+  const showTable = configShowTableNumber && isScanned && scannedTableNo && hasAssignedTable(scannedTableId);
   const showBrowseMenu = true; // Always show Browse Menu / Edit Order button
   const showCallWaiter = configShowLandingCallWaiter && isDineInContext;
   const showPayBill = configShowLandingPayBill && isDineInContext;
