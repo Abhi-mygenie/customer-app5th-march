@@ -226,6 +226,8 @@ class AppConfigUpdate(BaseModel):
     # Powered By Configuration (DFA-004)
     poweredByText: Optional[str] = None  # Custom "Powered by" text
     poweredByLogoUrl: Optional[str] = None  # Custom logo URL for powered-by footer
+    # Notification Popups (FEAT-003)
+    notificationPopups: Optional[List[dict]] = None  # [{enabled, showOn, delaySeconds, content:{title,message,...}, style:{position,type}}]
 
 class SetPasswordRequest(BaseModel):
     phone: str
@@ -1080,6 +1082,8 @@ async def get_app_config(restaurant_id: str):
             # Powered By Configuration (DFA-004)
             "poweredByText": "Powered by",
             "poweredByLogoUrl": "/assets/images/mygenie_logo.svg",
+            # Notification Popups (FEAT-003)
+            "notificationPopups": [],
         }
     
     return config

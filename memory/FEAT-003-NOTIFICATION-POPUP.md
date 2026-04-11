@@ -219,7 +219,108 @@ Admin can add up to 3 popups (one per page).
 
 ---
 
-## 10. Deferred to Next Phase
+## 10. Test Cases (38 Total)
+
+### A. Backend Config
+
+| # | Test | Expected |
+|---|------|----------|
+| A1 | `GET /api/config/{id}` with no popup configured | Returns `notificationPopups: []` |
+| A2 | `PUT /api/config/` with valid popup config | Saves and returns popup in config |
+| A3 | `PUT /api/config/` with only title + message (minimum) | Saves successfully — all optional fields null |
+| A4 | `GET /api/config/{id}` after save | Returns saved popup data |
+
+### B. Hook Logic (`useNotificationPopup`)
+
+| # | Test | Expected |
+|---|------|----------|
+| B1 | No popups in config | `isVisible = false`, `popup = null` |
+| B2 | Popup enabled for "landing", current page = "landing" | Shows after delay |
+| B3 | Popup enabled for "landing", current page = "review" | Does NOT show |
+| B4 | Popup disabled (`enabled: false`) | Does NOT show |
+| B5 | `delaySeconds: 5` | Popup appears after exactly 5 seconds |
+| B6 | `delaySeconds: 3` | Popup appears after exactly 3 seconds |
+| B7 | `autoDismissSeconds: 10` | Popup auto-closes after 10 seconds |
+| B8 | `autoDismissSeconds: 0` | Popup stays until user closes |
+| B9 | User calls `dismiss()` | Popup closes immediately |
+| B10 | Multiple popups, same page ("landing") | Only first enabled one shows |
+| B11 | 3 popups, one per page | Each page shows its own popup |
+| B12 | Page unmount during delay timer | No error, timer cleans up |
+| B13 | Page unmount during auto-dismiss timer | No error, timer cleans up |
+
+### C. Component UI — Modal Variant
+
+| # | Test | Expected |
+|---|------|----------|
+| C1 | Modal shows with title + message only | Title, message visible. No image, no CTA button |
+| C2 | Modal shows with image | Image rendered |
+| C3 | Modal shows with CTA button | Button visible with correct text |
+| C4 | Click X button | Modal closes |
+| C5 | Click backdrop overlay | Modal closes |
+| C6 | Click CTA with `ctaAction: "navigate"` | Navigates to `ctaLink` route |
+| C7 | Click CTA with `ctaAction: "dismiss"` | Modal closes |
+| C8 | Click CTA with `ctaAction: "external_link"` | Opens `ctaLink` in new tab |
+| C9 | Respects restaurant `primaryColor` | CTA button uses primaryColor |
+| C10 | Respects restaurant `borderRadius` | Modal card uses configured radius |
+
+### D. Component UI — Banner Variant
+
+| # | Test | Expected |
+|---|------|----------|
+| D1 | Banner at `position: "top"` | Appears at top of page |
+| D2 | Banner at `position: "bottom"` | Appears at bottom of page |
+| D3 | Banner close button | Dismisses banner |
+| D4 | Banner with CTA | Button works same as modal CTA |
+
+### E. Component UI — Toast Variant
+
+| # | Test | Expected |
+|---|------|----------|
+| E1 | Toast appears bottom-right | Positioned correctly |
+| E2 | Toast auto-dismiss countdown visible | Shows seconds remaining |
+| E3 | Toast close button | Dismisses toast |
+| E4 | Toast does NOT overlap `react-hot-toast` | Separate container, no collision |
+
+### F. Page Integration
+
+| # | Test | Expected |
+|---|------|----------|
+| F1 | Landing page with popup configured | Popup appears after delay |
+| F2 | Review page with popup configured | Popup appears after delay |
+| F3 | Success page with popup configured | Popup appears after delay |
+| F4 | Landing page, no popup for this page | Nothing shown, no errors |
+| F5 | Navigate landing → menu → back to landing | Popup shows again (every visit) |
+| F6 | Popup on ReviewOrder (1600+ lines page) | No performance impact, renders correctly |
+
+### G. Admin Settings
+
+| # | Test | Expected |
+|---|------|----------|
+| G1 | Add popup with title + message only | Saves successfully |
+| G2 | Add popup with all fields filled | Saves all fields |
+| G3 | Toggle popup enabled/disabled | Reflects on customer-facing pages |
+| G4 | Change showOn from "landing" to "review" | Popup moves to correct page |
+| G5 | Set delay to 3, 5, 10 | Delay respected on customer page |
+| G6 | Set auto-dismiss to 0, 5, 10 | Behavior matches setting |
+| G7 | Upload popup image | Image URL saved and displayed |
+| G8 | Max 3 popups (one per page) | Cannot add 4th popup |
+| G9 | Delete a popup | Removed from config |
+| G10 | Save empty title or message | Validation error — both required |
+
+### H. Edge Cases
+
+| # | Test | Expected |
+|---|------|----------|
+| H1 | Config fetch fails (network error) | No popup, no crash |
+| H2 | Popup with invalid/broken imageUrl | Image gracefully hidden, title+message still show |
+| H3 | Popup with `ctaLink` to invalid route | Navigate fails gracefully |
+| H4 | Very long title/message text | Scrollable or truncated, no overflow |
+| H5 | Rapid page navigation during delay | Timer cleans up, no stale popup |
+| H6 | Config cached in localStorage, popup updated by admin | Fresh config fetched, new popup shown |
+
+---
+
+## 11. Deferred to Next Phase
 
 | Item | Phase |
 |------|-------|
