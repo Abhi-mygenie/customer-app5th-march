@@ -1289,7 +1289,12 @@ const ReviewOrder = () => {
           });
 
         } catch (retryError) {
-          // console.error('[ReviewOrder] Failed to place order after retry:', retryError);
+          console.error('[BUG-040 DEBUG] Retry failed:', retryError);
+          console.error('[BUG-040 DEBUG] Retry error details:', {
+            message: retryError?.message,
+            status: retryError?.response?.status,
+            data: retryError?.response?.data
+          });
           toast.error('Session expired. Please refresh the page and try again.');
         }
       } else {
