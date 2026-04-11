@@ -32,9 +32,21 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git (branch
 
 ## Prioritized Backlog
 
-### P0 (Next)
-- CA-008 Phase 2: Dedup handlePlaceOrder (401 retry copy-paste, submitOrder helper, Razorpay extraction)
+### P0 (Next — Fix Bugs Before Phase 2)
+- BUG-041: Fix 401 retry payment type (use `paymentMethod` not `razorpay_key`) ✅ Confirmed
+- BUG-040: Fix 401 retry Razorpay skip (add `shouldProcessRazorpay` check in retry)
+- BUG-039: Fix edit order missing `orderDispatchedRef` (set ref before updateCustomerOrder)
+- BUG-038: Pass billSummary in Razorpay success navigation (points data)
+- BUG-P2-007: Reset `orderDispatchedRef` in Razorpay `ondismiss`
+
+### P1 (After Bug Fixes)
+- CA-008 Phase 2: Dedup handlePlaceOrder (submitOrder helper, navigateToSuccess, executeOrderFlow)
 - CA-008 Phase 3: Extract useOrderSubmit + useCustomerPrefill hooks
+- BUG-042: 401 retry table check — discuss with POS team
+
+### P2
+- DFA-011: Restaurant 716 hardcoded table check → config flag
+- BUG-037: Dynamic OG meta tags per restaurant
 
 ### P2
 - CA-006: 72+ console.logs → logger utility

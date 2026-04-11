@@ -134,14 +134,125 @@ Replace retry logic with: `paymentMethod === 'online' ? 'prepaid' : 'postpaid'` 
 | **Bug ID** | BUG-040 |
 | **Date Reported** | 2026-04-11 |
 | **Severity** | 🟡 P1 - High |
-| **Status** | ⏳ Pending Fix |
+| **Status** | ⏳ Pending Validation |
 | **File** | `ReviewOrder.jsx` lines 1086-1132 |
 
 ### Problem
 After 401 retry succeeds, code goes straight to `clearCart → navigateToSuccess`. Does NOT check if Razorpay payment flow should be triggered. User sees success page without paying.
 
-### Validation
-Console log `[BUG-P2-003]` added — will show `BUG_TRIGGERED: true` when Razorpay should have been opened.
+### How to Validate
+**Option A (Code read):** In browser DevTools Sources → ReviewOrder.jsx, find the 401 retry block. After `retryResponse = await placeOrder(...)`, there is NO `shouldProcessRazorpay` check. Compare with main flow (line 876) which has: `const shouldProcessRazorpay = paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key;`
+
+**Option B (Simulated 401):** Add temporary `window.__force401Done` flag to force first placeOrder to throw 401. Steps:
+1. Select online payment at restaurant 510
+2. First call fails → retry fires
+3. Console shows `[BUG-P2-003]` with `BUG_TRIGGERED: true`
+4. Observe: success page loads WITHOUT Razorpay modal
+
+### Console Log
+```
+[BUG-P2-003] 401 RETRY SKIPS RAZORPAY VALIDATION:
+  userSelectedOnlinePayment: true
+  shouldHaveTriggeredRazorpay: true
+  BUG_TRIGGERED: true
+```
+
+### Impact
+- Order placed as prepaid in POS but payment never collected
+- Affects all Razorpay-enabled restaurants on 401 retry with online payment
+
+---
+
+## BUG-039: Edit Order Missing orderDispatchedRef
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-039 |
+| **Date Reported** | 2026-04-11 |
+| **Severity** | 🟡 P1 |
+| **Status** | ⏳ Pending Validation |
+| **File** | `ReviewOrder.jsx` → edit order flow |
+
+### Problem
+New order flow sets `orderDispatchedRef.current = true` BEFORE `placeOrder()` call. Edit order flow does NOT set it before `updateCustomerOrder()`. If network drops during edit, catch block sees `orderDispatchedRef.current === false` → shows generic error instead of duplicate-prevention warning.
+
+### How to Validate (fires on EVERY edit order)
+1. Place an order at any restaurant (COD)
+2. Go back → tap "Edit Order"
+3. Modify items → Review Order → Place Order
+4. Check console:
+```
+[BUG-P2-004] EDIT ORDER - orderDispatchedRef NOT SET:
+  orderDispatchedRef: false
+  editOrderFlowSetsIt: 'NO - this is the bug'
+```
+**Difficulty: ⭐ Easiest** — no special trigger needed, fires every edit
+
+### Impact
+- Network drop during edit → user retries → duplicate update sent
+- Less dangerous than new order duplication (same items re-sent) but still incorrect UX
+
+---
+
+## BUG-038: Razorpay Success Missing pointsDiscount/pointsRedeemed
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-038 |
+| **Date Reported** | 2026-04-11 |
+| **Severity** | 🟢 P2 |
+| **Status** | ⏳ Pending Validation |
+| **File** | `ReviewOrder.jsx` → Razorpay success handler (lines 912-928) |
+
+### Problem
+Razorpay success navigates to OrderSuccess with `{ orderId, totalToPay, paymentId, isPaid }` only. Does NOT pass `billSummary`, `items`, `previousItems`. OrderSuccess fetches from API so most data is recovered, BUT `pointsDiscount` and `pointsRedeemed` come ONLY from `passedBillSummary` (line 292-293 in OrderSuccess.jsx) — not from API.
+
+### How to Validate (requires Razorpay payment)
+1. Go to restaurant 510 (has Razorpay)
+2. Add items → select Online Payment → Place Order
+3. Complete Razorpay (test card: 4111 1111 1111 1111, any expiry/CVV)
+4. Check console before success page:
+```
+[BUG-P2-006] RAZORPAY SUCCESS - DATA PASSED vs MISSING:
+  MISSING_vs_COD_FLOW: { billSummary: 'NOT PASSED', items: 'NOT PASSED' }
+  IMPACT: { pointsDiscount: '₹X LOST on success page' }
+```
+5. Check success page — bill breakdown should load from API, but points discount shows ₹0
+**Difficulty: ⭐⭐ Medium** — needs test card
+
+### Impact
+- Only affects loyalty points display on Razorpay orders
+- OrderSuccess page shows correct totals from API, only pointsDiscount/pointsRedeemed lost
+
+---
+
+## BUG-P2-007: Razorpay Dismiss Leaves orderDispatchedRef True
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-P2-007 |
+| **Date Reported** | 2026-04-11 |
+| **Severity** | 🟢 P2 |
+| **Status** | ⏳ Pending Validation |
+| **File** | `ReviewOrder.jsx` → Razorpay `ondismiss` handler |
+
+### Problem
+When user dismisses Razorpay modal, `isPlacingOrderRef` is reset but `orderDispatchedRef` is NOT. If user retries order and gets a network error, they see misleading "order may have been sent" warning even though previous order WAS created (just unpaid).
+
+### How to Validate (easy)
+1. Go to restaurant 510 → add items → Online Payment → Place Order
+2. Razorpay modal opens → **CLOSE IT** (X or back button)
+3. Check console:
+```
+[BUG-P2-007] RAZORPAY DISMISS - REF STATE:
+  orderDispatchedRef_BEFORE_RESET: true
+  explanation: 'BUG: orderDispatchedRef is still true...'
+```
+**Difficulty: ⭐ Easy** — just close the Razorpay modal
+
+### Impact
+- Misleading error message on subsequent retry + network error
+- No functional damage, UX confusion only
 
 ---
 
