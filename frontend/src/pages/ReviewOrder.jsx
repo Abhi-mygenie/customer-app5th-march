@@ -26,6 +26,7 @@ import TableRoomSelector from '../components/TableRoomSelector/TableRoomSelector
 import LoyaltyRewardsSection from '../components/LoyaltyRewardsSection/LoyaltyRewardsSection';
 import { calculateCartItemPrice } from '../api/transformers/helpers';
 import { calculateTaxBreakdown } from '../utils/taxCalculation';
+import { isDineInOrRoom } from '../utils/orderTypeHelpers';
 import logger from '../utils/logger';
 import './ReviewOrder.css';
 
@@ -479,9 +480,10 @@ const ReviewOrder = () => {
   //   setRoomOrTable(null);
   // };
 
-  // Auto-fill table if scanned
+  // FEAT-002-PREP: Auto-fill table only for dine-in/room orders
   useEffect(() => {
-    if (isScanned && scannedTableId && scannedOrderType === 'dinein') {
+    const needsTableAutoFill = isDineInOrRoom(scannedOrderType) && scannedTableId;
+    if (isScanned && needsTableAutoFill) {
       setTableNumber(scannedTableId); // Set table_id for API payload
       setRoomOrTable(scannedRoomOrTable || 'table'); // Set type for display
     }
@@ -674,10 +676,10 @@ const ReviewOrder = () => {
 
   // Handle place order
   const handlePlaceOrder = async () => {
-    // Validate room/table selection and number for multi-menu restaurants
-    if (isMultiMenu) {
+    // FEAT-002-PREP: Validate room/table only for dine-in/room orders at multi-menu restaurants
+    if (isMultiMenu && isDineInOrRoom(scannedOrderType)) {
       // Check if scanned table is available
-      const hasScannedTable = isScanned && scannedOrderType === 'dinein' && scannedTableId;
+      const hasScannedTable = isScanned && isDineInOrRoom(scannedOrderType) && scannedTableId;
 
       // If not scanned, validate manual selection
       if (!hasScannedTable) {
@@ -812,10 +814,11 @@ const ReviewOrder = () => {
     // Place order or Update order (if in edit mode)
     setIsPlacingOrder(true);
     try {
-      // Use scanned table if available, otherwise use manual selection
-      const finalTableId = (isScanned && scannedOrderType === 'dinein' && scannedTableId)
-        ? scannedTableId
-        : (isMultiMenu && tableNumber ? tableNumber : '');
+      // FEAT-002-PREP: Use table only for dine-in/room orders
+      const orderNeedsTable = isDineInOrRoom(scannedOrderType);
+      const finalTableId = orderNeedsTable
+        ? ((isScanned && scannedTableId) ? scannedTableId : (isMultiMenu && tableNumber ? tableNumber : ''))
+        : '';  // No table for takeaway/delivery
 
       let response;
 
@@ -1039,10 +1042,11 @@ const ReviewOrder = () => {
           const newToken = await getAuthToken(true);
           setAuthToken(newToken);
 
-          // Use scanned table if available, otherwise use manual selection
-          const retryTableId = (isScanned && scannedOrderType === 'dinein' && scannedTableId)
-            ? scannedTableId
-            : (isMultiMenu && tableNumber ? tableNumber : '');
+          // FEAT-002-PREP: Use table only for dine-in/room orders (same logic as main flow)
+          const retryOrderNeedsTable = isDineInOrRoom(scannedOrderType);
+          const retryTableId = retryOrderNeedsTable
+            ? ((isScanned && scannedTableId) ? scannedTableId : (isMultiMenu && tableNumber ? tableNumber : ''))
+            : '';
 
           let retryResponse;
 

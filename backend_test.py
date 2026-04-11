@@ -11,13 +11,13 @@ import json
 from datetime import datetime
 
 class MyGenieAPITester:
-    def __init__(self, base_url="https://mygenie-11th-apri.preview.emergentagent.com"):
+    def __init__(self, base_url="https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.restaurant_id = "478"  # Restaurant 478 for CA-004 tax testing
+        self.restaurant_id = "478"  # Restaurant 478 for FEAT-002-PREP testing
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""

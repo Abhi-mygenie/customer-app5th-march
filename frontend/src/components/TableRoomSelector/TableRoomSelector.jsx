@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import Select from 'react-select';
 import { MdOutlineTableRestaurant } from "react-icons/md";
 import { FaDoorOpen } from "react-icons/fa";
+import { isDineInOrRoom } from '../../utils/orderTypeHelpers';
 
 // Helper function to check if a string is purely numeric
 const isNumeric = (str) => {
@@ -77,8 +78,8 @@ const TableRoomSelector = ({
 
   return (
     <>
-      {/* Scanned Table Display */}
-      {showTableInfo && !isMultiMenu && isScanned && scannedOrderType === 'dinein' && (
+      {/* Scanned Table Display — FEAT-002-PREP: show for dine-in and room only */}
+      {showTableInfo && !isMultiMenu && isScanned && isDineInOrRoom(scannedOrderType) && (
         <>
           <div className="review-order-section">
             <div className="review-order-room-table-container">
@@ -97,8 +98,8 @@ const TableRoomSelector = ({
         </>
       )}
 
-      {/* Manual Room/Table Selection — multi-menu restaurants only */}
-      {isMultiMenu && (
+      {/* Manual Room/Table Selection — multi-menu restaurants, dine-in/room only */}
+      {isMultiMenu && isDineInOrRoom(scannedOrderType) && (
         <>
           <div className="review-order-section">
             <h2 className="review-order-section-title">Room/Table</h2>

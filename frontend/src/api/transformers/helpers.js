@@ -358,7 +358,7 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       dial_code: dialCode,
       otp: '',
       address_id: '',
-      order_type: 'dinein',
+      order_type: orderData.orderType || 'dinein',
       payment_method: 'cash_on_delivery',
       payment_id: '',
       fcm_token: '',

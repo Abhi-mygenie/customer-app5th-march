@@ -33,6 +33,7 @@ export const useScannedTable = () => {
         : null;
       
       // Validate orderType - default to 'dinein' if invalid/missing
+      // NOTE: 'dinein' default is intentional for backward compatibility — old QR codes lack orderType param
       const orderType = (urlOrderType === 'dinein' || urlOrderType === 'delivery' || urlOrderType === 'takeaway' || urlOrderType === 'take_away')
         ? urlOrderType
         : 'dinein';

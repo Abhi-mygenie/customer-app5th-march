@@ -11,6 +11,7 @@ import { getOrderDetails, checkTableStatus } from '../api/services/orderService'
 import { getStoredToken } from '../utils/authToken';
 import { ENDPOINTS } from '../api/config/endpoints';
 import logger from '../utils/logger';
+import { isDineInOrRoom, showsDineInActions } from '../utils/orderTypeHelpers';
 // Import centralized transformers - SINGLE SOURCE OF TRUTH for label formatting
 import { getVariationLabels, getAddonLabels } from '../api/transformers/helpers';
 import Header from '../components/Header/Header';
@@ -120,7 +121,7 @@ const OrderSuccess = () => {
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
   const { stations } = useStations(numericRestaurantId);
   const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showOrderStatusTracker, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill } = useRestaurantConfig();
-  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, clearScannedTable } = useScannedTable();
+  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, clearScannedTable } = useScannedTable();
   const { startEditOrder, clearCart, clearEditMode } = useCart();
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [showItems, setShowItems] = useState(true);
@@ -218,8 +219,10 @@ const OrderSuccess = () => {
       const storedTable = sessionStorage.getItem(storageKey);
       const scannedData = storedTable ? JSON.parse(storedTable) : null;
       const tableIdForCheck = scannedData?.table_id;
+      const orderTypeForCheck = scannedData?.order_type;
 
-      if (tableIdForCheck && String(tableIdForCheck) !== '0') {
+      // FEAT-002-PREP: Only check table status for dine-in/room orders
+      if (tableIdForCheck && String(tableIdForCheck) !== '0' && isDineInOrRoom(orderTypeForCheck)) {
         try {
           const tableCheckResult = await checkTableStatus(
             tableIdForCheck,
@@ -402,8 +405,8 @@ const OrderSuccess = () => {
 
     setIsLoadingEdit(true);
     try {
-      // FIRST: Check if table is still occupied with an active order
-      if (scannedTableId) {
+      // FIRST: Check if table is still occupied with an active order (dine-in/room only)
+      if (scannedTableId && isDineInOrRoom(scannedOrderType)) {
         const token = await getStoredToken();
         const tableStatus = await checkTableStatus(scannedTableId, restaurantId, token);
         
@@ -466,16 +469,19 @@ const OrderSuccess = () => {
   };
 
   // Config flags
+  // FEAT-002-PREP: Call Waiter / Pay Bill only for dine-in/room
+  const isDineInContext = showsDineInActions(scannedOrderType);
   const showOrderStatus = showOrderStatusTracker;
-  const showCallWaiter = configShowCallWaiter;
-  const showPayBill = configShowPayBill;
-  const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo;
+  const showCallWaiter = configShowCallWaiter && isDineInContext;
+  const showPayBill = configShowPayBill && isDineInContext;
+  const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo && isDineInOrRoom(scannedOrderType);
   
-  // Edit Order vs Browse Menu - based on table presence and order status
+  // Edit Order vs Browse Menu - based on table presence, order type, and order status
+  // FEAT-002-PREP: Only show table-based actions for dine-in/room
   // If fOrderStatus === 7 (Yet to be confirmed) → Show "Yet to be confirmed" message, no edit
   // If fOrderStatus === 1, 2, or 5 (Confirmed/Preparing/Served) → Show Edit Order button
-  // If no table → Show Browse Menu (no table to edit, start fresh)
-  const hasTable = isScanned && scannedTableNo;
+  // If no table or takeaway/delivery → Show Browse Menu
+  const hasTable = isDineInOrRoom(scannedOrderType) && isScanned && scannedTableNo;
   const showYetToBeConfirmed = hasTable && fOrderStatus === 7;
   const showEditOrder = hasTable && fOrderStatus !== 7 && fOrderStatus !== null;
   const showBrowseMenu = !hasTable;

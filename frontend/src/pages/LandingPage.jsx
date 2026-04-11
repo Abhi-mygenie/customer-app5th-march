@@ -9,6 +9,7 @@ import { useCart } from '../context/CartContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { checkTableStatus, getOrderDetails } from '../api/services/orderService';
+import { isDineInOrRoom, showsDineInActions } from '../utils/orderTypeHelpers';
 import { getAuthToken } from '../utils/authToken';
 import logger from '../utils/logger';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
@@ -29,7 +30,7 @@ const LandingPage = () => {
   const { startEditOrder, clearCart } = useCart();
   const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl } = useRestaurantConfig();
 
-  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned } = useScannedTable();
+  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType } = useScannedTable();
 
   const { restaurant, loading, error } = useRestaurantDetails(restaurantId);
   const actualRestaurantId = restaurant?.id?.toString() || restaurantId;
@@ -79,6 +80,8 @@ const LandingPage = () => {
     const checkTable = async () => {
       // Skip if: no table scanned, or is multi-menu restaurant, or already checked this session
       if (!isScanned || !scannedTableId || !restaurantId) return;
+      // FEAT-002-PREP: Skip table status check for takeaway/delivery orders
+      if (!isDineInOrRoom(scannedOrderType)) return;
       if (isMultipleMenu(restaurant)) return;
       if (tableStatusCheck.isChecked) return;
 
@@ -163,7 +166,7 @@ const LandingPage = () => {
     };
 
     checkTable();
-  }, [isScanned, scannedTableId, restaurantId, restaurant, tableStatusCheck.isChecked, navigate, clearCart]);
+  }, [isScanned, scannedTableId, scannedOrderType, restaurantId, restaurant, tableStatusCheck.isChecked, navigate, clearCart]);
 
   // Theme colors now controlled by local admin config only (not POS)
 
@@ -363,14 +366,16 @@ const LandingPage = () => {
   const whatsappNumber = configWhatsappNumber || '';
 
   // All visibility controlled by admin config (defaults to true)
+  // FEAT-002-PREP: Call Waiter / Pay Bill only relevant for dine-in/room
+  const isDineInContext = showsDineInActions(scannedOrderType);
   const showLogo = configShowLogo;
   const showWelcome = configShowWelcomeText;
   const showDescription = configShowDescription && tagline;
   const showSocial = configShowSocialIcons && (phone || instagramUrl || facebookUrl || twitterUrl || youtubeUrl || whatsappNumber);
-  const showTable = configShowTableNumber && isScanned && scannedTableNo;
+  const showTable = configShowTableNumber && isScanned && scannedTableNo && isDineInOrRoom(scannedOrderType);
   const showBrowseMenu = true; // Always show Browse Menu / Edit Order button
-  const showCallWaiter = configShowLandingCallWaiter;
-  const showPayBill = configShowLandingPayBill;
+  const showCallWaiter = configShowLandingCallWaiter && isDineInContext;
+  const showPayBill = configShowLandingPayBill && isDineInContext;
   const showPoweredBy = configShowPoweredBy;
 
   // Admin config overrides for welcome message
