@@ -10,9 +10,6 @@ if (!API_BASE_URL) {
 }
 
 export const ENDPOINTS = {
-  // Auth endpoints
-  LOGIN: () => `${API_BASE_URL}/auth/login`,
-  
   // Order endpoints
   PLACE_ORDER: () => `${API_BASE_URL}/customer/order/place`,
   PLACE_ORDER_AUTOPAID: () => `${API_BASE_URL}/customer/order/autopaid-place-prepaid-order`,
