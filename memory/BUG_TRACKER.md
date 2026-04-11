@@ -8,6 +8,7 @@
 
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
+| BUG-037 | OG/Meta shows "Hyatt Centric" hardcoded | 🟢 P2 | ⏳ Pending | Apr 11 | - | index.html meta description hardcoded, should be dynamic per restaurant |
 | BUG-036 | Login JSON parse error | 🔴 P0 | ✅ Fixed | Apr 10 | Apr 10 | Wrong backend URL in .env |
 | BUG-035 | f_order_status not set for Razorpay | 🔴 P0 | ⚠️ Partial | Mar 31 | Apr 10 | payment_type fixed, f_order_status TBD |
 | BUG-034 | Incorrect payment_type for Razorpay | 🔴 P0 | ✅ Fixed | Mar 31 | Mar 31 | Session 9 |

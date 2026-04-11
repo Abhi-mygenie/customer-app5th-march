@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { isValidPhoneNumber } from 'react-phone-number-input';
-import Select from 'react-select';
 import { useCart } from '../context/CartContext';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantDetails, useTableConfig, useStations } from '../hooks/useMenuData';
@@ -15,61 +14,19 @@ import { DEFAULT_THEME } from '../constants/theme';
 import { ENDPOINTS } from '../api/config/endpoints';
 import OrderItemCard from '../components/OrderItemCard/OrderItemCard';
 import PreviousOrderItems from '../components/PreviousOrderItems/PreviousOrderItems';
-import { IoArrowBackOutline, IoGiftOutline, IoPersonOutline } from "react-icons/io5";
+import { IoArrowBackOutline, IoPersonOutline } from "react-icons/io5";
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
-import { MdOutlineShoppingBag, MdOutlineTableRestaurant  } from "react-icons/md";
-import { FaDoorOpen } from "react-icons/fa";
+import { MdOutlineShoppingBag } from "react-icons/md";
 // import { GiShoppingCart } from "react-icons/gi";
 import ReviewOrderPriceBreakdown from '../components/ReviewOrderPriceBreakdown/ReviewOrderPriceBreakdown';
 import { RiFileList3Line } from "react-icons/ri";
 import CustomerDetails from '../components/CustomerDetails/CustomerDetails';
 import PaymentMethodSelector from '../components/PaymentMethodSelector';
+import TableRoomSelector from '../components/TableRoomSelector/TableRoomSelector';
+import LoyaltyRewardsSection from '../components/LoyaltyRewardsSection/LoyaltyRewardsSection';
 import { calculateCartItemPrice } from '../api/transformers/helpers';
 import { calculateTaxBreakdown } from '../utils/taxCalculation';
 import './ReviewOrder.css';
-
-// Helper function to check if a string is purely numeric
-const isNumeric = (str) => {
-  return /^\d+$/.test(str);
-};
-
-// Helper function to extract numeric value for sorting
-const getNumericValue = (str) => {
-  const match = str.match(/\d+/);
-  return match ? parseInt(match[0], 10) : Infinity;
-};
-
-// Sort function: numeric-first, then alphanumeric
-const sortTableNumbers = (a, b) => {
-  const aNum = isNumeric(a.table_no);
-  const bNum = isNumeric(b.table_no);
-
-  // Both numeric - sort numerically
-  if (aNum && bNum) {
-    return parseInt(a.table_no, 10) - parseInt(b.table_no, 10);
-  }
-
-  // Only a is numeric - a comes first
-  if (aNum && !bNum) {
-    return -1;
-  }
-
-  // Only b is numeric - b comes first
-  if (!aNum && bNum) {
-    return 1;
-  }
-
-  // Both alphanumeric - sort by numeric part first, then alphabetically
-  const aNumValue = getNumericValue(a.table_no);
-  const bNumValue = getNumericValue(b.table_no);
-
-  if (aNumValue !== bNumValue) {
-    return aNumValue - bNumValue;
-  }
-
-  // If numeric parts are equal, sort alphabetically
-  return a.table_no.localeCompare(b.table_no);
-};
 
 const ReviewOrder = () => {
   const navigate = useNavigate();
@@ -472,20 +429,6 @@ const ReviewOrder = () => {
     if (!isMultiMenu) return true; // Not required for other restaurants
     if (!roomOrTable) return false; // Must select Room or Table
     return tableNumber.trim().length > 0; // Must fill the input
-  };
-
-  // Get options based on roomOrTable selection (memoized for performance)
-  const allOptions = useMemo(() => {
-    const source = roomOrTable === 'room' ? rooms : tables;
-    return [...source]
-      .sort(sortTableNumbers)
-      .map(item => ({ value: item.id.toString(), label: item.table_no }));
-  }, [roomOrTable, rooms, tables]);
-
-
-  // Handle select change
-  const handleSelectChange = (selectedOption) => {
-    setTableNumber(selectedOption ? selectedOption.value : '');
   };
 
   // Handle room/table selection change
@@ -1270,119 +1213,24 @@ const ReviewOrder = () => {
 
         <div className="review-order-content">
 
-          {/*Scanned Table Container */}
-          {showTableInfo && !isMultiMenu && isScanned && scannedOrderType === 'dinein' && (
-            <>
-              <div className="review-order-section">
-                {/* <h2 className="review-order-section-title">
-                  {scannedRoomOrTable === 'room' ? 'Room' : 'Table'}
-                </h2> */}
-
-                {/* Container with border for scanned table display */}
-                <div className="review-order-room-table-container">
-                  <p className="review-order-seated-text">We'll bring your order to</p>
-                  <div className="review-order-seated-info">
-                    {scannedRoomOrTable === 'room' ? (
-                      <span className="review-order-room-icon"><FaDoorOpen  /></span>
-                    ) : (
-                      <span className="review-order-table-icon"><MdOutlineTableRestaurant   /></span>
-                    )}
-                    <span className="review-order-seated-name">{scannedTableNo}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="review-order-divider"></div>
-            </>
-
-          )}
-
-
-          {/* Room/Table Selection - Only for Restaurant hyatt */}
-          {isMultiMenu && (
-            <>
-              <div className="review-order-section">
-                <h2 className="review-order-section-title">Room/Table</h2>
-
-                {/* Container with border for radio buttons and input */}
-                <div className="review-order-room-table-container">
-                  {/* Radio Buttons for Room/Table Selection */}
-                  <div className="review-order-room-table-radio-group">
-                    <span className='review-order-radio-text'>Select : </span>
-                    <label className="review-order-radio-label">
-                      <input
-                        type="radio"
-                        name="roomOrTable"
-                        value="room"
-                        checked={roomOrTable === 'room'}
-                        onChange={(e) => handleRoomOrTableChange(e.target.value)}
-                        className="review-order-radio-input"
-                      />
-                      <span className="review-order-radio-text">Room</span>
-                    </label>
-                    <label className="review-order-radio-label">
-                      <input
-                        type="radio"
-                        name="roomOrTable"
-                        value="table"
-                        checked={roomOrTable === 'table'}
-                        onChange={(e) => handleRoomOrTableChange(e.target.value)}
-                        className="review-order-radio-input"
-                      />
-                      <span className="review-order-radio-text">Table</span>
-                    </label>
-                  </div>
-
-                  {/* Searchable Dropdown - Only show after selection */}
-                  {roomOrTable && (
-                    <div className="review-order-table-input-container">
-                      {/* Loading State */}
-                      {tablesLoading && (
-                        <div className="review-order-select-loading">
-                          <div className="review-order-select-skeleton"></div>
-                        </div>
-                      )}
-
-                      {/* Error State */}
-                      {tablesError && !tablesLoading && (
-                        <div className="review-order-select-error">
-                          <p className="review-order-error-message">
-                            {tablesErrorMessage || 'Failed to load tables/rooms. Please try again.'}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Select Component */}
-                      {!tablesLoading && (
-                        <Select
-                          options={allOptions}
-                          value={allOptions.find(opt => opt.value === tableNumber) || null}
-                          onChange={handleSelectChange}
-                          filterOption={(option, inputValue) => {
-                            if (!inputValue || !inputValue.trim()) return false;
-                            return option.label.toLowerCase().includes(inputValue.trim().toLowerCase());
-                          }}
-                          noOptionsMessage={({ inputValue }) =>
-                            inputValue?.trim() ? 'No options found' : 'Start typing to search...'
-                          }
-                          placeholder={roomOrTable === 'room'
-                            ? 'Type your room number'
-                            : 'Type your table number'}
-                          isClearable
-                          isSearchable
-                          isDisabled={tablesError || tablesLoading}
-                          className={`review-order-select ${!isTableNumberValid() && tableNumber.length > 0 ? 'error' : ''}`}
-                          classNamePrefix="review-order-select"
-                        />
-
-
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="review-order-divider"></div>
-            </>
-          )}
+          {/* Table/Room Selection — CA-008 Phase 1: extracted to component */}
+          <TableRoomSelector
+            isScanned={isScanned}
+            scannedTableNo={scannedTableNo}
+            scannedRoomOrTable={scannedRoomOrTable}
+            scannedOrderType={scannedOrderType}
+            showTableInfo={showTableInfo}
+            isMultiMenu={isMultiMenu}
+            rooms={rooms}
+            tables={tables}
+            roomOrTable={roomOrTable}
+            tableNumber={tableNumber}
+            tablesLoading={tablesLoading}
+            tablesError={tablesError}
+            tablesErrorMessage={tablesErrorMessage}
+            onRoomOrTableChange={handleRoomOrTableChange}
+            onTableNumberChange={setTableNumber}
+          />
 
 
           {/* Customer Details - configurable */}
@@ -1578,106 +1426,16 @@ const ReviewOrder = () => {
           </div>
           )}
 
-          {/* Customer Rewards Info — shown for any identified customer (via login or phone lookup) */}
-          {configShowLoyaltyPoints && restaurant?.is_loyalty === 'Yes' && (isAuthenticated || lookedUpCustomer) && loyaltySettings && (
-            (() => {
-              const custTier = isAuthenticated ? (user?.tier || 'Bronze') : (lookedUpCustomer?.tier || 'Bronze');
-              const tier = custTier.toLowerCase();
-              const earnPercent = loyaltySettings[`${tier}_earn_percent`] || loyaltySettings.bronze_earn_percent || 5;
-              const billAmount = totalToPay;
-              const minOrderValue = loyaltySettings.min_order_value || 100;
-              const isEligible = billAmount >= minOrderValue;
-              const pointsToEarn = Math.round(billAmount * (earnPercent / 100));
-              const redemptionValue = loyaltySettings.redemption_value || 0.25;
-              const pointsWorth = (pointsToEarn * redemptionValue).toFixed(0);
-              const isNewCustomer = lookedUpCustomer && !lookedUpCustomer.found;
-              const firstVisitBonus = isNewCustomer && loyaltySettings.first_visit_bonus_enabled ? loyaltySettings.first_visit_bonus_points : 0;
-
-              return (
-                <div className="review-order-user-info" data-testid="logged-in-user-info">
-                  <div className="user-info-content">
-                    <IoGiftOutline className="user-info-icon" />
-                    <div className="user-info-text">
-                      {isEligible ? (
-                        <>
-                          <span className="user-info-name">
-                            You will earn {pointsToEarn} points on this order!
-                          </span>
-                          <span className="user-info-points">
-                            Worth ₹{pointsWorth}{firstVisitBonus > 0 ? ` + ${firstVisitBonus} bonus points for first visit` : ''}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="user-info-name">Almost there!</span>
-                          <span className="user-info-points">
-                            Add ₹{(minOrderValue - billAmount).toFixed(0)} more to earn points
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()
-          )}
-
-          {/* No loyalty settings fallback */}
-          {configShowLoyaltyPoints && restaurant?.is_loyalty === 'Yes' && (isAuthenticated || lookedUpCustomer) && !loyaltySettings && (
-            <div className="review-order-user-info" data-testid="logged-in-user-info">
-              <div className="user-info-content">
-                <IoGiftOutline className="user-info-icon" />
-                <div className="user-info-text">
-                  <span className="user-info-name">
-                    Hi, {(isAuthenticated ? user?.name?.split(' ')[0] : lookedUpCustomer?.name?.split(' ')[0]) || 'there'}!
-                  </span>
-                  <span className="user-info-points">
-                    {(isAuthenticated ? user?.total_points : lookedUpCustomer?.total_points) || 0} points available
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Guest prompt — only if no phone entered and not logged in */}
-          {configShowLoyaltyPoints && restaurant?.is_loyalty === 'Yes' && !isAuthenticated && !lookedUpCustomer && loyaltySettings && (
-            (() => {
-              const earnPercent = loyaltySettings.bronze_earn_percent || 5;
-              const billAmount = totalToPay;
-              const pointsToEarn = Math.round(billAmount * (earnPercent / 100));
-              const redemptionValue = loyaltySettings.redemption_value || 0.25;
-              const pointsWorth = (pointsToEarn * redemptionValue).toFixed(0);
-              const minOrderValue = loyaltySettings.min_order_value || 100;
-              const isEligible = billAmount >= minOrderValue;
-
-              return (
-                <div className="review-order-login-prompt" data-testid="login-rewards-prompt">
-                  <div className="login-prompt-content">
-                    <IoGiftOutline className="login-prompt-icon" />
-                    <div className="login-prompt-text">
-                      {isEligible ? (
-                        <>
-                          <span className="login-prompt-title">
-                            Earn {pointsToEarn} points on this order!
-                          </span>
-                          <span className="login-prompt-subtitle">
-                            Worth ₹{pointsWorth} — enter your phone number above
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="login-prompt-title">Earn rewards on this order!</span>
-                          <span className="login-prompt-subtitle">
-                            Add ₹{(minOrderValue - billAmount).toFixed(0)} more to earn points
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()
-          )}
+          {/* Loyalty Rewards — CA-008 Phase 1: extracted to component */}
+          <LoyaltyRewardsSection
+            configShowLoyaltyPoints={configShowLoyaltyPoints}
+            restaurant={restaurant}
+            isAuthenticated={isAuthenticated}
+            user={user}
+            lookedUpCustomer={lookedUpCustomer}
+            loyaltySettings={loyaltySettings}
+            totalToPay={totalToPay}
+          />
         </div>
 
         {/* Fixed Footer with Payment Selector + Button (FEAT-001) */}

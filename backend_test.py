@@ -88,74 +88,57 @@ class MyGenieAPITester:
                 return True  # Still consider it a pass if API is responding
         return success
 
-    def test_restaurant_info(self):
-        """Test restaurant 478 information endpoint"""
+    def test_restaurant_config(self):
+        """Test restaurant 478 configuration endpoint"""
         success, response = self.run_test(
-            "Restaurant 478 Info",
+            "Restaurant 478 Config",
             "GET",
-            f"restaurant-info/{self.restaurant_id}",
+            f"config/{self.restaurant_id}",
             200
         )
         
         if success and isinstance(response, dict):
-            if "name" in response:
-                restaurant_name = response.get('name', 'Unknown')
-                gst_status = response.get('gst_status', 'Unknown')
-                print(f"   Restaurant: {restaurant_name}")
-                print(f"   GST Status: {gst_status}")
-                return True
+            restaurant_id = response.get('restaurant_id', 'Unknown')
+            primary_color = response.get('primaryColor', 'Unknown')
+            welcome_message = response.get('welcomeMessage', 'Unknown')
+            print(f"   Restaurant ID: {restaurant_id}")
+            print(f"   Primary Color: {primary_color}")
+            print(f"   Welcome Message: {welcome_message}")
+            return True
         return success
 
-    def test_menu_data(self):
-        """Test menu data endpoint and verify GST/VAT items for restaurant 478"""
-        success, response = self.run_test(
-            "Menu Data",
+    def test_dietary_tags(self):
+        """Test dietary tags endpoints"""
+        # Test available dietary tags
+        success1, response1 = self.run_test(
+            "Available Dietary Tags",
             "GET",
-            f"menu-data/{self.restaurant_id}",
+            "dietary-tags/available",
             200
         )
         
-        if success and isinstance(response, dict):
-            categories = response.get("categories", [])
-            if categories:
-                print(f"   Found {len(categories)} menu categories")
-                
-                # Look for GST and VAT items specifically for CA-004 testing
-                gst_items = []
-                vat_items = []
-                
-                for category in categories:
-                    items = category.get("items", [])
-                    for item in items:
-                        tax_type = item.get("tax_type", "GST")
-                        tax_percent = item.get("tax", 0)
-                        
-                        if tax_type == "GST" and tax_percent == 5:
-                            gst_items.append(item.get("name", "Unknown"))
-                        elif tax_type == "VAT" and tax_percent == 4:
-                            vat_items.append(item.get("name", "Unknown"))
-                
-                print(f"   GST Items (5%): {len(gst_items)} found")
-                print(f"   VAT Items (4%): {len(vat_items)} found")
-                
-                if gst_items:
-                    print(f"   Sample GST item: {gst_items[0]}")
-                if vat_items:
-                    print(f"   Sample VAT item: {vat_items[0]}")
-                
-                # Store for potential cart testing
-                self.sample_gst_items = gst_items[:3]  # Store first 3
-                self.sample_vat_items = vat_items[:3]  # Store first 3
-                
-                return True
-        return success
+        # Test restaurant-specific dietary tags
+        success2, response2 = self.run_test(
+            "Restaurant Dietary Tags",
+            "GET",
+            f"dietary-tags/{self.restaurant_id}",
+            200
+        )
+        
+        if success1 and isinstance(response1, list):
+            print(f"   Available dietary tags: {len(response1)} found")
+        
+        if success2 and isinstance(response2, list):
+            print(f"   Restaurant dietary tags: {len(response2)} found")
+            
+        return success1 and success2
 
     def test_table_config(self):
         """Test table configuration endpoint"""
         success, response = self.run_test(
             "Table Configuration",
             "GET",
-            f"table-config/{self.restaurant_id}",
+            "table-config",
             200
         )
         
@@ -166,35 +149,37 @@ class MyGenieAPITester:
             return True
         return success
 
-    def test_customer_config(self):
-        """Test customer app configuration"""
+    def test_loyalty_settings(self):
+        """Test loyalty settings endpoint"""
         success, response = self.run_test(
-            "Customer App Config",
+            "Loyalty Settings",
             "GET",
-            f"customer-app-config/{self.restaurant_id}",
+            f"loyalty-settings/{self.restaurant_id}",
             200
         )
         
         if success and isinstance(response, dict):
-            config_keys = list(response.keys())[:5]  # Show first 5 config keys
-            print(f"   Config keys: {config_keys}")
+            bronze_earn = response.get('bronze_earn_percent', 'Unknown')
+            redemption_value = response.get('redemption_value', 'Unknown')
+            print(f"   Bronze earn percent: {bronze_earn}")
+            print(f"   Redemption value: {redemption_value}")
             return True
         return success
 
-    def test_auth_endpoints(self):
-        """Test authentication endpoints"""
-        # Test guest token endpoint
+    def test_customer_lookup(self):
+        """Test customer lookup endpoint"""
+        # Test with a sample phone number
+        test_phone = "9876543210"
         success, response = self.run_test(
-            "Guest Token",
-            "POST",
-            "auth/guest-token",
-            200,
-            data={"restaurant_id": self.restaurant_id}
+            "Customer Lookup",
+            "GET",
+            f"customer-lookup/{self.restaurant_id}?phone={test_phone}",
+            200
         )
         
-        if success and isinstance(response, dict) and "access_token" in response:
-            self.token = response["access_token"]
-            print(f"   ✅ Guest token obtained")
+        if success and isinstance(response, dict):
+            found = response.get('found', False)
+            print(f"   Customer lookup test (phone: {test_phone}): Found = {found}")
             return True
         return success
 
@@ -225,12 +210,11 @@ def main():
     # Core API tests
     tests = [
         ("API Health Check", tester.test_api_health),
-        ("Restaurant Info", tester.test_restaurant_info),
-        ("Menu Data", tester.test_menu_data),
+        ("Restaurant Config", tester.test_restaurant_config),
+        ("Dietary Tags", tester.test_dietary_tags),
         ("Table Configuration", tester.test_table_config),
-        ("Customer App Config", tester.test_customer_config),
-        ("Authentication", tester.test_auth_endpoints),
-        ("Order Endpoints Basic", tester.test_order_endpoints_basic),
+        ("Loyalty Settings", tester.test_loyalty_settings),
+        ("Customer Lookup", tester.test_customer_lookup),
     ]
     
     print(f"\nRunning {len(tests)} test categories...")
