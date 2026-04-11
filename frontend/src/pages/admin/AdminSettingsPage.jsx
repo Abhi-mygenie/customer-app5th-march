@@ -353,243 +353,230 @@ const AdminSettingsPage = () => {
           Configure popups that appear on customer-facing pages. One popup per page (Landing, Review, Success).
         </p>
 
-        {(config.notificationPopups || []).map((popup, index) => (
-          <div key={popup.id || index} className="admin-subsection" style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 className="admin-subsection-title" style={{ margin: 0 }}>
-                Popup #{index + 1} — {popup.showOn || 'landing'}
-              </h3>
-              <button
-                className="admin-icon-btn admin-icon-btn-danger"
-                onClick={() => {
-                  const updated = (config.notificationPopups || []).filter((_, i) => i !== index);
-                  updateField('notificationPopups', updated);
-                }}
-                data-testid={`popup-delete-${index}`}
-              >
-                <IoTrashOutline />
-              </button>
-            </div>
+        {(config.notificationPopups || []).map((popup, index) => {
+          const content = popup.content || {};
+          const style = popup.style || {};
 
-            {/* Enabled Toggle */}
-            <div className="admin-form-row">
-              <label className="admin-toggle-label">
-                <input
-                  type="checkbox"
-                  checked={popup.enabled || false}
-                  onChange={(e) => {
-                    const updated = [...(config.notificationPopups || [])];
-                    updated[index] = { ...updated[index], enabled: e.target.checked };
-                    updateField('notificationPopups', updated);
-                  }}
-                  data-testid={`popup-enabled-${index}`}
-                />
-                <span>Enabled</span>
-              </label>
-            </div>
+          const updatePopup = (field, value) => {
+            const updated = [...(config.notificationPopups || [])];
+            updated[index] = { ...updated[index], [field]: value };
+            updateField('notificationPopups', updated);
+          };
+          const updateContent = (field, value) => {
+            const updated = [...(config.notificationPopups || [])];
+            updated[index] = { ...updated[index], content: { ...content, [field]: value } };
+            updateField('notificationPopups', updated);
+          };
+          const updateStyle = (field, value) => {
+            const updated = [...(config.notificationPopups || [])];
+            updated[index] = { ...updated[index], style: { ...style, [field]: value } };
+            updateField('notificationPopups', updated);
+          };
 
-            {/* Show On */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Show On Page</label>
-              <select
-                className="admin-form-select"
-                value={popup.showOn || 'landing'}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], showOn: e.target.value };
-                  updateField('notificationPopups', updated);
-                }}
-                data-testid={`popup-showOn-${index}`}
-              >
-                <option value="landing">Landing Page</option>
-                <option value="review">Review Order</option>
-                <option value="success">Order Success</option>
-              </select>
-            </div>
-
-            {/* Delay */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Delay (seconds)</label>
-              <input
-                type="number"
-                className="admin-form-input"
-                min={1}
-                max={30}
-                value={popup.delaySeconds || 3}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], delaySeconds: parseInt(e.target.value) || 3 };
-                  updateField('notificationPopups', updated);
-                }}
-                data-testid={`popup-delay-${index}`}
-              />
-            </div>
-
-            {/* Auto Dismiss */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Auto-dismiss (seconds, 0 = manual only)</label>
-              <input
-                type="number"
-                className="admin-form-input"
-                min={0}
-                max={60}
-                value={popup.autoDismissSeconds || 0}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], autoDismissSeconds: parseInt(e.target.value) || 0 };
-                  updateField('notificationPopups', updated);
-                }}
-                data-testid={`popup-autodismiss-${index}`}
-              />
-            </div>
-
-            {/* Title (required) */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Title *</label>
-              <input
-                type="text"
-                className="admin-form-input"
-                value={(popup.content || {}).title || ''}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), title: e.target.value } };
-                  updateField('notificationPopups', updated);
-                }}
-                placeholder="e.g., Welcome Offer!"
-                data-testid={`popup-title-${index}`}
-              />
-            </div>
-
-            {/* Message (required) */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Message *</label>
-              <textarea
-                className="admin-form-input"
-                rows={3}
-                value={(popup.content || {}).message || ''}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), message: e.target.value } };
-                  updateField('notificationPopups', updated);
-                }}
-                placeholder="e.g., Get 15% off your first order"
-                data-testid={`popup-message-${index}`}
-              />
-            </div>
-
-            {/* Image URL (optional) */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Image URL (optional)</label>
-              <input
-                type="text"
-                className="admin-form-input"
-                value={(popup.content || {}).imageUrl || ''}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), imageUrl: e.target.value } };
-                  updateField('notificationPopups', updated);
-                }}
-                placeholder="/api/uploads/promo.png or https://..."
-                data-testid={`popup-imageUrl-${index}`}
-              />
-            </div>
-
-            {/* CTA Text (optional) */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Button Text (optional, leave empty for no button)</label>
-              <input
-                type="text"
-                className="admin-form-input"
-                value={(popup.content || {}).ctaText || ''}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), ctaText: e.target.value } };
-                  updateField('notificationPopups', updated);
-                }}
-                placeholder="e.g., Order Now"
-                data-testid={`popup-ctaText-${index}`}
-              />
-            </div>
-
-            {/* CTA Link (optional) */}
-            {(popup.content || {}).ctaText && (
-              <div className="admin-form-row">
-                <label className="admin-form-label">Button Link</label>
-                <input
-                  type="text"
-                  className="admin-form-input"
-                  value={(popup.content || {}).ctaLink || ''}
-                  onChange={(e) => {
-                    const updated = [...(config.notificationPopups || [])];
-                    updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), ctaLink: e.target.value } };
-                    updateField('notificationPopups', updated);
-                  }}
-                  placeholder="/menu or https://example.com"
-                  data-testid={`popup-ctaLink-${index}`}
-                />
+          return (
+            <div key={popup.id || index} className="np-admin-card" data-testid={`popup-card-${index}`}>
+              {/* Card Header */}
+              <div className="np-admin-header">
+                <div className="np-admin-header-left">
+                  <select
+                    className="np-admin-page-select"
+                    value={popup.showOn || 'landing'}
+                    onChange={(e) => updatePopup('showOn', e.target.value)}
+                    data-testid={`popup-showOn-${index}`}
+                  >
+                    <option value="landing">Landing Page</option>
+                    <option value="review">Review Order</option>
+                    <option value="success">Order Success</option>
+                  </select>
+                </div>
+                <div className="np-admin-header-right">
+                  <label className="np-admin-toggle" data-testid={`popup-enabled-${index}`}>
+                    <input
+                      type="checkbox"
+                      checked={popup.enabled || false}
+                      onChange={(e) => updatePopup('enabled', e.target.checked)}
+                    />
+                    <span className="np-admin-toggle-track">
+                      <span className="np-admin-toggle-knob" />
+                    </span>
+                    <span className={`np-admin-toggle-text ${popup.enabled ? 'active' : ''}`}>
+                      {popup.enabled ? 'ON' : 'OFF'}
+                    </span>
+                  </label>
+                  <button
+                    className="np-admin-delete-btn"
+                    onClick={() => {
+                      const updated = (config.notificationPopups || []).filter((_, i) => i !== index);
+                      updateField('notificationPopups', updated);
+                    }}
+                    data-testid={`popup-delete-${index}`}
+                  >
+                    <IoTrashOutline />
+                  </button>
+                </div>
               </div>
-            )}
 
-            {/* CTA Action (optional) */}
-            {(popup.content || {}).ctaText && (
-              <div className="admin-form-row">
-                <label className="admin-form-label">Button Action</label>
-                <select
-                  className="admin-form-select"
-                  value={(popup.content || {}).ctaAction || 'navigate'}
-                  onChange={(e) => {
-                    const updated = [...(config.notificationPopups || [])];
-                    updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), ctaAction: e.target.value } };
-                    updateField('notificationPopups', updated);
-                  }}
-                  data-testid={`popup-ctaAction-${index}`}
-                >
-                  <option value="navigate">Navigate (same tab)</option>
-                  <option value="dismiss">Just Close Popup</option>
-                  <option value="external_link">Open External Link (new tab)</option>
-                </select>
+              {/* Content Section */}
+              <div className="np-admin-group">
+                <div className="np-admin-group-label">Content</div>
+                <div className="np-admin-field">
+                  <label className="np-admin-label">Title <span className="np-admin-required">*</span></label>
+                  <input
+                    type="text"
+                    className="np-admin-input"
+                    value={content.title || ''}
+                    onChange={(e) => updateContent('title', e.target.value)}
+                    placeholder="e.g., Welcome Offer!"
+                    data-testid={`popup-title-${index}`}
+                  />
+                </div>
+                <div className="np-admin-field">
+                  <label className="np-admin-label">Message <span className="np-admin-required">*</span></label>
+                  <textarea
+                    className="np-admin-input np-admin-textarea"
+                    rows={3}
+                    value={content.message || ''}
+                    onChange={(e) => updateContent('message', e.target.value)}
+                    placeholder="e.g., Get 15% off your first order"
+                    data-testid={`popup-message-${index}`}
+                  />
+                </div>
+                <div className="np-admin-field">
+                  <label className="np-admin-label">Image URL <span className="np-admin-optional">(optional)</span></label>
+                  <input
+                    type="text"
+                    className="np-admin-input"
+                    value={content.imageUrl || ''}
+                    onChange={(e) => updateContent('imageUrl', e.target.value)}
+                    placeholder="/api/uploads/promo.png or https://..."
+                    data-testid={`popup-imageUrl-${index}`}
+                  />
+                </div>
+                <div className="np-admin-field">
+                  <label className="np-admin-label">Button Text <span className="np-admin-optional">(optional — leave empty for no button)</span></label>
+                  <input
+                    type="text"
+                    className="np-admin-input"
+                    value={content.ctaText || ''}
+                    onChange={(e) => updateContent('ctaText', e.target.value)}
+                    placeholder="e.g., Order Now"
+                    data-testid={`popup-ctaText-${index}`}
+                  />
+                </div>
+                {content.ctaText && (
+                  <div className="np-admin-row-2col">
+                    <div className="np-admin-field">
+                      <label className="np-admin-label">Button Link</label>
+                      <input
+                        type="text"
+                        className="np-admin-input"
+                        value={content.ctaLink || ''}
+                        onChange={(e) => updateContent('ctaLink', e.target.value)}
+                        placeholder="/menu or https://..."
+                        data-testid={`popup-ctaLink-${index}`}
+                      />
+                    </div>
+                    <div className="np-admin-field">
+                      <label className="np-admin-label">Button Action</label>
+                      <select
+                        className="np-admin-input np-admin-select"
+                        value={content.ctaAction || 'navigate'}
+                        onChange={(e) => updateContent('ctaAction', e.target.value)}
+                        data-testid={`popup-ctaAction-${index}`}
+                      >
+                        <option value="navigate">Navigate (same tab)</option>
+                        <option value="dismiss">Just Close Popup</option>
+                        <option value="external_link">Open Link (new tab)</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* Style: Type */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Popup Type</label>
-              <select
-                className="admin-form-select"
-                value={(popup.style || {}).type || 'modal'}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], style: { ...(updated[index].style || {}), type: e.target.value } };
-                  updateField('notificationPopups', updated);
-                }}
-                data-testid={`popup-type-${index}`}
-              >
-                <option value="modal">Modal (centered overlay)</option>
-                <option value="banner">Banner (top/bottom strip)</option>
-                <option value="toast">Toast (bottom-right corner)</option>
-              </select>
-            </div>
+              {/* Display & Timing Row */}
+              <div className="np-admin-row-2col">
+                {/* Display Section */}
+                <div className="np-admin-group">
+                  <div className="np-admin-group-label">Display</div>
+                  <div className="np-admin-field">
+                    <label className="np-admin-label">Type</label>
+                    <div className="np-admin-type-options">
+                      {[
+                        { value: 'modal', label: 'Modal', icon: '▣' },
+                        { value: 'banner', label: 'Banner', icon: '▬' },
+                        { value: 'toast', label: 'Toast', icon: '▢' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          className={`np-admin-type-btn ${(style.type || 'modal') === opt.value ? 'active' : ''}`}
+                          onClick={() => updateStyle('type', opt.value)}
+                          data-testid={`popup-type-${opt.value}-${index}`}
+                        >
+                          <span className="np-admin-type-icon">{opt.icon}</span>
+                          <span>{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="np-admin-field">
+                    <label className="np-admin-label">Position</label>
+                    <div className="np-admin-position-options">
+                      {['top', 'center', 'bottom'].map(pos => (
+                        <button
+                          key={pos}
+                          className={`np-admin-position-btn ${(style.position || 'center') === pos ? 'active' : ''}`}
+                          onClick={() => updateStyle('position', pos)}
+                          data-testid={`popup-position-${pos}-${index}`}
+                        >
+                          <div className="np-admin-position-preview">
+                            <div className={`np-admin-position-bar np-admin-position-bar-${pos}`} />
+                          </div>
+                          <span>{pos.charAt(0).toUpperCase() + pos.slice(1)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
-            {/* Style: Position */}
-            <div className="admin-form-row">
-              <label className="admin-form-label">Position</label>
-              <select
-                className="admin-form-select"
-                value={(popup.style || {}).position || 'center'}
-                onChange={(e) => {
-                  const updated = [...(config.notificationPopups || [])];
-                  updated[index] = { ...updated[index], style: { ...(updated[index].style || {}), position: e.target.value } };
-                  updateField('notificationPopups', updated);
-                }}
-                data-testid={`popup-position-${index}`}
-              >
-                <option value="center">Center</option>
-                <option value="top">Top</option>
-                <option value="bottom">Bottom</option>
-              </select>
+                {/* Timing Section */}
+                <div className="np-admin-group">
+                  <div className="np-admin-group-label">Timing</div>
+                  <div className="np-admin-field">
+                    <label className="np-admin-label">Show after</label>
+                    <div className="np-admin-input-suffix">
+                      <input
+                        type="number"
+                        className="np-admin-input np-admin-input-num"
+                        min={1}
+                        max={30}
+                        value={popup.delaySeconds || 3}
+                        onChange={(e) => updatePopup('delaySeconds', parseInt(e.target.value) || 3)}
+                        data-testid={`popup-delay-${index}`}
+                      />
+                      <span className="np-admin-suffix">seconds</span>
+                    </div>
+                  </div>
+                  <div className="np-admin-field">
+                    <label className="np-admin-label">Auto-close after</label>
+                    <div className="np-admin-input-suffix">
+                      <input
+                        type="number"
+                        className="np-admin-input np-admin-input-num"
+                        min={0}
+                        max={60}
+                        value={popup.autoDismissSeconds || 0}
+                        onChange={(e) => updatePopup('autoDismissSeconds', parseInt(e.target.value) || 0)}
+                        data-testid={`popup-autodismiss-${index}`}
+                      />
+                      <span className="np-admin-suffix">seconds</span>
+                    </div>
+                    <span className="np-admin-hint">0 = manual close only</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Add Popup Button (max 3) */}
         {(config.notificationPopups || []).length < 3 && (
