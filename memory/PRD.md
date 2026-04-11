@@ -9,49 +9,43 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git, branch
 - **Database**: Remote MongoDB at 52.66.232.149 (mygenie database)
 - **External API**: MyGenie POS API at preprod.mygenie.online + manage.mygenie.online
 
-## Two Backend Systems
-| System | URL | Handles |
-|--------|-----|---------|
-| Our Backend (FastAPI) | REACT_APP_BACKEND_URL | Auth, customer data, app config, loyalty, delivery (planned) |
-| POS API (MyGenie) | REACT_APP_API_BASE_URL (preprod.mygenie.online) | Orders, menus, restaurant info, Razorpay, table status |
+## What's Been Implemented
 
-## What's Been Implemented (Jan 11, 2026)
-- Cloned repo from GitHub, branch `11-april-refactor-5-loyality`
-- Configured frontend .env with MyGenie API URLs, login credentials, and image base URL
-- Configured backend .env with remote MongoDB, JWT secret, CORS, and MyGenie API URL
-- Resolved `tsconfig.json` / `jsconfig.json` conflict (merged path aliases into tsconfig, removed jsconfig)
-- Installed all backend (pip) and frontend (yarn) dependencies
-- Both services running via supervisor
-- App loads successfully — landing page with restaurant branding, banners, menu, social icons
+### Session 1 — Setup (Jan 11, 2026)
+- Cloned repo, branch `11-april-refactor-5-loyality`
+- Configured frontend/backend .env files
+- Resolved tsconfig/jsconfig conflict
+- App running with restaurant 478 (18march)
 
-## Planning & Documentation (Jan 11, 2026)
-- Reviewed all memory docs (ROADMAP, SUMMARY, BUG_TRACKER, ARCHITECTURE, FEAT-002 specs, CODE_AUDIT)
-- Analyzed distance API (manage.mygenie.online) and zone API (preprod.mygenie.online) responses
-- Confirmed: customer auth + data flows through OUR backend/MongoDB, not POS
-- Created FEAT-002-DELIVERY-SPEC.md for handoff to implementation team
-- **No delivery code changes made** — planning only per user request
+### Session 2 — Planning & FEAT-003 Implementation (Jan 11, 2026)
+- Reviewed all memory docs, summarized project roadmap
+- Planned FEAT-002 Delivery (BLOCKED — waiting on backend team for address schema + POS lat/lng)
+- Created `/app/memory/FEAT-002-DELIVERY-SPEC.md`
+- **FEAT-003: Notification Popup — IMPLEMENTED**
+  - Backend: `notificationPopups` field added to AppConfigUpdate model + default config
+  - Frontend: `useNotificationPopup` hook (delay, auto-dismiss, page matching)
+  - Frontend: `NotificationPopup` component (3 variants: modal, banner, toast)
+  - Wired into LandingPage, ReviewOrder, OrderSuccess
+  - Admin settings UI in AdminSettingsPage (add/edit/delete popups, max 3)
+  - Tested: popup appears after delay, close works, respects restaurant branding
+  - Test popup data cleaned after verification
 
-## Core Features (from codebase)
+## Core Features
 - Unified auth (customer OTP + restaurant admin password)
 - Customer profiles, orders, points, wallet, coupons
-- Restaurant app config (branding, visibility toggles, payment options)
+- Restaurant app config (branding, visibility, payment options)
 - Banner management, Custom pages, Feedback system
-- Loyalty settings & customer lookup
-- Dietary tags management, File upload
+- Loyalty settings, Dietary tags, File upload
 - POS API integration (table config, order details)
-- FEAT-001: Dual Payment Options (Online + COD) ✅
-- FEAT-002 Phase 1: Core Plumbing (walkin type, table rules) ✅
-- FEAT-002 Phase 2: Takeaway Flow (OrderModeSelector, mode toggle) ✅
-- FEAT-002 Phase 3: Delivery Flow — SPEC CREATED, awaiting implementation by other team
-
-## Memory Folder Documents
-All documents pulled from repo memory folder + new FEAT-002-DELIVERY-SPEC.md
+- FEAT-001: Dual Payment Options ✅
+- FEAT-002 Phase 1-2: Takeaway ✅
+- FEAT-002 Phase 3: Delivery — BLOCKED (spec ready)
+- **FEAT-003: Notification Popups ✅**
 
 ## Prioritized Backlog
-- P0: FEAT-002 Phase 3 — Delivery Flow (spec ready, ~10-12 hrs, assigned to other team)
+- P0: FEAT-002 Phase 3 Delivery — BLOCKED on backend team
 - P1: Fix inclusive tax logic (2-3 hrs)
 - P1: Restaurant-level tax settings (3-4 hrs)
 - P2: Extract custom hooks (6-8 hrs)
 - P2: Decompose ReviewOrder.jsx (4-6 hrs)
-- P2: Remove 72+ console.logs
 - P3: Full TypeScript migration (8-12 hrs)

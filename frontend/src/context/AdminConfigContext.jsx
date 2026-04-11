@@ -118,6 +118,8 @@ const defaultConfig = {
   onlinePaymentDelivery: true,
   payOnlineLabel: '',
   payAtCounterLabel: '',
+  // Notification Popups (FEAT-003)
+  notificationPopups: [],
 };
 
 export const AdminConfigProvider = ({ children }) => {

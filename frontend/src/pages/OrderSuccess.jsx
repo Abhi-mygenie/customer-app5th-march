@@ -19,6 +19,7 @@ import { IoCheckmarkCircle, IoCallOutline, IoChevronDownOutline, IoChevronUpOutl
 import { RiBillLine } from 'react-icons/ri';
 import { MdOutlineEdit, MdOutlineRestaurantMenu, MdOutlineTableRestaurant } from 'react-icons/md';
 import { FaDoorOpen } from 'react-icons/fa';
+import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import './OrderSuccess.css';
 
 /**
@@ -783,6 +784,7 @@ const OrderSuccess = () => {
         </div>
 
       </div>
+      <NotificationPopup page="success" />
     </div>
   );
 };

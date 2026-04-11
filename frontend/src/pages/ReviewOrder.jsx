@@ -28,6 +28,7 @@ import { calculateCartItemPrice } from '../api/transformers/helpers';
 import { calculateTaxBreakdown } from '../utils/taxCalculation';
 import { isDineInOrRoom, hasAssignedTable } from '../utils/orderTypeHelpers';
 import logger from '../utils/logger';
+import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import './ReviewOrder.css';
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
@@ -1470,6 +1471,7 @@ const ReviewOrder = () => {
           </button>
         </div>
       </div>
+      <NotificationPopup page="review" />
     </div>
   );
 };

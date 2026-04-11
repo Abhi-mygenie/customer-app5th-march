@@ -112,6 +112,8 @@ const DEFAULT_CONFIG = {
   // Powered By Configuration (DFA-004)
   poweredByText: 'Powered by',
   poweredByLogoUrl: '/assets/images/mygenie_logo.svg',
+  // Notification Popups (FEAT-003)
+  notificationPopups: [],
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
@@ -412,6 +414,8 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Powered By Configuration (DFA-004)
     poweredByText: config.poweredByText || 'Powered by',
     poweredByLogoUrl: config.poweredByLogoUrl !== undefined ? config.poweredByLogoUrl : '/assets/images/mygenie_logo.svg',
+    // Notification Popups (FEAT-003)
+    notificationPopups: config.notificationPopups || [],
   };
 
   return (

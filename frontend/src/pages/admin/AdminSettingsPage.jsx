@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useAdminConfig } from '../../context/AdminConfigContext';
-import { IoSettingsOutline, IoCloudUploadOutline, IoTimeOutline, IoAddCircleOutline, IoTrashOutline, IoCardOutline, IoWalletOutline } from 'react-icons/io5';
+import { IoSettingsOutline, IoCloudUploadOutline, IoTimeOutline, IoAddCircleOutline, IoTrashOutline, IoCardOutline, IoWalletOutline, IoNotificationsOutline } from 'react-icons/io5';
 import './AdminPages.css';
 
 const AdminSettingsPage = () => {
@@ -342,6 +342,279 @@ const AdminSettingsPage = () => {
           <span className="admin-info-icon">ℹ️</span>
           <span>Online payment requires Razorpay configuration. Contact support if you need to set up Razorpay for your restaurant.</span>
         </div>
+      </div>
+
+      {/* Notification Popups Section (FEAT-003) */}
+      <div className="admin-section" data-testid="notification-popup-settings">
+        <h2 className="admin-section-title">
+          <IoNotificationsOutline /> Notification Popups
+        </h2>
+        <p className="admin-section-description">
+          Configure popups that appear on customer-facing pages. One popup per page (Landing, Review, Success).
+        </p>
+
+        {(config.notificationPopups || []).map((popup, index) => (
+          <div key={popup.id || index} className="admin-subsection" style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 className="admin-subsection-title" style={{ margin: 0 }}>
+                Popup #{index + 1} — {popup.showOn || 'landing'}
+              </h3>
+              <button
+                className="admin-icon-btn admin-icon-btn-danger"
+                onClick={() => {
+                  const updated = (config.notificationPopups || []).filter((_, i) => i !== index);
+                  updateField('notificationPopups', updated);
+                }}
+                data-testid={`popup-delete-${index}`}
+              >
+                <IoTrashOutline />
+              </button>
+            </div>
+
+            {/* Enabled Toggle */}
+            <div className="admin-form-row">
+              <label className="admin-toggle-label">
+                <input
+                  type="checkbox"
+                  checked={popup.enabled || false}
+                  onChange={(e) => {
+                    const updated = [...(config.notificationPopups || [])];
+                    updated[index] = { ...updated[index], enabled: e.target.checked };
+                    updateField('notificationPopups', updated);
+                  }}
+                  data-testid={`popup-enabled-${index}`}
+                />
+                <span>Enabled</span>
+              </label>
+            </div>
+
+            {/* Show On */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Show On Page</label>
+              <select
+                className="admin-form-select"
+                value={popup.showOn || 'landing'}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], showOn: e.target.value };
+                  updateField('notificationPopups', updated);
+                }}
+                data-testid={`popup-showOn-${index}`}
+              >
+                <option value="landing">Landing Page</option>
+                <option value="review">Review Order</option>
+                <option value="success">Order Success</option>
+              </select>
+            </div>
+
+            {/* Delay */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Delay (seconds)</label>
+              <input
+                type="number"
+                className="admin-form-input"
+                min={1}
+                max={30}
+                value={popup.delaySeconds || 3}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], delaySeconds: parseInt(e.target.value) || 3 };
+                  updateField('notificationPopups', updated);
+                }}
+                data-testid={`popup-delay-${index}`}
+              />
+            </div>
+
+            {/* Auto Dismiss */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Auto-dismiss (seconds, 0 = manual only)</label>
+              <input
+                type="number"
+                className="admin-form-input"
+                min={0}
+                max={60}
+                value={popup.autoDismissSeconds || 0}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], autoDismissSeconds: parseInt(e.target.value) || 0 };
+                  updateField('notificationPopups', updated);
+                }}
+                data-testid={`popup-autodismiss-${index}`}
+              />
+            </div>
+
+            {/* Title (required) */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Title *</label>
+              <input
+                type="text"
+                className="admin-form-input"
+                value={(popup.content || {}).title || ''}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), title: e.target.value } };
+                  updateField('notificationPopups', updated);
+                }}
+                placeholder="e.g., Welcome Offer!"
+                data-testid={`popup-title-${index}`}
+              />
+            </div>
+
+            {/* Message (required) */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Message *</label>
+              <textarea
+                className="admin-form-input"
+                rows={3}
+                value={(popup.content || {}).message || ''}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), message: e.target.value } };
+                  updateField('notificationPopups', updated);
+                }}
+                placeholder="e.g., Get 15% off your first order"
+                data-testid={`popup-message-${index}`}
+              />
+            </div>
+
+            {/* Image URL (optional) */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Image URL (optional)</label>
+              <input
+                type="text"
+                className="admin-form-input"
+                value={(popup.content || {}).imageUrl || ''}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), imageUrl: e.target.value } };
+                  updateField('notificationPopups', updated);
+                }}
+                placeholder="/api/uploads/promo.png or https://..."
+                data-testid={`popup-imageUrl-${index}`}
+              />
+            </div>
+
+            {/* CTA Text (optional) */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Button Text (optional, leave empty for no button)</label>
+              <input
+                type="text"
+                className="admin-form-input"
+                value={(popup.content || {}).ctaText || ''}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), ctaText: e.target.value } };
+                  updateField('notificationPopups', updated);
+                }}
+                placeholder="e.g., Order Now"
+                data-testid={`popup-ctaText-${index}`}
+              />
+            </div>
+
+            {/* CTA Link (optional) */}
+            {(popup.content || {}).ctaText && (
+              <div className="admin-form-row">
+                <label className="admin-form-label">Button Link</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  value={(popup.content || {}).ctaLink || ''}
+                  onChange={(e) => {
+                    const updated = [...(config.notificationPopups || [])];
+                    updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), ctaLink: e.target.value } };
+                    updateField('notificationPopups', updated);
+                  }}
+                  placeholder="/menu or https://example.com"
+                  data-testid={`popup-ctaLink-${index}`}
+                />
+              </div>
+            )}
+
+            {/* CTA Action (optional) */}
+            {(popup.content || {}).ctaText && (
+              <div className="admin-form-row">
+                <label className="admin-form-label">Button Action</label>
+                <select
+                  className="admin-form-select"
+                  value={(popup.content || {}).ctaAction || 'navigate'}
+                  onChange={(e) => {
+                    const updated = [...(config.notificationPopups || [])];
+                    updated[index] = { ...updated[index], content: { ...(updated[index].content || {}), ctaAction: e.target.value } };
+                    updateField('notificationPopups', updated);
+                  }}
+                  data-testid={`popup-ctaAction-${index}`}
+                >
+                  <option value="navigate">Navigate (same tab)</option>
+                  <option value="dismiss">Just Close Popup</option>
+                  <option value="external_link">Open External Link (new tab)</option>
+                </select>
+              </div>
+            )}
+
+            {/* Style: Type */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Popup Type</label>
+              <select
+                className="admin-form-select"
+                value={(popup.style || {}).type || 'modal'}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], style: { ...(updated[index].style || {}), type: e.target.value } };
+                  updateField('notificationPopups', updated);
+                }}
+                data-testid={`popup-type-${index}`}
+              >
+                <option value="modal">Modal (centered overlay)</option>
+                <option value="banner">Banner (top/bottom strip)</option>
+                <option value="toast">Toast (bottom-right corner)</option>
+              </select>
+            </div>
+
+            {/* Style: Position */}
+            <div className="admin-form-row">
+              <label className="admin-form-label">Position</label>
+              <select
+                className="admin-form-select"
+                value={(popup.style || {}).position || 'center'}
+                onChange={(e) => {
+                  const updated = [...(config.notificationPopups || [])];
+                  updated[index] = { ...updated[index], style: { ...(updated[index].style || {}), position: e.target.value } };
+                  updateField('notificationPopups', updated);
+                }}
+                data-testid={`popup-position-${index}`}
+              >
+                <option value="center">Center</option>
+                <option value="top">Top</option>
+                <option value="bottom">Bottom</option>
+              </select>
+            </div>
+          </div>
+        ))}
+
+        {/* Add Popup Button (max 3) */}
+        {(config.notificationPopups || []).length < 3 && (
+          <button
+            className="admin-add-btn"
+            onClick={() => {
+              const existing = config.notificationPopups || [];
+              const usedPages = existing.map(p => p.showOn);
+              const availablePages = ['landing', 'review', 'success'].filter(p => !usedPages.includes(p));
+              const newPopup = {
+                id: `popup-${Date.now()}`,
+                enabled: false,
+                showOn: availablePages[0] || 'landing',
+                delaySeconds: 3,
+                autoDismissSeconds: 0,
+                content: { title: '', message: '' },
+                style: { position: 'center', type: 'modal' }
+              };
+              updateField('notificationPopups', [...existing, newPopup]);
+            }}
+            data-testid="popup-add-btn"
+          >
+            <IoAddCircleOutline /> Add Popup
+          </button>
+        )}
       </div>
     </div>
   );

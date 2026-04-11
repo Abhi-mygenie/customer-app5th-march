@@ -17,6 +17,7 @@ import PromoBanner from '../components/PromoBanner/PromoBanner';
 import HamburgerMenu from '../components/HamburgerMenu/HamburgerMenu';
 import LandingCustomerCapture, { isPhoneValid } from '../components/LandingCustomerCapture/LandingCustomerCapture';
 import OrderModeSelector from '../components/OrderModeSelector/OrderModeSelector';
+import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import { DEFAULT_THEME } from '../constants/theme';
 import { MdOutlineTableRestaurant, MdOutlineRestaurantMenu, MdOutlineEdit } from 'react-icons/md';
 import { FaDoorOpen } from 'react-icons/fa';
@@ -724,6 +725,7 @@ const LandingPage = () => {
           </p>
         </footer>
       )}
+      <NotificationPopup page="landing" />
     </div>
   );
 };
