@@ -73,7 +73,7 @@ const PasswordSetup = () => {
           phone,
           password,
           confirm_password: confirmPassword,
-          restaurant_id: restaurantId,
+          restaurant_id: String(restaurantId),
           name: displayName,
         }),
       });
@@ -111,7 +111,7 @@ const PasswordSetup = () => {
         body: JSON.stringify({
           phone,
           password,
-          restaurant_id: restaurantId,
+          restaurant_id: String(restaurantId),
         }),
       });
       const data = await res.json();
@@ -139,7 +139,7 @@ const PasswordSetup = () => {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, restaurant_id: restaurantId }),
+        body: JSON.stringify({ phone, restaurant_id: String(restaurantId) }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -180,7 +180,7 @@ const PasswordSetup = () => {
           new_password: password,
           confirm_password: confirmPassword,
           otp,
-          restaurant_id: restaurantId,
+          restaurant_id: String(restaurantId),
         }),
       });
       const data = await res.json();

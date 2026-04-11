@@ -227,7 +227,7 @@ const LandingPage = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               phone: capturedPhone,
-              restaurant_id: restaurantId,
+              restaurant_id: String(restaurantId),
               pos_id: '0001',
             }),
           });
