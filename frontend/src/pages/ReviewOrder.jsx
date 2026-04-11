@@ -1149,8 +1149,10 @@ const ReviewOrder = () => {
               // BUG-041 FIX: payment type from user selection, not key existence
               paymentType: retryPaymentType
             });
+            console.log('[BUG-040 DEBUG] retryResponse received:', JSON.stringify(retryResponse));
           }
 
+          console.log('[BUG-040 DEBUG] About to check shouldRetryRazorpay, retryResponse:', retryResponse);
           // BUG-040 FIX: Check if Razorpay payment flow needed after 401 retry
           const shouldRetryRazorpay = paymentMethod === 'online' && retryResponse?.razorpay_id && restaurant?.razorpay?.razorpay_key;
           console.log('[BUG-040 FIX] 401 retry Razorpay check:', {
