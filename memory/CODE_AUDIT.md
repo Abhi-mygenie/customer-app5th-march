@@ -505,10 +505,15 @@ Post-fix: Admin Login ✅ | Token Verify ✅ | Backend Running ✅
 8. ✅ **Deleted 46 unused Shadcn UI components (-2,862 lines)**
 
 ### Phase 2: High Priority (Current Focus)
-1. 🔲 Fix Inclusive Tax Logic (`tax_calc: "Inclusive"`)
-2. 🔲 Restaurant-level Tax Settings (`restaurent_gst`, `vat.status`)
-3. 🔲 Remove/replace console.logs with logger
-4. 🔲 Remove unused endpoints from `endpoints.js`
+1. ✅ CA-008 Phase 2 — Dedup handlePlaceOrder (1644→1515 lines, -129 lines)
+   - Extracted `buildBillSummary()`, `buildOrderItems()`, `buildPreviousItems()` as module-level pure functions
+   - Extracted `openRazorpayCheckout()` as shared Razorpay flow (replaces 2 blocks → 1)
+   - Side-effect: BUG-038 fixed (main Razorpay success now passes billSummary)
+   - Side-effect: BUG-P2-007 fixed (main Razorpay dismiss now resets orderDispatchedRef)
+2. 🔲 Fix Inclusive Tax Logic (`tax_calc: "Inclusive"`)
+3. 🔲 Restaurant-level Tax Settings (`restaurent_gst`, `vat.status`)
+4. 🔲 Remove/replace console.logs with logger
+5. 🔲 Remove unused endpoints from `endpoints.js`
 
 ### Phase 3: Medium Priority (Parked - Wait 1-2 Sessions)
 1. 🔲 Extract custom hooks (`useOrderCalculations`, `usePreviousOrder`)

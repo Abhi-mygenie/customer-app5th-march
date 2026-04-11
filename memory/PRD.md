@@ -35,9 +35,13 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git (branch
 ### P0 (Next — Fix Bugs Before Phase 2)
 - BUG-041: Fix 401 retry payment type ✅ Fixed (Apr 11)
 - BUG-040: Fix 401 retry Razorpay skip ✅ Fixed (Apr 11) — includes BUG-P2-007 fix in dismiss handler
-- BUG-039: Fix edit order missing `orderDispatchedRef` (set ref before updateCustomerOrder) ⏳ Next
-- BUG-038: Pass billSummary in Razorpay success navigation (points data) ⏳ Next
-- BUG-P2-007: Reset `orderDispatchedRef` in Razorpay `ondismiss` ✅ Fixed (included in BUG-040 fix)
+- BUG-039: Fix edit order missing `orderDispatchedRef` (set ref before updateCustomerOrder) ⏳ Parked
+- BUG-038: Pass billSummary in Razorpay success navigation (points data) ✅ Fixed (Apr 11, side-effect of CA-008 Phase 2 refactor)
+- BUG-P2-007: Reset `orderDispatchedRef` in Razorpay `ondismiss` ✅ Fixed (Apr 11, side-effect of CA-008 Phase 2 refactor)
+
+### Refactoring
+- CA-008 Phase 2: Dedup handlePlaceOrder ✅ Done (Apr 11) — 1644→1515 lines (-129 lines)
+  - Extracted: buildBillSummary, buildOrderItems, buildPreviousItems, openRazorpayCheckout
 
 ### P1 (After Bug Fixes)
 - CA-008 Phase 2: Dedup handlePlaceOrder (submitOrder helper, navigateToSuccess, executeOrderFlow)

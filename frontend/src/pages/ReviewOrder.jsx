@@ -28,6 +28,40 @@ import { calculateCartItemPrice } from '../api/transformers/helpers';
 import { calculateTaxBreakdown } from '../utils/taxCalculation';
 import './ReviewOrder.css';
 
+// === CA-008 Phase 2: Extracted pure helper functions ===
+
+const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay }) => ({
+  itemTotal,
+  pointsDiscount,
+  pointsRedeemed: pointsToRedeem,
+  subtotal: subtotalAfterDiscount,
+  cgst: adjustedCgst,
+  sgst: adjustedSgst,
+  vat: adjustedVat,
+  totalTax: adjustedTotalTax,
+  grandTotal: roundedTotal,
+  originalTotal: hasRoundingDiff ? totalToPay : null
+});
+
+const buildOrderItems = (cartItems) => cartItems.map(item => ({
+  name: item.item?.name || 'Item',
+  quantity: item.quantity,
+  price: item.item?.price || item.totalPrice / item.quantity,
+  totalPrice: item.totalPrice,
+  veg: item.item?.veg === 1 || item.item?.veg === true
+}));
+
+const buildPreviousItems = (previousOrderItems, isEditMode) => {
+  if (!isEditMode) return [];
+  return previousOrderItems.map(item => ({
+    name: item.item?.name || 'Item',
+    quantity: item.quantity,
+    price: item.unitPrice || item.price || 0,
+    totalPrice: (item.unitPrice || item.price || 0) * item.quantity,
+    veg: item.item?.veg === true || item.item?.veg === 1
+  }));
+};
+
 const ReviewOrder = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
@@ -897,115 +931,82 @@ const ReviewOrder = () => {
 
       // Check if Razorpay payment flow needed (only for online payment selection)
       const shouldProcessRazorpay = paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key;
+
+      // === CA-008 Phase 2: Shared Razorpay checkout function ===
+      const openRazorpayCheckout = async (orderResponse, label = 'Razorpay') => {
+        console.log(`[${label}] Payment required:`, {
+          razorpay_id: orderResponse.razorpay_id,
+          razorpay_key: restaurant.razorpay.razorpay_key,
+          order_id: orderResponse.order_id,
+          total_amount: orderResponse.total_amount
+        });
+
+        const createOrderResponse = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: String(orderResponse.order_id) })
+        });
+
+        const razorpayOrder = await createOrderResponse.json();
+        console.log(`[${label}] Create order response:`, razorpayOrder);
+
+        if (razorpayOrder.error) {
+          throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
+        }
+
+        const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay });
+
+        const options = {
+          key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
+          amount: razorpayOrder.amount_in_paise || (orderResponse.total_amount * 100),
+          currency: 'INR',
+          name: restaurant?.name || 'Restaurant',
+          description: `Order #${orderResponse.order_id}`,
+          order_id: razorpayOrder.order_id,
+          handler: function (paymentResponse) {
+            console.log(`[${label}] Payment success:`, paymentResponse);
+            clearCart();
+            navigate(`/${restaurantId}/order-success`, {
+              state: {
+                orderData: {
+                  orderId: orderResponse.order_id,
+                  totalToPay: orderResponse.total_amount,
+                  paymentId: paymentResponse.razorpay_payment_id,
+                  razorpayOrderId: paymentResponse.razorpay_order_id,
+                  razorpaySignature: paymentResponse.razorpay_signature,
+                  isPaid: true,
+                  isEditedOrder: isEditMode,
+                  billSummary
+                }
+              }
+            });
+          },
+          prefill: {
+            name: customerName || '',
+            contact: customerPhone || ''
+          },
+          theme: {
+            color: restaurant?.primaryColor || DEFAULT_THEME.primaryColor
+          },
+          modal: {
+            ondismiss: function () {
+              console.log(`[${label}] Payment modal dismissed`);
+              toast.error('Payment cancelled');
+              setIsPlacingOrder(false);
+              isPlacingOrderRef.current = false;
+              orderDispatchedRef.current = false;
+            }
+          }
+        };
+
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
+      };
       
       if (shouldProcessRazorpay) {
-        console.log('[Razorpay] Payment required:', {
-          razorpay_id: response.razorpay_id,
-          razorpay_key: restaurant.razorpay.razorpay_key,
-          order_id: response.order_id,
-          total_amount: response.total_amount
-        });
-        
-        // Step 3: Create Razorpay order to get actual order_id
         try {
-          const createOrderResponse = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ order_id: String(response.order_id) })
-          });
-          
-          const razorpayOrder = await createOrderResponse.json();
-          console.log('[Razorpay] Create order response:', razorpayOrder);
-          
-          if (razorpayOrder.error) {
-            throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
-          }
-          
-          // Open Razorpay checkout with actual order_id
-          const options = {
-            key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
-            amount: razorpayOrder.amount_in_paise || (response.total_amount * 100),
-            currency: 'INR',
-            name: restaurant?.name || 'Restaurant',
-            description: `Order #${response.order_id}`,
-            order_id: razorpayOrder.order_id, // Actual Razorpay order ID (order_XXXXX)
-            handler: function (paymentResponse) {
-              // Payment successful
-              console.log('[Razorpay] Payment success:', paymentResponse);
-              
-              // ═══ BUG-P2-006 VALIDATION LOG ═══
-              // Razorpay success navigates WITHOUT billSummary, items, previousItems
-              // OrderSuccess page CAN fetch from API, but pointsDiscount/pointsRedeemed
-              // are only available from passedBillSummary (not in API response)
-              console.warn('[BUG-P2-006] RAZORPAY SUCCESS - DATA PASSED vs MISSING:', {
-                PASSED: {
-                  orderId: response.order_id,
-                  totalToPay: response.total_amount,
-                  paymentId: '(from razorpay)',
-                  isPaid: true,
-                },
-                MISSING_vs_COD_FLOW: {
-                  billSummary: 'NOT PASSED (COD flow passes full billSummary)',
-                  items: 'NOT PASSED (COD flow passes newOrderItems)',
-                  previousItems: 'NOT PASSED (COD flow passes prevItems)',
-                  isEditedOrder: 'NOT PASSED',
-                },
-                IMPACT: {
-                  pointsDiscount: pointsDiscount > 0 ? `₹${pointsDiscount} LOST on success page` : 'No points used, no impact',
-                  pointsRedeemed: pointsToRedeem > 0 ? `${pointsToRedeem} points LOST on success page` : 'No points used, no impact',
-                }
-              });
-
-              // Clear cart and navigate to success page
-              clearCart();
-              navigate(`/${restaurantId}/order-success`, {
-                state: {
-                  orderData: {
-                    orderId: response.order_id,
-                    totalToPay: response.total_amount,
-                    paymentId: paymentResponse.razorpay_payment_id,
-                    razorpayOrderId: paymentResponse.razorpay_order_id,
-                    razorpaySignature: paymentResponse.razorpay_signature,
-                    isPaid: true
-                  }
-                }
-              });
-            },
-            prefill: {
-              name: customerName || '',
-              contact: customerPhone || ''
-            },
-            theme: {
-              color: restaurant?.primaryColor || DEFAULT_THEME.primaryColor
-            },
-            modal: {
-              ondismiss: function () {
-                console.log('[Razorpay] Payment modal closed');
-                
-                // ═══ BUG-P2-007 VALIDATION LOG ═══
-                console.warn('[BUG-P2-007] RAZORPAY DISMISS - REF STATE:', {
-                  orderDispatchedRef_BEFORE_RESET: orderDispatchedRef.current,
-                  isPlacingOrderRef_BEFORE_RESET: isPlacingOrderRef.current,
-                  explanation: orderDispatchedRef.current 
-                    ? 'BUG: orderDispatchedRef is still true after dismiss. If user retries and gets network error, they will see misleading "order may have been sent" warning.'
-                    : 'orderDispatchedRef already false, no issue.'
-                });
-
-                toast.error('Payment cancelled');
-                setIsPlacingOrder(false);
-                isPlacingOrderRef.current = false;
-                // NOTE: orderDispatchedRef.current is NOT reset here (potential BUG-P2-007)
-              }
-            }
-          };
-
-          const razorpay = new window.Razorpay(options);
-          razorpay.open();
+          await openRazorpayCheckout(response, 'Razorpay');
           return; // Don't proceed to success page yet - wait for payment
-          
         } catch (razorpayError) {
           console.error('[Razorpay] Failed to create order:', razorpayError);
           toast.error('Payment initialization failed. Please try again.');
@@ -1018,24 +1019,6 @@ const ReviewOrder = () => {
       // Clear cart after successful order (non-payment flow)
       clearCart();
 
-      // Prepare new items for order success page
-      const newOrderItems = cartItems.map(item => ({
-        name: item.item?.name || 'Item',
-        quantity: item.quantity,
-        price: item.item?.price || item.totalPrice / item.quantity,
-        totalPrice: item.totalPrice,
-        veg: item.item?.veg === 1 || item.item?.veg === true
-      }));
-
-      // Prepare previous items if in edit mode
-      const prevItems = isEditMode ? previousOrderItems.map(item => ({
-        name: item.item?.name || 'Item',
-        quantity: item.quantity,
-        price: item.unitPrice || item.price || 0,
-        totalPrice: (item.unitPrice || item.price || 0) * item.quantity,
-        veg: item.item?.veg === true || item.item?.veg === 1
-      })) : [];
-
       // Navigate to success page with order data
       navigate(`/${restaurantId}/order-success`, {
         state: {
@@ -1043,21 +1026,9 @@ const ReviewOrder = () => {
             orderId: response?.order_id || editingOrderId || null,
             totalToPay: response?.total_amount || roundedTotal.toFixed(2),
             isEditedOrder: isEditMode,
-            items: newOrderItems,
-            previousItems: prevItems,
-            // Bill breakdown calculated locally
-            billSummary: {
-              itemTotal: itemTotal,
-              pointsDiscount: pointsDiscount,
-              pointsRedeemed: pointsToRedeem,
-              subtotal: subtotalAfterDiscount,
-              cgst: adjustedCgst,
-              sgst: adjustedSgst,
-              vat: adjustedVat,
-              totalTax: adjustedTotalTax,
-              grandTotal: roundedTotal,
-              originalTotal: hasRoundingDiff ? totalToPay : null
-            }
+            items: buildOrderItems(cartItems),
+            previousItems: buildPreviousItems(previousOrderItems, isEditMode),
+            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay })
           }
         }
       });
@@ -1163,83 +1134,11 @@ const ReviewOrder = () => {
           });
 
           if (shouldRetryRazorpay) {
-            // Open Razorpay checkout for retry response (same as main flow)
             try {
-              const createOrderResponse = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
-                method: 'POST',
-                headers: {
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ order_id: String(retryResponse.order_id) })
-              });
-
-              const razorpayOrder = await createOrderResponse.json();
-              console.log('[BUG-040 FIX] Retry Razorpay create order:', razorpayOrder);
-
-              if (razorpayOrder.error) {
-                throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
-              }
-
-              const options = {
-                key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
-                amount: razorpayOrder.amount_in_paise || (retryResponse.total_amount * 100),
-                currency: 'INR',
-                name: restaurant?.name || 'Restaurant',
-                description: `Order #${retryResponse.order_id}`,
-                order_id: razorpayOrder.order_id,
-                handler: function (paymentResponse) {
-                  console.log('[BUG-040 FIX] Retry Razorpay payment success:', paymentResponse);
-                  clearCart();
-                  navigate(`/${restaurantId}/order-success`, {
-                    state: {
-                      orderData: {
-                        orderId: retryResponse.order_id,
-                        totalToPay: retryResponse.total_amount,
-                        paymentId: paymentResponse.razorpay_payment_id,
-                        razorpayOrderId: paymentResponse.razorpay_order_id,
-                        razorpaySignature: paymentResponse.razorpay_signature,
-                        isPaid: true,
-                        isEditedOrder: isEditMode,
-                        billSummary: {
-                          itemTotal: itemTotal,
-                          pointsDiscount: pointsDiscount,
-                          pointsRedeemed: pointsToRedeem,
-                          subtotal: subtotalAfterDiscount,
-                          cgst: adjustedCgst,
-                          sgst: adjustedSgst,
-                          vat: adjustedVat,
-                          totalTax: adjustedTotalTax,
-                          grandTotal: roundedTotal,
-                          originalTotal: hasRoundingDiff ? totalToPay : null
-                        }
-                      }
-                    }
-                  });
-                },
-                prefill: {
-                  name: customerName || '',
-                  contact: customerPhone || ''
-                },
-                theme: {
-                  color: restaurant?.primaryColor || DEFAULT_THEME.primaryColor
-                },
-                modal: {
-                  ondismiss: function () {
-                    console.log('[BUG-040 FIX] Retry Razorpay modal dismissed');
-                    toast.error('Payment cancelled');
-                    setIsPlacingOrder(false);
-                    isPlacingOrderRef.current = false;
-                    orderDispatchedRef.current = false;
-                  }
-                }
-              };
-
-              const razorpay = new window.Razorpay(options);
-              razorpay.open();
-              return; // Wait for payment — don't navigate to success yet
+              await openRazorpayCheckout(retryResponse, 'Razorpay-Retry');
+              return; // Wait for payment
             } catch (razorpayError) {
-              console.error('[BUG-040 FIX] Retry Razorpay failed:', razorpayError);
+              console.error('[Razorpay-Retry] Failed:', razorpayError);
               toast.error('Payment initialization failed. Please try again.');
               setIsPlacingOrder(false);
               isPlacingOrderRef.current = false;
@@ -1250,42 +1149,15 @@ const ReviewOrder = () => {
           // COD retry: navigate to success directly
           clearCart();
 
-          const retryOrderItems = cartItems.map(item => ({
-            name: item.item?.name || 'Item',
-            quantity: item.quantity,
-            price: item.item?.price || item.totalPrice / item.quantity,
-            totalPrice: item.totalPrice,
-            veg: item.item?.veg === 1 || item.item?.veg === true
-          }));
-
-          const retryPrevItems = isEditMode ? previousOrderItems.map(item => ({
-            name: item.item?.name || 'Item',
-            quantity: item.quantity,
-            price: item.unitPrice || item.price || 0,
-            totalPrice: (item.unitPrice || item.price || 0) * item.quantity,
-            veg: item.item?.veg === true || item.item?.veg === 1
-          })) : [];
-
           navigate(`/${restaurantId}/order-success`, {
             state: {
               orderData: {
                 orderId: retryResponse?.order_id || editingOrderId || null,
                 totalToPay: retryResponse?.total_amount || roundedTotal.toFixed(2),
                 isEditedOrder: isEditMode,
-                items: retryOrderItems,
-                previousItems: retryPrevItems,
-                billSummary: {
-                  itemTotal: itemTotal,
-                  pointsDiscount: pointsDiscount,
-                  pointsRedeemed: pointsToRedeem,
-                  subtotal: subtotalAfterDiscount,
-                  cgst: adjustedCgst,
-                  sgst: adjustedSgst,
-                  vat: adjustedVat,
-                  totalTax: adjustedTotalTax,
-                  grandTotal: roundedTotal,
-                  originalTotal: hasRoundingDiff ? totalToPay : null
-                }
+                items: buildOrderItems(cartItems),
+                previousItems: buildPreviousItems(previousOrderItems, isEditMode),
+                billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay })
               }
             }
           });
