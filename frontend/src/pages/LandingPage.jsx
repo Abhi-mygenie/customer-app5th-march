@@ -9,13 +9,14 @@ import { useCart } from '../context/CartContext';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { checkTableStatus, getOrderDetails } from '../api/services/orderService';
-import { isDineInOrRoom, showsDineInActions, hasAssignedTable } from '../utils/orderTypeHelpers';
+import { isDineInOrRoom, showsDineInActions, hasAssignedTable, isTakeawayOrDelivery } from '../utils/orderTypeHelpers';
 import { getAuthToken } from '../utils/authToken';
 import logger from '../utils/logger';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import HamburgerMenu from '../components/HamburgerMenu/HamburgerMenu';
 import LandingCustomerCapture, { isPhoneValid } from '../components/LandingCustomerCapture/LandingCustomerCapture';
+import OrderModeSelector from '../components/OrderModeSelector/OrderModeSelector';
 import { DEFAULT_THEME } from '../constants/theme';
 import { MdOutlineTableRestaurant, MdOutlineRestaurantMenu, MdOutlineEdit } from 'react-icons/md';
 import { FaDoorOpen } from 'react-icons/fa';
@@ -30,7 +31,7 @@ const LandingPage = () => {
   const { startEditOrder, clearCart } = useCart();
   const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl } = useRestaurantConfig();
 
-  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType } = useScannedTable();
+  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, updateOrderType } = useScannedTable();
 
   const { restaurant, loading, error } = useRestaurantDetails(restaurantId);
   const actualRestaurantId = restaurant?.id?.toString() || restaurantId;
@@ -54,6 +55,25 @@ const LandingPage = () => {
 
   // State for edit order loading
   const [isLoadingEditOrder, setIsLoadingEditOrder] = useState(false);
+
+  // Phase 2: Takeaway/Delivery mode state
+  const isTakeawayDeliveryMode = isTakeawayOrDelivery(scannedOrderType);
+  const [selectedMode, setSelectedMode] = useState(scannedOrderType === 'delivery' ? 'delivery' : 'takeaway');
+
+  // Handle mode switch (takeaway ↔ delivery)
+  const handleModeChange = (newMode) => {
+    setSelectedMode(newMode);
+    if (updateOrderType) {
+      updateOrderType(newMode);
+    }
+  };
+
+  // Sync selectedMode when scannedOrderType changes (initial load)
+  useEffect(() => {
+    if (scannedOrderType === 'delivery' || scannedOrderType === 'takeaway') {
+      setSelectedMode(scannedOrderType);
+    }
+  }, [scannedOrderType]);
 
   // Fetch admin config when restaurantId is available
   useEffect(() => {
@@ -173,14 +193,26 @@ const LandingPage = () => {
   const handleDiningMenuClick = async () => {
     const actualRestaurantId = restaurant?.id || restaurantId;
     
-    // If customer capture is enabled, validate + lookup
-    if (configShowLandingCustomerCapture) {
-      // Validate mandatory fields
-      if (mandatoryCustomerPhone && (!capturedPhone || !isPhoneValid(capturedPhone))) {
+    // Phase 2: Validate mandatory fields for takeaway/delivery
+    if (isTakeawayDeliveryMode && !isAuthenticated) {
+      if (!capturedPhone || !isPhoneValid(capturedPhone)) {
         setPhoneError('Please enter a valid phone number');
         return;
       }
-      if (mandatoryCustomerName && !capturedName.trim()) {
+      if (!capturedName.trim()) {
+        toast.error('Please enter your name');
+        return;
+      }
+    }
+
+    // If customer capture is enabled (config-based), validate + lookup
+    if (configShowLandingCustomerCapture || isTakeawayDeliveryMode) {
+      // Validate mandatory fields (config-driven for dine-in, always for takeaway/delivery)
+      if (effectiveMandatoryPhone && (!capturedPhone || !isPhoneValid(capturedPhone))) {
+        setPhoneError('Please enter a valid phone number');
+        return;
+      }
+      if (effectiveMandatoryName && !capturedName.trim()) {
         toast.error('Please enter your name');
         return;
       }
@@ -386,7 +418,20 @@ const LandingPage = () => {
   const btnColor = configPrimaryColor || DEFAULT_THEME.primaryColor;
   const btnTextColor = configButtonTextColor || DEFAULT_THEME.buttonTextColor;
 
-  const showCustomerCapture = configShowLandingCustomerCapture && !isAuthenticated;
+  // Phase 2: Customer capture logic
+  // For takeaway/delivery: ALWAYS show and ALWAYS mandatory (unless logged in)
+  // For dine-in/walk-in: show from config
+  const showCustomerCapture = isTakeawayDeliveryMode
+    ? !isAuthenticated  // Always show for takeaway/delivery (mandatory)
+    : (configShowLandingCustomerCapture && !isAuthenticated);
+
+  // Phase 2: For takeaway/delivery, name+phone are always mandatory
+  const effectiveMandatoryName = isTakeawayDeliveryMode ? true : mandatoryCustomerName;
+  const effectiveMandatoryPhone = isTakeawayDeliveryMode ? true : mandatoryCustomerPhone;
+
+  // Phase 2: Validate if takeaway/delivery requirements are met
+  const isTakeawayDeliveryReady = !isTakeawayDeliveryMode || isAuthenticated || 
+    (capturedName.trim().length > 0 && capturedPhone && isPhoneValid(capturedPhone));
 
   // Check if we have a background image
   const hasBackgroundImage = !!configBackgroundImageUrl;
@@ -495,7 +540,17 @@ const LandingPage = () => {
           </div>
         )}
 
-        {/* 4.5 Customer Capture Form (when enabled) */}
+        {/* Phase 2: Takeaway/Delivery Mode Selector */}
+        {isTakeawayDeliveryMode && (
+          <OrderModeSelector
+            mode={selectedMode}
+            onModeChange={handleModeChange}
+            primaryColor={btnColor}
+            textColor={btnTextColor}
+          />
+        )}
+
+        {/* 4.5 Customer Capture Form — always shown for takeaway/delivery, config-driven for dine-in */}
         {showCustomerCapture && (
           <LandingCustomerCapture
             phone={capturedPhone}
@@ -504,8 +559,8 @@ const LandingPage = () => {
             setName={setCapturedName}
             phoneError={phoneError}
             setPhoneError={setPhoneError}
-            mandatoryName={mandatoryCustomerName}
-            mandatoryPhone={mandatoryCustomerPhone}
+            mandatoryName={effectiveMandatoryName}
+            mandatoryPhone={effectiveMandatoryPhone}
           />
         )}
 
@@ -553,10 +608,10 @@ const LandingPage = () => {
               {/* Browse Menu button - when table is available or no table scanned */}
               {!tableStatusCheck.isLoading && (!tableStatusCheck.isOccupied || !tableStatusCheck.existingOrderId) && (
                 <button
-                  className="landing-btn landing-btn-primary"
+                  className={`landing-btn landing-btn-primary ${isTakeawayDeliveryMode && !isTakeawayDeliveryReady ? 'landing-btn-disabled' : ''}`}
                   onClick={handleDiningMenuClick}
-                  disabled={isCheckingCustomer}
-                  style={{ backgroundColor: btnColor, color: btnTextColor, opacity: isCheckingCustomer ? 0.7 : 1 }}
+                  disabled={isCheckingCustomer || (isTakeawayDeliveryMode && !isTakeawayDeliveryReady)}
+                  style={{ backgroundColor: btnColor, color: btnTextColor, opacity: (isCheckingCustomer || (isTakeawayDeliveryMode && !isTakeawayDeliveryReady)) ? 0.5 : 1 }}
                   data-testid="landing-browse-menu-btn"
                 >
                   {isCheckingCustomer ? (

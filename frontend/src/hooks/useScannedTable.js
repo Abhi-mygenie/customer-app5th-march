@@ -74,6 +74,14 @@ export const useScannedTable = () => {
     orderType: scannedTable?.order_type || null,
     foodFor: scannedTable?.food_for || null,
     isScanned: !!scannedTable,
+    /** Update orderType in sessionStorage (for mode switching between takeaway/delivery) */
+    updateOrderType: (newOrderType) => {
+      if (!restaurantId || !scannedTable) return;
+      const updated = { ...scannedTable, order_type: newOrderType };
+      const storageKey = `scanned_table_${restaurantId}`;
+      sessionStorage.setItem(storageKey, JSON.stringify(updated));
+      setScannedTable(updated);
+    },
     clearScannedTable: () => {
       if (restaurantId) {
         sessionStorage.removeItem(`scanned_table_${restaurantId}`);
