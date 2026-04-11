@@ -17,6 +17,7 @@
   position: relative;
 }
 
+/* Name input */
 .capture-input {
   width: 100%;
   padding: 12px 14px;
@@ -41,36 +42,56 @@
   font-size: 14px;
 }
 
-/* Phone input — hide flag dropdown, show only the number input */
+/* Phone input wrapper — styled as a single bordered box */
 .capture-phone-input {
   width: 100%;
   display: flex;
   align-items: center;
+  border: 1.5px solid var(--color-primary, #E86F2C);
+  border-radius: var(--radius-button, 8px);
+  background: #fff;
+  padding: 0 4px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Hide the country selector (flag + dropdown) entirely — India-only context */
+.capture-phone-input:focus-within {
+  border-color: var(--color-primary, #E86F2C);
+  box-shadow: 0 0 0 2px rgba(232, 111, 44, 0.12);
+}
+
+/* Flag container — show flag only, compact */
 .capture-phone-input .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  padding: 0 6px 0 10px;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+/* Hide the country code text (+91) — keep only the flag */
+.capture-phone-input .PhoneInputCountryIcon {
+  width: 24px;
+  height: 18px;
+}
+
+/* Hide the dropdown arrow for cleaner look */
+.capture-phone-input .PhoneInputCountrySelectArrow {
   display: none;
 }
 
+/* The actual number input — no border (wrapper has border) */
 .capture-phone-input .PhoneInputInput {
   flex: 1;
-  width: 100%;
-  padding: 12px 14px;
-  border: 1.5px solid var(--color-primary, #E86F2C);
-  border-radius: var(--radius-button, 8px);
+  padding: 12px 10px;
+  border: none;
+  border-radius: 0;
   font-size: 15px;
   font-family: var(--font-body, 'Poppins', sans-serif);
-  background: #fff;
+  background: transparent;
   color: #222;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  box-sizing: border-box;
-}
-
-.capture-phone-input .PhoneInputInput:focus {
   outline: none;
-  border-color: var(--color-primary, #E86F2C);
-  box-shadow: 0 0 0 2px rgba(232, 111, 44, 0.12);
+  box-sizing: border-box;
 }
 
 .capture-phone-input .PhoneInputInput::placeholder {
@@ -78,12 +99,8 @@
   font-size: 14px;
 }
 
-.capture-phone-input.capture-phone-error .PhoneInputInput {
-  border-color: #e53935;
-  box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.1);
-}
-
-.capture-input.capture-phone-error-border {
+/* Error state */
+.capture-phone-input.capture-phone-error {
   border-color: #e53935;
   box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.1);
 }
@@ -102,34 +119,4 @@
   font-size: 11px;
   margin-top: 3px;
   padding-left: 4px;
-}
-
-.capture-continue-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  border: none;
-  border-radius: var(--radius-button, 8px);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-  margin-top: 0.5rem;
-}
-
-.capture-continue-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  opacity: 0.95;
-}
-
-.capture-continue-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.capture-btn-icon {
-  font-size: 1.125rem;
 }

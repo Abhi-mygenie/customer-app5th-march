@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
+import PhoneInput from 'react-phone-number-input';
 import { isValidPhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import './LandingCustomerCapture.css';
 
 const LandingCustomerCapture = ({
@@ -26,16 +28,8 @@ const LandingCustomerCapture = ({
     }
   }, []);
 
-  // Extract bare 10-digit number for display (strip +91)
-  const getDisplayPhone = (val) => {
-    if (!val) return '';
-    if (val.startsWith('+91')) return val.slice(3);
-    return val.replace(/^\+?\d{0,2}/, '');
-  };
-
-  const handlePhoneChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 10); // Only digits, max 10
-    setPhone(raw ? `+91${raw}` : '');
+  const handlePhoneChange = (value) => {
+    setPhone(value || '');
     setPhoneError('');
   };
 
@@ -43,14 +37,13 @@ const LandingCustomerCapture = ({
     <div className="landing-customer-capture" data-testid="landing-customer-capture">
       <div className="capture-form">
         <div className="capture-input-group">
-          <input
-            type="tel"
-            className={`capture-input ${phoneError ? 'capture-phone-error-border' : ''}`}
-            placeholder="Phone Number"
-            value={getDisplayPhone(phone)}
+          <PhoneInput
+            international
+            defaultCountry="IN"
+            value={phone}
             onChange={handlePhoneChange}
-            maxLength={10}
-            inputMode="numeric"
+            placeholder="Phone Number"
+            className={`capture-phone-input ${phoneError ? 'capture-phone-error' : ''}`}
             data-testid="capture-phone-input"
           />
           {phoneError && (
@@ -77,20 +70,11 @@ const LandingCustomerCapture = ({
 // Validation helper - exported for use by LandingPage
 export const isPhoneValid = (value) => {
   if (!value) return false;
-  // Try the library validation first
-  try {
-    if (isValidPhoneNumber(value)) {
-      const digits = value.replace(/\D/g, '');
-      if (value.startsWith('+91')) return digits.length === 12;
-      return digits.length >= 10;
-    }
-  } catch (e) {
-    // Fallback: manual check
-  }
-  // Fallback: check bare digits
+  if (!isValidPhoneNumber(value)) return false;
   const digits = value.replace(/\D/g, '');
   if (value.startsWith('+91')) return digits.length === 12;
-  return digits.length === 10;
+  if (value.startsWith('+98')) return digits.length === 12;
+  return digits.length >= 10;
 };
 
 export default LandingCustomerCapture;
