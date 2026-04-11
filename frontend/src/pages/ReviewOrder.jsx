@@ -820,13 +820,10 @@ const ReviewOrder = () => {
 
       // Check if we're in edit mode
       if (isEditMode && editingOrderId) {
-        // ═══ BUG-P2-004 VALIDATION LOG ═══
-        console.warn('[BUG-P2-004] EDIT ORDER - orderDispatchedRef NOT SET:', {
-          orderDispatchedRef: orderDispatchedRef.current,
-          explanation: 'Edit flow does NOT set orderDispatchedRef=true before API call. If network drops during updateCustomerOrder, catch block wont show duplicate-prevention warning.',
-          newOrderFlowSetsIt: 'Yes (line with orderDispatchedRef.current = true)',
-          editOrderFlowSetsIt: 'NO - this is the bug'
-        });
+        // ═══ BUG-039 FIX: Set orderDispatchedRef before edit order API call ═══
+        // Same as new order flow — if network drops during updateCustomerOrder,
+        // catch block will show duplicate-prevention warning instead of generic error
+        orderDispatchedRef.current = true;
         
         // FIRST: Check if table is still occupied before updating
         if (finalTableId && String(finalTableId) !== '0') {
@@ -959,21 +956,6 @@ const ReviewOrder = () => {
           tableId: finalTableId
         });
         
-        // ═══ TEMPORARY 401 SIMULATOR — HARDCODED ON — REMOVE AFTER TESTING ═══
-        // Forces first placeOrder to "fail" with 401 BEFORE the API call
-        // so retry creates a fresh order (realistic simulation)
-        if (!window.__simulate401Done) {
-          window.__simulate401Done = true;
-          console.warn('═══════════════════════════════════════════════');
-          console.warn('[401 SIMULATOR] ACTIVE! Throwing 401 BEFORE placeOrder API call.');
-          console.warn('Payment method:', paymentMethod, '| Payment type:', selectedPaymentType);
-          console.warn('═══════════════════════════════════════════════');
-          const fakeError = new Error('Simulated 401');
-          fakeError.response = { status: 401 };
-          throw fakeError;
-        }
-        // ═══ END SIMULATOR ═══
-
         response = await placeOrder({
           cartItems,
           customerName,
@@ -1088,18 +1070,8 @@ const ReviewOrder = () => {
             
             toast.success('Order updated successfully!');
           } else {
-            // Retry order placement
             // BUG-041 FIX: Use paymentMethod (user's selection), NOT razorpay_key existence
             const retryPaymentType = paymentMethod === 'online' ? 'prepaid' : 'postpaid';
-            
-            // ═══ BUG-P2-001 VALIDATION LOG (now showing fix works) ═══
-            const oldBuggyLogic = !!restaurant?.razorpay?.razorpay_key ? 'prepaid' : 'postpaid';
-            console.warn('[BUG-P2-001] 401 RETRY PAYMENT TYPE — FIXED:', {
-              userSelectedPaymentMethod: paymentMethod,
-              fixedRetrySends: retryPaymentType,
-              oldBuggyWouldHaveSent: oldBuggyLogic,
-              BUG_WOULD_HAVE_TRIGGERED: retryPaymentType !== oldBuggyLogic,
-            });
 
             retryResponse = await placeOrder({
               cartItems,
@@ -1121,18 +1093,10 @@ const ReviewOrder = () => {
               // BUG-041 FIX: payment type from user selection, not key existence
               paymentType: retryPaymentType
             });
-            console.log('[BUG-040 DEBUG] retryResponse received:', JSON.stringify(retryResponse));
           }
 
-          console.log('[BUG-040 DEBUG] About to check shouldRetryRazorpay, retryResponse:', retryResponse);
           // BUG-040 FIX: Check if Razorpay payment flow needed after 401 retry
           const shouldRetryRazorpay = paymentMethod === 'online' && retryResponse?.razorpay_id && restaurant?.razorpay?.razorpay_key;
-          console.log('[BUG-040 FIX] 401 retry Razorpay check:', {
-            shouldRetryRazorpay,
-            paymentMethod,
-            hasRazorpayId: !!retryResponse?.razorpay_id,
-            hasRazorpayKey: !!restaurant?.razorpay?.razorpay_key
-          });
 
           if (shouldRetryRazorpay) {
             try {
@@ -1164,12 +1128,7 @@ const ReviewOrder = () => {
           });
 
         } catch (retryError) {
-          console.error('[BUG-040 DEBUG] Retry failed:', retryError);
-          console.error('[BUG-040 DEBUG] Retry error details:', {
-            message: retryError?.message,
-            status: retryError?.response?.status,
-            data: retryError?.response?.data
-          });
+          console.error('[ReviewOrder] Failed to place order after retry:', retryError);
           toast.error('Session expired. Please refresh the page and try again.');
         }
       } else {
