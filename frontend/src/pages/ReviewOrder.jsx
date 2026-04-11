@@ -853,6 +853,21 @@ const ReviewOrder = () => {
           tableId: finalTableId
         });
         
+        // ═══ TEMPORARY 401 SIMULATOR — HARDCODED ON — REMOVE AFTER TESTING ═══
+        // Forces first placeOrder to "fail" with 401 BEFORE the API call
+        // so retry creates a fresh order (realistic simulation)
+        if (!window.__simulate401Done) {
+          window.__simulate401Done = true;
+          console.warn('═══════════════════════════════════════════════');
+          console.warn('[401 SIMULATOR] ACTIVE! Throwing 401 BEFORE placeOrder API call.');
+          console.warn('Payment method:', paymentMethod, '| Payment type:', selectedPaymentType);
+          console.warn('═══════════════════════════════════════════════');
+          const fakeError = new Error('Simulated 401');
+          fakeError.response = { status: 401 };
+          throw fakeError;
+        }
+        // ═══ END SIMULATOR ═══
+
         response = await placeOrder({
           cartItems,
           customerName,
@@ -875,21 +890,6 @@ const ReviewOrder = () => {
           // Payment type based on user selection (FEAT-001)
           paymentType: selectedPaymentType
         });
-
-        // ═══ TEMPORARY 401 SIMULATOR — HARDCODED ON — REMOVE AFTER TESTING ═══
-        // Forces first placeOrder to "fail" with 401 so retry path executes
-        // NOTE: This will place 2 real orders (main succeeds, then retry fires)
-        if (!window.__simulate401Done) {
-          window.__simulate401Done = true;
-          console.warn('═══════════════════════════════════════════════');
-          console.warn('[401 SIMULATOR] ACTIVE! Forcing 401 on first order.');
-          console.warn('Real response was:', response);
-          console.warn('═══════════════════════════════════════════════');
-          const fakeError = new Error('Simulated 401');
-          fakeError.response = { status: 401 };
-          throw fakeError;
-        }
-        // ═══ END SIMULATOR ═══
       }
 
       // DEBUG: Log full response to verify razorpay_id
