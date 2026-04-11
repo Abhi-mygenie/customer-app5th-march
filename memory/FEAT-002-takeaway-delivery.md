@@ -9,377 +9,382 @@
 | **Feature ID** | FEAT-002 |
 | **Title** | Scan & Order Expansion – Takeaway & Delivery |
 | **Created** | April 11, 2026 |
-| **Status** | Planning |
+| **Last Updated** | April 11, 2026 |
+| **Status** | Planning (All decisions confirmed) |
 | **Priority** | P0 - Critical |
+| **Pre-requisite** | FEAT-002-PREP ✅ Complete |
 
 ---
 
-## 1. Overview
+## 1. Scanner Types & URL Patterns
 
-### 4 Order Channels
+### 3 Scanner Types from POS
 
-| Channel | Status | QR `type` param | QR `orderType` param | Table/Room Required |
-|---------|--------|-----------------|---------------------|---------------------|
-| **Dine-In** | ✅ Implemented | `table` | `dinein` | Yes (tableId from QR) |
-| **Room Service** | ✅ Implemented | `room` | `dinein` | Yes (roomId from QR) |
-| **Takeaway** | ❌ New | None | `takeaway` | No |
-| **Delivery** | ❌ New | None | `delivery` | No |
+**Type A: Walk-in QR (`walkin_qr_urls`)**
+No table assigned. User walks in or orders remotely.
 
-### Flow Summary
+| Label | URL | `type` | `orderType` | `tableId` | `foodFor` |
+|-------|-----|--------|-------------|-----------|-----------|
+| walkin_dinein | `/478?type=walkin&orderType=dinein&foodFor=Normal` | `walkin` | `dinein` | None | Normal |
+| delivery | `/478?type=walkin&orderType=delivery&foodFor=Normal` | `walkin` | `delivery` | None | Normal |
+| takeaway | `/478?type=walkin&orderType=takeaway&foodFor=Normal` | `walkin` | `takeaway` | None | Normal |
+
+**Type B: Walk-in Menu QR (`walkin_menu_qr_urls`)**
+Same as walk-in dine-in but with different menu filters.
+
+| Label | URL | `type` | `orderType` | `tableId` | `foodFor` |
+|-------|-----|--------|-------------|-----------|-----------|
+| Normal | `/478?type=walkin&orderType=dinein&foodFor=Normal` | `walkin` | `dinein` | None | Normal |
+| Party | `/478?type=walkin&orderType=dinein&foodFor=Party` | `walkin` | `dinein` | None | Party |
+| Premium | `/478?type=walkin&orderType=dinein&foodFor=Premium` | `walkin` | `dinein` | None | Premium |
+
+**Type C: Table/Room QR (`qr_code_urls`)**
+Assigned table or room. Existing flow — no changes.
+
+| Label | URL | `type` | `orderType` | `tableId` | `foodFor` |
+|-------|-----|--------|-------------|-----------|-----------|
+| Normal | `/478?tableId=6182&tableName=e3&type=room&orderType=dinein&foodFor=Normal` | `room` | `dinein` | 6182 | Normal |
+| Party | Same but `foodFor=Party` | `room` | `dinein` | 6182 | Party |
+| Premium | Same but `foodFor=Premium` | `room` | `dinein` | 6182 | Premium |
+
+---
+
+## 2. Confirmed Decisions
+
+| # | Question | Answer |
+|---|----------|--------|
+| 1 | Store `type=walkin` as recognized type? | **Yes** — store as `walkin` so we can distinguish from direct URL |
+| 2 | Table required rule? | **Only when `tableId` is present in URL.** Walk-in dine-in, takeaway, delivery — all skip table. |
+| 3 | Takeaway ↔ Delivery switching? | **Yes** — mode toggle allowed since both land on same page |
+| 4 | Walk-in dine-in name+phone? | **From configuration** — same as existing config (`mandatoryCustomerName`, `mandatoryCustomerPhone`) |
+| 5 | Takeaway/Delivery name+phone? | **Always mandatory** — must capture or login |
+| 6 | Delivery address — where in flow? | **After landing page, before menu** — separate intermediate step |
+| 7 | Walk-in dine-in ↔ Takeaway/Delivery switch? | **No** — different scanners, different flows |
+| 8 | Walk-in dine-in `table_id` to POS? | Send `'0'` |
+| 9 | `foodFor` for takeaway/delivery? | **Yes** — respect menu filter if present, fallback to full menu |
+
+---
+
+## 3. The New Table Requirement Rule
+
+**OLD rule:** `isDineInOrRoom(orderType)` — order type determines table need
+**NEW rule:** `tableId present in URL` — table presence determines table need
+
+| Scenario | `type` | `orderType` | `tableId` | Table required? | `table_id` sent to POS |
+|----------|--------|-------------|-----------|-----------------|----------------------|
+| Table QR | `table` | `dinein` | `6182` | ✅ Yes (auto-filled) | `'6182'` |
+| Room QR | `room` | `dinein` | `6182` | ✅ Yes (auto-filled) | `'6182'` |
+| Walk-in dine-in | `walkin` | `dinein` | None | ❌ No | `'0'` |
+| Walk-in takeaway | `walkin` | `takeaway` | None | ❌ No | `'0'` |
+| Walk-in delivery | `walkin` | `delivery` | None | ❌ No | `'0'` |
+| Walk-in menu QR | `walkin` | `dinein` | None | ❌ No | `'0'` |
+| Direct URL (no params) | None | defaults `dinein` | None | ❌ No | `'0'` |
+| Multi-menu + Table QR | `table` | `dinein` | `6182` | ✅ Yes (auto-filled) | `'6182'` |
+| Multi-menu + Walk-in | `walkin` | any | None | ❌ No | `'0'` |
+
+**Impact on `orderTypeHelpers.js`:**
+The `isDineInOrRoom()` function is no longer the right check for table requirement. We need:
+
+```javascript
+// NEW: Table is needed only when a tableId was scanned from QR
+export const needsTable = (scannedTableId) => {
+  return !!scannedTableId;
+};
+```
+
+The existing `isDineInOrRoom()` is still useful for:
+- Call Waiter / Pay Bill visibility (dine-in/room context actions)
+- Table status polling (only for seated orders)
+
+---
+
+## 4. Complete Flow Map — All 5 Scenarios
+
+### 4.1 Table/Room QR Scan (Existing — No Changes)
 
 ```
-User scans QR → URL parsed by useScannedTable hook
+Scan QR → /478?tableId=6182&tableName=e3&type=room&orderType=dinein&foodFor=Normal
   │
-  ├─ orderType = dinein  → Existing flow (table check, edit order, browse menu)
-  ├─ orderType = room    → Existing flow (room service)
+  └─ LandingPage
+       ├─ tableId present → check table status
+       │   ├─ Table occupied → auto-redirect to OrderSuccess (edit order)
+       │   └─ Table free → show "Browse Menu"
+       ├─ Show table badge: "Room e3"
+       ├─ Show Call Waiter / Pay Bill
+       └─ → Menu (filtered by foodFor) → Cart → ReviewOrder (table auto-filled) → Place Order
+```
+
+### 4.2 Walk-in Dine-in (NEW handling for existing orderType)
+
+```
+Scan QR → /478?type=walkin&orderType=dinein&foodFor=Normal
   │
-  ├─ orderType = takeaway → NEW: Mode selector (Takeaway pre-selected)
-  │     └─ Mandatory: Name + Phone (or Login)
-  │     └─ → Menu → Cart → Review → Place Order
+  └─ LandingPage
+       ├─ No tableId → skip table status check
+       ├─ No table badge
+       ├─ Show Call Waiter / Pay Bill (dine-in context)
+       ├─ Name+Phone from config (mandatoryCustomerName/Phone)
+       └─ → Menu (filtered by foodFor) → Cart → ReviewOrder (table_id='0') → Place Order
+```
+
+### 4.3 Walk-in Takeaway (NEW)
+
+```
+Scan QR → /478?type=walkin&orderType=takeaway&foodFor=Normal
   │
-  └─ orderType = delivery → NEW: Mode selector (Delivery pre-selected)
-        └─ Mandatory: Name + Phone (or Login)
-        └─ Address selection/entry
-        └─ Delivery area validation
-        └─ → Menu → Cart → Review → Place Order
+  └─ LandingPage
+       ├─ No tableId → skip table status check
+       ├─ No table badge, No Call Waiter, No Pay Bill
+       ├─ Show Takeaway/Delivery toggle (Takeaway pre-selected)
+       ├─ Name + Phone MANDATORY (or Login)
+       └─ → Menu (filtered by foodFor) → Cart → ReviewOrder (table_id='0', order_type='takeaway') → Place Order
+```
+
+### 4.4 Walk-in Delivery (NEW)
+
+```
+Scan QR → /478?type=walkin&orderType=delivery&foodFor=Normal
+  │
+  └─ LandingPage
+       ├─ No tableId → skip table status check
+       ├─ No table badge, No Call Waiter, No Pay Bill
+       ├─ Show Takeaway/Delivery toggle (Delivery pre-selected)
+       ├─ Name + Phone MANDATORY (or Login)
+       │
+       └─ DeliveryAddressPage (intermediate, BEFORE menu)
+            ├─ First-time user → enter address manually
+            ├─ Logged-in user → show saved addresses, option to change
+            ├─ Call distance-api-new → validate + get delivery charge
+            │   ├─ Deliverable → store address + charge → proceed to Menu
+            │   └─ NOT deliverable → show message, block ordering
+            │
+            └─ → Menu (filtered by foodFor) → Cart → ReviewOrder (delivery charge in bill, table_id='0') → Place Order
+```
+
+### 4.5 Takeaway → Delivery Switch (via Mode Toggle)
+
+```
+User on Takeaway landing → clicks "Delivery" toggle
+  │
+  └─ orderType changes to 'delivery'
+  └─ DeliveryAddressPage appears (address required before menu)
+  └─ Rest of delivery flow follows
+```
+
+```
+User on Delivery landing → clicks "Takeaway" toggle
+  │
+  └─ orderType changes to 'takeaway'
+  └─ Address step skipped
+  └─ Directly to Menu
 ```
 
 ---
 
-## 2. Hardcoding Audit & Issues
+## 5. useScannedTable Hook Changes
 
-### 2.1 `useScannedTable.js` – Default orderType
-
-**Line 36-38:**
+### Current parsing:
 ```javascript
-const orderType = (urlOrderType === 'dinein' || urlOrderType === 'delivery' || urlOrderType === 'takeaway' || urlOrderType === 'take_away')
-  ? urlOrderType
-  : 'dinein';  // ← Hardcoded default
-```
-**Issue:** If no `orderType` in URL, defaults to `dinein`. This is correct for backward compatibility but must be documented.
-
-**Decision needed:** Should QR codes without `orderType` param always default to `dinein`? Or should we infer from context (e.g., no tableId + no roomId = could be takeaway)?
-
-### 2.2 `ReviewOrder.jsx` – Table requirement tied to `dinein`
-
-**Line 484:**
-```javascript
-if (isScanned && scannedTableId && scannedOrderType === 'dinein') {
-  setTableNumber(scannedTableId);
+const roomOrTable = (urlType === 'room' || urlType === 'table') ? urlType : null;
 ```
 
-**Line 680:**
+### New parsing needed:
 ```javascript
-const hasScannedTable = isScanned && scannedOrderType === 'dinein' && scannedTableId;
+const roomOrTable = (urlType === 'room' || urlType === 'table' || urlType === 'walkin')
+  ? urlType
+  : null;
 ```
 
-**Line 816:**
-```javascript
-const finalTableId = (isScanned && scannedOrderType === 'dinein' && scannedTableId)
-  ? scannedTableId
-  : (isMultiMenu && tableNumber ? tableNumber : '');
-```
+### New return values:
 
-**Issue:** Table selection logic is tightly coupled to `orderType === 'dinein'`. This is actually correct behavior — takeaway/delivery should NOT require tables. But the multi-menu fallback (`isMultiMenu && tableNumber`) could be a problem: multi-menu restaurants doing takeaway shouldn't need a table either.
-
-**Fix needed:** The condition should be:
-```javascript
-const needsTable = (scannedOrderType === 'dinein' || scannedOrderType === 'room');
-```
-
-### 2.3 `ReviewOrder.jsx` – isMultiMenu table validation
-
-**Line 676-696 (handlePlaceOrder):**
-```javascript
-if (isMultiMenu) {
-  const hasScannedTable = isScanned && scannedOrderType === 'dinein' && scannedTableId;
-  if (!hasScannedTable) {
-    if (!roomOrTable) { toast('Please Select Your Room or Table'); return; }
-    if (!tableNumber.trim()) { ... return; }
-  }
-}
-```
-
-**Issue:** Multi-menu restaurants enforcing table selection even for takeaway/delivery orders. This is the main hardcoding concern.
-
-**Fix needed:** Table/Room validation should ONLY apply when `orderType` is `dinein` or `room`:
-```javascript
-const isDineInOrRoom = (scannedOrderType === 'dinein' || scannedOrderType === 'room' || !scannedOrderType);
-if (isMultiMenu && isDineInOrRoom) {
-  // validate table/room selection
-}
-```
-
-### 2.4 `LandingPage.jsx` – Table status check always runs
-
-**Line 79-82:**
-```javascript
-const checkTable = async () => {
-  if (!isScanned || !scannedTableId || !restaurantId) return;
-  if (isMultipleMenu(restaurant)) return;
-```
-
-**Issue:** Table status check runs whenever `isScanned && scannedTableId`. For takeaway/delivery QR codes, there's no `scannedTableId`, so this naturally skips. However, if someone shares a takeaway URL with a stale `tableId` param, it could trigger incorrectly.
-
-**Recommendation:** Add explicit orderType check:
-```javascript
-if (!isScanned || !scannedTableId || !restaurantId) return;
-if (scannedOrderType !== 'dinein' && scannedOrderType !== 'room') return; // Skip for takeaway/delivery
-```
-
-### 2.5 `helpers.js` – Multi-menu payload hardcodes `order_type: 'dinein'`
-
-**Line 361:**
-```javascript
-order_type: 'dinein',  // ← Hardcoded in buildMultiMenuPayload
-```
-
-**Issue:** Multi-menu restaurants placing takeaway/delivery orders would always send `dinein` to the POS API.
-
-**Fix needed:** Pass `orderType` through to `buildMultiMenuPayload`:
-```javascript
-order_type: orderData.orderType || 'dinein',
-```
-
-### 2.6 `TableRoomSelector.jsx` – Visibility check
-
-**Line 81:**
-```javascript
-{showTableInfo && !isMultiMenu && isScanned && scannedOrderType === 'dinein' && (
-```
-
-**Status:** This is actually correct — only shows table badge for dine-in. But needs to also handle `room` type explicitly.
+| URL Param | `roomOrTable` | `orderType` | `tableId` | `isScanned` | `foodFor` |
+|-----------|--------------|-------------|-----------|-------------|-----------|
+| `type=table&tableId=X` | `'table'` | `'dinein'` | `'X'` | `true` | value |
+| `type=room&tableId=X` | `'room'` | `'dinein'` | `'X'` | `true` | value |
+| `type=walkin&orderType=dinein` | `'walkin'` | `'dinein'` | `null` | `true` | value |
+| `type=walkin&orderType=takeaway` | `'walkin'` | `'takeaway'` | `null` | `true` | value |
+| `type=walkin&orderType=delivery` | `'walkin'` | `'delivery'` | `null` | `true` | value |
+| No params | `null` | `null` | `null` | `false` | `null` |
 
 ---
 
-## 3. New API Endpoints
+## 6. Component Architecture (Updated)
 
-### 3.1 Customer Address List
+### 6.1 Landing Page Changes
 
 ```
-GET https://preprod.mygenie.online/api/v1/customer/address/list
-Headers:
-  Content-Type: application/json; charset=UTF-8
-  zoneId: (empty or zone ID)
-  X-localization: en
-  latitude: (empty or lat)
-  longitude: (empty or lng)
-  Authorization: Bearer {customer_token}
+LandingPage.jsx
+  │
+  ├─ IF tableId present (Table/Room QR)
+  │     └─ Existing flow: table status check → edit order / browse menu
+  │
+  ├─ IF orderType = takeaway OR delivery (Walk-in QR)
+  │     ├─ <OrderModeSelector mode={orderType} onModeChange={...} />
+  │     ├─ Name + Phone (mandatory)
+  │     ├─ IF delivery → "Set Delivery Address" button → navigate to address page
+  │     ├─ IF takeaway → "Browse Menu" button (enabled after name+phone)
+  │     └─ Hide: table badge, Call Waiter, Pay Bill
+  │
+  └─ IF walkin dinein (no tableId, orderType=dinein)
+        ├─ Name + Phone from config
+        ├─ Show Call Waiter / Pay Bill
+        └─ "Browse Menu" button
 ```
 
-**Purpose:** Fetch saved delivery addresses for logged-in customers.
-**Used in:** Delivery flow — auto-select default address, allow address change.
-**Auth:** Requires customer auth token (from `/auth/login`).
+### 6.2 New Components
 
-### 3.2 Delivery Charge by Distance
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| `OrderModeSelector` | Takeaway/Delivery toggle pill | `components/OrderModeSelector/` |
+| `DeliveryAddressPage` | Intermediate page: address entry/selection + validation | `pages/DeliveryAddress.jsx` |
 
+### 6.3 Modified Components
+
+| Component | Change |
+|-----------|--------|
+| `useScannedTable.js` | Recognize `type=walkin`, expose `isWalkin` |
+| `orderTypeHelpers.js` | Update `needsTable()` → check `tableId` not `orderType` |
+| `LandingPage.jsx` | Add orderType branching, mode selector, mandatory fields |
+| `ReviewOrder.jsx` | Update table logic to use `tableId` presence, delivery charge in bill |
+| `OrderSuccess.jsx` | Already fixed in FEAT-002-PREP |
+| `TableRoomSelector.jsx` | Update table logic to use `tableId` presence |
+| `CartContext.js` | Store `orderType`, `deliveryAddress`, `deliveryCharge` |
+| `orderService.ts` | Pass delivery fields (`address_id`, `address`, `lat`, `lng`, `delivery_charge`) |
+| `helpers.js` | Pass delivery fields in `buildMultiMenuPayload` |
+| `endpoints.js` | Add delivery endpoints |
+| `App.js` | Add route for `DeliveryAddressPage` |
+
+---
+
+## 7. API Endpoints
+
+### 7.1 Customer Address List
+```
+GET {API_BASE_URL}/customer/address/list
+Auth: Bearer {customer_token}
+Headers: Content-Type, zoneId, X-localization, latitude, longitude
+```
+
+### 7.2 Delivery Charge + Area Validation
 ```
 GET https://manage.mygenie.online/api/v1/config/distance-api-new
-  ?destination_lat={lat}
-  &destination_lng={lng}
-  &restaurant_id={id}
-  &order_value={amount}
-Headers:
-  Content-Type: application/json; charset=UTF-8
-  X-localization: en
-  Authorization: Bearer {token}
+  ?destination_lat={lat}&destination_lng={lng}&restaurant_id={id}&order_value={amount}
+Auth: Bearer {token}
+```
+**Note:** Different base URL — needs `REACT_APP_MANAGE_BASE_URL` env var.
+
+### 7.3 Get Zone ID
+```
+GET {API_BASE_URL}/config/get-all-zone?lat={lat}&lng={lng}
 ```
 
-**IMPORTANT:** This API is on `manage.mygenie.online`, NOT `preprod.mygenie.online`.
-
-**Purpose:** Calculate delivery charge based on distance + order value. Also validates if delivery is available to that location.
-**Used in:** Delivery flow — after address selection, before order placement.
-**Returns:** Delivery charge amount + whether delivery is serviceable.
-
-### 3.3 Get Zone ID
-
+### 7.4 Customer Login (existing)
 ```
-GET https://preprod.mygenie.online/api/v1/config/get-all-zone?lat={lat}&lng={lng}
-```
-
-**Purpose:** Get zone ID for a given lat/lng. Zone ID is required in headers for other API calls.
-**Used in:** Delivery flow — determine zone for delivery address.
-
-### 3.4 Customer Login
-
-```
-POST https://preprod.mygenie.online/api/v1/auth/login
-```
-
-**Purpose:** Existing endpoint. Customer login to get auth token for address list and other authenticated operations.
-**Used in:** Takeaway/Delivery flow — user must be identified (login or guest capture).
-
----
-
-## 4. Landing Page Flow — By Order Type
-
-### 4.1 Dine-In / Room (Existing — No Changes)
-
-```
-Landing Page → Check table status → Edit Order / Browse Menu → Menu → Review → Place
-```
-
-### 4.2 Takeaway (NEW)
-
-```
-Landing Page
-  └─ Detect orderType=takeaway from QR URL
-  └─ Show Takeaway/Delivery mode toggle (Takeaway pre-selected)
-  └─ Mandatory: Name + Phone capture (or Login button)
-  └─ "Browse Menu" button (only after name+phone filled OR logged in)
-  └─ NO table status check
-  └─ NO Call Waiter / Pay Bill buttons
-  └─ → Menu → Cart → ReviewOrder (no table selector) → Place Order
-```
-
-### 4.3 Delivery (NEW)
-
-```
-Landing Page
-  └─ Detect orderType=delivery from QR URL
-  └─ Show Takeaway/Delivery mode toggle (Delivery pre-selected)
-  └─ Mandatory: Name + Phone capture (or Login button)
-  │
-  ├─ First-Time User (not logged in / no saved address):
-  │     └─ Prompt address entry (manual or map/location picker)
-  │     └─ Call distance-api-new to validate + get delivery charge
-  │     └─ If deliverable → Proceed to menu
-  │     └─ If NOT deliverable → Show "Delivery not available" message
-  │
-  ├─ Existing User (logged in with saved addresses):
-  │     └─ Auto-select default saved address
-  │     └─ Option to change address
-  │     └─ Validate delivery availability
-  │     └─ → Menu → Cart → ReviewOrder → Place Order
-  │
-  └─ NO table status check
-  └─ NO Call Waiter / Pay Bill buttons
+POST {API_BASE_URL}/auth/login
 ```
 
 ---
 
-## 5. Component Architecture (Proposed)
+## 8. Order Payload Changes
 
-### 5.1 New/Modified Components
-
-| Component | Type | Location | Purpose |
-|-----------|------|----------|---------|
-| `OrderModeSelector` | NEW | `components/OrderModeSelector/` | Takeaway/Delivery toggle on landing |
-| `DeliveryAddressSelector` | NEW | `components/DeliveryAddressSelector/` | Address list, add new, map picker |
-| `DeliveryValidation` | NEW | `components/DeliveryValidation/` | Show delivery charge or "not available" |
-| `LandingPage.jsx` | MODIFY | `pages/` | Add orderType branching, mode selector |
-| `ReviewOrder.jsx` | MODIFY | `pages/` | Conditional table logic, delivery charge in bill |
-| `useScannedTable.js` | MODIFY | `hooks/` | Already supports orderType — minor tweaks |
-| `CartContext.js` | MODIFY | `context/` | Store delivery address + charge |
-| `orderService.ts` | MODIFY | `api/services/` | Pass delivery fields in payload |
-| `helpers.js` | MODIFY | `api/transformers/` | Fix hardcoded `order_type: 'dinein'` in multi-menu |
-| `endpoints.js` | MODIFY | `api/config/` | Add new endpoints |
-
-### 5.2 New Endpoints to Add in `endpoints.js`
-
+### 8.1 Takeaway Order
 ```javascript
-// Delivery endpoints
-CUSTOMER_ADDRESS_LIST: () => `${API_BASE_URL}/customer/address/list`,
-DELIVERY_CHARGE: (lat, lng, restaurantId, orderValue) =>
-  `https://manage.mygenie.online/api/v1/config/distance-api-new?destination_lat=${lat}&destination_lng=${lng}&restaurant_id=${restaurantId}&order_value=${orderValue}`,
-GET_ZONE: (lat, lng) => `${API_BASE_URL}/config/get-all-zone?lat=${lat}&lng=${lng}`,
+{
+  order_type: 'takeaway',
+  table_id: '0',
+  delivery_charge: '0',
+  address_id: '',
+  address: '',
+  latitude: '',
+  longitude: '',
+  cust_name: 'REQUIRED',
+  cust_phone: 'REQUIRED',
+  // everything else same as dinein
+}
 ```
 
-**Note:** `DELIVERY_CHARGE` endpoint uses a different base URL (`manage.mygenie.online`). This needs to be handled — possibly via a new env var `REACT_APP_MANAGE_BASE_URL`.
+### 8.2 Delivery Order
+```javascript
+{
+  order_type: 'delivery',
+  table_id: '0',
+  delivery_charge: '{from_distance_api}',
+  address_id: '{from_saved_address_or_new}',
+  address: '{full_address_text}',
+  latitude: '{lat}',
+  longitude: '{lng}',
+  address_type: '{home/office/other}',
+  cust_name: 'REQUIRED',
+  cust_phone: 'REQUIRED',
+}
+```
+
+### 8.3 Walk-in Dine-in (no table)
+```javascript
+{
+  order_type: 'dinein',
+  table_id: '0',
+  delivery_charge: '0',
+  // name+phone from config (may or may not be mandatory)
+}
+```
 
 ---
 
-## 6. Data Flow Changes
+## 9. Implementation Phases
 
-### 6.1 Order Payload Changes
+### Phase 1: Core Plumbing (Estimated: 3-4 hours)
+1. Update `useScannedTable.js` — recognize `type=walkin`
+2. Update `orderTypeHelpers.js` — `needsTable(tableId)` instead of `isDineInOrRoom(orderType)`
+3. Update table logic in ReviewOrder, TableRoomSelector, LandingPage — use `tableId` presence
+4. Walk-in dine-in sends `table_id: '0'`
+5. `foodFor` fallback to full menu if absent
+6. Test: all 5 scenarios with URL params
 
-| Field | Current | Takeaway | Delivery |
-|-------|---------|----------|----------|
-| `order_type` | `dinein` | `takeaway` | `delivery` |
-| `table_id` | From QR / manual | Empty `''` | Empty `''` |
-| `delivery_charge` | `'0'` | `'0'` | Dynamic (from API) |
-| `address_id` | `''` | `''` | From saved address |
-| `address` | `''` | `''` | Full address text |
-| `latitude` | `''` | `''` | From address |
-| `longitude` | `''` | `''` | From address |
-| `cust_name` | Optional | **Mandatory** | **Mandatory** |
-| `cust_phone` | Optional | **Mandatory** | **Mandatory** |
+### Phase 2: Takeaway Flow (Estimated: 4-6 hours)
+1. `OrderModeSelector` component (Takeaway/Delivery toggle)
+2. LandingPage branching for takeaway/delivery
+3. Mandatory name+phone enforcement for takeaway/delivery
+4. Mode switching (takeaway ↔ delivery)
+5. CartContext stores `orderType`
+6. ReviewOrder sends correct `order_type` and `table_id: '0'`
+7. Test: end-to-end takeaway order placement
 
-### 6.2 CartContext Changes
+### Phase 3: Delivery Flow (Estimated: 8-10 hours)
+1. `DeliveryAddressPage` — new intermediate page
+2. Add route in App.js
+3. Address list API integration (saved addresses for logged-in users)
+4. Manual address entry for new users
+5. Distance API integration (delivery charge + validation)
+6. Zone ID API integration
+7. CartContext stores `deliveryAddress`, `deliveryCharge`, `zoneId`
+8. ReviewOrder shows delivery charge in bill breakdown
+9. Order payload includes all delivery fields
+10. `REACT_APP_MANAGE_BASE_URL` env var
+11. Test: end-to-end delivery order placement (both new + existing user)
 
-Need to store:
-- `orderType` — takeaway/delivery/dinein
-- `deliveryAddress` — selected address object
-- `deliveryCharge` — from distance API
-- `zoneId` — from zone API
-
----
-
-## 7. Open Questions / Discussion Items
-
-1. **Mode switching:** Can a user switch between Takeaway and Delivery after starting to browse the menu? Or is it locked after the landing page?
-
-2. **Delivery charge in bill:** Should delivery charge show in the ReviewOrder price breakdown? (Likely yes — as a new line item)
-
-3. **Minimum order for delivery:** Does `distance-api-new` return minimum order value? Should we enforce it?
-
-4. **Address add/edit:** For first-time users, do we show a full address form or a map-based picker? What fields are required?
-
-5. **Multi-menu + Takeaway:** For a multi-menu restaurant with takeaway QR — should we still show station selection (menu master) but skip table selection?
-
-6. **Room service vs Delivery:** Room service currently uses `orderType=dinein` with `type=room`. Should room service have its own distinct `orderType` value?
-
-7. **QR code generation:** Will the POS system generate takeaway/delivery QR codes? Or will these be static URLs configured by the restaurant?
+### Phase 4: Polish (Estimated: 2-3 hours)
+1. Error handling for all delivery APIs
+2. Loading states for address validation
+3. "Delivery not available" message UI
+4. Address management (save/edit/delete for logged-in users)
 
 ---
 
-## 8. Implementation Phases (Proposed)
+## 10. Remaining Gaps / Open Items
 
-### Phase 1: Takeaway (Lower complexity)
-- OrderModeSelector component
-- Landing page branching by orderType
-- Mandatory name+phone for takeaway
-- Skip table logic for takeaway
-- Fix hardcoded `dinein` in multi-menu payload
-- Test end-to-end takeaway order
+| # | Item | Status | Blocking? |
+|---|------|--------|-----------|
+| 1 | Distance API response format — need sample response to understand fields | Need from you | Yes (Phase 3) |
+| 2 | Address list API response format — need sample response | Need from you | Yes (Phase 3) |
+| 3 | Zone API response format | Need from you | Yes (Phase 3) |
+| 4 | Delivery address form fields — what's required? (flat/house, road, landmark, pincode, city?) | Need from you | Yes (Phase 3) |
+| 5 | Minimum order value for delivery — does distance API enforce it? | Need from you | No (can add later) |
+| 6 | Delivery charge display — in bill breakdown on ReviewOrder? | Assumed yes | No |
+| 7 | `REACT_APP_MANAGE_BASE_URL` value for this environment | Need from you | Yes (Phase 3) |
 
-### Phase 2: Delivery (Higher complexity)
-- Address list integration (API)
-- Address entry UI for new users
-- Delivery charge calculation (distance API)
-- Zone ID resolution
-- Delivery availability validation
-- Delivery charge in bill summary
-- Test end-to-end delivery order
-
-### Phase 3: Polish
-- Mode switching between takeaway/delivery
-- Address management (save, edit, delete)
-- Map/location picker integration
-- Estimated delivery time display
-
----
-
-## 9. Pre-Scale Preparation (FEAT-002-PREP)
-
-See `/app/memory/FEAT-002-PREP-hardcoding-removal.md` for full audit.
-
-**17 issues found across 8 files.** 6 HIGH risk, 4 MEDIUM risk, 7 LOW risk.
-
-Must be completed BEFORE any takeaway/delivery code is written.
-
----
-
-## 10. Key Learnings (Updated April 11)
-
-1. **4 channels, not 2:** dine-in, room, takeaway, delivery. Room uses `type=room` with `orderType=dinein` currently.
-2. **LandingPage is order-type-blind:** Doesn't even destructure `orderType` from `useScannedTable()`.
-3. **OrderSuccess is order-type-blind:** Same issue — no orderType awareness.
-4. **Multi-menu + table validation is the #1 blocker:** `isMultiMenu` check forces table selection regardless of order type.
-5. **`buildMultiMenuPayload` hardcodes `order_type: 'dinein'`:** Multi-menu restaurants can never send takeaway/delivery to POS.
-6. **`delivery_charge` hardcoded to `'0'` in 3 places:** orderService.ts (x2) + helpers.js (x1).
-7. **Address fields all empty strings:** `address_id`, `address`, `latitude`, `longitude`, `address_type` — all hardcoded to `''`.
-8. **Delivery charge API uses different base URL:** `manage.mygenie.online` not `preprod.mygenie.online`.
+**Phase 1 and Phase 2 (Takeaway) can proceed immediately — no gaps.**
+**Phase 3 (Delivery) needs API response samples before implementation.**
 
 ---
 
@@ -387,5 +392,6 @@ Must be completed BEFORE any takeaway/delivery code is written.
 
 | Date | Changes |
 |------|---------|
+| April 11, 2026 | Complete rewrite — all decisions confirmed, 5 scenario flows mapped, 3 scanner types documented, phase plan finalized |
 | April 11, 2026 | Added FEAT-002-PREP audit results, key learnings, API endpoints |
 | April 11, 2026 | Initial planning document created |

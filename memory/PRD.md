@@ -1,7 +1,7 @@
 # MyGenie Customer App - PRD
 
 ## Original Problem Statement
-Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git, branch `11-april-refactor-3`. Set up and run the app with specified environment variables pointing to external MongoDB and MyGenie POS API.
+Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git, branch `11-april-refactor-3`. Set up and run the app. Extend Scan & Order to support Takeaway and Delivery channels.
 
 ## Architecture
 - **Frontend**: React (CRA with Craco) + Tailwind CSS + Radix UI + shadcn components
@@ -12,53 +12,40 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git, branch
 ## What's Been Implemented
 
 ### April 11, 2026 — Initial Setup
-- Cloned repo from GitHub, branch `11-april-refactor-3`
-- Set up backend .env with external MongoDB connection, JWT secret, and MyGenie API URL
-- Set up frontend .env with backend URL, image base URL, POS API URL, and login phone
-- Resolved `tsconfig.json` / `jsconfig.json` conflict (removed jsconfig.json)
-- Installed missing frontend dependencies: `react-icons`, `qrcode.react`, `jszip`, `file-saver`
-- Backend running on port 8001, frontend on port 3000
+- Cloned repo, set up env, resolved build issues, app running
 
-### April 11, 2026 — FEAT-002-PREP: Hardcoding Removal
-- **Audit:** Found 17 issues across 8 files where dine-in was hardcoded
-- **Fixed:** 10 issues (6 HIGH + 4 MEDIUM) across 7 files
-- **New utility:** `utils/orderTypeHelpers.js` — isDineInOrRoom(), isTakeawayOrDelivery(), needsTableCheck(), showsDineInActions()
-- **Files modified:** LandingPage.jsx, ReviewOrder.jsx, OrderSuccess.jsx, TableRoomSelector.jsx, helpers.js, useScannedTable.js
-- **Test results:** Backend 85.7%, Frontend 90% pass rate — all order type flows verified
-- **Backward compatible:** Existing dine-in + room flows unchanged
+### April 11, 2026 — FEAT-002-PREP: Hardcoding Removal ✅
+- 10 fixes across 7 files, new `orderTypeHelpers.js` utility
+- All order type flows verified via testing agent
 
-## Core Features (from repo)
-- Restaurant landing page with dynamic config
-- Menu browsing with categories, stations, search & filters
-- Cart & order placement with customization
-- Customer authentication (OTP + password)
-- Admin settings panel (branding, content, QR codes, dietary tags, visibility)
-- Loyalty/rewards integration
-- Promo banners, Table/room selector, Feedback system
-- Razorpay payment integration
-- Dual payment options (Online + COD)
+### April 11, 2026 — FEAT-002 Planning ✅
+- Analyzed 3 scanner types (walk-in QR, walk-in menu QR, table/room QR)
+- All 9 decisions confirmed with stakeholder
+- 5 scenario flows mapped, 4 phases defined
+- **Key insight:** Table rule changed from orderType-based to tableId-presence-based
+- Full spec: `/app/memory/FEAT-002-takeaway-delivery.md`
 
-## Active Planning
+## 4 Order Channels
 
-### FEAT-002-PREP: Hardcoding Removal (COMPLETE)
-- **Status:** Done — April 11, 2026
-- **Spec:** `/app/memory/FEAT-002-PREP-hardcoding-removal.md`
+| Channel | Scanner | `type` | `orderType` | `tableId` | Table Required | Status |
+|---------|---------|--------|-------------|-----------|---------------|--------|
+| Table Dine-in | Table QR | `table` | `dinein` | Yes | Yes (auto) | ✅ Done |
+| Room Service | Room QR | `room` | `dinein` | Yes | Yes (auto) | ✅ Done |
+| Walk-in Dine-in | Walk-in QR | `walkin` | `dinein` | No | No (`table_id='0'`) | Phase 1 |
+| Takeaway | Walk-in QR | `walkin` | `takeaway` | No | No (`table_id='0'`) | Phase 2 |
+| Delivery | Walk-in QR | `walkin` | `delivery` | No | No (`table_id='0'`) | Phase 3 |
 
-### FEAT-002: Scan & Order Expansion – Takeaway & Delivery (Planning Phase)
-- **Status:** Planning — no code changes yet
-- **Spec:** `/app/memory/FEAT-002-takeaway-delivery.md`
-- **4 Order Channels:** Dine-In (done), Room (done), Takeaway (new), Delivery (new)
-- **Key APIs identified:** customer/address/list, config/distance-api-new (manage.mygenie.online), config/get-all-zone, auth/login
-- **Phase 1:** Takeaway (mode selector, mandatory name+phone, landing branching)
-- **Phase 2:** Delivery (address UI, delivery charge API, zone API, area validation)
+## Implementation Phases
 
-## Environment
-- **Backend URL**: https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com
-- **MongoDB**: External (52.66.232.149:27017/mygenie)
+| Phase | Scope | Effort | Blockers |
+|-------|-------|--------|----------|
+| Phase 1 | Core plumbing: walkin type, table rule update | 3-4 hrs | None |
+| Phase 2 | Takeaway: mode selector, mandatory name+phone | 4-6 hrs | None |
+| Phase 3 | Delivery: address page, APIs, charge calc | 8-10 hrs | Need API response samples |
+| Phase 4 | Polish: error handling, loading states | 2-3 hrs | None |
 
-## Backlog / Next Steps
-- P0: FEAT-002 Phase 1 — Takeaway implementation
-- P0: FEAT-002 Phase 2 — Delivery implementation
-- P1: Optimize unused ML/AI dependencies in requirements.txt
-- P2: Address React Hook dependency warnings
-- P2: Fix pre-existing ReviewOrder auth token initialization issue
+## Backlog
+- P0: FEAT-002 Phases 1-4
+- P1: Optimize unused ML/AI dependencies
+- P2: React Hook dependency warnings
+- P2: Pre-existing ReviewOrder auth token init issue

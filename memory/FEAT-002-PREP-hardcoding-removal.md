@@ -4,6 +4,19 @@
 **Status:** ✅ Complete — All 10 HIGH+MEDIUM fixes implemented and tested.
 **Date:** April 11, 2026
 
+## CRITICAL UPDATE (Post-Planning Confirmation)
+
+**The table requirement rule has changed:**
+
+- **OLD rule (what FEAT-002-PREP implemented):** `isDineInOrRoom(orderType)` — order type determines table need
+- **NEW rule (confirmed):** `tableId present in URL` — only QR codes with `tableId` need table selection
+
+This means the `isDineInOrRoom()` checks we added for table validation/display need to be updated in Phase 1 of FEAT-002 to check `scannedTableId` presence instead. The `isDineInOrRoom()` function remains valid for Call Waiter/Pay Bill/table status polling.
+
+Walk-in dine-in (`type=walkin&orderType=dinein`) should NOT require table — sends `table_id: '0'` to POS.
+
+See `/app/memory/FEAT-002-takeaway-delivery.md` Section 3 for the complete rule table.
+
 ---
 
 ## Audit Results: 17 Issues Across 8 Files
