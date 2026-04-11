@@ -2,14 +2,14 @@
 
 :root {
    /* ============================================
-     PRIMARY COLORS
+     PRIMARY COLORS - MyGenie Brand (Orange + Green)
      ============================================ */
-   --color-primary: #61B4E5;
-   --color-primary-dark: #4fa3d1;
-   --color-primary-light: #78CAFF;
-   --color-primary-darker: #177DAA;
-   --color-primary-darkest: #0c3f56;
-   --color-primary-pale: #A8DADC;
+   --color-primary: #E8531E;
+   --color-primary-dark: #2E7D32;
+   --color-primary-light: #F4845F;
+   --color-primary-darker: #C44518;
+   --color-primary-darkest: #8B3112;
+   --color-primary-pale: #FADBD8;
 
    /* ============================================
      CATEGORY COLORS
@@ -55,14 +55,14 @@
    --text-light: #999999;
    --text-white: #ffffff;
    --button-text-color: #ffffff;
-   --text-link: #61B4E5;
-   --text-link-hover: #4fa3d1;
+   --text-link: #E8531E;
+   --text-link-hover: #C44518;
    --text-error: #dc3545;
    --text-success: #28a745;
-   --text-blue-light: #78CAFF;
-   --text-blue-medium: #177DAA;
-   --text-blue-dark: #06293F;
-   --text-blue-hero: #62B5E5;
+   --text-blue-light: #F4845F;
+   --text-blue-medium: #C44518;
+   --text-blue-dark: #5A1D0E;
+   --text-blue-hero: #E8531E;
 
    /* ============================================
      BORDER COLORS
@@ -71,7 +71,7 @@
    --border-medium: #e0e0e0;
    --border-dark: #ddd;
    --border-dashed: #aeaeae;
-   --border-primary: #61B4E5;
+   --border-primary: #E8531E;
    --border-veg: #008000;
    --border-non-veg: #be3838;
    --border-egg: #FFA500;

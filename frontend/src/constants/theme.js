@@ -5,11 +5,11 @@
  */
 
 export const DEFAULT_THEME = {
-  // Primary brand color (buttons, links, accents)
-  primaryColor: '#61B4E5',
+  // Primary brand color - MyGenie Orange
+  primaryColor: '#E8531E',
   
-  // Secondary color (hover states, gradients)
-  secondaryColor: '#4fa3d1',
+  // Secondary color - MyGenie Green
+  secondaryColor: '#2E7D32',
   
   // Button text color
   buttonTextColor: '#FFFFFF',

@@ -28,7 +28,7 @@
 
 .capture-input:focus {
   outline: none;
-  border-color: var(--color-primary, #61B4E5);
+  border-color: var(--color-primary, #E8531E);
 }
 
 .capture-input::placeholder {
@@ -53,7 +53,7 @@
 
 .capture-phone-input .PhoneInputInput:focus {
   outline: none;
-  border-color: var(--color-primary, #61B4E5);
+  border-color: var(--color-primary, #E8531E);
 }
 
 .capture-phone-input .PhoneInputCountry {

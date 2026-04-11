@@ -53,7 +53,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary, #61B4E5);
+  background: var(--color-primary, #E8531E);
   z-index: 0;
 }
 

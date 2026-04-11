@@ -86,7 +86,7 @@
 }
 
 .category-box.selected svg {
-  color: var(--color-primary-darkest, #0c3f56);
+  color: var(--color-primary-darkest, #8B3112);
 }
 
 .category-name {

@@ -15,11 +15,11 @@
 | DFA-003 | Images | MEDIUM | Logo fallback to MyGenie generic logo | 5 files, 7 occurrences | ✅ Fixed (Apr 10) |
 | DFA-004 | Images | MEDIUM | Hardcoded "Powered by MyGenie" logo | 1 file | ✅ Fixed (Apr 10) |
 | DFA-005 | Images | LOW | onError handlers hide broken images silently | 6 files, 9 occurrences | Pending |
-| DFA-006 | CSS Colors | MEDIUM | Primary color mismatch across fallbacks | 3 different colors | Pending |
+| DFA-006 | CSS Colors | MEDIUM | Primary color mismatch across fallbacks | 3 different colors | ✅ Fixed (Apr 10) |
 | DFA-007 | CSS Fonts | MEDIUM | 55 hardcoded Montserrat font-family (not via CSS var) | MenuItems.css + others | Pending |
 | DFA-008 | CSS Vars | LOW | 219 CSS var() with hardcoded fallback values | Multiple CSS files | Informational |
 | DFA-009 | Backend | LOW | 80+ hardcoded default config values in get_app_config | server.py | Informational |
-| DFA-010 | Backend | MEDIUM | Backend primary color default (#E8531E) mismatches frontend (#61B4E5) | server.py vs index.css | Pending |
+| DFA-010 | Backend | MEDIUM | Backend primary color default (#E8531E) mismatches frontend (#61B4E5) | server.py vs index.css | ✅ Fixed (Apr 10) |
 | DFA-011 | Hardcoding | HIGH | Restaurant 716 skip table check hardcoded | ReviewOrder.jsx | Documented |
 
 ### Stats
@@ -27,9 +27,9 @@
 | Severity | Count | Pending | Informational |
 |---|---|---|---|
 | HIGH | 3 | 1 | 0 |
-| MEDIUM | 5 | 3 | 0 |
+| MEDIUM | 5 | 1 | 0 |
 | LOW | 2 | 0 | 2 |
-| **Total** | **11** | **4** | **2** |
+| **Total** | **11** | **2** | **2** |
 
 ---
 
@@ -427,6 +427,7 @@ const skipTableCheck = config?.allowMultipleOrdersPerTable === true;
 
 | Date | Changes |
 |---|---|
+| April 10, 2026 | DFA-006 & DFA-010 fixed — aligned all frontend colors to MyGenie brand (orange #E8531E + green #2E7D32). Replaced 35 blue/wrong hex values across index.css, theme.js, and 7 CSS files. Verified across 3 restaurants (698, 716, 478). |
 | April 10, 2026 | DFA-003 & DFA-004 fixed — removed logo fallbacks, made powered-by configurable. 25-point regression test passed. |
 | April 10, 2026 | DFA-001 & DFA-002 fixed — removed all preprod URL fallbacks. 7 tests passed. |
 | April 10, 2026 | Initial audit created — 11 findings documented |

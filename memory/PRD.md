@@ -54,4 +54,4 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git branch 
 - DFA-004: Made "Powered by" footer configurable via `poweredByText` and `poweredByLogoUrl` config fields (backend model + defaults + frontend context + LandingPage)
 - Backend now fails fast with ValueError if MYGENIE_API_URL env var missing
 - Frontend logs console.error if REACT_APP_API_BASE_URL or REACT_APP_IMAGE_BASE_URL missing
-- 25-point regression test passed covering logo, footer, layout, API, and context
+- DFA-006/DFA-010: Aligned all frontend CSS colors to MyGenie brand (orange #E8531E primary, green #2E7D32 secondary). Replaced entire blue palette in index.css, theme.js, and 7 CSS files (35 changes). Verified: unconfigured restaurants show orange, configured restaurants (Hyatt, 18march) retain custom colors.

@@ -685,7 +685,7 @@
 
 .qr-card-icon {
   font-size: 20px;
-  color: var(--color-primary, #61B4E5);
+  color: var(--color-primary, #E8531E);
 }
 
 .qr-card-label {
@@ -724,7 +724,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: var(--color-primary, #61B4E5);
+  background: var(--color-primary, #E8531E);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -898,7 +898,7 @@
 
 .qr-filter-tab.active {
   background: white;
-  color: var(--color-primary, #61B4E5);
+  color: var(--color-primary, #E8531E);
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -915,7 +915,7 @@
 
 .qr-filter-select:focus {
   outline: none;
-  border-color: var(--color-primary, #61B4E5);
+  border-color: var(--color-primary, #E8531E);
 }
 
 .qr-menu-label {
