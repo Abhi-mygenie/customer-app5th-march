@@ -31,7 +31,7 @@
 }
 
 .footer-list li {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   margin-bottom: var(--spacing-sm);
@@ -71,7 +71,7 @@
 }
 
 .allergen-label {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.7rem;
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);

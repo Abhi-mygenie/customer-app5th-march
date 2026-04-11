@@ -27,7 +27,7 @@
   border: 2px solid var(--border-medium);
   border-radius: 20px;
   background-color: var(--bg-primary);
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all var(--transition-base);

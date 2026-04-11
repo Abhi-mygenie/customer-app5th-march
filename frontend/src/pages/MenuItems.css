@@ -82,7 +82,7 @@
 
 .error-message p {
   margin: 0;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-sm);
 }
 
@@ -94,7 +94,7 @@
 }
 
 .empty-state p {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-base);
   margin: 0;
 }
@@ -205,7 +205,7 @@
   gap: var(--spacing-md);
   color: var(--text-white);
   text-decoration: none;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-md);
   margin-bottom: var(--spacing-3xl);
   text-align: left;
@@ -223,7 +223,7 @@
 }
 
 .hours-title {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-normal);
   margin: 0 0 var(--spacing-lg) 0;
@@ -241,7 +241,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
 }
 
 .hours-row .day {
@@ -252,7 +252,7 @@
 .hours-row .time {
   font-size: var(--font-size-sm);
   color: var(--text-white);
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
 }
 
 .inroom-menu-btn {
@@ -261,7 +261,7 @@
   color: var(--text-white);
   border-radius: var(--radius-button, 25px);
   padding: var(--spacing-md) 30px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-base);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -301,7 +301,7 @@
 }
 
 .header-brand-text {
-  font-family: 'Big Shoulders', sans-serif;
+  font-family: var(--font-heading, 'Big Shoulders', sans-serif);
   font-size: 1.2rem;
   letter-spacing: 0.1em;
   font-weight: 600;
@@ -347,7 +347,7 @@
   border: none;
   border-radius: var(--radius-button, 10px);
   padding: 12px 15px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -392,7 +392,7 @@ body.cart-bar-visible .menu-fab {
   padding: 12px 15px 12px 45px;
   border: 1px solid var(--border-dark);
   border-radius: 8px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 1rem;
   outline: none;
 } */
@@ -428,7 +428,7 @@ body.cart-bar-visible .menu-fab {
   border: 2px solid var(--border-medium);
   border-radius: var(--radius-button, 20px);
   background-color: white;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -534,7 +534,7 @@ body.cart-bar-visible .menu-fab {
   border-radius: 12px;
   text-align: center;
   color: var(--text-tertiary);
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
 }
 
 /* Category Info Header */
@@ -548,7 +548,7 @@ body.cart-bar-visible .menu-fab {
 }
 
 .category-info-name {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-color, #333333);
@@ -563,7 +563,7 @@ body.cart-bar-visible .menu-fab {
 }
 
 .category-info-count {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-tertiary);
@@ -601,7 +601,7 @@ body.cart-bar-visible .menu-fab {
 }
 
 .section-title {
-  font-family: 'Big Shoulders', sans-serif;
+  font-family: var(--font-heading, 'Big Shoulders', sans-serif);
   font-size: 1.2rem;
   font-weight: 500;
   color: var(--text-secondary);
@@ -697,7 +697,7 @@ body.cart-bar-visible .menu-fab {
 
 /* Item Name */
 .item-name {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 1.15rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -707,7 +707,7 @@ body.cart-bar-visible .menu-fab {
 
 /* Item Price */
 .item-price {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -760,7 +760,7 @@ body.cart-bar-visible .menu-fab {
   background: none;
   border: none;
   color: var(--color-primary);
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -834,7 +834,7 @@ body.cart-bar-visible .menu-fab {
   border: 2px solid var(--border-primary);
   border-radius: var(--radius-button, 20px);
   padding: 8px 24px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
@@ -1409,7 +1409,7 @@ body.cart-bar-visible .menu-fab {
 }
 
 .footer-heading {
-  font-family: 'Big Shoulders', sans-serif;
+  font-family: var(--font-heading, 'Big Shoulders', sans-serif);
   font-size: 1.2rem;
   color: var(--color-primary);
   margin-bottom: 15px;
@@ -1423,7 +1423,7 @@ body.cart-bar-visible .menu-fab {
 }
 
 .footer-list li {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.85rem;
   color: var(--color-primary-darker);
   margin-bottom: 10px;
@@ -1461,7 +1461,7 @@ body.cart-bar-visible .menu-fab {
 }
 
 .allergen-label {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 0.7rem;
   color: var(--color-primary-darker);
   text-align: center;

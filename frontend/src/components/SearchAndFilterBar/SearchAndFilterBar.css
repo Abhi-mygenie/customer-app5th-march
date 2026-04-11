@@ -42,7 +42,7 @@
   padding: 10px 12px 10px 38px;
   border: 1.5px solid var(--border-medium);
   border-radius: var(--radius-container-lg);
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-sm);
   outline: none;
   transition: border-color var(--transition-base);
@@ -81,7 +81,7 @@
   border-radius: var(--radius-container-md);
   background: transparent;
   cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 12px;
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
@@ -199,7 +199,7 @@
   border-radius: 20px;
   background: white;
   cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: 12px;
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);

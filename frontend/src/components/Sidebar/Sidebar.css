@@ -106,7 +106,7 @@
 }
 
 .sidebar-description {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-normal);
   margin: 0;
@@ -163,7 +163,7 @@
 }
 
 .sidebar-nav-label {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   color: var(--text-white);
@@ -211,7 +211,7 @@
 }
 
 .sidebar-help-title {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   margin: 0;
@@ -241,7 +241,7 @@
 }
 
 .sidebar-help-phone {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-normal);
   margin: 0;
@@ -261,7 +261,7 @@
   background-color: var(--bg-dark);
   color: var(--text-white);
   text-decoration: none;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
@@ -283,7 +283,7 @@
 }
 
 .sidebar-call-us-text {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   color: var(--text-white);

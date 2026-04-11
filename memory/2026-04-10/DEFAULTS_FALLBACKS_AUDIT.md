@@ -27,9 +27,9 @@
 | Severity | Count | Pending | Informational |
 |---|---|---|---|
 | HIGH | 3 | 1 | 0 |
-| MEDIUM | 5 | 1 | 0 |
+| MEDIUM | 5 | 0 | 0 |
 | LOW | 2 | 0 | 2 |
-| **Total** | **11** | **2** | **2** |
+| **Total** | **11** | **1** | **2** |
 
 ---
 
@@ -427,6 +427,7 @@ const skipTableCheck = config?.allowMultipleOrdersPerTable === true;
 
 | Date | Changes |
 |---|---|
+| April 10, 2026 | DFA-007 fixed — replaced 55 hardcoded font-family with var(--font-body)/var(--font-heading) across 11 CSS files. Zero visual change for default fonts. |
 | April 10, 2026 | DFA-006 & DFA-010 fixed — aligned all frontend colors to MyGenie brand (orange #E8531E + green #2E7D32). Replaced 35 blue/wrong hex values across index.css, theme.js, and 7 CSS files. Verified across 3 restaurants (698, 716, 478). |
 | April 10, 2026 | DFA-003 & DFA-004 fixed — removed logo fallbacks, made powered-by configurable. 25-point regression test passed. |
 | April 10, 2026 | DFA-001 & DFA-002 fixed — removed all preprod URL fallbacks. 7 tests passed. |
