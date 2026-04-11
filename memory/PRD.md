@@ -1,40 +1,241 @@
-# MyGenie Customer App - PRD
+# Customer App - Project Documentation
 
-## Original Problem Statement
-Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git (branch: 11th-apri-refactor), set up environment, and run as-is.
+## Last Updated: March 31, 2026 (Session 9 - Razorpay payment_type Fix)
 
-## Architecture
-- **Frontend**: React 19 + Craco + Tailwind CSS + Radix UI + TipTap editor
-- **Backend**: FastAPI (Python) with Motor (async MongoDB driver)
-- **Database**: External MongoDB at 52.66.232.149 (mygenie database)
-- **External APIs**: MyGenie POS API (preprod.mygenie.online)
+---
 
-## What's Been Implemented (2026-04-11)
-- Cloned repo from GitHub (branch: 11th-apri-refactor)
-- Resolved tsconfig.json / jsconfig.json conflict (removed jsconfig.json)
-- Configured backend .env (MONGO_URL, DB_NAME, JWT_SECRET, MYGENIE_API_URL, CORS_ORIGINS)
-- Configured frontend .env (REACT_APP_BACKEND_URL, image base URL, POS API URL, login credentials)
-- Installed all backend Python dependencies
-- Installed all frontend Node.js dependencies via yarn
-- Both services running successfully via supervisor
-- App loads and displays customer-facing restaurant page ("Welcome to 18march!")
+## Project Overview
+- **Repository**: https://github.com/Abhi-mygenie/customer-app5th-march.git
+- **Default Branch**: `abhi-25th-march-all-fix-refeactor3-withtest-cases-and-hyatt-fix-`
+- **Database**: MongoDB at `mongodb://mygenie_admin:QplazmMzalpq@52.66.232.149:27017/mygenie`
+- **Tech Stack**: React (Frontend) + FastAPI (Backend) + MongoDB + TypeScript (API Layer)
+- **Preview URL**: https://app-customer-five.preview.emergentagent.com
 
-## Core Features (from repo)
-- Customer authentication (phone/OTP + password)
-- Restaurant landing page with banners
-- Browse Menu functionality
-- Call Waiter / Pay Bill features
-- Admin configuration panel
-- Dietary tags management
-- File uploads
-- QR code / table configuration
-- Social media integration
+---
 
-## Memory Folder Documents
-All documents from the repo's memory/ folder preserved, including:
-- PRD.md, ARCHITECTURE.md, ROADMAP.md, CHANGELOG.md
-- 2026-04-10/ subfolder with API_MAPPING, CODE_AUDIT, BUG_TRACKER, etc.
+## Current Status
 
-## Next Action Items
-- No changes requested - app running as-is per user instructions
-- Pending: Production-ready JWT_SECRET, CORS_ORIGINS lockdown
+| Area | Status |
+|------|--------|
+| Order Flow | ✅ Working |
+| Transform Layer | ✅ Complete |
+| Multi-menu Support | ✅ Restored |
+| Restaurant 716 Fix | ✅ Fixed (BUG-030) |
+| POS Token Architecture | ✅ Fixed (BUG-033) |
+| Razorpay Payment Integration | ✅ Complete (Session 7) |
+| Razorpay payment_type Fix | ✅ Complete (Session 9 - BUG-034) |
+| QR Code Filters | ✅ Complete (Session 7) |
+| P0 Bugs | ✅ None |
+| P1 Bugs | 🟡 1 (QR URL - Parked) |
+
+---
+
+## Session 7 Completed Features
+
+### 1. Razorpay Payment Integration ✅
+
+**Flow:**
+```
+1. Check restaurant.razorpay.razorpay_key exists → Show "Pay & Proceed"
+2. Place Order API → { order_id, razorpay_id, total_amount }
+3. Create Razorpay Order API → { order_id: "order_XXXXX" }
+4. Open Razorpay SDK with actual order_id
+5. Payment Success → Navigate to Order Success page
+6. Verify Payment API → Confirm payment
+```
+
+**Files Changed:**
+- `/app/frontend/public/index.html` - Added Razorpay SDK script
+- `/app/frontend/src/pages/ReviewOrder.jsx` - Button logic + payment flow
+- `/app/frontend/src/pages/OrderSuccess.jsx` - Payment verification + status UI
+- `/app/frontend/src/pages/OrderSuccess.css` - Payment status styles
+
+**Test Restaurant:**
+- Restaurant 510 (Mygenie Dev) - has Razorpay configured
+- Credentials: owner@devmygenie.com / Qplazm@10
+
+### 2. QR Code Page Enhancements ✅
+
+**New Filters:**
+- Type filter: All / Tables / Rooms
+- Menu Master filter: Dropdown with available menus (Normal, Party, Premium, etc.)
+
+**Changes:**
+- Uses QR URLs directly from POS API (`qr_code_urls[selectedMenu]`)
+- Removed manual URL building
+- Bulk download includes selected menu in filename
+
+**Files Changed:**
+- `/app/frontend/src/pages/admin/AdminQRPage.jsx`
+- `/app/frontend/src/pages/admin/AdminPages.css`
+
+---
+
+## Pending Implementation / Next Actions
+
+### P1 - High Priority
+1. **QR code broken URLs** - baseUrl empty (Parked)
+2. **Remove silent env fallbacks** - hardcoded credentials in authToken.js
+3. **Fix weak JWT secret fallback**
+
+### P2 - Backlog
+1. P2-1: Extract Custom Hooks (6-8 hours)
+2. P2-2: Decompose ReviewOrder.jsx (4-6 hours) - Currently 1600+ lines
+3. P2-3: Fix Inclusive Tax Logic (2-3 hours)
+4. P2-4: Restaurant-level Tax Settings (3-4 hours)
+5. P2-5: Full TypeScript Migration (8-12 hours)
+
+---
+
+## Admin Credentials
+- Restaurant 709 (Young Monk): email=owner@youngmonk.com, password=admin123
+- Restaurant 510 (Mygenie Dev): email=owner@devmygenie.com, password=Qplazm@10
+- Customer test: phone=7505242126, restaurant_id=709
+
+---
+
+## Parked Features / Planned Implementation
+
+### PARKED-001: Retry Payment Button (Razorpay)
+
+**Status:** Planned  
+**Priority:** P1  
+**Date Parked:** March 26, 2026
+
+**Description:**  
+Add "PAY ₹XXX" button on Order Success page when payment verification fails.
+
+**Flow:**
+```
+1. On Order Success page load → Call /verify-payment
+2. If status: "failed" → Show "PAY ₹XXX" button
+3. User clicks "PAY":
+   - Call /create-razor-order with order_id
+   - Get fresh Razorpay order_id
+   - Open Razorpay SDK
+   - On success → Verify again → Update UI
+   - On cancel → Stay on page, button remains
+```
+
+**UI States:**
+| State | Display |
+|-------|---------|
+| isVerifyingPayment: true | "Verifying payment..." spinner |
+| paymentVerified: true | "Payment Verified ✅" badge |
+| paymentVerified: false + isPaid: true | "PAY ₹XXX" button |
+| isPaid: false (COD) | Normal success page |
+
+**Files to Modify:**
+- `/app/frontend/src/pages/OrderSuccess.jsx`
+
+**Data Required:**
+- order_id (from orderData)
+- razorpay_key (from restaurant config)
+- total_amount (from orderData)
+
+
+### PARKED-002: Payment Status Persistence on Refresh
+
+**Status:** Planned  
+**Priority:** P2  
+**Date Parked:** March 26, 2026
+
+**Issue:**  
+On page refresh, `location.state` is lost → payment status not re-verified.
+
+**Options:**
+| Option | Approach |
+|--------|----------|
+| A | Store payment data in sessionStorage |
+| B | Fetch payment_status from /order-details API (Recommended) |
+| C | Re-verify using stored razorpay IDs |
+
+**Recommendation:** Option B - Backend should return payment_status in order details API.
+
+**Files to Modify:**
+- `/app/frontend/src/pages/OrderSuccess.jsx`
+- Possibly POS `/order-details` API
+
+
+---
+
+## Session 9 Completed (March 31, 2026)
+
+### 1. BUG-034: Razorpay payment_type Fix ✅
+
+**Issue:** All orders (including Razorpay) were created with `payment_type: 'postpaid'`
+
+**Root Cause:**
+- `placeOrder()` in `ReviewOrder.jsx` did not pass `paymentType` parameter
+- `orderService.ts` defaulted to `'postpaid'`
+
+**Fix Applied:**
+```jsx
+const isRazorpayEnabled = !!restaurant?.razorpay?.razorpay_key;
+// Pass to placeOrder:
+paymentType: isRazorpayEnabled ? 'prepaid' : 'postpaid'
+```
+
+**Files Changed:**
+| File | Line | Change |
+|------|------|--------|
+| `ReviewOrder.jsx` | 926 | Main placeOrder call - added paymentType |
+| `ReviewOrder.jsx` | 1136 | Retry placeOrder call - added paymentType |
+
+### 2. BUG-035: f_order_status for Razorpay (Pending)
+
+**Status:** Identified, awaiting user confirmation
+
+**Issue:** `f_order_status` defaults to `7` for all orders. Should be `8` for Razorpay.
+
+---
+
+## Session 8 Completed (March 31, 2026)
+
+### 1. Theme Color Consistency Fix ✅
+
+**Issue:** Inconsistent fallback colors causing orange flash on cache clear for Restaurant 716.
+
+**Files Created:**
+- `/app/frontend/src/constants/theme.js` - Single source of truth for default colors
+
+**Files Updated (JS - 6 files):**
+- `RestaurantConfigContext.jsx` - Import DEFAULT_THEME, conditional CSS override
+- `LandingPage.jsx` - Use DEFAULT_THEME for button colors
+- `ReviewOrder.jsx` - Use DEFAULT_THEME for Razorpay theme
+- `AdminSettings.jsx` - Use DEFAULT_THEME for color inputs
+- `AdminConfigContext.jsx` - Use DEFAULT_THEME for defaults
+- `AdminBrandingPage.jsx` - Use DEFAULT_THEME for color pickers
+
+**Files Updated (CSS - 5 files):**
+- `PasswordSetup.css`, `OrderSuccess.css`, `AdminPages.css`, `StationCard.css`, `LandingCustomerCapture.css`
+- All fallbacks changed from orange variants to `#61B4E5` (blue)
+
+### 2. CRITICAL-006 Fix: Hardcoded Razorpay URLs ✅
+
+**Issue:** Razorpay endpoints hardcoded with preprod URL instead of using ENDPOINTS pattern.
+
+**Files Changed:**
+| File | Change |
+|------|--------|
+| `endpoints.js` | Added `RAZORPAY_CREATE_ORDER`, `RAZORPAY_VERIFY_PAYMENT` |
+| `ReviewOrder.jsx` | Use `ENDPOINTS.RAZORPAY_CREATE_ORDER()` |
+| `OrderSuccess.jsx` | Use `ENDPOINTS.RAZORPAY_VERIFY_PAYMENT()` |
+
+### 3. Code Audit V1 ✅
+
+**Document Created:** `/app/memory/AUDIT_V1.md`
+
+**Findings:**
+- Critical Issues: 6 (1 resolved)
+- High Priority: 7
+- Medium: 7
+- Low: 7
+
+**Key Issues Identified:**
+- CRITICAL-001: Hardcoded credentials in authToken.js
+- CRITICAL-002: Weak JWT secret fallback
+- CRITICAL-003: CORS wildcard configuration
+- CRITICAL-004: No rate limiting
+- CRITICAL-005: Razorpay live keys exposure
+- CRITICAL-006: Hardcoded POS API URL ✅ FIXED
