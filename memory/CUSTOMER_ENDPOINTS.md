@@ -972,9 +972,185 @@ curl -X POST "https://preprod.mygenie.online/api/v1/razor-pay/verify-payment" \
 
 ---
 
-## 6. Delivery-Specific POS Endpoints (Phase 3 — Not Yet Integrated)
+## 6. Loyalty & Points Endpoints
 
-### 6.1 Customer Address List
+### 6.1 Loyalty Settings (Our Backend)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/api/loyalty-settings/{restaurant_id}` |
+| **Auth** | None |
+| **Called by** | ReviewOrder page (to calculate earn/redeem rates) |
+| **Source** | Our backend → MongoDB `loyalty_settings` collection |
+
+**cURL:**
+```bash
+curl -X GET "https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com/api/loyalty-settings/478"
+```
+
+**Response (settings found):**
+```json
+{
+  "found": true,
+  "bronze_earn_percent": 5.0,
+  "silver_earn_percent": 7.0,
+  "gold_earn_percent": 10.0,
+  "platinum_earn_percent": 15.0,
+  "redemption_value": 0.25,
+  "min_order_value": 100.0,
+  "first_visit_bonus_enabled": true,
+  "first_visit_bonus_points": 50
+}
+```
+
+**Response (defaults — no settings configured):**
+```json
+{
+  "found": false,
+  "bronze_earn_percent": 5.0,
+  "silver_earn_percent": 7.0,
+  "gold_earn_percent": 10.0,
+  "platinum_earn_percent": 15.0,
+  "redemption_value": 0.25,
+  "min_order_value": 100.0,
+  "first_visit_bonus_enabled": true,
+  "first_visit_bonus_points": 50
+}
+```
+
+**How loyalty works in ReviewOrder:**
+- Restaurant must have `is_loyalty: "Yes"` in POS config
+- Customer must have phone number filled (for lookup)
+- `customer-lookup` returns `total_points` and `tier`
+- `loyalty-settings` returns earn/redeem rates per tier
+- User can choose to redeem points → `points_redeemed` and `points_discount` in order payload
+
+---
+
+### 6.2 Customer Lookup (Our Backend — used for loyalty display)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/api/customer-lookup/{restaurant_id}?phone={phone}` |
+| **Auth** | None |
+| **Called by** | ReviewOrder page (loyalty points display + name auto-fill) |
+
+**cURL:**
+```bash
+curl -X GET "https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com/api/customer-lookup/478?phone=9579504871"
+```
+
+**Response (found):**
+```json
+{
+  "found": true,
+  "name": "Abhishek",
+  "phone": "9579504871",
+  "country_code": "+91",
+  "total_points": 145,
+  "tier": "Bronze",
+  "wallet_balance": 250.0
+}
+```
+
+**Response (not found):**
+```json
+{
+  "found": false,
+  "name": "",
+  "phone": "9579504871",
+  "total_points": 0,
+  "tier": "Bronze",
+  "wallet_balance": 0.0
+}
+```
+
+---
+
+### 6.3 Customer Points History (Our Backend — authenticated)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/api/customer/points?limit=50&skip=0` |
+| **Auth** | Bearer token (customer) |
+| **Called by** | Profile page |
+
+**cURL:**
+```bash
+curl -X GET "https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com/api/customer/points?limit=20" \
+  -H "Authorization: Bearer {customer_token}"
+```
+
+---
+
+### 6.4 Customer Wallet (Our Backend — authenticated)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/api/customer/wallet?limit=50&skip=0` |
+| **Auth** | Bearer token (customer) |
+| **Called by** | Profile page |
+
+**cURL:**
+```bash
+curl -X GET "https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com/api/customer/wallet" \
+  -H "Authorization: Bearer {customer_token}"
+```
+
+---
+
+### 6.5 Customer Coupons (Our Backend — authenticated)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/api/customer/coupons` |
+| **Auth** | Bearer token (customer) |
+| **Called by** | ReviewOrder page (coupon code entry) |
+| **Gated by** | Restaurant config `is_coupon: "Yes"` |
+
+**cURL:**
+```bash
+curl -X GET "https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com/api/customer/coupons" \
+  -H "Authorization: Bearer {customer_token}"
+```
+
+---
+
+### Loyalty + Points Flow in Order
+
+```
+ReviewOrder loads
+  │
+  ├─ GET /api/loyalty-settings/{restaurantId}
+  │     └─ Gets earn/redeem rates per tier
+  │
+  ├─ GET /api/customer-lookup/{restaurantId}?phone=X
+  │     └─ Gets total_points, tier, wallet_balance
+  │
+  ├─ User sees: "You have X points (Tier)"
+  ├─ User can toggle "Redeem Points"
+  │     └─ Points converted to discount using redemption_value
+  │     └─ pointsRedeemed + pointsDiscount added to order payload
+  │
+  └─ Order payload includes:
+       points_redeemed: 100,
+       points_discount: 25.0,
+       discount_type: "Loyality",
+       discount_amount: 25.0
+```
+
+---
+
+## 7. Delivery-Specific POS Endpoints (Phase 3 — NEXT TASK)
+
+**Status:** Not yet integrated. API endpoints confirmed, need response samples for implementation.
+
+### 7.1 Customer Address List
 
 | Field | Value |
 |-------|-------|
@@ -982,6 +1158,8 @@ curl -X POST "https://preprod.mygenie.online/api/v1/razor-pay/verify-payment" \
 | **URL** | `/customer/address/list` |
 | **Base** | `https://preprod.mygenie.online/api/v1` |
 | **Auth** | Bearer {customer_token} |
+| **Used by** | Delivery flow — saved addresses for logged-in users |
+| **Integration status** | ❌ Not integrated — needs response sample |
 
 **cURL:**
 ```bash
@@ -994,16 +1172,25 @@ curl -X GET "https://preprod.mygenie.online/api/v1/customer/address/list" \
   -H "Authorization: Bearer {customer_pos_token}"
 ```
 
+**TODO:** Need response sample to understand:
+- Address object structure (fields: flat, road, landmark, pincode, city?)
+- Default address flag
+- Address type (home/office/other)
+- lat/lng in address object
+
 ---
 
-### 6.2 Delivery Charge / Distance Validation
+### 7.2 Delivery Charge / Distance Validation
 
 | Field | Value |
 |-------|-------|
 | **Method** | `GET` |
 | **URL** | `/config/distance-api-new?destination_lat={lat}&destination_lng={lng}&restaurant_id={id}&order_value={amount}` |
-| **Base** | `https://manage.mygenie.online/api/v1` (DIFFERENT base URL!) |
+| **Base** | `https://manage.mygenie.online/api/v1` (**DIFFERENT base URL!**) |
 | **Auth** | Bearer token |
+| **Used by** | Delivery flow — validate area + calculate delivery charge |
+| **Integration status** | ❌ Not integrated — needs response sample |
+| **Note** | Needs new env var `REACT_APP_MANAGE_BASE_URL` |
 
 **cURL:**
 ```bash
@@ -1013,9 +1200,16 @@ curl -X GET "https://manage.mygenie.online/api/v1/config/distance-api-new?destin
   -H "Authorization: Bearer {token}"
 ```
 
+**TODO:** Need response sample to understand:
+- Is delivery available (boolean)?
+- Delivery charge amount
+- Distance in km
+- Minimum order value for delivery
+- Estimated delivery time
+
 ---
 
-### 6.3 Get Zone ID
+### 7.3 Get Zone ID
 
 | Field | Value |
 |-------|-------|
@@ -1023,15 +1217,52 @@ curl -X GET "https://manage.mygenie.online/api/v1/config/distance-api-new?destin
 | **URL** | `/config/get-all-zone?lat={lat}&lng={lng}` |
 | **Base** | `https://preprod.mygenie.online/api/v1` |
 | **Auth** | None / Bearer token |
+| **Used by** | Delivery flow — get zone ID for API headers |
+| **Integration status** | ❌ Not integrated — needs response sample |
 
 **cURL:**
 ```bash
 curl -X GET "https://preprod.mygenie.online/api/v1/config/get-all-zone?lat=27.179&lng=78.001"
 ```
 
+**TODO:** Need response sample to understand:
+- Zone ID format
+- Multiple zones possible?
+- Zone-based delivery rules
+
 ---
 
-## 7. Flow Summary
+### Delivery Flow (Planned)
+
+```
+Landing Page (orderType=delivery)
+  │
+  ├─ Mandatory: Name + Phone (or Login)
+  │
+  └─ DeliveryAddressPage (intermediate, BEFORE menu)
+       │
+       ├─ Logged-in user:
+       │     GET /customer/address/list → show saved addresses
+       │     User selects or adds new
+       │
+       ├─ New user:
+       │     Manual address entry form
+       │
+       ├─ GET /config/get-all-zone → get zoneId for headers
+       │
+       ├─ GET /config/distance-api-new → validate + get charge
+       │     ├─ Deliverable → store address + charge → Menu
+       │     └─ NOT deliverable → show message, block
+       │
+       └─ → Menu → Cart → ReviewOrder
+              └─ delivery_charge: {from API}
+              └─ address fields filled
+              └─ order_type: "delivery"
+```
+
+---
+
+## 8. Flow Summary
 
 ```
 Landing Page (phone + name entered)
@@ -1050,16 +1281,30 @@ Landing Page (phone + name entered)
   └─ Skip → saves as guest (localStorage) → Menu
 
 Menu / Review Order
-  └─ GET /api/customer-lookup/{id}?phone=X → loyalty info display
+  ├─ GET /api/loyalty-settings/{id} → earn/redeem rates
+  ├─ GET /api/customer-lookup/{id}?phone=X → points, tier, name
+  └─ GET /api/customer/coupons → available coupons
+
+Place Order
+  ├─ Restaurant 716 → POST /customer/order/autopaid-place-prepaid-order
+  └─ All others     → POST /customer/order/place
+       └─ payment_method: always "cash_on_delivery"
+       └─ payment_type: "prepaid" (Razorpay) | "postpaid" (COD)
+
+Delivery (Phase 3 — NOT YET)
+  ├─ GET /customer/address/list → saved addresses
+  ├─ GET /config/get-all-zone → zone ID
+  └─ GET /config/distance-api-new → delivery charge + validation
 
 Profile (authenticated)
-  ├─ GET /api/customer/profile
-  ├─ PUT /api/customer/profile
-  ├─ GET /api/customer/orders
-  ├─ GET /api/customer/points
-  ├─ GET /api/customer/wallet
-  └─ GET /api/customer/coupons
+  ├─ GET  /api/auth/me
+  ├─ GET  /api/customer/profile
+  ├─ PUT  /api/customer/profile
+  ├─ GET  /api/customer/orders
+  ├─ GET  /api/customer/points
+  ├─ GET  /api/customer/wallet
+  └─ GET  /api/customer/coupons
 ```
 
 ---
-*Last Revised: April 11, 2026 — 21:30 IST | Updated: Session 12 — FEAT-002 Phase 1-2, BUG-043/044, payment fixes*
+*Last Revised: April 11, 2026 — 21:45 IST | Updated: Added Loyalty endpoints (Section 6), enhanced Delivery endpoints with TODO items (Section 7), updated flow summary*
