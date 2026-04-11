@@ -11,7 +11,7 @@
 | BUG-042 | 401 retry skips table status check | 🔴 P0 | ⏳ Discussion | Apr 11 | - | Needs POS-side table free/engaged API clarity |
 | BUG-041 | 401 retry wrong payment type (COD→prepaid) | 🔴 P0 | ✅ Fixed | Apr 11 | Apr 11 | Uses user's paymentMethod selection now |
 | BUG-040 | 401 retry skips Razorpay checkout | 🟡 P1 | ✅ Fixed | Apr 11 | Apr 11 | Retry now opens Razorpay modal for online payments |
-| BUG-039 | Edit order missing orderDispatchedRef | 🟡 P1 | ⏳ To Validate | Apr 11 | - | Network drop during edit shows wrong error msg |
+| BUG-039 | Edit order missing orderDispatchedRef | 🟡 P1 | ✅ Fixed | Apr 11 | Apr 11 | Set ref before updateCustomerOrder API call |
 | BUG-038 | Razorpay success missing billSummary (points only) | 🟢 P2 | ⏳ To Validate | Apr 11 | - | pointsDiscount/pointsRedeemed lost, rest from API |
 | BUG-037 | OG/Meta shows "Hyatt Centric" hardcoded | 🟢 P2 | ⏳ Pending | Apr 11 | - | index.html meta description hardcoded, should be dynamic per restaurant |
 | BUG-036 | Login JSON parse error | 🔴 P0 | ✅ Fixed | Apr 10 | Apr 10 | Wrong backend URL in .env |
