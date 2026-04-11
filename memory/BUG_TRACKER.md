@@ -87,7 +87,7 @@ When a 401 error occurs during order placement, the retry block re-sends the ord
 | **Bug ID** | BUG-041 |
 | **Date Reported** | 2026-04-11 |
 | **Severity** | 🔴 P0 - High |
-| **Status** | ⏳ Pending Fix |
+| **Status** | ✅ Confirmed |
 | **File** | `ReviewOrder.jsx` lines 1062-1083 |
 
 ### Problem
@@ -96,8 +96,34 @@ Retry flow: `!!restaurant?.razorpay?.razorpay_key ? 'prepaid' : 'postpaid'` (key
 
 When user chose COD at a Razorpay-enabled restaurant → 401 → retry sends `prepaid` instead of `postpaid`.
 
-### Validation
-Console log `[BUG-P2-001]` added — will show `BUG_TRIGGERED: true` when mismatch occurs.
+### Confirmed Evidence (Apr 11 — Restaurant 510)
+```
+[FEAT-001] Payment Config:
+  paymentMethod: 'cod'
+  selectedPaymentType: 'postpaid'     ← Main flow: CORRECT
+  hasRazorpayKey: true                ← Restaurant has Razorpay key
+
+placeOrder Payload:
+  payment_type: 'postpaid'            ← Sent correctly on first attempt
+
+PlaceOrder Response:
+  razorpay_id: '000526-510'           ← POS returns razorpay_id even for COD
+  order_id: 730792
+```
+
+**If 401 had occurred:** Retry would compute:
+```
+isRazorpayEnabledRetry = !!restaurant.razorpay.razorpay_key → true
+paymentType = true ? 'prepaid' : 'postpaid' → 'prepaid'  ← WRONG!
+```
+
+### Impact
+- COD order retried as prepaid → POS records wrong payment type
+- Restaurant 510 confirmed: has Razorpay key + user chose COD + main flow sent correct `postpaid`
+- All Razorpay-enabled restaurants with COD option are affected on 401 retry
+
+### Fix
+Replace retry logic with: `paymentMethod === 'online' ? 'prepaid' : 'postpaid'` (same as main flow)
 
 ---
 
