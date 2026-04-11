@@ -876,12 +876,15 @@ const ReviewOrder = () => {
           paymentType: selectedPaymentType
         });
 
-        // ═══ TEMPORARY 401 SIMULATOR — remove after testing ═══
-        // Set window.__simulate401 = true in browser console before placing order
-        // This forces the main flow to "fail" with 401 so the retry path executes
-        if (window.__simulate401 && !window.__simulate401Done) {
+        // ═══ TEMPORARY 401 SIMULATOR — HARDCODED ON — REMOVE AFTER TESTING ═══
+        // Forces first placeOrder to "fail" with 401 so retry path executes
+        // NOTE: This will place 2 real orders (main succeeds, then retry fires)
+        if (!window.__simulate401Done) {
           window.__simulate401Done = true;
-          console.warn('[401 SIMULATOR] Forcing 401 to test retry path. Real response was:', response);
+          console.warn('═══════════════════════════════════════════════');
+          console.warn('[401 SIMULATOR] ACTIVE! Forcing 401 on first order.');
+          console.warn('Real response was:', response);
+          console.warn('═══════════════════════════════════════════════');
           const fakeError = new Error('Simulated 401');
           fakeError.response = { status: 401 };
           throw fakeError;
