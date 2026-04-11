@@ -704,7 +704,318 @@ curl -X GET "https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.
 
 ---
 
-## 5. Flow Summary
+## 5. POS API Endpoints (External — `preprod.mygenie.online`)
+
+**Base URL:** `https://preprod.mygenie.online/api/v1`
+**Auth:** Bearer token (from POS API login — env creds `REACT_APP_LOGIN_PHONE` / `REACT_APP_LOGIN_PASSWORD`)
+**Called by:** Frontend directly via `REACT_APP_API_BASE_URL` or backend proxy via `MYGENIE_API_URL`
+
+---
+
+### 5.1 Restaurant Info
+
+| Field | Value |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `/web/restaurant-info` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (RestaurantConfigContext) |
+
+**cURL:**
+```bash
+curl -X POST "https://preprod.mygenie.online/api/v1/web/restaurant-info" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {pos_token}"
+```
+
+---
+
+### 5.2 Restaurant Products (Menu Items)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `/web/restaurant-product` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (MenuItems page) |
+
+**cURL:**
+```bash
+curl -X POST "https://preprod.mygenie.online/api/v1/web/restaurant-product" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {pos_token}" \
+  -d '{
+    "restaurant_id": "478"
+  }'
+```
+
+---
+
+### 5.3 Menu Master (Stations / Menu Types)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `/web/menu-master` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (multi-menu restaurants) |
+
+**cURL:**
+```bash
+curl -X POST "https://preprod.mygenie.online/api/v1/web/menu-master" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {pos_token}" \
+  -d '{
+    "restaurant_id": "478"
+  }'
+```
+
+---
+
+### 5.4 Place Order
+
+| Field | Value |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `/customer/order/place` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (ReviewOrder → placeOrder) |
+
+**cURL:**
+```bash
+curl -X POST "https://preprod.mygenie.online/api/v1/customer/order/place" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {pos_token}" \
+  -d '{
+    "restaurant_id": "478",
+    "order_type": "dinein",
+    "table_id": "6182",
+    "delivery_charge": "0",
+    "address_id": "",
+    "address": "",
+    "latitude": "",
+    "longitude": "",
+    "items": [...],
+    "cust_name": "John",
+    "cust_phone": "9579504871"
+  }'
+```
+
+---
+
+### 5.5 Place Order (Auto-Paid / Prepaid)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `/customer/order/autopaid-place-prepaid-order` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (ReviewOrder → online payment flow) |
+
+**cURL:**
+```bash
+curl -X POST "https://preprod.mygenie.online/api/v1/customer/order/autopaid-place-prepaid-order" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {pos_token}" \
+  -d '{
+    "restaurant_id": "478",
+    "order_type": "dinein",
+    "table_id": "6182",
+    "payment_method": "Razorpay",
+    "items": [...]
+  }'
+```
+
+---
+
+### 5.6 Update Customer Order (Edit Order)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `/customer/order/update-customer-order` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (ReviewOrder → edit existing order) |
+
+**cURL:**
+```bash
+curl -X POST "https://preprod.mygenie.online/api/v1/customer/order/update-customer-order" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {pos_token}" \
+  -d '{
+    "order_id": "12345",
+    "restaurant_id": "478",
+    "order_type": "dinein",
+    "items": [...]
+  }'
+```
+
+---
+
+### 5.7 Check Table Status
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/customer/check-table-status?table_id={id}&restaurant_id={id}` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (LandingPage, OrderSuccess — table occupancy check) |
+
+**cURL:**
+```bash
+curl -X GET "https://preprod.mygenie.online/api/v1/customer/check-table-status?table_id=6182&restaurant_id=478" \
+  -H "Authorization: Bearer {pos_token}"
+```
+
+---
+
+### 5.8 Get Order Details (via Backend Proxy)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/air-bnb/get-order-details/{order_id}` |
+| **Auth** | None (proxied through our backend) |
+| **Called by** | Frontend → our backend → POS API |
+
+**cURL (via our backend):**
+```bash
+curl -X GET "https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com/api/air-bnb/get-order-details/12345"
+```
+
+**cURL (direct POS):**
+```bash
+curl -X GET "https://preprod.mygenie.online/api/v1/air-bnb/get-order-details/12345" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+### 5.9 Table Config (via Backend Proxy)
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/web/table-config` |
+| **Auth** | Bearer token (admin, via X-POS-Token header) |
+| **Called by** | Frontend → our backend (`/api/table-config`) → POS v2 API |
+| **Note** | Uses POS **v2** API (`/api/v2/vendoremployee/restaurant-settings/table-config`) |
+
+**cURL (via our backend):**
+```bash
+curl -X GET "https://4a7e2250-5b49-41e3-a2cb-0b90056dac03.preview.emergentagent.com/api/table-config" \
+  -H "Authorization: Bearer {admin_token}" \
+  -H "X-POS-Token: {pos_token}"
+```
+
+---
+
+### 5.10 Razorpay — Create Order
+
+| Field | Value |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `/razor-pay/create-razor-order` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (online payment flow) |
+
+**cURL:**
+```bash
+curl -X POST "https://preprod.mygenie.online/api/v1/razor-pay/create-razor-order" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {pos_token}" \
+  -d '{
+    "amount": 45000,
+    "currency": "INR",
+    "restaurant_id": "478"
+  }'
+```
+
+---
+
+### 5.11 Razorpay — Verify Payment
+
+| Field | Value |
+|-------|-------|
+| **Method** | `POST` |
+| **URL** | `/razor-pay/verify-payment` |
+| **Auth** | Bearer token |
+| **Called by** | Frontend (after Razorpay checkout callback) |
+
+**cURL:**
+```bash
+curl -X POST "https://preprod.mygenie.online/api/v1/razor-pay/verify-payment" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {pos_token}" \
+  -d '{
+    "razorpay_payment_id": "pay_abc123",
+    "razorpay_order_id": "order_xyz789",
+    "razorpay_signature": "sig_..."
+  }'
+```
+
+---
+
+## 6. Delivery-Specific POS Endpoints (Phase 3 — Not Yet Integrated)
+
+### 6.1 Customer Address List
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/customer/address/list` |
+| **Base** | `https://preprod.mygenie.online/api/v1` |
+| **Auth** | Bearer {customer_token} |
+
+**cURL:**
+```bash
+curl -X GET "https://preprod.mygenie.online/api/v1/customer/address/list" \
+  -H "Content-Type: application/json; charset=UTF-8" \
+  -H "zoneId;" \
+  -H "X-localization: en" \
+  -H "latitude;" \
+  -H "longitude;" \
+  -H "Authorization: Bearer {customer_pos_token}"
+```
+
+---
+
+### 6.2 Delivery Charge / Distance Validation
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/config/distance-api-new?destination_lat={lat}&destination_lng={lng}&restaurant_id={id}&order_value={amount}` |
+| **Base** | `https://manage.mygenie.online/api/v1` (DIFFERENT base URL!) |
+| **Auth** | Bearer token |
+
+**cURL:**
+```bash
+curl -X GET "https://manage.mygenie.online/api/v1/config/distance-api-new?destination_lat=27.1791026&destination_lng=78.0013866&restaurant_id=478&order_value=0" \
+  -H "Content-Type: application/json; charset=UTF-8" \
+  -H "X-localization: en" \
+  -H "Authorization: Bearer {token}"
+```
+
+---
+
+### 6.3 Get Zone ID
+
+| Field | Value |
+|-------|-------|
+| **Method** | `GET` |
+| **URL** | `/config/get-all-zone?lat={lat}&lng={lng}` |
+| **Base** | `https://preprod.mygenie.online/api/v1` |
+| **Auth** | None / Bearer token |
+
+**cURL:**
+```bash
+curl -X GET "https://preprod.mygenie.online/api/v1/config/get-all-zone?lat=27.179&lng=78.001"
+```
+
+---
+
+## 7. Flow Summary
 
 ```
 Landing Page (phone + name entered)

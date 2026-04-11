@@ -78,7 +78,10 @@ const PasswordSetup = () => {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to set password');
+      if (!res.ok) {
+        const detail = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+        throw new Error(detail || 'Failed to set password');
+      }
 
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
@@ -86,7 +89,8 @@ const PasswordSetup = () => {
       toast.success('Password set successfully!');
       navigateToMenu();
     } catch (err) {
-      setError(err.message);
+      const msg = typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -111,7 +115,10 @@ const PasswordSetup = () => {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Invalid password');
+      if (!res.ok) {
+        const detail = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+        throw new Error(detail || 'Invalid password');
+      }
 
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
@@ -119,7 +126,8 @@ const PasswordSetup = () => {
       toast.success(`Welcome back, ${data.customer?.name || displayName}!`);
       navigateToMenu();
     } catch (err) {
-      setError(err.message);
+      const msg = typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +142,10 @@ const PasswordSetup = () => {
         body: JSON.stringify({ phone, restaurant_id: restaurantId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to send OTP');
+      if (!res.ok) {
+        const detail = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+        throw new Error(detail || 'Failed to send OTP');
+      }
       setOtpSent(true);
       toast.success('OTP sent to your phone');
     } catch (err) {
@@ -173,7 +184,10 @@ const PasswordSetup = () => {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to reset password');
+      if (!res.ok) {
+        const detail = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+        throw new Error(detail || 'Failed to reset password');
+      }
       toast.success('Password reset! Please login.');
       setForgotMode(false);
       setPassword('');
@@ -181,7 +195,8 @@ const PasswordSetup = () => {
       setOtp('');
       setOtpSent(false);
     } catch (err) {
-      setError(err.message);
+      const msg = typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
