@@ -24,6 +24,9 @@ const useNotificationPopup = (page, popups = []) => {
     if (countdownRef.current) clearInterval(countdownRef.current);
   }, []);
 
+  // Stable key: re-trigger when popup appears/changes (handles stale cache → fresh API update)
+  const popupKey = popup ? `${popup.id}_${popup.enabled}_${popup.delaySeconds}_${popup.autoDismissSeconds}` : 'none';
+
   useEffect(() => {
     // Reset on page/popup change
     setIsVisible(false);
@@ -66,7 +69,7 @@ const useNotificationPopup = (page, popups = []) => {
       if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [page, popup?.id, popup?.enabled, popup?.delaySeconds, popup?.autoDismissSeconds]);
+  }, [page, popupKey]);
 
   return { popup, isVisible, dismiss, secondsRemaining };
 };

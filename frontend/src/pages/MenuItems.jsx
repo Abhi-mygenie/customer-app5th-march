@@ -20,6 +20,7 @@ import { useCart } from '../context/CartContext';
 import { getAllergenIcon } from '../utils/allergenIcons';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { isRestaurantOpen } from '../utils/itemAvailability';
+import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import './MenuItems.css';
 
 const MenuItems = () => {
@@ -812,6 +813,7 @@ const MenuItems = () => {
             Menu
           </button>
         )}
+      <NotificationPopup page="menu" />
     </div>
   );
 };

@@ -385,6 +385,7 @@ const AdminSettingsPage = () => {
                     data-testid={`popup-showOn-${index}`}
                   >
                     <option value="landing">Landing Page</option>
+                    <option value="menu">Menu Page</option>
                     <option value="review">Review Order</option>
                     <option value="success">Order Success</option>
                   </select>
@@ -579,13 +580,13 @@ const AdminSettingsPage = () => {
         })}
 
         {/* Add Popup Button (max 3) */}
-        {(config.notificationPopups || []).length < 3 && (
+        {(config.notificationPopups || []).length < 4 && (
           <button
             className="admin-add-btn"
             onClick={() => {
               const existing = config.notificationPopups || [];
               const usedPages = existing.map(p => p.showOn);
-              const availablePages = ['landing', 'review', 'success'].filter(p => !usedPages.includes(p));
+              const availablePages = ['landing', 'menu', 'review', 'success'].filter(p => !usedPages.includes(p));
               const newPopup = {
                 id: `popup-${Date.now()}`,
                 enabled: false,
