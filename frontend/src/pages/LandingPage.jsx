@@ -10,6 +10,7 @@ import { useScannedTable } from '../hooks/useScannedTable';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { checkTableStatus, getOrderDetails } from '../api/services/orderService';
 import { getAuthToken } from '../utils/authToken';
+import logger from '../utils/logger';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import HamburgerMenu from '../components/HamburgerMenu/HamburgerMenu';
@@ -89,7 +90,7 @@ const LandingPage = () => {
         try {
           token = await getAuthToken();
         } catch (tokenErr) {
-          console.error('Token fetch failed, retrying...', tokenErr);
+          logger.error('auth', 'Token fetch failed, retrying...', tokenErr);
           // Retry once with force refresh
           token = await getAuthToken(true);
         }
@@ -136,7 +137,7 @@ const LandingPage = () => {
             clearCart();
             
           } catch (orderErr) {
-            console.error('Failed to fetch order details for auto-redirect:', orderErr);
+            logger.error('order', 'Failed to fetch order details for auto-redirect:', orderErr);
             // On error, fall through to show Edit Order button (user can retry manually)
           }
         }
@@ -149,7 +150,7 @@ const LandingPage = () => {
           error: result.error || null,
         });
       } catch (err) {
-        console.error('Table status check failed:', err);
+        logger.error('table', 'Table status check failed:', err);
         // Fallback to browse menu on error
         setTableStatusCheck({
           isLoading: false,
@@ -228,7 +229,7 @@ const LandingPage = () => {
             });
           }
         } catch (err) {
-          console.error('Customer lookup failed:', err);
+          logger.error('order', 'Customer lookup failed:', err);
           // On error, save as guest and go to menu
           const guestData = { name: capturedName, phone: capturedPhone, restaurantId };
           localStorage.setItem('guestCustomer', JSON.stringify(guestData));
@@ -258,12 +259,12 @@ const LandingPage = () => {
 
   const handleCallWaiter = () => {
     // TODO: Integrate with call waiter API
-    console.log('Call waiter triggered');
+    logger.order('Call waiter triggered');
   };
 
   const handlePayBill = () => {
     // TODO: Integrate with pay bill flow
-    console.log('Pay bill triggered');
+    logger.order('Pay bill triggered');
   };
 
   // Handle Edit Order click - fetch order details and enter edit mode
@@ -322,7 +323,7 @@ const LandingPage = () => {
         navigate(`/${actualRestaurantId}/menu`);
       }
     } catch (err) {
-      console.error('Failed to fetch order details for editing:', err);
+      logger.error('order', 'Failed to fetch order details for editing:', err);
       toast.error('Failed to load order. Starting fresh.');
       // On error, fallback to normal menu navigation
       const actualRestaurantId = restaurant?.id || restaurantId;

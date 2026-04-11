@@ -7,6 +7,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { getRestaurantDetails, getRestaurantProducts, getMenuMaster } from '../api/services/restaurantService';
+import logger from '../utils/logger';
 // import { getStations } from '../api/services/stationService';
 import { getTableConfig } from '../api/services/tableRoomService';
 import { getErrorMessage } from '../api/utils/errorHandler';
@@ -34,7 +35,7 @@ export const useMenuSections = (stationId, restaurantId) => {
       // console.log('fetchMenuSections called with:', { stationId, finalRestaurantId });
 
       if (!finalRestaurantId) {
-        console.warn('No restaurantId provided, cannot fetch menu sections');
+        logger.menu('No restaurantId provided, cannot fetch menu sections');
         return [];
       }
 
@@ -77,7 +78,7 @@ export const useMenuSections = (stationId, restaurantId) => {
                   // DFA-001 fix: No fallback — fail visibly if env var missing
                   const imageBaseUrl = process.env.REACT_APP_IMAGE_BASE_URL;
                   if (!imageBaseUrl) {
-                    console.error('[MenuData] REACT_APP_IMAGE_BASE_URL is not set. Images will not load.');
+                    logger.error('menu', 'REACT_APP_IMAGE_BASE_URL is not set. Images will not load.');
                   }
                   imageUrl = `${imageBaseUrl}/storage/${item.image}`;
                 }
@@ -120,7 +121,7 @@ export const useMenuSections = (stationId, restaurantId) => {
 
           return transformedSections;
         } else {
-          console.warn('API response structure unexpected:', data);
+          logger.menu('API response structure unexpected:', data);
           return [];
         }
       } catch (err) {
@@ -130,7 +131,7 @@ export const useMenuSections = (stationId, restaurantId) => {
             const menuItemsData = require('../data/menuItems.json');
             return menuItemsData[stationId] || [];
           } catch (fallbackError) {
-            console.error('Fallback also failed:', fallbackError);
+            logger.error('menu', 'Fallback also failed:', fallbackError);
             throw err; // Re-throw original error if fallback fails
           }
         }

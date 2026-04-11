@@ -4,6 +4,7 @@
  */
 
 import { getStoredToken, isTokenExpired } from '../../utils/authToken';
+import logger from '../../utils/logger';
 
 /**
  * Get auth token from storage
@@ -35,8 +36,7 @@ export const requestInterceptor = (config) => {
   config.headers['Content-Type'] = config.headers['Content-Type'] || 'application/json; charset=UTF-8';
   config.headers['Accept'] = 'application/json';
 
-  // Console logging for debugging
-  console.log('%c[API REQUEST]', 'color: #2196F3; font-weight: bold', {
+  logger.api('REQUEST', {
     method: config.method?.toUpperCase(),
     url: config.url,
     payload: config.data || config.params || null,

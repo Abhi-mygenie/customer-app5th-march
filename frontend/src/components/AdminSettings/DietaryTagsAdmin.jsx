@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { getRestaurantProducts, getMenuMaster } from '../../api/services/restaurantService';
 import { getAvailableDietaryTags, getDietaryTagsMapping, updateDietaryTagsMapping } from '../../api/services/dietaryTagsService';
 import './DietaryTagsAdmin.css';
+import logger from '../../utils/logger';
 
 const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
   const [menuItems, setMenuItems] = useState([]);
@@ -85,7 +86,7 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
         setMappings(mappingData.mappings || {});
         
       } catch (error) {
-        console.error('Error fetching data:', error);
+        logger.error('admin', 'Error fetching data:', error);
         toast.error('Failed to load menu items');
       } finally {
         setLoading(false);
@@ -122,7 +123,7 @@ const DietaryTagsAdmin = ({ restaurantId, token, multipleMenu = false }) => {
           }
         });
       } catch (error) {
-        console.error('Auto-save error:', error);
+        logger.error('admin', 'Auto-save error:', error);
         toast.error('Failed to save changes');
       } finally {
         setSaving(false);

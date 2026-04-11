@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import logger from '../utils/logger';
 const AuthContext = createContext(null);
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
           const contentType = response.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
             // Server unavailable, keep token but don't validate
-            console.warn('Auth check: Server returned non-JSON response');
+            logger.auth('Auth check: Server returned non-JSON response');
             setLoading(false);
             return;
           }
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
             setToken(null);
           }
         } catch (error) {
-          console.error('Auth check failed:', error);
+          logger.error('auth', 'Auth check failed:', error);
           localStorage.removeItem('auth_token');
           setToken(null);
         }
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('Non-JSON response:', text);
+      logger.error('auth', 'Non-JSON response:', text);
       throw new Error('Server is temporarily unavailable. Please try again.');
     }
 
@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }) => {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('Non-JSON response:', text);
+      logger.error('auth', 'Non-JSON response:', text);
       throw new Error('Server is temporarily unavailable. Please try again.');
     }
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { calculateCartItemPrice } from '../api/transformers/helpers';
+import logger from '../utils/logger';
 
 const CartContext = createContext();
 
@@ -36,7 +37,7 @@ const loadCartFromStorage = (restaurantId) => {
 
     return cartData;
   } catch (error) {
-    console.error('Error loading cart from storage:', error);
+    logger.error('cart', 'Error loading cart from storage:', error);
     return { items: [], createdAt: Date.now(), expiresAt: Date.now() + CART_EXPIRY_TIME };
   }
 };
@@ -60,7 +61,7 @@ const loadEditOrderFromStorage = (restaurantId) => {
 
     return editData;
   } catch (error) {
-    console.error('Error loading edit order from storage:', error);
+    logger.error('cart', 'Error loading edit order from storage:', error);
     return null;
   }
 };
@@ -79,7 +80,7 @@ const saveCartToStorage = (restaurantId, cartData) => {
       detail: { key: cartKey, value: cartDataString }
     }));
   } catch (error) {
-    console.error('Error saving cart to storage:', error);
+    logger.error('cart', 'Error saving cart to storage:', error);
   }
 };
 
@@ -95,7 +96,7 @@ const saveEditOrderToStorage = (restaurantId, editData) => {
       localStorage.removeItem(editOrderKey);
     }
   } catch (error) {
-    console.error('Error saving edit order to storage:', error);
+    logger.error('cart', 'Error saving edit order to storage:', error);
   }
 };
 
@@ -136,7 +137,7 @@ export const CartProvider = ({ children, restaurantId }) => {
             setCart(cartData);
           }
         } catch (error) {
-          console.error('Error parsing cart from storage event:', error);
+          logger.error('cart', 'Error parsing cart from storage event:', error);
         } finally {
           // Reset flag after a short delay to allow state update
           setTimeout(() => {
@@ -175,7 +176,7 @@ export const CartProvider = ({ children, restaurantId }) => {
       localStorage.removeItem(getCartKey(prevRestaurantId));
       localStorage.removeItem(getEditOrderKey(prevRestaurantId));
       
-      console.log(`Restaurant changed from ${prevRestaurantId} to ${restaurantId} - cleared all cart state`);
+      logger.cart(`Restaurant changed from ${prevRestaurantId} to ${restaurantId} - cleared all cart state`);
     }
     
     // Store current restaurant ID for next comparison

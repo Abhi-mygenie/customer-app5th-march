@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useRestaurantId } from '../utils/useRestaurantId';
+import logger from '../utils/logger';
 
 /**
  * Hook to manage scanned table/room information from QR code
@@ -60,7 +61,7 @@ export const useScannedTable = () => {
         setScannedTable(null);
       }
     } catch (error) {
-      console.error('Error reading scanned table:', error);
+      logger.error('table', 'Error reading scanned table:', error);
       setScannedTable(null);
     }
   }, [restaurantId, searchParams]);

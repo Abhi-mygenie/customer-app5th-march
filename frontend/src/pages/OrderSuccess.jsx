@@ -10,6 +10,7 @@ import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { getOrderDetails, checkTableStatus } from '../api/services/orderService';
 import { getStoredToken } from '../utils/authToken';
 import { ENDPOINTS } from '../api/config/endpoints';
+import logger from '../utils/logger';
 // Import centralized transformers - SINGLE SOURCE OF TRUTH for label formatting
 import { getVariationLabels, getAddonLabels } from '../api/transformers/helpers';
 import Header from '../components/Header/Header';
@@ -162,7 +163,7 @@ const OrderSuccess = () => {
       if (paymentVerified) return;
 
       setIsVerifyingPayment(true);
-      console.log('[Payment] Verifying payment:', {
+      logger.payment('Verifying payment:', {
         razorpay_order_id: orderData.razorpayOrderId,
         razorpay_payment_id: orderData.paymentId,
         razorpay_signature: orderData.razorpaySignature
@@ -183,17 +184,17 @@ const OrderSuccess = () => {
         });
 
         const result = await response.json();
-        console.log('[Payment] Verification result:', result);
+        logger.payment('Verification result:', result);
 
         if (result.status === 'success') {
           setPaymentVerified(true);
           toast.success('Payment verified successfully!');
         } else {
-          console.error('[Payment] Verification failed:', result.message);
+          logger.error('payment', 'Verification failed:', result.message);
           toast.error(result.message || 'Payment verification failed');
         }
       } catch (error) {
-        console.error('[Payment] Verification error:', error);
+        logger.error('payment', 'Verification error:', error);
         toast.error('Payment verification failed. Please contact support.');
       } finally {
         setIsVerifyingPayment(false);
@@ -232,7 +233,7 @@ const OrderSuccess = () => {
             return;
           }
         } catch (tableCheckErr) {
-          console.error('Table status check failed:', tableCheckErr);
+          logger.error('table', 'Table status check failed:', tableCheckErr);
         }
       }
 
@@ -326,7 +327,7 @@ const OrderSuccess = () => {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch order status:', error);
+      logger.error('order', 'Failed to fetch order status:', error);
       
       // If order not found (deleted), clear state and redirect
       if (error?.response?.status === 404 || error?.response?.data?.errors) {
@@ -395,7 +396,7 @@ const OrderSuccess = () => {
 
   const handleEditOrder = async () => {
     if (!orderData?.orderId) {
-      console.error('No order ID available for editing');
+      logger.error('order', 'No order ID available for editing');
       return;
     }
 
@@ -446,7 +447,7 @@ const OrderSuccess = () => {
         navigate(`/${restaurantId}/menu`, { replace: true });
       }
     } catch (error) {
-      console.error('Failed to fetch order details for editing:', error);
+      logger.error('order', 'Failed to fetch order details for editing:', error);
       // Still allow navigation even if API fails
       navigate(`/${restaurantId}/review-order`, { replace: true });
     } finally {
@@ -456,12 +457,12 @@ const OrderSuccess = () => {
 
   const handleCallWaiter = () => {
     // TODO: Integrate with call waiter API
-    console.log('Call waiter triggered for order', orderData.orderId);
+    logger.order('Call waiter triggered for order', orderData.orderId);
   };
 
   const handlePayBill = () => {
     // TODO: Integrate with pay bill flow
-    console.log('Pay bill triggered for order', orderData.orderId);
+    logger.order('Pay bill triggered for order', orderData.orderId);
   };
 
   // Config flags

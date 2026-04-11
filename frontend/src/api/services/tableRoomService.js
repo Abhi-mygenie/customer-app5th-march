@@ -5,6 +5,7 @@
 
 import apiClient from '../config/axios';
 import { ENDPOINTS } from '../config/endpoints';
+import logger from '../../utils/logger';
 
 /**
  * Get table configuration for a restaurant
@@ -46,7 +47,7 @@ export const getTableConfig = async (restaurantId) => {
       tables
     };
   } catch (error) {
-    console.error('[TableRoomService] Failed to fetch table config:', error);
+    logger.error('table', 'Failed to fetch table config:', error);
     throw error;
   }
 };

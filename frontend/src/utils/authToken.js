@@ -1,6 +1,7 @@
 // src/utils/authToken.js
 
 import apiClient from '../api/config/axios';
+import logger from './logger';
 
 // Storage keys
 const TOKEN_STORAGE_KEY = 'order_auth_token';
@@ -16,7 +17,7 @@ const HARDCODED_PASSWORD = process.env.REACT_APP_LOGIN_PASSWORD;
 
 // Validate credentials are configured
 if (!HARDCODED_PHONE || !HARDCODED_PASSWORD) {
-  console.error('[Auth] CRITICAL: Missing REACT_APP_LOGIN_PHONE or REACT_APP_LOGIN_PASSWORD in environment');
+  logger.error('auth', 'CRITICAL: Missing REACT_APP_LOGIN_PHONE or REACT_APP_LOGIN_PASSWORD in environment');
 }
 
 /**

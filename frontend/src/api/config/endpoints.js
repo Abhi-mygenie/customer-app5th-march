@@ -4,9 +4,11 @@
  */
 
 // DFA-001 fix: No fallback — fail visibly if env var missing
+import logger from '../../utils/logger';
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 if (!API_BASE_URL) {
-  console.error('[ENDPOINTS] CRITICAL: REACT_APP_API_BASE_URL is not set in .env. API calls will fail.');
+  logger.error('api', 'CRITICAL: REACT_APP_API_BASE_URL is not set in .env. API calls will fail.');
 }
 
 export const ENDPOINTS = {

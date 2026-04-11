@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DEFAULT_THEME } from '../constants/theme';
+import logger from '../utils/logger';
 
 const RestaurantConfigContext = createContext(null);
 
@@ -132,7 +133,7 @@ export const RestaurantConfigProvider = ({ children }) => {
         return true;
       }
     } catch (error) {
-      console.error('Failed to load config from cache:', error);
+      logger.error('menu', 'Failed to load config from cache:', error);
     }
     return false;
   }, []);
@@ -142,7 +143,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     try {
       localStorage.setItem(getConfigCacheKey(restaurantId), JSON.stringify(data));
     } catch (error) {
-      console.error('Failed to save config to cache:', error);
+      logger.error('menu', 'Failed to save config to cache:', error);
     }
   };
 
@@ -164,7 +165,7 @@ export const RestaurantConfigProvider = ({ children }) => {
         saveConfigToCache(restaurantId, data);
       }
     } catch (error) {
-      console.error('Failed to fetch restaurant config:', error);
+      logger.error('menu', 'Failed to fetch restaurant config:', error);
     } finally {
       setConfigLoading(false);
     }
@@ -193,7 +194,7 @@ export const RestaurantConfigProvider = ({ children }) => {
         localStorage.setItem(cacheKey, JSON.stringify(data));
       }
     } catch (error) {
-      console.error('Failed to refresh restaurant config:', error);
+      logger.error('menu', 'Failed to refresh restaurant config:', error);
     } finally {
       setConfigLoading(false);
     }

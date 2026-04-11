@@ -3,6 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { useAuth } from '../../context/AuthContext';
+import logger from '../../utils/logger';
 import {
   IoQrCodeOutline,
   IoDownloadOutline,
@@ -181,7 +182,7 @@ const AdminQRPage = () => {
       const content = await zip.generateAsync({ type: 'blob' });
       saveAs(content, `${folderName}-${selectedMenu}-qr-codes.zip`);
     } catch (e) {
-      console.error('ZIP generation failed:', e);
+      logger.error('admin', 'ZIP generation failed:', e);
     } finally {
       setZipping(false);
     }

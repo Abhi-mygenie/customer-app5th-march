@@ -33,6 +33,7 @@ import { getRestaurantProducts, getRestaurantDetails, getMenuMaster } from '../.
 import { isMultipleMenu } from '../../api/utils/restaurantIdConfig';
 import { useAuth } from '../../context/AuthContext';
 import './MenuOrderTab.css';
+import logger from '../../utils/logger';
 
 // Sortable Item Component
 const SortableItem = ({ id, children }) => {
@@ -350,7 +351,7 @@ const MenuOrderTab = ({ config, setConfig }) => {
       setApiCategories(cats);
       setApiItems(items);
     } catch (err) {
-      console.error('Failed to fetch categories:', err);
+      logger.error('admin', 'Failed to fetch categories:', err);
     } finally {
       setLoading(false);
     }
@@ -383,7 +384,7 @@ const MenuOrderTab = ({ config, setConfig }) => {
       setStationCategories(catResults);
       setStationItems(itemResults);
     } catch (err) {
-      console.error('Failed to fetch station categories:', err);
+      logger.error('admin', 'Failed to fetch station categories:', err);
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { IoFlameOutline, IoNutritionOutline, IoWarningOutline, IoInformationCirc
 import QuantitySelector from '../QuantitySelector/QuantitySelector';
 import { isItemAvailable } from '../../utils/itemAvailability';
 import './MenuItem.css';
+import logger from '../../utils/logger';
 
 const MenuItem = ({
   item,
@@ -189,7 +190,7 @@ const MenuItem = ({
                 className="default-food-icon"
                 onError={(e) => {
                   // Fallback if default image also fails to load
-                  console.error('Default image failed to load:', e.target.src);
+                  logger.error('menu', 'Default image failed to load:', e.target.src);
                   e.target.style.display = 'none';
                 }}
               />

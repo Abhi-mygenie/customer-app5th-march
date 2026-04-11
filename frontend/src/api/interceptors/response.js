@@ -5,14 +5,14 @@
 
 import { getErrorType, ErrorTypes } from '../utils/errorHandler';
 import { getAuthToken, clearStoredToken } from '../../utils/authToken';
+import logger from '../../utils/logger';
 
 /**
  * Response interceptor
  * Transforms response data and handles common response patterns
  */
 export const responseInterceptor = (response) => {
-  // Console logging for debugging
-  console.log('%c[API RESPONSE]', 'color: #4CAF50; font-weight: bold', {
+  logger.api('RESPONSE', {
     url: response.config?.url,
     status: response.status,
     data: response.data
@@ -35,8 +35,7 @@ export const responseErrorInterceptor = async (error) => {
   const originalRequest = error.config;
   const errorType = getErrorType(error);
 
-  // Console logging for errors
-  console.log('%c[API ERROR]', 'color: #F44336; font-weight: bold', {
+  logger.api('ERROR', {
     url: error.config?.url,
     method: error.config?.method,
     status: error.response?.status,
@@ -90,16 +89,13 @@ export const responseErrorInterceptor = async (error) => {
     window.dispatchEvent(new CustomEvent('auth:unauthorized'));
   }
 
-  // Log error for debugging (remove in production or use proper logging service)
-  if (process.env.NODE_ENV === 'development') {
-    console.error('API Error:', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
-  }
+  logger.error('api', 'API Error:', {
+    url: error.config?.url,
+    method: error.config?.method,
+    status: error.response?.status,
+    message: error.message,
+    data: error.response?.data,
+  });
 
   return Promise.reject(error);
 };

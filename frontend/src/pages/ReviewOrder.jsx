@@ -26,6 +26,7 @@ import TableRoomSelector from '../components/TableRoomSelector/TableRoomSelector
 import LoyaltyRewardsSection from '../components/LoyaltyRewardsSection/LoyaltyRewardsSection';
 import { calculateCartItemPrice } from '../api/transformers/helpers';
 import { calculateTaxBreakdown } from '../utils/taxCalculation';
+import logger from '../utils/logger';
 import './ReviewOrder.css';
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
@@ -112,7 +113,7 @@ const ReviewOrder = () => {
           setLoyaltySettings(data);
         }
       } catch (error) {
-        console.error('Failed to fetch loyalty settings:', error);
+        logger.error('order', 'Failed to fetch loyalty settings:', error);
       }
     };
     fetchLoyaltySettings();
@@ -310,7 +311,7 @@ const ReviewOrder = () => {
       // Clear auth token on restaurant change
       localStorage.removeItem('auth_token');
       
-      console.log(`Restaurant changed from ${prevRestaurantId} to ${numericRestaurantId} - cleared all form states`);
+      logger.order(`Restaurant changed from ${prevRestaurantId} to ${numericRestaurantId} - cleared all form states`);
     }
     
     // Store current restaurant ID for next comparison (CartContext also does this, but this ensures it's set)
@@ -350,7 +351,7 @@ const ReviewOrder = () => {
           }
         }
       } catch (error) {
-        console.error('Customer lookup failed:', error);
+        logger.error('order', 'Customer lookup failed:', error);
       } finally {
         setIsLookingUp(false);
       }
@@ -498,10 +499,10 @@ const ReviewOrder = () => {
   const taxBreakdown = useMemo(() => {
     const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
     
-    console.log('=== TAX DEBUG START ===');
-    console.log('GST Status (restaurant level):', isGstEnabled);
-    console.log('Cart items (new):', cartItems.length);
-    console.log('Previous order items:', previousOrderItems?.length || 0);
+    logger.tax('=== TAX DEBUG START ===');
+    logger.tax('GST Status (restaurant level):', isGstEnabled);
+    logger.tax('Cart items (new):', cartItems.length);
+    logger.tax('Previous order items:', previousOrderItems?.length || 0);
 
     // Normalize NEW cart items
     const newItems = cartItems.map((cartItem, index) => {
@@ -509,9 +510,9 @@ const ReviewOrder = () => {
       const taxPercent = parseFloat(cartItem.item.tax) || 0;
       const taxType = cartItem.item.tax_type || 'GST';
 
-      console.log(`New Item ${index + 1}: ${cartItem.item.name?.substring(0, 20)}`);
-      console.log(`  - Price: ₹${fullPrice}, Qty: ${cartItem.quantity}`);
-      console.log(`  - Tax: ${taxPercent}% (${taxType})`);
+      logger.tax(`New Item ${index + 1}: ${cartItem.item.name?.substring(0, 20)}`);
+      logger.tax(`  - Price: ₹${fullPrice}, Qty: ${cartItem.quantity}`);
+      logger.tax(`  - Tax: ${taxPercent}% (${taxType})`);
 
       return { fullPrice, quantity: cartItem.quantity, taxPercent, taxType, isCancelled: false };
     });
@@ -525,9 +526,9 @@ const ReviewOrder = () => {
       const isCancelled = prevItem.foodStatus === 3;
 
       if (!isCancelled) {
-        console.log(`Previous Item ${index + 1}: ${prevItem.item?.name?.substring(0, 20)}`);
-        console.log(`  - Full Price: ₹${fullPrice}, Qty: ${quantity}`);
-        console.log(`  - Tax: ${taxPercent}% (${taxType})`);
+        logger.tax(`Previous Item ${index + 1}: ${prevItem.item?.name?.substring(0, 20)}`);
+        logger.tax(`  - Full Price: ₹${fullPrice}, Qty: ${quantity}`);
+        logger.tax(`  - Tax: ${taxPercent}% (${taxType})`);
       }
 
       return { fullPrice, quantity, taxPercent, taxType, isCancelled };
@@ -535,10 +536,10 @@ const ReviewOrder = () => {
 
     const result = calculateTaxBreakdown([...newItems, ...prevItems], isGstEnabled);
 
-    console.log('=== TAX DEBUG SUMMARY ===');
-    console.log(`Total GST: ₹${result.totalGst} (CGST: ₹${result.cgst}, SGST: ₹${result.sgst})`);
-    console.log(`Total VAT: ₹${result.vat}`);
-    console.log('=== TAX DEBUG END ===');
+    logger.tax('=== TAX DEBUG SUMMARY ===');
+    logger.tax(`Total GST: ₹${result.totalGst} (CGST: ₹${result.cgst}, SGST: ₹${result.sgst})`);
+    logger.tax(`Total VAT: ₹${result.vat}`);
+    logger.tax('=== TAX DEBUG END ===');
 
     return result;
   }, [cartItems, previousOrderItems, restaurant?.gst_status]);
@@ -739,7 +740,7 @@ const ReviewOrder = () => {
     // === CA-008 Phase 2: Shared Razorpay checkout function ===
     // Defined BEFORE try/catch so it's accessible in both main flow and 401 retry flow
     const openRazorpayCheckout = async (orderResponse, label = 'Razorpay') => {
-      console.log(`[${label}] Payment required:`, {
+      logger.razorpay(`[${label}] Payment required:`, {
         razorpay_id: orderResponse.razorpay_id,
         razorpay_key: restaurant.razorpay.razorpay_key,
         order_id: orderResponse.order_id,
@@ -753,7 +754,7 @@ const ReviewOrder = () => {
       });
 
       const razorpayOrder = await createOrderResponse.json();
-      console.log(`[${label}] Create order response:`, razorpayOrder);
+      logger.razorpay(`[${label}] Create order response:`, razorpayOrder);
 
       if (razorpayOrder.error) {
         throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
@@ -769,7 +770,7 @@ const ReviewOrder = () => {
         description: `Order #${orderResponse.order_id}`,
         order_id: razorpayOrder.order_id,
         handler: function (paymentResponse) {
-          console.log(`[${label}] Payment success:`, paymentResponse);
+          logger.razorpay(`[${label}] Payment success:`, paymentResponse);
           clearCart();
           navigate(`/${restaurantId}/order-success`, {
             state: {
@@ -795,7 +796,7 @@ const ReviewOrder = () => {
         },
         modal: {
           ondismiss: function () {
-            console.log(`[${label}] Payment modal dismissed`);
+            logger.razorpay(`[${label}] Payment modal dismissed`);
             toast.error('Payment cancelled');
             setIsPlacingOrder(false);
             isPlacingOrderRef.current = false;
@@ -841,7 +842,7 @@ const ReviewOrder = () => {
               return;
             }
           } catch (tableCheckErr) {
-            console.error('Table status check failed:', tableCheckErr);
+            logger.error('table', 'Table status check failed:', tableCheckErr);
             // Continue with order on error (fail-safe)
           }
         }
@@ -880,7 +881,7 @@ const ReviewOrder = () => {
             toast.success('Order updated successfully!');
           }
         } catch (orderCheckErr) {
-          console.error('Failed to verify order status:', orderCheckErr);
+          logger.error('order', 'Failed to verify order status:', orderCheckErr);
           // On error, try to update anyway (fail-safe)
           response = await updateCustomerOrder({
             orderId: editingOrderId,
@@ -925,7 +926,7 @@ const ReviewOrder = () => {
               return;
             }
           } catch (tableCheckErr) {
-            console.error('Table status check failed:', tableCheckErr);
+            logger.error('table', 'Table status check failed:', tableCheckErr);
             // Continue with order on error (fail-safe)
           }
         }
@@ -945,7 +946,7 @@ const ReviewOrder = () => {
         const shouldTriggerRazorpay = paymentMethod === 'online' && hasRazorpayKey;
         
         // DEBUG: Log payment configuration before placing order
-        console.log('[FEAT-001] Payment Config:', {
+        logger.order('[FEAT-001] Payment Config:', {
           paymentMethod,
           selectedPaymentType,
           shouldTriggerRazorpay,
@@ -981,7 +982,7 @@ const ReviewOrder = () => {
       }
 
       // DEBUG: Log full response to verify razorpay_id
-      console.log('[PlaceOrder Response]', response);
+      logger.order('[PlaceOrder Response]', response);
 
       // Check if Razorpay payment flow needed (only for online payment selection)
       const shouldProcessRazorpay = paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key;
@@ -991,7 +992,7 @@ const ReviewOrder = () => {
           await openRazorpayCheckout(response, 'Razorpay');
           return; // Don't proceed to success page yet - wait for payment
         } catch (razorpayError) {
-          console.error('[Razorpay] Failed to create order:', razorpayError);
+          logger.error('razorpay', 'Failed to create order:', razorpayError);
           toast.error('Payment initialization failed. Please try again.');
           setIsPlacingOrder(false);
           isPlacingOrderRef.current = false;
@@ -1103,7 +1104,7 @@ const ReviewOrder = () => {
               await openRazorpayCheckout(retryResponse, 'Razorpay-Retry');
               return; // Wait for payment
             } catch (razorpayError) {
-              console.error('[Razorpay-Retry] Failed:', razorpayError);
+              logger.error('razorpay', 'Retry failed:', razorpayError);
               toast.error('Payment initialization failed. Please try again.');
               setIsPlacingOrder(false);
               isPlacingOrderRef.current = false;
@@ -1128,7 +1129,7 @@ const ReviewOrder = () => {
           });
 
         } catch (retryError) {
-          console.error('[ReviewOrder] Failed to place order after retry:', retryError);
+          logger.error('order', 'Failed to place order after retry:', retryError);
           toast.error('Session expired. Please refresh the page and try again.');
         }
       } else {

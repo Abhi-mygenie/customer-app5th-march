@@ -6,6 +6,7 @@ import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantDetails } from '../hooks/useMenuData';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import './Login.css';
+import logger from '../utils/logger';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -49,7 +50,7 @@ const Login = () => {
     setError('');
     try {
       // DEBUG: Log request details
-      console.log('[BUG-036 DEBUG] Login Request:', {
+      logger.auth('[BUG-036 DEBUG] Login Request:', {
         url: `${API_URL}/api/auth/login`,
         phone: phone.trim(),
         restaurant_id: restaurantId,
@@ -69,15 +70,15 @@ const Login = () => {
       
       // DEBUG: Log raw response
       const rawText = await res.text();
-      console.log('[BUG-036 DEBUG] Raw Response:', rawText);
-      console.log('[BUG-036 DEBUG] Response Status:', res.status);
+      logger.auth('[BUG-036 DEBUG] Raw Response:', rawText);
+      logger.auth('[BUG-036 DEBUG] Response Status:', res.status);
       
       // Try to parse JSON
       let data;
       try {
         data = JSON.parse(rawText);
       } catch (parseError) {
-        console.error('[BUG-036 DEBUG] JSON Parse Error:', parseError);
+        logger.error('auth', '[BUG-036 DEBUG] JSON Parse Error:', parseError);
         throw new Error(`Invalid JSON response: ${rawText.substring(0, 100)}`);
       }
       

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 import { DEFAULT_THEME } from '../constants/theme';
+import logger from '../utils/logger';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -162,7 +163,7 @@ export const AdminConfigProvider = ({ children }) => {
           });
         }
       } catch (error) {
-        console.error('Failed to load admin config:', error);
+        logger.error('admin', 'Failed to load admin config:', error);
         toast.error('Failed to load configuration');
       } finally {
         setLoading(false);
@@ -212,7 +213,7 @@ export const AdminConfigProvider = ({ children }) => {
         throw new Error('Failed to save');
       }
     } catch (error) {
-      console.error('Failed to save config:', error);
+      logger.error('admin', 'Failed to save config:', error);
       toast.error('Failed to save settings');
     } finally {
       setSaving(false);

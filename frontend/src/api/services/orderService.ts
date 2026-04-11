@@ -6,6 +6,7 @@
 
 import apiClient from '../config/axios';
 import { ENDPOINTS } from '../config/endpoints';
+import logger from '../../utils/logger';
 
 // Import RECEIVE transformers (API → App)
 import {
@@ -64,7 +65,7 @@ const getStoredToken = async () => {
       return newToken;
     }
   } catch (e) {
-    console.error('[OrderService] Token refresh failed:', e);
+    logger.error('order', 'Token refresh failed:', e);
   }
   return null;
 };
@@ -101,7 +102,7 @@ export const checkTableStatus = async (
       isInvalid: tableStatus === 'Invalid Table ID or QR code',
     };
   } catch (error: any) {
-    console.error('[OrderService] Failed to check table status:', error);
+    logger.error('table', 'Failed to check table status:', error);
     return {
       tableStatus: 'Available',
       orderId: null,
@@ -228,7 +229,7 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       }
     };
   } catch (error) {
-    console.error('[OrderService] Failed to fetch order details:', error);
+    logger.error('order', 'Failed to fetch order details:', error);
     throw error;
   }
 };
@@ -332,7 +333,7 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
     };
 
     // DEBUG: Log payload before sending to API
-    console.log('[BUG-035 TEST] placeOrder Payload:', {
+    logger.order('[BUG-035 TEST] placeOrder Payload:', {
       payment_type: payloadData.payment_type,
       restaurant_id: payloadData.restaurant_id,
       table_id: payloadData.table_id,
@@ -353,7 +354,7 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
 
     return response.data;
   } catch (error: any) {
-    console.error('[OrderService] Failed to place order:', error);
+    logger.error('order', 'Failed to place order:', error);
     throw error;
   }
 };
@@ -454,7 +455,7 @@ export const updateCustomerOrder = async ({
 
     return response.data;
   } catch (error: any) {
-    console.error('[OrderService] Failed to update customer order:', error);
+    logger.error('order', 'Failed to update customer order:', error);
     throw error;
   }
 };
