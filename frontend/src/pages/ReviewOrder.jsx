@@ -714,6 +714,14 @@ const ReviewOrder = () => {
 
       // Check if we're in edit mode
       if (isEditMode && editingOrderId) {
+        // ═══ BUG-P2-004 VALIDATION LOG ═══
+        console.warn('[BUG-P2-004] EDIT ORDER - orderDispatchedRef NOT SET:', {
+          orderDispatchedRef: orderDispatchedRef.current,
+          explanation: 'Edit flow does NOT set orderDispatchedRef=true before API call. If network drops during updateCustomerOrder, catch block wont show duplicate-prevention warning.',
+          newOrderFlowSetsIt: 'Yes (line with orderDispatchedRef.current = true)',
+          editOrderFlowSetsIt: 'NO - this is the bug'
+        });
+        
         // FIRST: Check if table is still occupied before updating
         if (finalTableId && String(finalTableId) !== '0') {
           try {
@@ -912,6 +920,30 @@ const ReviewOrder = () => {
             handler: function (paymentResponse) {
               // Payment successful
               console.log('[Razorpay] Payment success:', paymentResponse);
+              
+              // ═══ BUG-P2-006 VALIDATION LOG ═══
+              // Razorpay success navigates WITHOUT billSummary, items, previousItems
+              // OrderSuccess page CAN fetch from API, but pointsDiscount/pointsRedeemed
+              // are only available from passedBillSummary (not in API response)
+              console.warn('[BUG-P2-006] RAZORPAY SUCCESS - DATA PASSED vs MISSING:', {
+                PASSED: {
+                  orderId: response.order_id,
+                  totalToPay: response.total_amount,
+                  paymentId: '(from razorpay)',
+                  isPaid: true,
+                },
+                MISSING_vs_COD_FLOW: {
+                  billSummary: 'NOT PASSED (COD flow passes full billSummary)',
+                  items: 'NOT PASSED (COD flow passes newOrderItems)',
+                  previousItems: 'NOT PASSED (COD flow passes prevItems)',
+                  isEditedOrder: 'NOT PASSED',
+                },
+                IMPACT: {
+                  pointsDiscount: pointsDiscount > 0 ? `₹${pointsDiscount} LOST on success page` : 'No points used, no impact',
+                  pointsRedeemed: pointsToRedeem > 0 ? `${pointsToRedeem} points LOST on success page` : 'No points used, no impact',
+                }
+              });
+
               // Clear cart and navigate to success page
               clearCart();
               navigate(`/${restaurantId}/order-success`, {
@@ -937,9 +969,20 @@ const ReviewOrder = () => {
             modal: {
               ondismiss: function () {
                 console.log('[Razorpay] Payment modal closed');
+                
+                // ═══ BUG-P2-007 VALIDATION LOG ═══
+                console.warn('[BUG-P2-007] RAZORPAY DISMISS - REF STATE:', {
+                  orderDispatchedRef_BEFORE_RESET: orderDispatchedRef.current,
+                  isPlacingOrderRef_BEFORE_RESET: isPlacingOrderRef.current,
+                  explanation: orderDispatchedRef.current 
+                    ? 'BUG: orderDispatchedRef is still true after dismiss. If user retries and gets network error, they will see misleading "order may have been sent" warning.'
+                    : 'orderDispatchedRef already false, no issue.'
+                });
+
                 toast.error('Payment cancelled');
                 setIsPlacingOrder(false);
                 isPlacingOrderRef.current = false;
+                // NOTE: orderDispatchedRef.current is NOT reset here (potential BUG-P2-007)
               }
             }
           };
@@ -1062,6 +1105,23 @@ const ReviewOrder = () => {
             // Determine payment type: 'prepaid' for Razorpay, 'postpaid' for COD
             const isRazorpayEnabledRetry = !!restaurant?.razorpay?.razorpay_key;
             
+            // ═══ BUG-P2-001 VALIDATION LOG ═══
+            // Main flow uses: paymentMethod === 'online' ? 'prepaid' : 'postpaid'
+            // Retry uses: isRazorpayEnabledRetry ? 'prepaid' : 'postpaid'
+            // These CAN differ when user chose COD but restaurant has Razorpay key
+            const mainFlowPaymentType = paymentMethod === 'online' ? 'prepaid' : 'postpaid';
+            const retryPaymentType = isRazorpayEnabledRetry ? 'prepaid' : 'postpaid';
+            console.warn('[BUG-P2-001] 401 RETRY PAYMENT TYPE VALIDATION:', {
+              userSelectedPaymentMethod: paymentMethod,
+              mainFlowWouldSend: mainFlowPaymentType,
+              retryActuallySends: retryPaymentType,
+              hasRazorpayKey: isRazorpayEnabledRetry,
+              BUG_TRIGGERED: mainFlowPaymentType !== retryPaymentType,
+              explanation: mainFlowPaymentType !== retryPaymentType 
+                ? 'BUG CONFIRMED: User chose COD but retry sends prepaid because Razorpay key exists!'
+                : 'No mismatch in this case'
+            });
+
             retryResponse = await placeOrder({
               cartItems,
               customerName,
@@ -1083,6 +1143,21 @@ const ReviewOrder = () => {
               paymentType: isRazorpayEnabledRetry ? 'prepaid' : 'postpaid'
             });
           }
+
+          // ═══ BUG-P2-003 VALIDATION LOG ═══
+          // After 401 retry, we go straight to success navigation
+          // We NEVER check shouldProcessRazorpay for the retry response
+          const shouldRetryRazorpay = paymentMethod === 'online' && retryResponse?.razorpay_id && restaurant?.razorpay?.razorpay_key;
+          console.warn('[BUG-P2-003] 401 RETRY SKIPS RAZORPAY VALIDATION:', {
+            userSelectedOnlinePayment: paymentMethod === 'online',
+            retryResponseHasRazorpayId: !!retryResponse?.razorpay_id,
+            restaurantHasRazorpayKey: !!restaurant?.razorpay?.razorpay_key,
+            shouldHaveTriggeredRazorpay: shouldRetryRazorpay,
+            BUG_TRIGGERED: shouldRetryRazorpay,
+            explanation: shouldRetryRazorpay
+              ? 'BUG CONFIRMED: Retry should open Razorpay checkout but goes straight to success page!'
+              : 'No Razorpay needed for this retry'
+          });
 
           // Clear cart after successful order
           clearCart();

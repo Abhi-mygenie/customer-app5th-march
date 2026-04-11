@@ -8,6 +8,11 @@
 
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
+| BUG-042 | 401 retry skips table status check | 🔴 P0 | ⏳ Discussion | Apr 11 | - | Needs POS-side table free/engaged API clarity |
+| BUG-041 | 401 retry wrong payment type (COD→prepaid) | 🔴 P0 | ⏳ Pending | Apr 11 | - | Uses razorpay_key existence instead of user selection |
+| BUG-040 | 401 retry skips Razorpay checkout | 🟡 P1 | ⏳ Pending | Apr 11 | - | Retry goes to success page without opening payment modal |
+| BUG-039 | Edit order missing orderDispatchedRef | 🟡 P1 | ⏳ To Discuss | Apr 11 | - | Network drop during edit shows wrong error msg |
+| BUG-038 | Razorpay success missing billSummary (points only) | 🟢 P2 | ⏳ To Validate | Apr 11 | - | pointsDiscount/pointsRedeemed lost, rest from API |
 | BUG-037 | OG/Meta shows "Hyatt Centric" hardcoded | 🟢 P2 | ⏳ Pending | Apr 11 | - | index.html meta description hardcoded, should be dynamic per restaurant |
 | BUG-036 | Login JSON parse error | 🔴 P0 | ✅ Fixed | Apr 10 | Apr 10 | Wrong backend URL in .env |
 | BUG-035 | f_order_status not set for Razorpay | 🔴 P0 | ⚠️ Partial | Mar 31 | Apr 10 | payment_type fixed, f_order_status TBD |
@@ -29,6 +34,88 @@
 | **Partial** | 1 |
 
 **Legend:** 🔴 P0 Critical | 🟡 P1 High | 🟢 P2 Medium | ✅ Fixed | ⚠️ Partial | 🔍 Debugging | ⏳ Pending | ⏸️ Parked
+
+---
+
+
+## BUG-042: 401 Retry Skips Table Status Check (NEEDS POS DISCUSSION)
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-042 |
+| **Date Reported** | 2026-04-11 |
+| **Severity** | 🔴 P0 - High |
+| **Status** | ⏳ Discussion Required |
+| **File** | `ReviewOrder.jsx` → `handlePlaceOrder` → 401 catch block |
+
+### Problem
+When a 401 error occurs during order placement, the retry block re-sends the order WITHOUT re-running table status checks. This means:
+- No check if table is occupied (new order)
+- No check if table is freed (edit order)
+- No check if order is cancelled/paid (edit order)
+- No Restaurant 716 skip logic
+
+### Core Question for POS Team
+**Should the customer app even be responsible for table status?** The POS API should be the source of truth:
+- If table is engaged → POS should reject duplicate orders with a clear error
+- If table is free → POS should allow the order
+- The customer app doing client-side table checks is a workaround for POS not enforcing this
+
+### All Possible Cases (table check during retry)
+
+| # | Scenario | What Happens Now (Bug) | What Should Happen | Impact |
+|---|---|---|---|---|
+| 1 | New order → 401 → table becomes occupied during retry | Retry places order → **duplicate order on table** | POS rejects OR retry checks table | 🔴 Duplicate order |
+| 2 | New order → 401 → table still free | Retry places order → **correct** | Same | ✅ OK |
+| 3 | Edit order → 401 → table freed during retry | Retry updates order → **update succeeds on freed table** | Redirect to fresh order OR POS rejects | 🟡 Order on wrong table |
+| 4 | Edit order → 401 → order cancelled by POS during retry | Retry updates cancelled order → **POS may reject** | Place as new order OR show error | 🟠 Failed update |
+| 5 | Edit order → 401 → order paid by POS during retry | Retry updates paid order → **POS may reject** | Show "already paid" message | 🟠 Failed update |
+| 6 | Restaurant 716 → 401 → retry | Retry does table check → **may block valid multi-order** | Skip table check (like main flow) | 🟡 Valid order blocked |
+
+### Recommended Discussion Points with POS Team
+1. Does POS API reject duplicate orders on the same table? If yes, client-side check is redundant
+2. Does POS API return specific error codes for table conflicts? (e.g., 409 Conflict)
+3. Should the customer app just send the order and handle POS rejection gracefully?
+4. Restaurant 716 skip — should this be a restaurant-level config in POS (`allow_multiple_orders_per_table`)?
+
+---
+
+## BUG-041: 401 Retry Uses Wrong Payment Type
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-041 |
+| **Date Reported** | 2026-04-11 |
+| **Severity** | 🔴 P0 - High |
+| **Status** | ⏳ Pending Fix |
+| **File** | `ReviewOrder.jsx` lines 1062-1083 |
+
+### Problem
+Main flow: `paymentMethod === 'online' ? 'prepaid' : 'postpaid'` (user's selection)
+Retry flow: `!!restaurant?.razorpay?.razorpay_key ? 'prepaid' : 'postpaid'` (key existence)
+
+When user chose COD at a Razorpay-enabled restaurant → 401 → retry sends `prepaid` instead of `postpaid`.
+
+### Validation
+Console log `[BUG-P2-001]` added — will show `BUG_TRIGGERED: true` when mismatch occurs.
+
+---
+
+## BUG-040: 401 Retry Skips Razorpay Checkout
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-040 |
+| **Date Reported** | 2026-04-11 |
+| **Severity** | 🟡 P1 - High |
+| **Status** | ⏳ Pending Fix |
+| **File** | `ReviewOrder.jsx` lines 1086-1132 |
+
+### Problem
+After 401 retry succeeds, code goes straight to `clearCart → navigateToSuccess`. Does NOT check if Razorpay payment flow should be triggered. User sees success page without paying.
+
+### Validation
+Console log `[BUG-P2-003]` added — will show `BUG_TRIGGERED: true` when Razorpay should have been opened.
 
 ---
 
