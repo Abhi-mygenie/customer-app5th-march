@@ -48,6 +48,25 @@ const webpackConfig = {
     },
     configure: (webpackConfig) => {
 
+      // CA-006: Strip console.log and console.warn in production builds
+      // Keeps console.error so real errors still surface in prod
+      if (process.env.NODE_ENV === 'production') {
+        const TerserPlugin = require('terser-webpack-plugin');
+        webpackConfig.optimization.minimizer = webpackConfig.optimization.minimizer.map(plugin => {
+          if (plugin instanceof TerserPlugin) {
+            return new TerserPlugin({
+              terserOptions: {
+                compress: {
+                  drop_console: false,
+                  pure_funcs: ['console.log', 'console.warn'],
+                },
+              },
+            });
+          }
+          return plugin;
+        });
+      }
+
       // Add ignored patterns to reduce watched directories
         webpackConfig.watchOptions = {
           ...webpackConfig.watchOptions,
