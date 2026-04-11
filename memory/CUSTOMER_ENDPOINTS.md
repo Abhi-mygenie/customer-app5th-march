@@ -803,14 +803,15 @@ curl -X POST "https://preprod.mygenie.online/api/v1/customer/order/place" \
 
 ---
 
-### 5.5 Place Order (Auto-Paid / Prepaid)
+### 5.5 Place Order (Auto-Paid / Prepaid) — Restaurant 716 ONLY
 
 | Field | Value |
 |-------|-------|
 | **Method** | `POST` |
 | **URL** | `/customer/order/autopaid-place-prepaid-order` |
 | **Auth** | Bearer token |
-| **Called by** | Frontend (ReviewOrder → online payment flow) |
+| **Called by** | Frontend (ReviewOrder) — **ONLY for restaurant 716 (Hyatt Centric)** |
+| **Note** | All other restaurants use `/customer/order/place` regardless of payment type |
 
 **cURL:**
 ```bash
@@ -818,13 +819,28 @@ curl -X POST "https://preprod.mygenie.online/api/v1/customer/order/autopaid-plac
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {pos_token}" \
   -d '{
-    "restaurant_id": "478",
+    "restaurant_id": "716",
     "order_type": "dinein",
     "table_id": "6182",
-    "payment_method": "Razorpay",
+    "payment_method": "cash_on_delivery",
+    "payment_type": "postpaid",
     "items": [...]
   }'
 ```
+
+**Payment Rules (applies to ALL endpoints):**
+
+| Field | Value | Rule |
+|-------|-------|------|
+| `payment_method` | Always `"cash_on_delivery"` | Hardcoded, never changes |
+| `payment_type` | `"prepaid"` if Razorpay, `"postpaid"` if COD | Based on user's UI selection, sent upfront |
+
+**Endpoint Routing:**
+
+| Restaurant | Endpoint |
+|-----------|----------|
+| 716 only | `/customer/order/autopaid-place-prepaid-order` |
+| All others | `/customer/order/place` |
 
 ---
 
@@ -1044,3 +1060,6 @@ Profile (authenticated)
   ├─ GET /api/customer/wallet
   └─ GET /api/customer/coupons
 ```
+
+---
+*Last Revised: April 11, 2026 — 21:30 IST | Updated: Session 12 — FEAT-002 Phase 1-2, BUG-043/044, payment fixes*

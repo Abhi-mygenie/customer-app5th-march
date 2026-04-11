@@ -599,3 +599,6 @@ See `/app/memory/API_MAPPING.md` for complete API field documentation.
 | Mar 25, 2026 | Session 2 | Initial audit created |
 | Apr 11, 2026 | Session 11 | CA-003 fixed — centralized price calculation. Replaced 4 inline duplications with `calculateCartItemPrice()` from helpers.js. ReviewOrder previous items now uses pre-computed `fullPrice` from transformer. Tested: cart totals match, prices display correctly. |
 | Apr 11, 2026 | Session 11 | CA-004 fixed — centralized tax calculation. Created /utils/taxCalculation.js with calculateItemTax() and calculateTaxBreakdown(). Replaced inline tax calc in ReviewOrder.jsx (~80 lines → normalized items array + utility call) and orderService.ts (~20 lines → same utility). Zero behavior change. Tested on restaurant 478 (GST 5% + VAT 4%): CGST/SGST/VAT breakdown correct. |
+
+---
+*Last Revised: April 11, 2026 — 21:30 IST | No changes this session*

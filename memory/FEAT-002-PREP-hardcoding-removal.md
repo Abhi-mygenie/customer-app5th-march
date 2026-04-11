@@ -383,3 +383,6 @@ Test the following MANUALLY or with test agent:
 **Estimated effort:** 2-3 hours for all fixes + 1-2 hours for regression testing
 
 **Key principle:** Every change should be backward-compatible. Existing dine-in and room QR codes must continue to work exactly as they do today.
+
+---
+*Last Revised: April 11, 2026 — 21:30 IST | Updated: Session 12 — FEAT-002 Phase 1-2, BUG-043/044, payment fixes*

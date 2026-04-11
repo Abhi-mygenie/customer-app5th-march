@@ -73,7 +73,7 @@ See `/app/memory/ARCHITECTURE.md` for full details.
 | 5 | `/web/table-config` | POST | ✅ Active | `useMenuData.js` |
 | 6 | `/air-bnb/get-order-details/{id}` | GET | ✅ Active | `orderService.js` |
 | 7 | `/customer/order/place` | POST | ✅ Active | `orderService.js` |
-| 8 | `/customer/order/autopaid-place-prepaid-order` | POST | ✅ Active | `orderService.js` |
+| 8 | `/customer/order/autopaid-place-prepaid-order` | POST | ✅ Active (716 ONLY) | `orderService.js` |
 | 9 | `/customer/check-table-status` | GET | ✅ Active | `orderService.js` |
 | 10 | `/restaurants/{id}/menu` | - | ❌ Dead | `endpoints.js` (never called) |
 | 11 | `/restaurants/{id}/menu/sections` | - | ❌ Dead | `endpoints.js` (never called) |
@@ -403,10 +403,12 @@ GET https://preprod.mygenie.online/api/v1/air-bnb/get-order-details/{orderId}
 POST https://preprod.mygenie.online/api/v1/customer/order/place
 ```
 
-### Endpoint (Multi-menu)
+### Endpoint (Multi-menu — Restaurant 716 ONLY uses autopaid)
 ```
-POST https://preprod.mygenie.online/api/v1/customer/order/autopaid-place-prepaid-order
+Restaurant 716: POST https://preprod.mygenie.online/api/v1/customer/order/autopaid-place-prepaid-order
+All others:     POST https://preprod.mygenie.online/api/v1/customer/order/place
 ```
+**Note:** Multi-menu restaurants other than 716 use the normal `/place` endpoint with `buildMultiMenuPayload` structure.
 
 ### Request Payload - Key Fields
 
@@ -959,3 +961,6 @@ const response = await fetch(ENDPOINTS.RAZORPAY_VERIFY_PAYMENT(), { ... });
 ```
 
 This resolves CRITICAL-006 from Audit V1.
+
+---
+*Last Revised: April 11, 2026 — 21:30 IST | Updated: Session 12 — FEAT-002 Phase 1-2, BUG-043/044, payment fixes*

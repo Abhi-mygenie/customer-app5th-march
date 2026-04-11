@@ -415,9 +415,10 @@
 |-------|---------|
 | **ID** | TC-080 |
 | **Priority** | P0 - Critical |
-| **Restaurant** | Any with `multiple_menu: 'Yes'` |
-| **Steps** | 1. Place order<br>2. Check network request |
-| **Expected** | Uses `/customer/order/autopaid-place-prepaid-order` endpoint |
+| **Restaurant** | Restaurant 716 (Hyatt Centric) ONLY |
+| **Steps** | 1. Place order on restaurant 716<br>2. Check network request |
+| **Expected** | Uses `/customer/order/autopaid-place-prepaid-order` endpoint. All other restaurants (including multi-menu) use `/customer/order/place` |
+| **Updated** | Apr 11, 2026 — BUG-043 fix: autopaid endpoint restricted to 716 only |
 
 ### TC-081: Multi-Menu - Payload Structure
 | Field | Details |
@@ -864,3 +865,6 @@
 | Mar 26, 2026 | Session 5 | Updated POS token flow test cases for localStorage architecture |
 | Mar 26, 2026 | Session 5 | Added Admin Login & POS Token test cases (TC-120 to TC-123) |
 | Mar 25, 2026 | Session 4 | Initial test cases document created |
+
+---
+*Last Revised: April 11, 2026 — 21:30 IST | Updated: Session 12 — FEAT-002 Phase 1-2, BUG-043/044, payment fixes*

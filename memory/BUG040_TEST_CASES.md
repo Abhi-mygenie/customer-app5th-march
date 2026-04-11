@@ -133,3 +133,6 @@ Temporarily break the RAZORPAY_CREATE_ORDER endpoint or use network throttling t
 | 5  | —   | Online  | No   | Opens           | Normal Razorpay flow |
 | 6  | —   | COD     | No   | No              | Normal COD flow |
 | 7  | 040 | Online  | Yes  | Fails           | Error toast, stay on page |
+
+---
+*Last Revised: April 11, 2026 — 21:30 IST | No changes this session*

@@ -293,13 +293,15 @@ POST {API_BASE_URL}/auth/login
   order_type: 'takeaway',
   table_id: '0',
   delivery_charge: '0',
+  payment_method: 'cash_on_delivery',  // ALWAYS — never changes
+  payment_type: 'postpaid',            // 'prepaid' only if Razorpay selected in UI
   address_id: '',
   address: '',
   latitude: '',
   longitude: '',
   cust_name: 'REQUIRED',
   cust_phone: 'REQUIRED',
-  // everything else same as dinein
+  // Endpoint: /customer/order/place (716 only uses autopaid)
 }
 ```
 
@@ -309,6 +311,8 @@ POST {API_BASE_URL}/auth/login
   order_type: 'delivery',
   table_id: '0',
   delivery_charge: '{from_distance_api}',
+  payment_method: 'cash_on_delivery',  // ALWAYS
+  payment_type: 'postpaid',            // 'prepaid' only if Razorpay
   address_id: '{from_saved_address_or_new}',
   address: '{full_address_text}',
   latitude: '{lat}',
@@ -395,3 +399,6 @@ POST {API_BASE_URL}/auth/login
 | April 11, 2026 | Complete rewrite — all decisions confirmed, 5 scenario flows mapped, 3 scanner types documented, phase plan finalized |
 | April 11, 2026 | Added FEAT-002-PREP audit results, key learnings, API endpoints |
 | April 11, 2026 | Initial planning document created |
+
+---
+*Last Revised: April 11, 2026 — 21:30 IST | Updated: Session 12 — FEAT-002 Phase 1-2, BUG-043/044, payment fixes*

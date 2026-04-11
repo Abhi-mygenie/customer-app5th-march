@@ -2483,3 +2483,6 @@ Multi-menu orders always sent prepaid regardless of user's payment choice.
 ### Action Required
 - POS backend team to fix: do not generate/return `razorpay_id` for postpaid orders
 - Frontend has a workaround but POS should be the source of truth
+
+---
+*Last Revised: April 11, 2026 — 21:30 IST | Updated: Session 12 — FEAT-002 Phase 1-2, BUG-043/044, payment fixes*
