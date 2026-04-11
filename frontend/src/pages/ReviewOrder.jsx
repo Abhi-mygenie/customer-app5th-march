@@ -1151,25 +1151,103 @@ const ReviewOrder = () => {
             });
           }
 
-          // ═══ BUG-P2-003 VALIDATION LOG ═══
-          // After 401 retry, we go straight to success navigation
-          // We NEVER check shouldProcessRazorpay for the retry response
+          // BUG-040 FIX: Check if Razorpay payment flow needed after 401 retry
           const shouldRetryRazorpay = paymentMethod === 'online' && retryResponse?.razorpay_id && restaurant?.razorpay?.razorpay_key;
-          console.warn('[BUG-P2-003] 401 RETRY SKIPS RAZORPAY VALIDATION:', {
-            userSelectedOnlinePayment: paymentMethod === 'online',
-            retryResponseHasRazorpayId: !!retryResponse?.razorpay_id,
-            restaurantHasRazorpayKey: !!restaurant?.razorpay?.razorpay_key,
-            shouldHaveTriggeredRazorpay: shouldRetryRazorpay,
-            BUG_TRIGGERED: shouldRetryRazorpay,
-            explanation: shouldRetryRazorpay
-              ? 'BUG CONFIRMED: Retry should open Razorpay checkout but goes straight to success page!'
-              : 'No Razorpay needed for this retry'
+          console.log('[BUG-040 FIX] 401 retry Razorpay check:', {
+            shouldRetryRazorpay,
+            paymentMethod,
+            hasRazorpayId: !!retryResponse?.razorpay_id,
+            hasRazorpayKey: !!restaurant?.razorpay?.razorpay_key
           });
 
-          // Clear cart after successful order
+          if (shouldRetryRazorpay) {
+            // Open Razorpay checkout for retry response (same as main flow)
+            try {
+              const createOrderResponse = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
+                method: 'POST',
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ order_id: String(retryResponse.order_id) })
+              });
+
+              const razorpayOrder = await createOrderResponse.json();
+              console.log('[BUG-040 FIX] Retry Razorpay create order:', razorpayOrder);
+
+              if (razorpayOrder.error) {
+                throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
+              }
+
+              const options = {
+                key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
+                amount: razorpayOrder.amount_in_paise || (retryResponse.total_amount * 100),
+                currency: 'INR',
+                name: restaurant?.name || 'Restaurant',
+                description: `Order #${retryResponse.order_id}`,
+                order_id: razorpayOrder.order_id,
+                handler: function (paymentResponse) {
+                  console.log('[BUG-040 FIX] Retry Razorpay payment success:', paymentResponse);
+                  clearCart();
+                  navigate(`/${restaurantId}/order-success`, {
+                    state: {
+                      orderData: {
+                        orderId: retryResponse.order_id,
+                        totalToPay: retryResponse.total_amount,
+                        paymentId: paymentResponse.razorpay_payment_id,
+                        razorpayOrderId: paymentResponse.razorpay_order_id,
+                        razorpaySignature: paymentResponse.razorpay_signature,
+                        isPaid: true,
+                        isEditedOrder: isEditMode,
+                        billSummary: {
+                          itemTotal: itemTotal,
+                          pointsDiscount: pointsDiscount,
+                          pointsRedeemed: pointsToRedeem,
+                          subtotal: subtotalAfterDiscount,
+                          cgst: adjustedCgst,
+                          sgst: adjustedSgst,
+                          vat: adjustedVat,
+                          totalTax: adjustedTotalTax,
+                          grandTotal: roundedTotal,
+                          originalTotal: hasRoundingDiff ? totalToPay : null
+                        }
+                      }
+                    }
+                  });
+                },
+                prefill: {
+                  name: customerName || '',
+                  contact: customerPhone || ''
+                },
+                theme: {
+                  color: restaurant?.primaryColor || DEFAULT_THEME.primaryColor
+                },
+                modal: {
+                  ondismiss: function () {
+                    console.log('[BUG-040 FIX] Retry Razorpay modal dismissed');
+                    toast.error('Payment cancelled');
+                    setIsPlacingOrder(false);
+                    isPlacingOrderRef.current = false;
+                    orderDispatchedRef.current = false;
+                  }
+                }
+              };
+
+              const razorpay = new window.Razorpay(options);
+              razorpay.open();
+              return; // Wait for payment — don't navigate to success yet
+            } catch (razorpayError) {
+              console.error('[BUG-040 FIX] Retry Razorpay failed:', razorpayError);
+              toast.error('Payment initialization failed. Please try again.');
+              setIsPlacingOrder(false);
+              isPlacingOrderRef.current = false;
+              return;
+            }
+          }
+
+          // COD retry: navigate to success directly
           clearCart();
 
-          // Prepare new items for order success page
           const retryOrderItems = cartItems.map(item => ({
             name: item.item?.name || 'Item',
             quantity: item.quantity,
@@ -1178,7 +1256,6 @@ const ReviewOrder = () => {
             veg: item.item?.veg === 1 || item.item?.veg === true
           }));
 
-          // Prepare previous items if in edit mode
           const retryPrevItems = isEditMode ? previousOrderItems.map(item => ({
             name: item.item?.name || 'Item',
             quantity: item.quantity,
@@ -1187,7 +1264,6 @@ const ReviewOrder = () => {
             veg: item.item?.veg === true || item.item?.veg === 1
           })) : [];
 
-          // Navigate to success page
           navigate(`/${restaurantId}/order-success`, {
             state: {
               orderData: {
@@ -1196,7 +1272,6 @@ const ReviewOrder = () => {
                 isEditedOrder: isEditMode,
                 items: retryOrderItems,
                 previousItems: retryPrevItems,
-                // Bill breakdown calculated locally
                 billSummary: {
                   itemTotal: itemTotal,
                   pointsDiscount: pointsDiscount,
