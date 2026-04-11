@@ -86,6 +86,9 @@ const PasswordSetup = () => {
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
       }
+      // Save customer details so ReviewOrder can pre-fill them
+      const guestData = { name: displayName, phone, restaurantId };
+      localStorage.setItem('guestCustomer', JSON.stringify(guestData));
       toast.success('Password set successfully!');
       navigateToMenu();
     } catch (err) {
@@ -123,7 +126,11 @@ const PasswordSetup = () => {
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
       }
-      toast.success(`Welcome back, ${data.customer?.name || displayName}!`);
+      // Save customer details so ReviewOrder can pre-fill them
+      const loginName = data.customer?.name || displayName;
+      const guestData = { name: loginName, phone, restaurantId };
+      localStorage.setItem('guestCustomer', JSON.stringify(guestData));
+      toast.success(`Welcome back, ${loginName}!`);
       navigateToMenu();
     } catch (err) {
       const msg = typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
