@@ -360,8 +360,32 @@ Need to store:
 
 ---
 
+## 9. Pre-Scale Preparation (FEAT-002-PREP)
+
+See `/app/memory/FEAT-002-PREP-hardcoding-removal.md` for full audit.
+
+**17 issues found across 8 files.** 6 HIGH risk, 4 MEDIUM risk, 7 LOW risk.
+
+Must be completed BEFORE any takeaway/delivery code is written.
+
+---
+
+## 10. Key Learnings (Updated April 11)
+
+1. **4 channels, not 2:** dine-in, room, takeaway, delivery. Room uses `type=room` with `orderType=dinein` currently.
+2. **LandingPage is order-type-blind:** Doesn't even destructure `orderType` from `useScannedTable()`.
+3. **OrderSuccess is order-type-blind:** Same issue — no orderType awareness.
+4. **Multi-menu + table validation is the #1 blocker:** `isMultiMenu` check forces table selection regardless of order type.
+5. **`buildMultiMenuPayload` hardcodes `order_type: 'dinein'`:** Multi-menu restaurants can never send takeaway/delivery to POS.
+6. **`delivery_charge` hardcoded to `'0'` in 3 places:** orderService.ts (x2) + helpers.js (x1).
+7. **Address fields all empty strings:** `address_id`, `address`, `latitude`, `longitude`, `address_type` — all hardcoded to `''`.
+8. **Delivery charge API uses different base URL:** `manage.mygenie.online` not `preprod.mygenie.online`.
+
+---
+
 ## Document History
 
 | Date | Changes |
 |------|---------|
+| April 11, 2026 | Added FEAT-002-PREP audit results, key learnings, API endpoints |
 | April 11, 2026 | Initial planning document created |
