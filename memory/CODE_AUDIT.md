@@ -11,7 +11,7 @@
 |----------|----------|----------|-------|---------|--------|--------|---------|
 | CA-001 | Security | 🔴 Critical | Hardcoded credentials | authToken.js | ✅ Fixed | 0.5 hr | Apr 10 |
 | CA-002 | Security | 🔴 Critical | Weak JWT secret fallback | server.py | ✅ Fixed | 0.5 hr | Apr 10 |
-| CA-003 | Duplication | 🟠 High | Price calc in 6+ files | Multiple | ⏳ Pending | 2 days | - |
+| CA-003 | Duplication | 🟠 High | Price calc in 6+ files | Multiple | ✅ Fixed | 2 days | Apr 11 |
 | CA-004 | Duplication | 🟠 High | Tax calc in 3 files | Multiple | ⏳ Pending | 1 day | - |
 | CA-005 | Dead Code | 🟢 Low | Unused UI components (46) | components/ui/ | ✅ Fixed | - | Session 4 |
 | CA-006 | Performance | 🟡 Medium | 72+ console.logs | Multiple | ⏳ Pending | 0.5 day | - |
@@ -468,7 +468,7 @@ Post-fix: Admin Login ✅ | Token Verify ✅ | Backend Running ✅
 
 | Issue | Current Impact | After Fix | Priority | Status |
 |-------|---------------|-----------|----------|--------|
-| Price calc duplication | -0.5 | +0.5 | HIGH | 🔲 Pending |
+| Price calc duplication | -0.5 | +0.5 | HIGH | ✅ FIXED |
 | Tax calc duplication | -0.3 | +0.3 | HIGH | 🔲 Pending |
 | Dead UI components | -0.2 | +0.2 | LOW | ✅ FIXED |
 | Large files | -1.0 | +1.0 | MEDIUM | 🔲 Parked |
@@ -592,3 +592,4 @@ See `/app/memory/API_MAPPING.md` for complete API field documentation.
 | Mar 25, 2026 | Session 4 | Deleted 46 unused Shadcn UI components (-2,862 lines) |
 | Mar 25, 2026 | Session 4 | Updated for TypeScript refactor, added architecture section |
 | Mar 25, 2026 | Session 2 | Initial audit created |
+| Apr 11, 2026 | Session 11 | CA-003 fixed — centralized price calculation. Replaced 4 inline duplications with `calculateCartItemPrice()` from helpers.js. ReviewOrder previous items now uses pre-computed `fullPrice` from transformer. Tested: cart totals match, prices display correctly. |
