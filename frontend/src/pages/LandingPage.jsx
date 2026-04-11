@@ -192,6 +192,7 @@ const LandingPage = () => {
 
   const handleDiningMenuClick = async () => {
     const actualRestaurantId = restaurant?.id || restaurantId;
+    console.log('[Landing] Browse Menu clicked', { isAuthenticated, isTakeawayDeliveryMode, capturedPhone, capturedName, selectedMode });
     
     // Phase 2: Validate mandatory fields for takeaway/delivery
     if (isTakeawayDeliveryMode && !isAuthenticated) {
@@ -206,7 +207,8 @@ const LandingPage = () => {
     }
 
     // If customer capture is enabled (config-based), validate + lookup
-    if (configShowLandingCustomerCapture || isTakeawayDeliveryMode) {
+    // Skip entirely for authenticated users — they're already identified
+    if (!isAuthenticated && (configShowLandingCustomerCapture || isTakeawayDeliveryMode)) {
       // Validate mandatory fields (config-driven for dine-in, always for takeaway/delivery)
       if (effectiveMandatoryPhone && (!capturedPhone || !isPhoneValid(capturedPhone))) {
         setPhoneError('Please enter a valid phone number');

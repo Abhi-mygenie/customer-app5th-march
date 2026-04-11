@@ -71,10 +71,10 @@ export const storeToken = (token) => {
   localStorage.setItem(TOKEN_STORAGE_KEY, token);
   localStorage.setItem(TOKEN_EXPIRY_KEY, expiry.toString());
   
-  // console.log('[Auth] Token stored', {
-  //   expiresAt: new Date(expiry).toISOString(),
-  //   expiresIn: '2 minutes'
-  // });
+  console.log('[Auth] Token stored', {
+    expiresAt: new Date(expiry).toISOString(),
+    expiresIn: '10 minutes'
+  });
 };
 
 /**
@@ -92,7 +92,7 @@ export const clearStoredToken = () => {
  */
 export const loginForToken = async () => {
   try {
-    // console.log('[Auth] Calling login API...');
+    console.log('[Auth] Calling login API...');
     
     const response = await apiClient.post('/auth/login', {
       phone: HARDCODED_PHONE,
@@ -103,18 +103,18 @@ export const loginForToken = async () => {
       const token = response.data.token;
       storeToken(token); // Store with 30-minute expiration
       
-      // console.log('[Auth] Login successful', {
-      //   tokenReceived: true,
-      //   isPhoneVerified: response.data.is_phone_verified,
-      //   userId: response.data.user_id
-      // });
+      console.log('[Auth] Login successful', {
+        tokenReceived: true,
+        isPhoneVerified: response.data.is_phone_verified,
+        userId: response.data.user_id
+      });
       
       return token;
     }
     
     throw new Error('No token in response');
   } catch (error) {
-    // console.error('[Auth] Login failed:', error);
+    console.error('[Auth] Login failed:', error);
     clearStoredToken();
     
     // Re-throw with more context
@@ -131,7 +131,7 @@ export const loginForToken = async () => {
 export const getAuthToken = async (forceRefresh = false) => {
   // Force refresh - get new token
   if (forceRefresh) {
-    // console.log('[Auth] Force refresh requested');
+    console.log('[Auth] Force refresh requested');
     return await loginForToken();
   }
   
@@ -140,23 +140,23 @@ export const getAuthToken = async (forceRefresh = false) => {
   
   // No token - get new one
   if (!storedToken) {
-    // console.log('[Auth] No token found, fetching new token');
+    console.log('[Auth] No token found, fetching new token');
     return await loginForToken();
   }
   
   // Check if token is expired (30-minute check)
   if (isTokenExpired()) {
-    // console.log('[Auth] Token expired (30min), fetching new token');
+    console.log('[Auth] Token expired, fetching new token');
     return await loginForToken();
   }
   
-  // Token is still valid (within 30 minutes)
-  // const expiry = getTokenExpiry();
-  // const timeLeft = Math.floor((expiry - Date.now()) / 1000 / 60);
-  // console.log('[Auth] Using existing token', {
-  //   expiresIn: `${timeLeft} minutes`,
-  //   expiresAt: new Date(expiry).toISOString()
-  // });
+  // Token is still valid
+  const expiry = getTokenExpiry();
+  const timeLeft = Math.floor((expiry - Date.now()) / 1000 / 60);
+  console.log('[Auth] Using existing token', {
+    expiresIn: `${timeLeft} minutes`,
+    expiresAt: new Date(expiry).toISOString()
+  });
   
   return storedToken;
 };
