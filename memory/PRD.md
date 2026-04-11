@@ -34,8 +34,17 @@ Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git, branch
 - **Frontend**: Same URL (port 3000 served via ingress)
 - **MongoDB**: External (52.66.232.149:27017/mygenie)
 
+## Active Planning
+
+### FEAT-002: Scan & Order Expansion – Takeaway & Delivery (Planning Phase)
+- **Status:** Planning — no code changes yet
+- **Spec:** See `/app/memory/FEAT-002-takeaway-delivery.md`
+- **4 Order Channels:** Dine-In (done), Room (done), Takeaway (new), Delivery (new)
+- **Key APIs identified:** customer/address/list, config/distance-api-new (manage.mygenie.online), config/get-all-zone, auth/login
+- **Hardcoding concerns identified:** 6 locations where `dinein` is hardcoded as default/condition
+
 ## Backlog / Next Steps
-- P0: None (app running as-is)
+- P0: FEAT-002 Takeaway & Delivery implementation
 - P1: Optimize unused ML/AI dependencies in requirements.txt
 - P1: Add pagination to /api/status endpoint
 - P2: Address React Hook dependency warnings
