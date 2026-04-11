@@ -28,6 +28,8 @@ import {
   buildMultiMenuPayload,
 } from '../transformers/helpers';
 
+import { calculateTaxBreakdown } from '../../utils/taxCalculation';
+
 // Import types
 import {
   ORDER_STATUS,
@@ -133,10 +135,8 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
     const details = orderData.details || [];
     const firstDetail = details[0] || {};
 
-    // Calculate totals from items
+    // Calculate totals from items — CA-004: use centralized tax utility
     let itemTotal = 0;
-    let totalGst = 0;
-    let totalVat = 0;
     const orderDiscount = parseFloat((firstDetail as any).order_discount) || 0;
 
     // Transform previous items using centralized transformer
@@ -147,15 +147,6 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       
       if (!isCancelled) {
         itemTotal += item.fullPrice * item.quantity;
-        
-        // Calculate tax
-        const taxPercent = item.tax || 0;
-        const taxType = item.taxType || 'GST';
-        const taxAmountPerUnit = parseFloat(((item.fullPrice * taxPercent) / 100).toFixed(2));
-        const totalTaxForItem = taxAmountPerUnit * item.quantity;
-        
-        if (taxType === 'GST') totalGst += totalTaxForItem;
-        if (taxType === 'VAT') totalVat += totalTaxForItem;
       }
       
       // Return transformed item with standardized properties
@@ -179,13 +170,22 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       };
     });
 
-    // Round tax values
-    totalGst = parseFloat(totalGst.toFixed(2));
-    totalVat = parseFloat(totalVat.toFixed(2));
+    // Normalize items for tax calculation
+    const taxItems = details.map(detail => {
+      const item = transformPreviousOrderItem(detail);
+      const isCancelled = detail.foodStatus === ORDER_STATUS.CANCELLED;
+      return {
+        fullPrice: item.fullPrice,
+        quantity: item.quantity,
+        taxPercent: item.tax || 0,
+        taxType: item.taxType || 'GST',
+        isCancelled,
+      };
+    });
 
-    const cgst = parseFloat((totalGst / 2).toFixed(2));
-    const sgst = parseFloat((totalGst / 2).toFixed(2));
-    const totalTax = parseFloat((totalGst + totalVat).toFixed(2));
+    // Note: orderService does not have restaurant context, so isGstEnabled defaults to true
+    // This matches previous behavior — gst_status check is only in ReviewOrder.jsx
+    const { cgst, sgst, totalGst, vat: totalVat, totalTax } = calculateTaxBreakdown(taxItems, true);
 
     // Extract order-level status
     const fOrderStatus = (firstDetail as any).f_order_status ?? ORDER_STATUS.YET_TO_CONFIRM;

@@ -25,6 +25,7 @@ import { RiFileList3Line } from "react-icons/ri";
 import CustomerDetails from '../components/CustomerDetails/CustomerDetails';
 import PaymentMethodSelector from '../components/PaymentMethodSelector';
 import { calculateCartItemPrice } from '../api/transformers/helpers';
+import { calculateTaxBreakdown } from '../utils/taxCalculation';
 import './ReviewOrder.css';
 
 // Helper function to check if a string is purely numeric
@@ -516,85 +517,53 @@ const ReviewOrder = () => {
 
   // Calculate totals (GST, VAT will be added in future)
   // ─── Tax Calculation (from cart items) ────────────────────────
+  // CA-004: Uses centralized calculateTaxBreakdown utility
   const taxBreakdown = useMemo(() => {
-    let totalGst = 0;
-    let totalVat = 0;
-
-    // CHECK: Is GST enabled at restaurant level?
     const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
     
-    // Debug: Log cart items and their tax info
     console.log('=== TAX DEBUG START ===');
     console.log('GST Status (restaurant level):', isGstEnabled);
     console.log('Cart items (new):', cartItems.length);
     console.log('Previous order items:', previousOrderItems?.length || 0);
 
-    // Calculate tax for NEW items (cartItems) — CA-003 fix: use centralized price calc
-    cartItems.forEach((cartItem, index) => {
-      const itemPrice = calculateCartItemPrice(cartItem);
-      
+    // Normalize NEW cart items
+    const newItems = cartItems.map((cartItem, index) => {
+      const fullPrice = calculateCartItemPrice(cartItem);
       const taxPercent = parseFloat(cartItem.item.tax) || 0;
       const taxType = cartItem.item.tax_type || 'GST';
-      const taxAmountPerUnit = parseFloat(((itemPrice * taxPercent) / 100).toFixed(2));
-      const totalTaxForItem = taxAmountPerUnit * cartItem.quantity;
 
-      // Debug: Log each item's tax info
       console.log(`New Item ${index + 1}: ${cartItem.item.name?.substring(0, 20)}`);
-      console.log(`  - Price: ₹${itemPrice}, Qty: ${cartItem.quantity}`);
+      console.log(`  - Price: ₹${fullPrice}, Qty: ${cartItem.quantity}`);
       console.log(`  - Tax: ${taxPercent}% (${taxType})`);
-      console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
 
-      // Only add GST if enabled at restaurant level
-      if (taxType === 'GST' && isGstEnabled) {
-        totalGst += totalTaxForItem;
-      } else if (taxType === 'VAT') {
-        totalVat += totalTaxForItem;
-      }
+      return { fullPrice, quantity: cartItem.quantity, taxPercent, taxType, isCancelled: false };
     });
 
-    // Calculate tax for PREVIOUS items (in edit mode)
-    // Exclude cancelled items (foodStatus === 3)
-    // CA-003 fix: use fullPrice from transformer instead of recalculating
-    if (previousOrderItems && previousOrderItems.length > 0) {
-      previousOrderItems.forEach((prevItem, index) => {
-        if (prevItem.foodStatus === 3) return; // Skip cancelled items
-        
-        // Use fullPrice from transformer (already includes base + variations + addons)
-        const fullItemPrice = prevItem.fullPrice ?? prevItem.price ?? 0;
-        const quantity = prevItem.quantity || 1;
-        const taxPercent = parseFloat(prevItem.item?.tax) || 0;
-        const taxType = prevItem.item?.tax_type || 'GST';
-        const totalTaxForItem = parseFloat(((fullItemPrice * quantity * taxPercent) / 100).toFixed(2));
+    // Normalize PREVIOUS order items (exclude cancelled: foodStatus === 3)
+    const prevItems = (previousOrderItems || []).map((prevItem, index) => {
+      const fullPrice = prevItem.fullPrice ?? prevItem.price ?? 0;
+      const quantity = prevItem.quantity || 1;
+      const taxPercent = parseFloat(prevItem.item?.tax) || 0;
+      const taxType = prevItem.item?.tax_type || 'GST';
+      const isCancelled = prevItem.foodStatus === 3;
 
-        // Debug: Log each previous item's tax info
+      if (!isCancelled) {
         console.log(`Previous Item ${index + 1}: ${prevItem.item?.name?.substring(0, 20)}`);
-        console.log(`  - Full Price: ₹${fullItemPrice}, Qty: ${quantity}`);
+        console.log(`  - Full Price: ₹${fullPrice}, Qty: ${quantity}`);
         console.log(`  - Tax: ${taxPercent}% (${taxType})`);
-        console.log(`  - Tax Amount: ₹${totalTaxForItem}`);
+      }
 
-        // Only add GST if enabled at restaurant level
-        if (taxType === 'GST' && isGstEnabled) {
-          totalGst += totalTaxForItem;
-        } else if (taxType === 'VAT') {
-          totalVat += totalTaxForItem;
-        }
-      });
-    }
+      return { fullPrice, quantity, taxPercent, taxType, isCancelled };
+    });
 
-    totalGst = parseFloat(totalGst.toFixed(2));
-    totalVat = parseFloat(totalVat.toFixed(2));
-
-    // GST splits into CGST + SGST (50/50)
-    const cgst = parseFloat((totalGst / 2).toFixed(2));
-    const sgst = parseFloat((totalGst / 2).toFixed(2));
-    const totalTax = parseFloat((totalGst + totalVat).toFixed(2));
+    const result = calculateTaxBreakdown([...newItems, ...prevItems], isGstEnabled);
 
     console.log('=== TAX DEBUG SUMMARY ===');
-    console.log(`Total GST: ₹${totalGst} (CGST: ₹${cgst}, SGST: ₹${sgst})`);
-    console.log(`Total VAT: ₹${totalVat}`);
+    console.log(`Total GST: ₹${result.totalGst} (CGST: ₹${result.cgst}, SGST: ₹${result.sgst})`);
+    console.log(`Total VAT: ₹${result.vat}`);
     console.log('=== TAX DEBUG END ===');
 
-    return { cgst, sgst, totalGst, vat: totalVat, totalTax };
+    return result;
   }, [cartItems, previousOrderItems, restaurant?.gst_status]);
 
   const { cgst, sgst, totalGst, vat, totalTax } = taxBreakdown;

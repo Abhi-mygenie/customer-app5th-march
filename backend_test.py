@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Backend API Testing for MyGenie Customer App
-Tests the centralized price calculation logic (CA-003 fix) and core API functionality
+Tests the centralized tax calculation logic (CA-004 fix) and core API functionality
+Restaurant 478 - GST (5%) and VAT (4%) items testing
 """
 
 import requests
@@ -16,7 +17,7 @@ class MyGenieAPITester:
         self.token = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.restaurant_id = "698"  # Based on agent context note
+        self.restaurant_id = "478"  # Restaurant 478 for CA-004 tax testing
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
@@ -88,9 +89,9 @@ class MyGenieAPITester:
         return success
 
     def test_restaurant_info(self):
-        """Test restaurant information endpoint"""
+        """Test restaurant 478 information endpoint"""
         success, response = self.run_test(
-            "Restaurant Info",
+            "Restaurant 478 Info",
             "GET",
             f"restaurant-info/{self.restaurant_id}",
             200
@@ -98,12 +99,15 @@ class MyGenieAPITester:
         
         if success and isinstance(response, dict):
             if "name" in response:
-                print(f"   Restaurant: {response.get('name', 'Unknown')}")
+                restaurant_name = response.get('name', 'Unknown')
+                gst_status = response.get('gst_status', 'Unknown')
+                print(f"   Restaurant: {restaurant_name}")
+                print(f"   GST Status: {gst_status}")
                 return True
         return success
 
     def test_menu_data(self):
-        """Test menu data endpoint"""
+        """Test menu data endpoint and verify GST/VAT items for restaurant 478"""
         success, response = self.run_test(
             "Menu Data",
             "GET",
@@ -115,14 +119,34 @@ class MyGenieAPITester:
             categories = response.get("categories", [])
             if categories:
                 print(f"   Found {len(categories)} menu categories")
-                # Check if items have price information
-                for category in categories[:2]:  # Check first 2 categories
+                
+                # Look for GST and VAT items specifically for CA-004 testing
+                gst_items = []
+                vat_items = []
+                
+                for category in categories:
                     items = category.get("items", [])
-                    if items:
-                        item = items[0]
-                        if "price" in item:
-                            print(f"   Sample item: {item.get('name', 'Unknown')} - ₹{item.get('price', 0)}")
-                        break
+                    for item in items:
+                        tax_type = item.get("tax_type", "GST")
+                        tax_percent = item.get("tax", 0)
+                        
+                        if tax_type == "GST" and tax_percent == 5:
+                            gst_items.append(item.get("name", "Unknown"))
+                        elif tax_type == "VAT" and tax_percent == 4:
+                            vat_items.append(item.get("name", "Unknown"))
+                
+                print(f"   GST Items (5%): {len(gst_items)} found")
+                print(f"   VAT Items (4%): {len(vat_items)} found")
+                
+                if gst_items:
+                    print(f"   Sample GST item: {gst_items[0]}")
+                if vat_items:
+                    print(f"   Sample VAT item: {vat_items[0]}")
+                
+                # Store for potential cart testing
+                self.sample_gst_items = gst_items[:3]  # Store first 3
+                self.sample_vat_items = vat_items[:3]  # Store first 3
+                
                 return True
         return success
 
