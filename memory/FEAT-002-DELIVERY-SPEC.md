@@ -9,191 +9,235 @@
 | **Feature ID** | FEAT-002-DELIVERY |
 | **Title** | Delivery Flow — Address Management + Distance/Zone APIs |
 | **Created** | January 11, 2026 |
-| **Last Updated** | January 11, 2026 |
-| **Status** | BLOCKED — Waiting on Backend Team (Address schema + POS lat/lng confirmation) |
+| **Last Updated** | January 13, 2026 |
+| **Status** | PLANNING — Pending architecture decisions |
 | **Priority** | P0 - Critical |
 | **Pre-requisite** | FEAT-002 Phase 1 (Core Plumbing) ✅, Phase 2 (Takeaway) ✅ |
-| **Depends On** | Customer address schema update, POS lat/lng confirmation, Add address endpoint |
+| **Source Docs** | `SCAN_AND_ORDER_API.md` (CRM), `FEAT-002-takeaway-delivery.md` |
 
 ---
 
-## ⚠️ BLOCKERS FOR BACKEND TEAM
+## ⚠️ OPEN DECISIONS (Must Resolve Before Implementation)
 
-Before delivery can be implemented, the following must be resolved:
-
-| # | Blocker | Owner | Status |
-|---|---------|-------|--------|
-| 1 | **POS to send lat/lng with customer address** — confirm if POS API will include `latitude`/`longitude` in customer data | POS Team | ❓ Pending confirmation |
-| 2 | **Add address endpoint** — `POST /api/customer/addresses` to save new delivery addresses (with lat/lng) | Backend Team | ❓ Next phase |
-| 3 | **Customer address schema migration** — single flat `address`/`city`/`pincode` → structured with lat/lng support, multiple addresses | Backend Team | ❓ Not started |
-| 4 | **Google Maps API key** — needed as fallback if POS doesn't send lat/lng (geocoding) | Ops/Backend | ❓ Not provisioned |
-| 5 | **Manage API token storage** — Bearer token for `manage.mygenie.online` distance API, how is it refreshed? | Backend Team | ❓ Pending |
+| # | Decision | Options | Impact |
+|---|----------|---------|--------|
+| 1 | **CRM URL for frontend** — Should we add `REACT_APP_CRM_URL` pointing to CRM backend? | A) Add 3rd env var for CRM<br>B) Proxy all CRM calls through our FastAPI backend | Determines how frontend calls address/order endpoints |
+| 2 | **X-API-Key for `/pos/orders` and `/pos/max-redeemable`** — These 2 CRM endpoints use server key, not customer token | A) Add `REACT_APP_CRM_API_KEY` to frontend .env (simpler, less secure)<br>B) Proxy through our FastAPI backend (backend holds key) | Security vs simplicity |
+| 3 | **Order placement endpoint** — Currently frontend uses POS API (`/customer/order/update-customer-order`). Switch to CRM? | A) Switch to CRM `/pos/orders` (gets loyalty/wallet/WhatsApp auto-triggered)<br>B) Keep POS for orders, use CRM only for addresses<br>C) Dual — CRM for delivery orders, POS for dine-in/takeaway | Affects order flow, loyalty, wallet |
+| 4 | **Google Maps API key** — Needed for geocoding when address has no lat/lng | Provide key or browser geolocation only? | Fallback accuracy |
 
 ---
 
-## 1. Architecture Overview
+## 1. Current Architecture — 3 Backends
 
-### Two Backends in Play
-
-| System | URL | Handles |
-|--------|-----|---------|
-| **Our Backend** (FastAPI + MongoDB) | `REACT_APP_BACKEND_URL` | Auth, customer data, app config, loyalty |
-| **POS API** (MyGenie) | `REACT_APP_API_BASE_URL` = `preprod.mygenie.online` | Orders, menus, restaurant info, Razorpay, table status |
-| **CRM Backend** (separate project) | `mygenie-crm-build-1.preview.emergentagent.com` | Customer OTP, verify, profile (reference implementation) |
-
-### Customer Auth Flow
+### Frontend .env (current)
 
 ```
-Frontend → OUR backend (/api/auth/login) → OUR MongoDB (customers collection) → JWT token
+REACT_APP_BACKEND_URL=https://customer-app-loyalty.preview.emergentagent.com   ← Our FastAPI
+REACT_APP_API_BASE_URL=https://preprod.mygenie.online/api/v1                    ← POS API
+REACT_APP_IMAGE_BASE_URL=https://manage.mygenie.online                          ← Image assets
 ```
 
-All customer data lives in OUR MongoDB. Addresses must also live here.
+### Three Backends in Play
+
+| System | URL | Auth | Handles |
+|--------|-----|------|---------|
+| **Our Backend** (FastAPI) | `REACT_APP_BACKEND_URL` | JWT (our token) | Auth, customer data, app config, loyalty, notification popups |
+| **POS API** (MyGenie) | `REACT_APP_API_BASE_URL` | Bearer (POS authToken) | Orders, menus, restaurant info, Razorpay, table status |
+| **CRM Backend** (separate) | `mygenie-crm-build-1` | Customer Token + X-API-Key | Customer OTP, profile, **addresses**, **order placement**, coupons, points/wallet, feedback |
+
+### Gap: CRM Not Connected to Customer App
+
+The CRM backend has all the delivery-related endpoints we need, but the customer app frontend doesn't have a URL or API key for it. This is the primary architecture decision.
 
 ---
 
-## 2. Customer Auth Endpoints (Reference from CRM Project)
+## 2. How Orders Are Placed TODAY
 
-These endpoints exist on the CRM project (`mygenie-crm-build-1`) and serve as the reference:
+### Current Flow (POS API)
 
-### 2.1 Send OTP — `POST /api/customer/send-otp`
+```
+Frontend → POS API (preprod.mygenie.online)
+  POST /customer/order/update-customer-order
+  Auth: Bearer {POS authToken from localStorage}
+  Format: FormData with JSON payload
+  File: orderService.ts → placeOrder()
+```
 
-```json
-Request:  { "phone": "9876543210" }
-Response: {
-  "success": true,
-  "message": "OTP sent to +91 9876543210",
-  "expires_in_minutes": 10,
-  "debug_otp": "544156"
+The payload already has delivery fields — **all currently empty strings**:
+
+```javascript
+{
+  address_id: '',
+  delivery_charge: '0',
+  address: '',
+  latitude: '',
+  longitude: '',
+  address_type: '',
+  contact_person_name: '',
+  contact_person_number: '',
+  road: '',
+  house: '',
+  floor: '',
 }
 ```
 
-### 2.2 Verify OTP — `POST /api/customer/verify-otp`
+### CRM Flow (from SCAN_AND_ORDER_API.md)
+
+```
+Frontend → CRM Backend
+  POST /pos/orders
+  Auth: X-API-Key (server-side, NOT customer token)
+  Format: JSON body
+```
+
+CRM order placement auto-triggers:
+1. Loyalty points earned based on tier
+2. Wallet deduction
+3. Coupon usage recorded
+4. Customer stats updated
+5. WhatsApp notification
+
+### Difference
+
+| Aspect | Current (POS) | CRM |
+|--------|--------------|-----|
+| Auth | POS Bearer token | X-API-Key (server key) |
+| Format | FormData | JSON |
+| Loyalty/Wallet | Not auto-triggered | Auto-triggered |
+| WhatsApp | Not triggered | Auto-triggered |
+| Delivery address | Empty fields in payload | Full `delivery_address` object |
+
+---
+
+## 3. CRM Endpoints Available for Delivery
+
+### Auth & Profile (Customer Token)
+
+| Endpoint | Method | Auth | What It Does |
+|----------|--------|------|-------------|
+| `/customer/send-otp` | POST | None | Send OTP. Needs `user_id` (restaurant) |
+| `/customer/verify-otp` | POST | None | Verify → token + profile + **addresses array** |
+| `/customer/me` | GET | Token | Refresh profile + addresses |
+| `/customer/me/points` | GET | Token | Points balance & history |
+| `/customer/me/wallet` | GET | Token | Wallet balance & history |
+| `/customer/me/orders` | GET | Token | Order history with delivery addresses |
+
+### Address CRUD (Customer Token) ✅ READY
+
+| Endpoint | Method | Auth | What It Does |
+|----------|--------|------|-------------|
+| `/customer/me/addresses` | GET | Token | List all saved addresses (with lat/lng) |
+| `/customer/me/addresses` | POST | Token | Add new address |
+| `/customer/me/addresses/{id}` | PUT | Token | Edit address |
+| `/customer/me/addresses/{id}` | DELETE | Token | Delete address |
+| `/customer/me/addresses/{id}/set-default` | POST | Token | Set default |
+
+### Checkout (X-API-Key) ⚠️ NEEDS KEY
+
+| Endpoint | Method | Auth | What It Does |
+|----------|--------|------|-------------|
+| `/coupons/validate` | POST | Token | Validate coupon code |
+| `/pos/max-redeemable` | POST | **X-API-Key** | Check max redeemable points for bill |
+| `/pos/orders` | POST | **X-API-Key** | Place order (triggers loyalty/wallet/WhatsApp) |
+
+### Post-Order (Customer Token)
+
+| Endpoint | Method | Auth | What It Does |
+|----------|--------|------|-------------|
+| `/feedback` | POST | Token | Submit rating after delivery |
+
+---
+
+## 4. CRM Address Object Schema
 
 ```json
-Request:  { "phone": "9876543210", "otp": "544156" }
-Response: {
-  "success": true,
-  "token": "eyJhbG...",
-  "token_type": "bearer",
-  "expires_in_hours": 24,
-  "customer": {
-    "id": "25149198-...",
-    "name": "errg frty",
-    "phone": "9876543210",
-    "email": "customer1179@mygenie.local",
-    "country_code": "+91",
-    "tier": "Bronze",
-    "total_points": 0,
-    "wallet_balance": 0.0,
-    "total_visits": 2,
-    "total_spent": 160.0,
-    "address": "",
-    "city": "",
-    "state": null,
-    "pincode": "",
-    "allergies": [],
-    "favorites": [],
-    "restaurant_id": "pos_0001_restaurant_509"
-  }
+{
+  "id": "addr_abc123",
+  "pos_address_id": 2010,
+  "is_default": true,
+  "address_type": "Home",
+  "address": "123 Main Street, Shoghi",
+  "house": "A-101",
+  "floor": "1st",
+  "road": "Main Road",
+  "city": "Shimla",
+  "state": "HP",
+  "pincode": "171219",
+  "country": "India",
+  "latitude": "31.0537",
+  "longitude": "77.1273",
+  "contact_person_name": "Vivan",
+  "contact_person_number": "9876543210",
+  "delivery_instructions": "Ring bell at gate"
 }
 ```
 
-### 2.3 Get Me — `GET /api/customer/me`
+### Add Address — Required Fields
 
-```
-Headers: Authorization: Bearer {token}
-```
+At least one of `address`, `city`, or `pincode` required. Everything else optional.
+
+| Field | Type | Required | Notes |
+|-------|------|:--------:|-------|
+| address | string | Yes* | Street address |
+| city | string | Yes* | City |
+| pincode | string | Yes* | Pincode |
+| house | string | No | Flat/House number |
+| floor | string | No | Floor |
+| road | string | No | Road / Landmark |
+| state | string | No | State |
+| country | string | No | Default: India |
+| latitude | string | No | GPS lat |
+| longitude | string | No | GPS lng |
+| address_type | string | No | Home / Work / Other |
+| contact_person_name | string | No | Delivery contact name |
+| contact_person_number | string | No | Delivery contact phone |
+| delivery_instructions | string | No | Special notes |
+
+---
+
+## 5. CRM Order Payload (for delivery)
 
 ```json
-Response: {
-  "id": "25149198-...",
-  "name": "errg frty",
-  "phone": "9876543210",
-  "country_code": "+91",
-  "tier": "Bronze",
-  "address": "",
-  "city": "",
-  "state": null,
-  "pincode": "",
-  ... (same fields as verify-otp customer object)
+{
+  "pos_id": "mygenie",
+  "restaurant_id": "509",
+  "order_id": "SCAN-001",
+  "cust_mobile": "9876543210",
+  "cust_name": "Vivan",
+  "order_amount": 570.00,
+  "delivery_charge": 30.00,
+  "wallet_used": 100.00,
+  "coupon_code": "SAVE10",
+  "redeem_points": 200,
+  "payment_status": "success",
+  "payment_method": "upi",
+  "order_type": "delivery",
+  "delivery_address": {
+    "address": "123 Main Street, Shoghi",
+    "city": "Shimla",
+    "pincode": "171219",
+    "house": "A-101",
+    "contact_person_name": "Vivan",
+    "contact_person_number": "9876543210"
+  },
+  "order_note": "Less spicy please",
+  "items": [
+    {
+      "item_name": "Farm Fresh Pizza",
+      "item_qty": 1,
+      "item_price": 350.00,
+      "item_category": "Pizza"
+    }
+  ]
 }
 ```
 
-**Key finding:** Verify-OTP and /me return the **same customer fields** (including address, city, state, pincode). Verify-OTP just wraps it with token + success/message.
-
 ---
 
-## 3. Lat/Lng Strategy — Geocode Once, Store Forever
+## 6. Distance & Zone APIs (MyGenie Manage/POS)
 
-### Principle
-Google Geocoding API is a **fallback only**. Goal is zero Google API calls once all addresses have lat/lng stored.
-
-### Three Tiers (Priority Order)
-
-| Tier | Scenario | Google API? | Action |
-|------|----------|:-----------:|--------|
-| 1 | POS sends lat/lng with address (expected) | ❌ No | Use directly |
-| 2 | POS doesn't send lat/lng (migration fallback) | ✅ Once | Geocode → store lat/lng in our DB. Next time: no API call |
-| 3 | New address from browser geolocation (Case 2) | ❌ No | Device provides lat/lng directly |
-
-### Data Storage — Current vs Target
-
-```
-CURRENT:  { address: "Ruby Residency, Goa", city: "", pincode: "403702" }
-TARGET:   { address: "Ruby Residency, Goa", city: "", pincode: "403702", latitude: 15.01, longitude: 74.05 }
-                                                                          ↑ from POS, or geocoded once & stored
-```
-
-### API Call Optimization
-
-| Scenario | Google API? | Distance API? |
-|----------|:-----------:|:------------:|
-| Address has lat/lng (POS sent or previously stored) | ❌ | ✅ |
-| Address missing lat/lng (first time only) | ✅ Once, then store | ✅ |
-| New address from browser geolocation | ❌ (device gives lat/lng) | ✅ |
-| New address manual entry (no geolocation) | ✅ Once, then store | ✅ |
-
----
-
-## 4. Delivery Address Flow — Two Cases
-
-### Case 1: Returning Customer (Has Saved Address)
-
-```
-Login/verify-otp → customer data has address
-  │
-  ├── Address has lat/lng? → use directly
-  └── Address missing lat/lng? → Google Geocode (one-time) → store lat/lng
-  │
-  → Distance API (lat/lng → shipping_status, charge, ETA)
-  → Deliverable? → Proceed to Menu
-```
-
-### Case 2: First-Time Customer (No Saved Address)
-
-```
-Login/verify-otp → customer has no address
-  │
-  → Browser geolocation prompt: "Allow location?"
-  │
-  ├── ALLOWED → lat/lng from device
-  │     → Google Reverse Geocode → auto-fill pincode + area
-  │     → User completes remaining fields (flat, road, landmark)
-  │
-  └── DENIED → fully manual entry
-        → User types full address
-        → Google Forward Geocode → lat/lng
-  │
-  → Full address + lat/lng → Distance API → charge, ETA
-  → Deliverable? → Proceed to Menu
-  → (Add address endpoint — NEXT PHASE — stores address + lat/lng together)
-```
-
----
-
-## 5. External APIs
-
-### 5.1 Distance API (MyGenie Manage)
+### Distance API
 
 ```
 GET https://manage.mygenie.online/api/v1/config/distance-api-new
@@ -203,17 +247,14 @@ Authorization: Bearer {MYGENIE_MANAGE_TOKEN}
 
 ```json
 Response: {
-  "distance": "5.2 km",
-  "shipping_status": "Yes",        ← "Yes" = deliverable, "No" = out of range
-  "shipping_charge": 50,            ← delivery fee
-  "shipping_time": "25 mins",       ← ETA
-  "distance_km": 5.2,
-  "origin": { "lat": 25.42, "lng": 81.83 },
-  "destination": { "lat": 25.45, "lng": 81.85 }
+  "shipping_status": "Yes",
+  "shipping_charge": 50,
+  "shipping_time": "25 mins",
+  "distance_km": 5.2
 }
 ```
 
-### 5.2 Zone API (MyGenie POS)
+### Zone API
 
 ```
 GET https://preprod.mygenie.online/api/v1/config/get-all-zone?lat={lat}&lng={lng}
@@ -221,119 +262,102 @@ GET https://preprod.mygenie.online/api/v1/config/get-all-zone?lat={lat}&lng={lng
 
 ```json
 Response: {
-  "zone_data": [
-    {
-      "id": 5,
-      "name": "Agonda",
-      "minimum_shipping_charge": 10,
-      "per_km_shipping_charge": 10,
-      "max_cod_order_amount": 1000,
-      "maximum_shipping_charge": 100,
-      "increased_delivery_fee_status": 0,
-      "increase_delivery_charge_message": null,
-      "matchstatus": 0                  ← 1 = customer is in this zone
-    }
-  ]
-}
-```
-
-### 5.3 Google Maps Geocoding (Fallback Only)
-
-| Type | Use Case | Call |
-|------|----------|------|
-| Forward Geocode | Address text → lat/lng | `GET /maps/api/geocode/json?address={text}&key={KEY}` |
-| Reverse Geocode | lat/lng → pincode, area | `GET /maps/api/geocode/json?latlng={lat},{lng}&key={KEY}` |
-
-**Cost:** ~$5 per 1000 requests. Goal: minimize by storing lat/lng after first geocode.
-
----
-
-## 6. Backend Proxy Endpoints Needed (Our FastAPI)
-
-| # | Endpoint | Proxies To | Purpose |
-|---|----------|-----------|---------|
-| 1 | `GET /api/delivery/distance-check` | `manage.mygenie.online/.../distance-api-new` | Delivery feasibility + charge |
-| 2 | `GET /api/delivery/zones` | `preprod.mygenie.online/.../get-all-zone` | Zone lookup |
-| 3 | `GET /api/customer/addresses` | Our MongoDB | List saved addresses (with lat/lng) |
-| 4 | `POST /api/customer/addresses` | Our MongoDB | Save new address (**NEXT PHASE — you will provide**) |
-
----
-
-## 7. Environment Variables Needed
-
-```
-# Backend .env additions
-MYGENIE_MANAGE_URL=https://manage.mygenie.online/api/v1
-MYGENIE_MANAGE_TOKEN=<long-lived POS Bearer token for distance API>
-GOOGLE_MAPS_API_KEY=<for geocoding fallback>
-```
-
----
-
-## 8. Frontend Changes Summary
-
-| # | File | Change |
-|---|------|--------|
-| 1 | `DeliveryAddressPage.jsx` | NEW — intermediate page between landing and menu |
-| 2 | `endpoints.js` | Add delivery endpoints (our backend) |
-| 3 | `CartContext.js` | Store deliveryAddress, deliveryCharge, zoneId, shippingTime |
-| 4 | `LandingPage.jsx` | Navigate to address page on delivery mode |
-| 5 | `ReviewOrder.jsx` | Delivery charge line in bill + payload fields |
-| 6 | `helpers.js` | delivery_charge, address, lat, lng in order payload |
-| 7 | `App.js` | Route for DeliveryAddressPage |
-
----
-
-## 9. Order Payload — Delivery Fields
-
-```javascript
-{
-  order_type: 'delivery',
-  table_id: '0',
-  delivery_charge: '{from distance API}',
-  address_id: '{saved address ID or empty}',
-  address: '{full address text}',
-  latitude: '{lat}',
-  longitude: '{lng}',
-  address_type: '{home/office/other}',
-  cust_name: 'REQUIRED',
-  cust_phone: 'REQUIRED',
-  payment_method: 'cash_on_delivery',
-  payment_type: 'postpaid',  // or 'prepaid' if Razorpay
+  "zone_data": [{
+    "id": 5, "name": "Agonda",
+    "minimum_shipping_charge": 10,
+    "max_cod_order_amount": 1000,
+    "matchstatus": 0
+  }]
 }
 ```
 
 ---
 
-## 10. Checklist & Known Constraints
+## 7. Lat/Lng Strategy — Geocode Once, Store Forever
 
-- ⚠️ **Phone stored without `+91` prefix** — matching is exact string (`9876543210` not `+919876543210`). Any endpoint with `country_code` must strip prefix before DB lookup
-- ✅ **verify-otp and /me return same customer fields** including address, city, state, pincode
-- ✅ **verify-otp is standalone endpoint** — returns token + full customer in one shot
-- 📌 **Expect POS to send lat/lng** — confirm with POS team. If not, geocode once and store
-- 📌 **Google Maps API key required** — fallback only, minimized by caching lat/lng
-- 📌 **Add address endpoint deferred** — next phase, you will provide
-- 📌 **Distance API + Zone API** — called every delivery order (lat/lng required)
-- 📌 **Goal: zero Google API calls** once all addresses have lat/lng stored in our DB
-- 📌 **Manage API token** (`manage.mygenie.online`) — storage and refresh strategy TBD with backend team
+| Tier | Scenario | Google API? |
+|------|----------|:-----------:|
+| 1 | CRM address already has lat/lng | ❌ No — use directly |
+| 2 | CRM address missing lat/lng (old data) | ✅ Once — geocode + store via PUT |
+| 3 | Browser geolocation (user allows) | ❌ No — device provides lat/lng |
+| 4 | Manual entry (user denies location) | ✅ Once — forward geocode |
+
+**Goal:** Zero Google API calls once all addresses have lat/lng.
 
 ---
 
-## 11. Implementation Order (Once Blockers Resolved)
+## 8. Delivery Address Flow
+
+### Case 1: Returning Customer (Has Saved Address)
+
+```
+Login/verify-otp → customer has addresses[]
+  → List addresses (default pre-selected)
+  → Address has lat/lng? → use directly
+  → Address missing lat/lng? → Google Geocode once → store via PUT
+  → Distance API (lat/lng → charge, ETA)
+  → Deliverable? → Proceed to Menu
+```
+
+### Case 2: First-Time Customer (No Saved Address)
+
+```
+Login/verify-otp → customer addresses[] is empty
+  → Browser geolocation prompt
+  ├── ALLOWED → lat/lng → reverse geocode → auto-fill pincode/area
+  └── DENIED → manual entry → forward geocode → lat/lng
+  → Save address via POST /customer/me/addresses
+  → Distance API → charge, ETA
+  → Deliverable? → Proceed to Menu
+```
+
+---
+
+## 9. Checklist & Known Constraints
+
+- ⚠️ **Phone stored without `+91` prefix** — strip before matching
+- ✅ **verify-otp returns addresses array** (with lat/lng when available)
+- ✅ **CRM has full address CRUD** — no need to build our own
+- ✅ **CRM addresses include lat/lng** — no need for Google in most cases
+- ✅ **Manage API token available** — distance API can be called
+- ⚠️ **X-API-Key needed** for `/pos/orders` and `/pos/max-redeemable` — decision pending (env var vs proxy)
+- ⚠️ **CRM base URL not in frontend .env** — needs `REACT_APP_CRM_URL` or proxy decision
+- ⚠️ **Google Maps API key** — still needed as fallback for old addresses without lat/lng
+- 📌 **Current order flow uses POS API** (`/customer/order/update-customer-order` via FormData + POS Bearer token) — switching to CRM `/pos/orders` gives auto loyalty/wallet/WhatsApp but is a bigger change
+
+---
+
+## 10. Blocker Status (Updated)
+
+| # | Blocker | Old Status | New Status |
+|---|---------|-----------|-----------|
+| 1 | POS to send lat/lng with address | ❓ Pending | ✅ CRM addresses have lat/lng |
+| 2 | Add address endpoint | ❓ Next phase | ✅ CRM has full CRUD (`/customer/me/addresses`) |
+| 3 | Customer address schema migration | ❓ Not started | ✅ CRM handles it |
+| 4 | Google Maps API key | ❓ Not provisioned | 🟡 Still needed for fallback (old addresses without lat/lng) |
+| 5 | Manage API token | ✅ Already shared | ✅ Available |
+| 6 | **NEW: CRM URL for frontend** | — | ❓ Decision needed |
+| 7 | **NEW: X-API-Key for order/points endpoints** | — | ❓ Decision needed |
+| 8 | **NEW: Switch order placement to CRM?** | — | ❓ Decision needed |
+
+---
+
+## 11. Implementation Plan (Once Decisions Resolved)
 
 | Step | Task | Effort | Blocked By |
 |------|------|--------|-----------|
-| 1 | Backend: Distance-check proxy endpoint | 1 hr | Manage API token |
-| 2 | Backend: Zone lookup proxy endpoint | 30 min | — |
-| 3 | Backend: Address read endpoint (from our MongoDB) | 1 hr | — |
-| 4 | Backend: Geocode + store lat/lng logic | 2 hrs | Google API key |
-| 5 | Frontend: DeliveryAddressPage (address display + geolocation + validation) | 3-4 hrs | Steps 1-4 |
-| 6 | Frontend: LandingPage → navigate to address page | 30 min | Step 5 |
-| 7 | Frontend: ReviewOrder — delivery charge in bill + payload | 1-2 hrs | Step 5 |
-| 8 | Frontend: CartContext delivery state | 30 min | — |
-| 9 | Polish: Error handling, "not deliverable" UX, loading states | 1-2 hrs | Step 5 |
-| **Total** | | **~10-12 hrs** | |
+| 1 | Add `REACT_APP_CRM_URL` + `REACT_APP_CRM_API_KEY` to frontend .env (or set up proxy) | 30 min | Decision #1, #2 |
+| 2 | Backend: Distance-check proxy endpoint | 1 hr | — |
+| 3 | Backend: Zone lookup proxy endpoint | 30 min | — |
+| 4 | Frontend: CRM API service (address CRUD, token-based calls) | 2 hrs | Step 1 |
+| 5 | Frontend: DeliveryAddressPage (list addresses, add new, geolocation, distance check) | 3-4 hrs | Steps 2-4 |
+| 6 | Frontend: LandingPage → navigate to address page on delivery mode | 30 min | Step 5 |
+| 7 | Frontend: ReviewOrder — delivery charge in bill | 1-2 hrs | Step 5 |
+| 8 | Frontend: Order payload — populate delivery fields (address, lat/lng, charge) | 1-2 hrs | Decision #3 |
+| 9 | Frontend: CartContext delivery state | 30 min | — |
+| 10 | Polish: Error handling, "not deliverable" UX | 1-2 hrs | Step 5 |
+| **Total** | | **~10-14 hrs** | |
 
 ---
 
-*Created: January 11, 2026 | Status: BLOCKED — resolve items in Section 0 with backend/POS team before implementation*
+*Created: January 11, 2026 | Updated: January 13, 2026 | Status: PLANNING — resolve decisions in Section 0*
