@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { crmGetOrders, crmGetPoints, crmGetWallet } from '../api/services/crmService';
 import { IoArrowBack, IoPersonOutline, IoWalletOutline, IoReceiptOutline, IoSettingsOutline, IoLogOutOutline, IoGiftOutline } from 'react-icons/io5';
 import { MdStars } from 'react-icons/md';
 import toast from 'react-hot-toast';
 import './Profile.css';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -23,7 +22,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (!token) {
-      navigate('/login');
+      navigate('/');
       return;
     }
     
@@ -54,13 +53,9 @@ const Profile = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/customer/orders`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data);
-      }
+      const data = await crmGetOrders(token);
+      // CRM returns { total_orders, orders: [...] }
+      setOrders(data.orders || []);
     } catch (error) {
       toast.error('Failed to load orders');
     } finally {
@@ -71,13 +66,14 @@ const Profile = () => {
   const fetchPoints = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/customer/points`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setPoints(data);
-      }
+      const data = await crmGetPoints(token);
+      // CRM returns { total_points, points_value, tier, expiring_soon, transactions: [...] }
+      // Normalize: CRM uses 'type' field, our UI expects 'transaction_type'
+      const transactions = (data.transactions || []).map(tx => ({
+        ...tx,
+        transaction_type: tx.type || tx.transaction_type,
+      }));
+      setPoints(transactions);
     } catch (error) {
       toast.error('Failed to load points history');
     } finally {
@@ -88,13 +84,17 @@ const Profile = () => {
   const fetchWallet = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/customer/wallet`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const data = await crmGetWallet(token);
+      // CRM returns { wallet_balance, total_received, total_used, transactions: [...] }
+      // Normalize: CRM uses 'type' field, our UI expects 'transaction_type'
+      const transactions = (data.transactions || []).map(tx => ({
+        ...tx,
+        transaction_type: tx.type || tx.transaction_type,
+      }));
+      setWallet({
+        balance: data.wallet_balance || 0,
+        transactions,
       });
-      if (response.ok) {
-        const data = await response.json();
-        setWallet(data);
-      }
     } catch (error) {
       toast.error('Failed to load wallet');
     } finally {
