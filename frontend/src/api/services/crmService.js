@@ -82,7 +82,7 @@ const crmAuthFetch = async (endpoint, token, options = {}) => {
  * Returns: { success, token, customer, is_new_customer }
  */
 export const crmRegister = async (phone, password, userId, name = '', email = '') => {
-  const body = { phone, password, user_id: userId };
+  const body = { phone: stripPhonePrefix(phone), password, user_id: userId };
   if (name) body.name = name;
   if (email) body.email = email;
 
@@ -99,8 +99,24 @@ export const crmRegister = async (phone, password, userId, name = '', email = ''
 export const crmLogin = async (phone, password, userId) => {
   return crmFetch('/customer/login', {
     method: 'POST',
-    body: JSON.stringify({ phone, password, user_id: userId }),
+    body: JSON.stringify({ phone: stripPhonePrefix(phone), password, user_id: userId }),
   });
+};
+
+/**
+ * Strip country code prefix from phone for CRM API calls.
+ * CRM expects bare digits (e.g., "7505242126"), not "+917505242126".
+ * The country_code field is sent separately.
+ */
+const stripPhonePrefix = (phone) => {
+  if (!phone) return phone;
+  // Remove + and leading country code (91 for India, etc.)
+  let bare = phone.replace(/^\+/, '');
+  // If starts with 91 and remaining is 10 digits, strip 91
+  if (bare.startsWith('91') && bare.length === 12) {
+    return bare.slice(2);
+  }
+  return bare;
 };
 
 /**
@@ -110,7 +126,7 @@ export const crmLogin = async (phone, password, userId) => {
 export const crmSendOtp = async (phone, userId, countryCode = '91') => {
   return crmFetch('/customer/send-otp', {
     method: 'POST',
-    body: JSON.stringify({ phone, user_id: userId, country_code: countryCode }),
+    body: JSON.stringify({ phone: stripPhonePrefix(phone), user_id: userId, country_code: countryCode }),
   });
 };
 
@@ -121,7 +137,7 @@ export const crmSendOtp = async (phone, userId, countryCode = '91') => {
 export const crmVerifyOtp = async (phone, otp, userId, countryCode = '91') => {
   return crmFetch('/customer/verify-otp', {
     method: 'POST',
-    body: JSON.stringify({ phone, otp, user_id: userId, country_code: countryCode }),
+    body: JSON.stringify({ phone: stripPhonePrefix(phone), otp, user_id: userId, country_code: countryCode }),
   });
 };
 
@@ -132,7 +148,7 @@ export const crmVerifyOtp = async (phone, otp, userId, countryCode = '91') => {
 export const crmForgotPassword = async (phone, userId, countryCode = '91') => {
   return crmFetch('/customer/forgot-password', {
     method: 'POST',
-    body: JSON.stringify({ phone, user_id: userId, country_code: countryCode }),
+    body: JSON.stringify({ phone: stripPhonePrefix(phone), user_id: userId, country_code: countryCode }),
   });
 };
 
@@ -143,7 +159,7 @@ export const crmForgotPassword = async (phone, userId, countryCode = '91') => {
 export const crmResetPassword = async (phone, otp, userId, newPassword) => {
   return crmFetch('/customer/reset-password', {
     method: 'POST',
-    body: JSON.stringify({ phone, otp, user_id: userId, new_password: newPassword }),
+    body: JSON.stringify({ phone: stripPhonePrefix(phone), otp, user_id: userId, new_password: newPassword }),
   });
 };
 
