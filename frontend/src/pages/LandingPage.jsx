@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useRestaurantDetails, useStations } from '../hooks/useMenuData';
@@ -44,6 +44,63 @@ const LandingPage = () => {
   const [capturedName, setCapturedName] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [isCheckingCustomer, setIsCheckingCustomer] = useState(false);
+
+  // Cached check-customer result (debounced phone lookup)
+  const [customerLookup, setCustomerLookup] = useState(null); // { exists, customer, phone }
+  const [isAutoLooking, setIsAutoLooking] = useState(false);
+  const [nameAutoFilled, setNameAutoFilled] = useState(false);
+  const lookupTimerRef = useRef(null);
+  const lastLookedUpPhone = useRef('');
+
+  // Debounced auto-lookup: when phone is valid, check-customer in background
+  useEffect(() => {
+    // Clear previous timer
+    if (lookupTimerRef.current) clearTimeout(lookupTimerRef.current);
+
+    // Skip if authenticated or phone not valid
+    if (isAuthenticated || !capturedPhone || !isPhoneValid(capturedPhone)) {
+      setCustomerLookup(null);
+      setNameAutoFilled(false);
+      return;
+    }
+
+    // Skip if we already looked up this exact phone
+    if (lastLookedUpPhone.current === capturedPhone) return;
+
+    lookupTimerRef.current = setTimeout(async () => {
+      setIsAutoLooking(true);
+      try {
+        const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+        const res = await fetch(`${API_URL}/api/auth/check-customer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: capturedPhone,
+            restaurant_id: String(restaurantId),
+            pos_id: '0001',
+          }),
+        });
+        const data = await res.json();
+        lastLookedUpPhone.current = capturedPhone;
+        setCustomerLookup({ ...data, phone: capturedPhone });
+
+        // Auto-fill name if customer exists and user hasn't typed a name
+        if (data.exists && data.customer?.name && !capturedName.trim()) {
+          setCapturedName(data.customer.name);
+          setNameAutoFilled(true);
+        }
+      } catch (err) {
+        logger.error('order', 'Auto customer lookup failed:', err);
+        setCustomerLookup(null);
+      } finally {
+        setIsAutoLooking(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => {
+      if (lookupTimerRef.current) clearTimeout(lookupTimerRef.current);
+    };
+  }, [capturedPhone, isAuthenticated, restaurantId, capturedName]);
 
   // State for table status check (edit order detection)
   const [tableStatusCheck, setTableStatusCheck] = useState({
@@ -222,64 +279,70 @@ const LandingPage = () => {
       
       // If phone is provided, do customer lookup
       if (capturedPhone && isPhoneValid(capturedPhone)) {
-        setIsCheckingCustomer(true);
-        try {
-          const API_URL = process.env.REACT_APP_BACKEND_URL || '';
-          const res = await fetch(`${API_URL}/api/auth/check-customer`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              phone: capturedPhone,
-              restaurant_id: String(restaurantId),
-              pos_id: '0001',
-            }),
-          });
-          const data = await res.json();
-          
-          if (data.exists) {
-            // Auto-populate name from lookup
-            const customerName = data.customer?.name || '';
-            if (customerName && !capturedName.trim()) {
-              setCapturedName(customerName);
+        // Use cached lookup if available for this phone, otherwise fetch
+        let data = customerLookup && customerLookup.phone === capturedPhone ? customerLookup : null;
+
+        if (!data) {
+          setIsCheckingCustomer(true);
+          try {
+            const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+            const res = await fetch(`${API_URL}/api/auth/check-customer`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                phone: capturedPhone,
+                restaurant_id: String(restaurantId),
+                pos_id: '0001',
+              }),
+            });
+            data = await res.json();
+          } catch (err) {
+            logger.error('order', 'Customer lookup failed:', err);
+            // On error, save as guest and go to menu
+            const guestData = { name: capturedName, phone: capturedPhone, restaurantId };
+            localStorage.setItem('guestCustomer', JSON.stringify(guestData));
+            if (isMultipleMenu(restaurant)) {
+              navigate(`/${actualRestaurantId}/stations`);
+            } else {
+              navigate(`/${actualRestaurantId}/menu`);
             }
-            // Navigate to password setup
-            navigate(`/${actualRestaurantId}/password-setup`, {
-              state: {
-                phone: capturedPhone,
-                name: capturedName || customerName,
-                restaurantId: actualRestaurantId,
-                customerExists: true,
-                hasPassword: data.customer?.has_password || false,
-                customerName: customerName,
-                orderMode: selectedMode,
-              },
-            });
-          } else {
-            // New customer → password setup
-            navigate(`/${actualRestaurantId}/password-setup`, {
-              state: {
-                phone: capturedPhone,
-                name: capturedName,
-                restaurantId: actualRestaurantId,
-                customerExists: false,
-                hasPassword: false,
-                customerName: '',
-                orderMode: selectedMode,
-              },
-            });
+            setIsCheckingCustomer(false);
+            return;
           }
-        } catch (err) {
-          logger.error('order', 'Customer lookup failed:', err);
-          // On error, save as guest and go to menu
-          const guestData = { name: capturedName, phone: capturedPhone, restaurantId };
-          localStorage.setItem('guestCustomer', JSON.stringify(guestData));
-          if (isMultipleMenu(restaurant)) {
-            navigate(`/${actualRestaurantId}/stations`);
-          } else {
-            navigate(`/${actualRestaurantId}/menu`);
-          }
-        } finally {
           setIsCheckingCustomer(false);
+        }
+          
+        if (data.exists) {
+          // Auto-populate name from lookup
+          const customerName = data.customer?.name || '';
+          if (customerName && !capturedName.trim()) {
+            setCapturedName(customerName);
+          }
+          // Navigate to password setup
+          navigate(`/${actualRestaurantId}/password-setup`, {
+            state: {
+              phone: capturedPhone,
+              name: capturedName || customerName,
+              restaurantId: actualRestaurantId,
+              customerExists: true,
+              hasPassword: data.customer?.has_password || false,
+              customerName: customerName,
+              orderMode: selectedMode,
+            },
+          });
+        } else {
+          // New customer → password setup
+          navigate(`/${actualRestaurantId}/password-setup`, {
+            state: {
+              phone: capturedPhone,
+              name: capturedName,
+              restaurantId: actualRestaurantId,
+              customerExists: false,
+              hasPassword: false,
+              customerName: '',
+              orderMode: selectedMode,
+            },
+          });
         }
         return;
       }
@@ -568,14 +631,39 @@ const LandingPage = () => {
         {showCustomerCapture && (
           <LandingCustomerCapture
             phone={capturedPhone}
-            setPhone={setCapturedPhone}
+            setPhone={(val) => {
+              setCapturedPhone(val);
+              // Reset auto-fill when phone changes
+              if (nameAutoFilled) {
+                setNameAutoFilled(false);
+                setCapturedName('');
+              }
+            }}
             name={capturedName}
-            setName={setCapturedName}
+            setName={(val) => {
+              setCapturedName(val);
+              // User manually edited — clear auto-fill flag
+              if (nameAutoFilled) setNameAutoFilled(false);
+            }}
             phoneError={phoneError}
             setPhoneError={setPhoneError}
             mandatoryName={effectiveMandatoryName}
             mandatoryPhone={effectiveMandatoryPhone}
           />
+        )}
+
+        {/* Welcome back hint when name auto-filled from check-customer */}
+        {nameAutoFilled && customerLookup?.exists && (
+          <p className="landing-welcome-back-hint" data-testid="welcome-back-hint">
+            Welcome back, {capturedName}!
+          </p>
+        )}
+
+        {/* Auto-lookup spinner */}
+        {isAutoLooking && (
+          <p className="landing-auto-looking" data-testid="auto-looking-hint">
+            Checking...
+          </p>
         )}
 
         {/* 5. Action Buttons */}
