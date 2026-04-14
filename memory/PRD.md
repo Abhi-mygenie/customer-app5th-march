@@ -1,62 +1,75 @@
-# Customer App - PRD
+# PRD — MyGenie Customer App
 
-## Original Problem Statement
-Pull code from https://github.com/Abhi-mygenie/customer-app5th-march.git, branch `11-april-refactor-5-loyality`. Set up environment, install dependencies, and run the app as-is.
+**Last Updated:** April 14, 2026
+
+---
+
+## Problem Statement
+White-label restaurant customer app (PWA) where diners scan a QR code to browse menus, place orders, pay, and interact with loyalty/wallet features. Built for MyGenie POS ecosystem.
 
 ## Architecture
-- **Frontend**: React 19 + Tailwind CSS + Radix UI + Craco (CRA override)
-- **Backend**: FastAPI (Python) with Motor (async MongoDB driver)
-- **Database**: Remote MongoDB at 52.66.232.149 (mygenie database)
-- **External API**: MyGenie POS API at preprod.mygenie.online + manage.mygenie.online
+Three-backend system:
+1. **Our FastAPI Backend** — Admin auth, app config, branding, banners, loyalty settings, dietary tags, customer-lookup, feedback
+2. **POS API (MyGenie)** — Menus, products, order placement, Razorpay, table status, restaurant info
+3. **CRM Backend (DinePoints)** — Customer auth (password + OTP), customer profile, addresses, points, wallet, orders
 
-## Two Backend Systems
-| System | URL | Handles |
-|--------|-----|---------|
-| Our Backend (FastAPI) | REACT_APP_BACKEND_URL | Auth, customer data, app config, loyalty, notification popups |
-| POS API (MyGenie) | REACT_APP_API_BASE_URL (preprod.mygenie.online) | Orders, menus, restaurant info, Razorpay, table status |
-| CRM Backend (separate project) | mygenie-crm-build-1.preview.emergentagent.com | Customer OTP, verify, profile (reference) |
+Single shared MongoDB at `52.66.232.149:27017/mygenie`.
+
+## User Personas
+1. **Dine-in Customer** — Scans table QR, browses menu, orders, pays
+2. **Takeaway Customer** — Walk-in QR, selects takeaway, orders without table
+3. **Delivery Customer** — Walk-in QR, selects delivery, adds address, orders
+4. **Restaurant Admin** — Manages branding, banners, visibility, QR codes, content
+
+## Core Requirements
+- QR-based ordering (table, walk-in, walk-in menu)
+- Customer auth (password + OTP via CRM)
+- Menu browsing with variations, add-ons, dietary tags
+- Cart management with edit-order flow
+- Order placement with GST/VAT calculation
+- Razorpay online payment
+- Loyalty points earn/redeem
+- Wallet balance
+- Admin panel for configuration
 
 ## What's Been Implemented
 
-### Session 1 — Setup (Jan 11, 2026)
-- Cloned repo, branch `11-april-refactor-5-loyality`
-- Configured frontend/backend .env files
-- Resolved tsconfig/jsconfig conflict
-- App running with restaurant 478 (18march)
+### Original (Pre April 13)
+- Full dine-in ordering flow (QR → menu → cart → order)
+- Admin panel with branding, visibility, banners, QR, dietary tags
+- Customer auth (password via our backend)
+- Loyalty points display and redemption
+- Razorpay payment integration
+- Edit order flow (table QR)
+- Phase 1-2 of FEAT-002: Takeaway mode
 
-### Session 2 — Planning (Jan 11, 2026)
-- Reviewed all memory docs, summarized project roadmap
-- Planned FEAT-002 Delivery (BLOCKED — waiting on backend team)
-- Created `/app/memory/FEAT-002-DELIVERY-SPEC.md`
-- Investigated CRM endpoints (send-otp, verify-otp, /me) — confirmed same customer fields
-- Documented lat/lng strategy: POS sends → fallback Google Geocode → store forever
-
-### Session 3 — FEAT-003 Implementation (Jan 11, 2026)
-- **FEAT-003: Notification Popup — COMPLETE**
-  - Backend: `notificationPopups` field in AppConfigUpdate model + default config
-  - Frontend: `useNotificationPopup` hook (delay, auto-dismiss, page matching, stale cache fix)
-  - Frontend: `NotificationPopup` component (3 variants: modal, banner, toast)
-  - Wired into 4 pages: LandingPage, MenuItems, ReviewOrder, OrderSuccess
-  - Admin UI redesigned: grouped sections (Content/Display/Timing), visual position selector (phone mockups), visual type selector (icon buttons), toggle switch header
-  - Brand compliance: text uses `var(--text-color)` / `var(--text-secondary-color)`, border uses `var(--color-primary)`, fonts use `var(--font-heading)` / `var(--font-body)`
-  - Max 4 popups (one per page)
-
-## Core Features
-- Unified auth (customer OTP + restaurant admin password)
-- Customer profiles, orders, points, wallet, coupons
-- Restaurant app config (branding, visibility, payment options)
-- Banner management, Custom pages, Feedback system
-- Loyalty settings, Dietary tags, File upload
-- POS API integration (table config, order details)
-- FEAT-001: Dual Payment Options ✅
-- FEAT-002 Phase 1-2: Takeaway ✅
-- FEAT-002 Phase 3: Delivery — BLOCKED (spec ready)
-- **FEAT-003: Notification Popups ✅ (4 pages, 3 variants, admin UI, brand colors)**
+### April 13, 2026 — CRM Migration + Delivery Phase 3
+- **Phase A**: CRM service layer (`crmService.js`) with 15 API functions
+- **Phase B**: Customer auth migrated from our backend to CRM (register, login, forgot-password, reset-password, OTP)
+- **Phase C**: Profile page migrated to CRM (orders, points, wallet with response normalization)
+- **Phase D**: Delivery address page (CRUD), cart delivery state, order payload wiring, landing page delivery flow
 
 ## Prioritized Backlog
-- P0: FEAT-002 Phase 3 Delivery — BLOCKED on backend team (address schema + POS lat/lng)
-- P1: Fix inclusive tax logic (2-3 hrs)
-- P1: Restaurant-level tax settings (3-4 hrs)
-- P2: Extract custom hooks (6-8 hrs)
-- P2: Decompose ReviewOrder.jsx (4-6 hrs)
-- P3: Full TypeScript migration (8-12 hrs)
+
+### P0 (Critical)
+- [ ] Phase E: Full regression testing
+- [ ] CRM down fallback (guest mode)
+- [ ] Token expiry handling (401 → re-login prompt)
+
+### P1 (Important)
+- [ ] Distance API integration (delivery charge calculation)
+- [ ] Google Maps geocoding for new addresses
+- [ ] Profile page — edit customer info via CRM
+- [ ] Coupon listing for customers
+
+### P2 (Nice to have)
+- [ ] Our backend customer auth endpoint cleanup (currently unused but alive)
+- [ ] Zone-based delivery availability
+- [ ] Order tracking in real-time
+- [ ] WhatsApp notification integration via CRM
+
+## Next Tasks
+1. Run comprehensive test suite (TC-01 through TC-30)
+2. Fix any blocking issues
+3. Delivery charge via distance API (when keys provided)
+4. Google Maps for address geocoding
