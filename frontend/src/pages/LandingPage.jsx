@@ -251,6 +251,7 @@ const LandingPage = () => {
                 customerExists: true,
                 hasPassword: data.customer?.has_password || false,
                 customerName: customerName,
+                orderMode: selectedMode,
               },
             });
           } else {
@@ -263,6 +264,7 @@ const LandingPage = () => {
                 customerExists: false,
                 hasPassword: false,
                 customerName: '',
+                orderMode: selectedMode,
               },
             });
           }
@@ -283,10 +285,19 @@ const LandingPage = () => {
       }
     }
     
-    // No phone or capture disabled → go directly to menu
+    // No phone or capture disabled → go directly to menu (or delivery address for delivery)
     if (capturedName || capturedPhone) {
       const guestData = { name: capturedName, phone: capturedPhone, restaurantId };
       localStorage.setItem('guestCustomer', JSON.stringify(guestData));
+    }
+    // Delivery mode requires login for addresses — prompt if guest
+    if (selectedMode === 'delivery' && !isAuthenticated) {
+      toast.error('Please login to use delivery');
+      return;
+    }
+    if (selectedMode === 'delivery' && isAuthenticated) {
+      navigate(`/${actualRestaurantId}/delivery-address`);
+      return;
     }
     if (isMultipleMenu(restaurant)) {
       navigate(`/${actualRestaurantId}/stations`);

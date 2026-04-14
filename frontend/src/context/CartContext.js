@@ -478,6 +478,33 @@ export const CartProvider = ({ children, restaurantId }) => {
     return previousCount + getTotalItems();
   }, [previousOrderItems, getTotalItems]);
 
+  // Delivery address state (Phase 3)
+  const [deliveryAddress, setDeliveryAddressState] = useState(null);
+  const [deliveryCharge, setDeliveryCharge] = useState(0);
+
+  const setDeliveryAddress = (address) => {
+    setDeliveryAddressState(address);
+    if (address) {
+      localStorage.setItem(`delivery_${restaurantId}`, JSON.stringify(address));
+    } else {
+      localStorage.removeItem(`delivery_${restaurantId}`);
+    }
+  };
+
+  const clearDeliveryAddress = () => {
+    setDeliveryAddressState(null);
+    setDeliveryCharge(0);
+    localStorage.removeItem(`delivery_${restaurantId}`);
+  };
+
+  // Load delivery address from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`delivery_${restaurantId}`);
+      if (stored) setDeliveryAddressState(JSON.parse(stored));
+    } catch (e) { /* ignore */ }
+  }, [restaurantId]);
+
   const value = {
     // Cart items and basic operations
     cartItems: cart.items,
@@ -503,6 +530,13 @@ export const CartProvider = ({ children, restaurantId }) => {
     getPreviousOrderTotal,
     getCombinedTotal,
     getCombinedItemCount,
+
+    // Delivery (Phase 3)
+    deliveryAddress,
+    deliveryCharge,
+    setDeliveryAddress,
+    setDeliveryCharge,
+    clearDeliveryAddress,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

@@ -19,6 +19,7 @@ const PasswordSetup = () => {
     customerExists = false,
     hasPassword = false,
     customerName = '',
+    orderMode = '',
   } = location.state || {};
 
   const [password, setPassword] = useState('');
@@ -40,6 +41,11 @@ const PasswordSetup = () => {
   const userId = buildUserId(restaurantId);
 
   const navigateToMenu = () => {
+    // Delivery mode → go to delivery address page first
+    if (orderMode === 'delivery') {
+      navigate(`/${restaurantId}/delivery-address`);
+      return;
+    }
     if (restaurantId) {
       navigate(`/${restaurantId}/menu`);
     } else {

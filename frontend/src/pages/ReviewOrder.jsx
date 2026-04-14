@@ -88,6 +88,10 @@ const ReviewOrder = () => {
     previousOrderItems,
     clearEditMode,
     getPreviousOrderTotal,
+    // Delivery (Phase 3)
+    deliveryAddress,
+    deliveryCharge,
+    clearDeliveryAddress,
   } = useCart();
 
   // Fetch restaurant details FIRST to get numeric ID
@@ -978,7 +982,10 @@ const ReviewOrder = () => {
           // GST status
           gstEnabled: isGstEnabled,
           // Payment type based on user selection (FEAT-001)
-          paymentType: selectedPaymentType
+          paymentType: selectedPaymentType,
+          // Delivery address (Phase 3)
+          deliveryAddress: deliveryAddress || null,
+          deliveryCharge: deliveryCharge || 0,
         });
       }
 
@@ -1383,6 +1390,31 @@ const ReviewOrder = () => {
                     </div>
                   );
                 })()
+              )}
+
+              {/* Delivery Address (Phase 3) */}
+              {deliveryAddress && scannedOrderType === 'delivery' && (
+                <div className="price-row delivery-address-summary" data-testid="delivery-address-summary">
+                  <div className="delivery-summary-label">
+                    <span className="price-label">Delivery to:</span>
+                    <span className="delivery-summary-text">
+                      {[deliveryAddress.house, deliveryAddress.address, deliveryAddress.city].filter(Boolean).join(', ')}
+                    </span>
+                    {deliveryAddress.contact_person_name && (
+                      <span className="delivery-summary-contact">
+                        {deliveryAddress.contact_person_name} • {deliveryAddress.contact_person_number}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Delivery Charge */}
+              {scannedOrderType === 'delivery' && (
+                <div className="price-row price-row-sub">
+                  <span className="price-label-sub">Delivery Charge</span>
+                  <span className="price-value-sub">{deliveryCharge > 0 ? `₹${deliveryCharge.toFixed(2)}` : 'Free'}</span>
+                </div>
               )}
 
               {/* Subtotal (before taxes) */}
