@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: April 11, 2026 (Session 11 - FEAT-002 + Payment Fixes)
+## Last Updated: April 14, 2026 (Session 12 - OTP Auth Migration)
 
 ---
 
@@ -8,6 +8,8 @@
 
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
+| BUG-046 | `stripPhonePrefix` only handles Indian +91 — breaks international numbers | 🟡 P1 | ⏳ Known Issue | Apr 14 | - | Current logic hardcodes `91` prefix + 12-digit check. UK (+44), US (+1), UAE (+971) etc. will send prefixed digits to CRM causing lookup failures. Low impact now (India-only users). Fix before international rollout. |
+| BUG-045 | CRM API calls sent phone with `+91` prefix — CRM expects bare digits | 🔴 P0 | ✅ Fixed | Apr 14 | Apr 14 | `crmSendOtp` etc. received `+917505242126` from PhoneInput, CRM returned 404. Added `stripPhonePrefix()` to all 6 CRM functions in `crmService.js`. |
 | BUG-044 | POS returns razorpay_id for COD orders | 🔴 P0 | ⏳ POS-side bug | Apr 11 | - | POS generates razorpay_id even when payment_type=postpaid. Should only generate for PG payments |
 | BUG-043 | Refactoring broke payment defaults — orders not on dashboard | 🔴 P0 | ✅ Fixed | Apr 11 | Apr 11 | 3 bugs: paymentMethod defaulted to 'online', autopaid endpoint used for all multi-menu, helpers.js hardcoded prepaid |
 | BUG-042 | 401 retry skips table status check | 🔴 P0 | ⏳ Discussion | Apr 11 | - | Needs POS-side table free/engaged API clarity |
