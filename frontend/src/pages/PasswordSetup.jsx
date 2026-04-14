@@ -46,7 +46,7 @@ const PasswordSetup = () => {
   const resendIntervalRef = useRef(null);
 
   const displayName = customerName || name || '';
-  const needsSetPassword = !customerExists || !hasPassword;
+  const isNewCustomer = !customerExists;  // Truly new — not in our DB at all
   const userId = buildUserId(restaurantId);
 
   const navigateToMenu = () => {
@@ -348,8 +348,9 @@ const PasswordSetup = () => {
     );
   }
 
-  // Set password (new customer or returning without password)
-  if (needsSetPassword) {
+  // Set password — only for NEW customers (not in our DB at all)
+  // Existing customers without password get OTP chooser below
+  if (isNewCustomer) {
     return (
       <div className="password-setup-page" data-testid="password-set-page">
         <div className="password-setup-container">
@@ -438,10 +439,10 @@ const PasswordSetup = () => {
 
           <button
             className="password-setup-btn secondary"
-            onClick={() => { setAuthMethod('password'); setError(''); }}
+            onClick={() => { setAuthMethod(hasPassword ? 'password' : 'set-password'); setError(''); }}
             data-testid="choose-password-btn"
           >
-            Login with Password
+            {hasPassword ? 'Login with Password' : 'Set a Password'}
           </button>
 
           <button className="password-skip-link" onClick={handleSkip} data-testid="skip-login-btn">
@@ -451,6 +452,85 @@ const PasswordSetup = () => {
       </div>
     );
   }
+
+  // State A2: authMethod = 'set-password' (existing customer without password, chose to set one)
+  if (authMethod === 'set-password') {
+    return (
+      <div className="password-setup-page" data-testid="password-set-page">
+        <div className="password-setup-container">
+          <button
+            className="password-back-btn"
+            onClick={() => { setAuthMethod('choose'); setError(''); setPassword(''); setConfirmPassword(''); }}
+            data-testid="set-password-back-btn"
+          >
+            <IoArrowBack /> Back
+          </button>
+          <h2 className="password-setup-title">
+            Welcome back{displayName ? `, ${displayName}` : ''}!
+          </h2>
+          <p className="password-setup-subtitle">
+            Set a password for quick login next time
+          </p>
+
+          <div className="password-input-group">
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="password-input"
+                placeholder="Password (min 6 characters)"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                data-testid="set-password-input"
+              />
+              <button className="password-toggle" onClick={() => setShowPassword(!showPassword)} type="button">
+                {showPassword ? <IoEyeOffOutline /> : <IoEyeOutline />}
+              </button>
+            </div>
+          </div>
+
+          <div className="password-input-group">
+            <div className="password-input-wrapper">
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                className="password-input"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
+                data-testid="confirm-password-input"
+              />
+              <button className="password-toggle" onClick={() => setShowConfirm(!showConfirm)} type="button">
+                {showConfirm ? <IoEyeOffOutline /> : <IoEyeOutline />}
+              </button>
+            </div>
+          </div>
+
+          {error && <p className="password-error" data-testid="set-password-error">{error}</p>}
+
+          <button
+            className="password-setup-btn primary"
+            onClick={handleSetPassword}
+            disabled={isLoading}
+            data-testid="save-continue-btn"
+          >
+            {isLoading ? 'Saving...' : 'Save & Continue'}
+          </button>
+
+          <button
+            className="password-forgot-link"
+            onClick={() => { setAuthMethod('choose'); setError(''); setPassword(''); setConfirmPassword(''); }}
+            data-testid="switch-to-otp-from-set"
+          >
+            Use OTP instead
+          </button>
+
+          <button className="password-skip-link" onClick={handleSkip} data-testid="skip-password-btn">
+            Skip for now
+          </button>
+        </div>
+      </div>
+    );
+  }
+
 
   // State B: authMethod = 'otp' (OTP sent, waiting for verification)
   if (authMethod === 'otp') {
@@ -517,10 +597,10 @@ const PasswordSetup = () => {
             </button>
             <button
               className="password-forgot-link"
-              onClick={() => { setAuthMethod('password'); setError(''); }}
+              onClick={() => { setAuthMethod(hasPassword ? 'password' : 'set-password'); setError(''); }}
               data-testid="switch-to-password-btn"
             >
-              Use password instead
+              {hasPassword ? 'Use password instead' : 'Set a password instead'}
             </button>
           </div>
 

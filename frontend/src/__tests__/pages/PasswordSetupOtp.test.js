@@ -77,6 +77,17 @@ const newCustomerState = {
   orderMode: '',
 };
 
+// Existing customer WITHOUT password (e.g., Kriele)
+const existingNoPasswordState = {
+  phone: '+911234567890',
+  name: 'Kriele',
+  restaurantId: '509',
+  customerExists: true,
+  hasPassword: false,
+  customerName: 'Kriele',
+  orderMode: '',
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   jest.useFakeTimers();
@@ -507,3 +518,113 @@ describe('TC-10: Phone Display Masking', () => {
     expect(subtitle.textContent).not.toContain('9579504871');
   });
 });
+
+// ============================================
+// TC-11: Existing Customer WITHOUT Password — OTP Available
+// ============================================
+describe('TC-11: Existing Customer Without Password', () => {
+  test('shows OTP chooser (not set-password form) for existing customer without password', () => {
+    renderWithState(existingNoPasswordState);
+
+    // Should show the OTP/Password chooser — NOT the set-password form
+    expect(screen.getByTestId('choose-otp-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('choose-password-btn')).toBeInTheDocument();
+    expect(screen.getByText('Login with OTP')).toBeInTheDocument();
+    expect(screen.getByText('Set a Password')).toBeInTheDocument(); // Not "Login with Password"
+    expect(screen.getByText(/Welcome back, Kriele/)).toBeInTheDocument();
+
+    // Should NOT show the old set-password form
+    expect(screen.queryByTestId('set-password-input')).not.toBeInTheDocument();
+  });
+
+  test('OTP works for existing customer without password', async () => {
+    mockCrmSendOtp.mockResolvedValueOnce({ success: true, message: 'OTP sent', debug_otp: '123456' });
+    mockCrmVerifyOtp.mockResolvedValueOnce({
+      success: true,
+      token: 'kriele-token',
+      customer: { name: 'Kriele', phone: '1234567890' },
+    });
+
+    renderWithState(existingNoPasswordState);
+
+    // Click OTP
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('choose-otp-btn'));
+    });
+    expect(mockCrmSendOtp).toHaveBeenCalled();
+    expect(screen.getByTestId('otp-digit-input')).toBeInTheDocument();
+
+    // Verify OTP
+    fireEvent.change(screen.getByTestId('otp-digit-input'), { target: { value: '123456' } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('verify-otp-btn'));
+    });
+
+    expect(mockSetCrmAuth).toHaveBeenCalledWith('kriele-token', { name: 'Kriele', phone: '1234567890' });
+    expect(mockNavigate).toHaveBeenCalledWith('/509/menu');
+  });
+
+  test('"Set a Password" button goes to set-password form with back button', () => {
+    renderWithState(existingNoPasswordState);
+
+    // Click "Set a Password"
+    fireEvent.click(screen.getByTestId('choose-password-btn'));
+
+    // Should show set-password form
+    expect(screen.getByTestId('set-password-input')).toBeInTheDocument();
+    expect(screen.getByTestId('confirm-password-input')).toBeInTheDocument();
+    expect(screen.getByTestId('save-continue-btn')).toBeInTheDocument();
+
+    // Should have back button
+    expect(screen.getByTestId('set-password-back-btn')).toBeInTheDocument();
+
+    // Should have "Use OTP instead" link
+    expect(screen.getByTestId('switch-to-otp-from-set')).toBeInTheDocument();
+  });
+
+  test('set-password back button returns to chooser', () => {
+    renderWithState(existingNoPasswordState);
+
+    fireEvent.click(screen.getByTestId('choose-password-btn'));
+    expect(screen.getByTestId('set-password-input')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('set-password-back-btn'));
+    expect(screen.getByTestId('choose-otp-btn')).toBeInTheDocument();
+  });
+
+  test('OTP screen shows "Set a password instead" (not "Use password instead")', async () => {
+    mockCrmSendOtp.mockResolvedValueOnce({ success: true, message: 'OTP sent' });
+    renderWithState(existingNoPasswordState);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('choose-otp-btn'));
+    });
+
+    const switchBtn = screen.getByTestId('switch-to-password-btn');
+    expect(switchBtn.textContent).toBe('Set a password instead');
+  });
+});
+
+// ============================================
+// TC-12: Existing Customer WITH Password — Labels Correct
+// ============================================
+describe('TC-12: Existing Customer With Password — Labels', () => {
+  test('chooser shows "Login with Password" (not "Set a Password")', () => {
+    renderWithState(existingCustomerState);
+
+    expect(screen.getByText('Login with Password')).toBeInTheDocument();
+  });
+
+  test('OTP screen shows "Use password instead" (not "Set a password")', async () => {
+    mockCrmSendOtp.mockResolvedValueOnce({ success: true, message: 'OTP sent' });
+    renderWithState(existingCustomerState);
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('choose-otp-btn'));
+    });
+
+    const switchBtn = screen.getByTestId('switch-to-password-btn');
+    expect(switchBtn.textContent).toBe('Use password instead');
+  });
+});
+
