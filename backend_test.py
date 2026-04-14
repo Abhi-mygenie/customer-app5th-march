@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Backend API Testing for MyGenie Customer App
-Tests the centralized tax calculation logic (CA-004 fix) and core API functionality
-Restaurant 478 - GST (5%) and VAT (4%) items testing
+Tests OTP auth, delivery address, distance API, and core functionality
+Restaurant 509 - Pav & Pages / 18march testing
 """
 
 import requests
@@ -14,10 +14,12 @@ class MyGenieAPITester:
     def __init__(self, base_url="https://loyalty-app-april-v1.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
+        self.crm_url = "https://crm.mygenie.online/api"
+        self.distance_api_url = "https://manage.mygenie.online/api/v1/config/distance-api-new"
         self.token = None
         self.tests_run = 0
         self.tests_passed = 0
-        self.restaurant_id = "478"  # Restaurant 478 for FEAT-002-PREP testing
+        self.restaurant_id = "509"  # Restaurant 509 for testing
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""
@@ -89,9 +91,9 @@ class MyGenieAPITester:
         return success
 
     def test_restaurant_config(self):
-        """Test restaurant 478 configuration endpoint"""
+        """Test restaurant 509 configuration endpoint"""
         success, response = self.run_test(
-            "Restaurant 478 Config",
+            "Restaurant 509 Config",
             "GET",
             f"config/{self.restaurant_id}",
             200
@@ -166,22 +168,107 @@ class MyGenieAPITester:
             return True
         return success
 
-    def test_customer_lookup(self):
-        """Test customer lookup endpoint"""
-        # Test with a sample phone number
-        test_phone = "9876543210"
+    def test_check_customer_api(self):
+        """Test check-customer API with known phone numbers"""
+        test_phones = [
+            ("7018342940", "Parikshit"),  # Known customer
+            ("1234567890", "Kriele"),     # Known customer
+            ("9816666555", "Vishal"),     # Known customer
+            ("0000000000", None)          # Unknown customer
+        ]
+        
+        all_passed = True
+        for phone, expected_name in test_phones:
+            success, response = self.run_test(
+                f"Check Customer - {phone}",
+                "POST",
+                "auth/check-customer",
+                200,
+                data={
+                    "phone": phone,
+                    "restaurant_id": self.restaurant_id,
+                    "pos_id": "0001"
+                }
+            )
+            
+            if success and isinstance(response, dict):
+                exists = response.get('exists', False)
+                customer_name = response.get('customer', {}).get('name', '') if response.get('customer') else ''
+                print(f"   Phone {phone}: exists={exists}, name='{customer_name}'")
+                
+                if expected_name and exists and customer_name:
+                    print(f"   ✅ Known customer found as expected")
+                elif not expected_name and not exists:
+                    print(f"   ✅ Unknown customer handled correctly")
+                else:
+                    print(f"   ⚠️  Unexpected result for {phone}")
+            else:
+                all_passed = False
+                
+        return all_passed
+
+    def test_crm_health_check(self):
+        """Test CRM API health check"""
         success, response = self.run_test(
-            "Customer Lookup",
+            "CRM Health Check",
             "GET",
-            f"customer-lookup/{self.restaurant_id}?phone={test_phone}",
+            self.crm_url,  # Full URL
             200
         )
         
         if success and isinstance(response, dict):
-            found = response.get('found', False)
-            print(f"   Customer lookup test (phone: {test_phone}): Found = {found}")
-            return True
+            if "DinePoints API" in str(response.get("message", "")):
+                print("   ✅ CRM API responding correctly")
+                return True
+            else:
+                print(f"   ⚠️  CRM responded but message might be different: {response}")
+                return True
         return success
+
+    def test_distance_api(self):
+        """Test distance API with near and far locations"""
+        # Test near location (Shoghi area - should be deliverable)
+        near_location = {
+            "destination_lat": "31.0537",
+            "destination_lng": "77.1273", 
+            "restaurant_id": self.restaurant_id,
+            "order_value": "0"
+        }
+        
+        success1, response1 = self.run_test(
+            "Distance API - Near Location",
+            "POST",
+            self.distance_api_url,  # Full URL
+            200,
+            data=near_location
+        )
+        
+        # Test far location (Delhi - should not be deliverable)
+        far_location = {
+            "destination_lat": "28.6139",
+            "destination_lng": "77.2090",
+            "restaurant_id": self.restaurant_id,
+            "order_value": "0"
+        }
+        
+        success2, response2 = self.run_test(
+            "Distance API - Far Location",
+            "POST", 
+            self.distance_api_url,  # Full URL
+            200,
+            data=far_location
+        )
+        
+        if success1 and isinstance(response1, dict):
+            shipping_status = response1.get('shipping_status', 'Unknown')
+            shipping_charge = response1.get('shipping_charge', 'Unknown')
+            print(f"   Near location: status={shipping_status}, charge={shipping_charge}")
+            
+        if success2 and isinstance(response2, dict):
+            shipping_status = response2.get('shipping_status', 'Unknown')
+            print(f"   Far location: status={shipping_status}")
+            
+        return success1 and success2
 
     def test_order_endpoints_basic(self):
         """Test basic order-related endpoints that don't require full order data"""
@@ -203,6 +290,7 @@ class MyGenieAPITester:
 def main():
     """Run all backend API tests"""
     print("🚀 Starting MyGenie Customer App Backend API Tests")
+    print("Testing Restaurant 509 - Pav & Pages / 18march")
     print("=" * 60)
     
     tester = MyGenieAPITester()
@@ -211,10 +299,12 @@ def main():
     tests = [
         ("API Health Check", tester.test_api_health),
         ("Restaurant Config", tester.test_restaurant_config),
+        ("Check Customer API", tester.test_check_customer_api),
+        ("CRM Health Check", tester.test_crm_health_check),
+        ("Distance API", tester.test_distance_api),
         ("Dietary Tags", tester.test_dietary_tags),
         ("Table Configuration", tester.test_table_config),
         ("Loyalty Settings", tester.test_loyalty_settings),
-        ("Customer Lookup", tester.test_customer_lookup),
     ]
     
     print(f"\nRunning {len(tests)} test categories...")

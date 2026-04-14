@@ -1,6 +1,6 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: April 14, 2026 (Session 12 - OTP Auth Migration)
+## Last Updated: April 14, 2026 (Session 12 - OTP Auth + Delivery Map)
 
 ---
 
@@ -8,6 +8,7 @@
 
 | Bug ID | Title | Priority | Status | Date Found | Date Fixed | Comments |
 |--------|-------|----------|--------|------------|------------|----------|
+| BUG-047 | REACT_APP_CRM_URL was set to our own backend URL | 🔴 P0 | ✅ Fixed | Apr 14 | Apr 14 | .env had CRM_URL pointing to loyalty-app-april-v1 (our backend) instead of crm.mygenie.online. All CRM calls were hitting our backend and 404ing. Fixed to https://crm.mygenie.online/api |
 | BUG-046 | `stripPhonePrefix` only handles Indian +91 — breaks international numbers | 🟡 P1 | ⏳ Known Issue | Apr 14 | - | Current logic hardcodes `91` prefix + 12-digit check. UK (+44), US (+1), UAE (+971) etc. will send prefixed digits to CRM causing lookup failures. Low impact now (India-only users). Fix before international rollout. |
 | BUG-045 | CRM API calls sent phone with `+91` prefix — CRM expects bare digits | 🔴 P0 | ✅ Fixed | Apr 14 | Apr 14 | `crmSendOtp` etc. received `+917505242126` from PhoneInput, CRM returned 404. Added `stripPhonePrefix()` to all 6 CRM functions in `crmService.js`. |
 | BUG-044 | POS returns razorpay_id for COD orders | 🔴 P0 | ⏳ POS-side bug | Apr 11 | - | POS generates razorpay_id even when payment_type=postpaid. Should only generate for PG payments |

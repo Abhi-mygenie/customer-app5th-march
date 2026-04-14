@@ -1,6 +1,6 @@
 # PRD — MyGenie Customer App
 
-**Last Updated:** April 14, 2026 (Re-deployed from branch `14-april-v1`)
+**Last Updated:** April 14, 2026 (Session 12 — OTP Auth + Delivery Map + Distance API)
 
 ---
 
@@ -31,11 +31,12 @@ Single shared MongoDB at `52.66.232.149:27017/mygenie`.
 - Loyalty points earn/redeem
 - Wallet balance
 - Admin panel for configuration
+- Delivery with map-based address selection + distance-based charge
 
 ## What's Been Implemented
 
 ### Original (Pre April 13)
-- Full dine-in ordering flow (QR → menu → cart → order)
+- Full dine-in ordering flow (QR -> menu -> cart -> order)
 - Admin panel with branding, visibility, banners, QR, dietary tags
 - Customer auth (password via our backend)
 - Loyalty points display and redemption
@@ -44,32 +45,58 @@ Single shared MongoDB at `52.66.232.149:27017/mygenie`.
 - Phase 1-2 of FEAT-002: Takeaway mode
 
 ### April 13, 2026 — CRM Migration + Delivery Phase 3
-- **Phase A**: CRM service layer (`crmService.js`) with 15 API functions
-- **Phase B**: Customer auth migrated from our backend to CRM (register, login, forgot-password, reset-password, OTP)
-- **Phase C**: Profile page migrated to CRM (orders, points, wallet with response normalization)
-- **Phase D**: Delivery address page (CRUD), cart delivery state, order payload wiring, landing page delivery flow
+- Phase A: CRM service layer (crmService.js) with 15 API functions
+- Phase B: Customer auth migrated from our backend to CRM (register, login, forgot-password, reset-password, OTP)
+- Phase C: Profile page migrated to CRM (orders, points, wallet with response normalization)
+- Phase D: Delivery address page (CRUD), cart delivery state, order payload wiring, landing page delivery flow
+
+### April 14, 2026 — OTP Auth + Delivery Map + Distance API
+- **OTP Login**: 3-state auth method chooser on PasswordSetup (OTP / Password / Set Password)
+  - Works for existing customers WITH password (OTP primary, password secondary)
+  - Works for existing customers WITHOUT password (OTP primary, set-password secondary)
+  - New customers still go through registration (no OTP for unregistered)
+  - 30-sec resend timer, dev OTP display, phone masking
+  - 30 unit tests passing
+- **Phone prefix fix (BUG-045)**: stripPhonePrefix() strips +91 before CRM calls
+- **CRM URL fix**: Corrected REACT_APP_CRM_URL from our backend to crm.mygenie.online
+- **Auto-populate name**: Debounced check-customer on landing page, auto-fills name for returning customers
+- **Google Maps delivery page**: Full rewrite of DeliveryAddressPage with:
+  - Google Map with draggable pin
+  - Browser geolocation ("Use Current Location")
+  - Saved address cards from CRM
+  - Reverse geocoding (pin drag -> address text)
+  - Forward geocoding (address without lat/lng -> map pin)
+- **Distance API integration**: POST to manage.mygenie.online/api/v1/config/distance-api-new
+  - Deliverability gate (shipping_status: Yes/No)
+  - Delivery charge + ETA display
+  - Debounced 500ms on address change
+- **Order payload wiring**: helpers.js now populates delivery fields (address, lat, lng, delivery_charge, address_id, contact_person, house, floor, road, pincode) from CartContext
 
 ## Prioritized Backlog
 
 ### P0 (Critical)
-- [ ] Phase E: Full regression testing
+- [ ] Full regression testing (TC-01 through TC-30 + new delivery tests)
 - [ ] CRM down fallback (guest mode)
-- [ ] Token expiry handling (401 → re-login prompt)
+- [ ] Token expiry handling (401 -> re-login prompt)
 
 ### P1 (Important)
-- [ ] Distance API integration (delivery charge calculation)
-- [ ] Google Maps geocoding for new addresses
+- [ ] Zone API integration (COD limits, surge pricing) — Phase 2
+- [ ] Google Maps autocomplete for address search
 - [ ] Profile page — edit customer info via CRM
-- [ ] Coupon listing for customers
+- [ ] Coupon listing for customers (/coupons/validate)
+- [ ] /pos/max-redeemable — points redemption at checkout
+- [ ] /pos/orders — CRM order placement (auto loyalty/wallet/WhatsApp)
+- [ ] /feedback — post-order rating via CRM
+- [ ] Address edit UI (PUT endpoint exists, no UI)
+- [ ] BUG-046: stripPhonePrefix only handles India +91
 
 ### P2 (Nice to have)
-- [ ] Our backend customer auth endpoint cleanup (currently unused but alive)
-- [ ] Zone-based delivery availability
+- [ ] Our backend customer auth endpoint cleanup
 - [ ] Order tracking in real-time
 - [ ] WhatsApp notification integration via CRM
 
 ## Next Tasks
-1. Run comprehensive test suite (TC-01 through TC-30)
-2. Fix any blocking issues
-3. Delivery charge via distance API (when keys provided)
-4. Google Maps for address geocoding
+1. Run comprehensive test suite
+2. Fix any blocking issues from tests
+3. Zone API integration (Phase 2)
+4. CRM checkout endpoints (/coupons/validate, /pos/max-redeemable, /pos/orders)
