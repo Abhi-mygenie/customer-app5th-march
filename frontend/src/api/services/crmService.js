@@ -13,6 +13,48 @@ if (!CRM_URL) {
 }
 
 // ============================================
+// Per-restaurant API key map
+// ============================================
+// REACT_APP_CRM_API_KEY is a JSON object: { "<restaurantId>": "<apiKey>", ... }
+let CRM_API_KEYS = {};
+try {
+  const raw = process.env.REACT_APP_CRM_API_KEY;
+  if (raw) {
+    CRM_API_KEYS = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  }
+} catch (e) {
+  console.error('[CRM] Failed to parse REACT_APP_CRM_API_KEY as JSON:', e);
+  CRM_API_KEYS = {};
+}
+
+/** Extract restaurant_id from a "pos_{posId}_restaurant_{restaurantId}" userId string */
+const getRestaurantIdFromUserId = (userId) => {
+  if (!userId) return null;
+  const m = String(userId).match(/restaurant_(\d+)/);
+  return m ? m[1] : null;
+};
+
+/** Extract restaurant_id from a CRM JWT (user_id claim) */
+const getRestaurantIdFromToken = (token) => {
+  try {
+    if (!token) return null;
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+    const decoded = JSON.parse(atob(padded));
+    return getRestaurantIdFromUserId(decoded.user_id);
+  } catch {
+    return null;
+  }
+};
+
+/** Get API key for a restaurant id (string or number) */
+const getApiKeyForRestaurant = (restaurantId) => {
+  if (restaurantId == null) return null;
+  return CRM_API_KEYS[String(restaurantId)] || null;
+};
+
+// ============================================
 // Helper
 // ============================================
 
@@ -25,15 +67,38 @@ export const buildUserId = (restaurantId, posId = '0001') => {
 };
 
 /**
- * Internal fetch wrapper with error handling
+ * Internal fetch wrapper with error handling.
+ * Pass opts.restaurantId (or opts.userId / opts.token) to attach the per-restaurant x-api-key.
  */
 const crmFetch = async (endpoint, options = {}) => {
   const url = `${CRM_URL}${endpoint}`;
-  const { headers: optionHeaders, ...restOptions } = options;
-  
+  const { headers: optionHeaders, restaurantId, userId, token, ...restOptions } = options;
+
+  // Resolve restaurant id from the first available source
+  const resolvedRestId =
+    restaurantId ||
+    getRestaurantIdFromUserId(userId) ||
+    getRestaurantIdFromToken(token) ||
+    getRestaurantIdFromUserId(
+      (() => {
+        try {
+          const body = restOptions.body ? JSON.parse(restOptions.body) : null;
+          return body?.user_id;
+        } catch {
+          return null;
+        }
+      })()
+    );
+
+  const apiKey = getApiKeyForRestaurant(resolvedRestId);
+  if (!apiKey && resolvedRestId) {
+    console.warn(`[CRM] No API key configured for restaurant_id=${resolvedRestId}`);
+  }
+
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
+      ...(apiKey ? { 'x-api-key': apiKey } : {}),
       ...optionHeaders,
     },
     ...restOptions,
@@ -61,11 +126,12 @@ const crmFetch = async (endpoint, options = {}) => {
 };
 
 /**
- * Authenticated fetch — adds Bearer token
+ * Authenticated fetch — adds Bearer token + per-restaurant x-api-key (derived from token)
  */
 const crmAuthFetch = async (endpoint, token, options = {}) => {
   return crmFetch(endpoint, {
     ...options,
+    token, // used by crmFetch to resolve restaurant -> x-api-key
     headers: {
       ...options.headers,
       'Authorization': `Bearer ${token}`,
