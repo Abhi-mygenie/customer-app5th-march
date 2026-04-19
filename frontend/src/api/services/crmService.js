@@ -55,6 +55,20 @@ const getApiKeyForRestaurant = (restaurantId) => {
 };
 
 // ============================================
+// API version flag (Phase-1 migration)
+// ============================================
+// Read at module load; defaults to v1 if not set or invalid.
+// Controls which CRM contract this service talks to (see Phase-1 plan).
+// Value flip requires a frontend restart (CRA bakes env vars at dev-server start).
+const CRM_API_VERSION = (process.env.REACT_APP_CRM_API_VERSION || 'v1').trim().toLowerCase();
+if (!['v1', 'v2'].includes(CRM_API_VERSION)) {
+  console.warn(`[CRM] Invalid REACT_APP_CRM_API_VERSION="${CRM_API_VERSION}", defaulting to v1`);
+}
+console.log(`[CRM] API version: ${CRM_API_VERSION}`);
+// eslint-disable-next-line no-unused-vars
+const isV2 = () => CRM_API_VERSION === 'v2';
+
+// ============================================
 // Helper
 // ============================================
 
