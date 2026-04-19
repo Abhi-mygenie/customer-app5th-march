@@ -467,9 +467,24 @@ export const crmDeleteAddress = async (token, addressId) => {
 
 /**
  * Set an address as default
- * Returns: updated address object with is_default: true
+ * Returns: { success, message, address_id }
+ *
+ * v1 path: POST /customer/me/addresses/{id}/set-default
+ * v2 path: PUT  /scan/addresses/{addr_id}/default  (METHOD and PATH both change)
+ *          Idempotent — setting already-default returns success.
  */
 export const crmSetDefaultAddress = async (token, addressId) => {
+  if (isV2()) {
+    const data = await crmAuthFetch(`/scan/addresses/${addressId}/default`, token, {
+      method: 'PUT',
+    });
+    return {
+      success: true,
+      message: 'Default address set',
+      address_id: data?.address_id || addressId,
+    };
+  }
+
   return crmAuthFetch(`/customer/me/addresses/${addressId}/set-default`, token, {
     method: 'POST',
   });
