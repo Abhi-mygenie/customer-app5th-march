@@ -350,8 +350,15 @@ export const crmVerifyOtp = async (phone, otp, userId, countryCode = '91') => {
 /**
  * Send OTP for password reset
  * Returns: { success, message, expires_in_minutes }
+ *
+ * HELD ON v1 — v2 contract has no /forgot-password endpoint (per SCAN_AND_ORDER_API_v2.md).
+ * Deliberate Phase-1 hold (decision 3d). Tracked as UX-GAP-02.
+ * Calls continue to hit v1 URL regardless of flag — same (broken) behavior as today.
  */
 export const crmForgotPassword = async (phone, userId, countryCode = '91') => {
+  if (isV2()) {
+    console.warn('[CRM] Forgot Password is not in v2 contract. Falling back to v1 path (expected 404 from CRM). Tracked as UX-GAP-02.');
+  }
   return crmFetch('/customer/forgot-password', {
     method: 'POST',
     body: JSON.stringify({ phone: stripPhonePrefix(phone), user_id: userId, country_code: countryCode }),
@@ -361,8 +368,15 @@ export const crmForgotPassword = async (phone, userId, countryCode = '91') => {
 /**
  * Reset password with OTP verification
  * Returns: { success, message }
+ *
+ * HELD ON v1 — v2 contract has no /reset-password endpoint (per SCAN_AND_ORDER_API_v2.md).
+ * Deliberate Phase-1 hold (decision 3d). Tracked as UX-GAP-02.
+ * Calls continue to hit v1 URL regardless of flag — same (broken) behavior as today.
  */
 export const crmResetPassword = async (phone, otp, userId, newPassword) => {
+  if (isV2()) {
+    console.warn('[CRM] Reset Password is not in v2 contract. Falling back to v1 path (expected 404 from CRM). Tracked as UX-GAP-02.');
+  }
   return crmFetch('/customer/reset-password', {
     method: 'POST',
     body: JSON.stringify({ phone: stripPhonePrefix(phone), otp, user_id: userId, new_password: newPassword }),
