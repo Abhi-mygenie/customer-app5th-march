@@ -136,6 +136,28 @@ const crmFetch = async (endpoint, options = {}) => {
     throw error;
   }
 
+  // ============================================
+  // v2 response-envelope adapter
+  // ============================================
+  // v2 wraps every response in { success, message, data }.
+  // v1 returns bare objects and will NOT match this shape — passes through unchanged.
+  // Business errors in v2 arrive as HTTP 200 with success:false — must throw here.
+  if (
+    data &&
+    typeof data === 'object' &&
+    !Array.isArray(data) &&
+    'success' in data &&
+    'data' in data
+  ) {
+    if (data.success === false) {
+      const err = new Error(data.message || 'CRM returned success:false');
+      err.data = data;
+      err.isBusinessError = true;
+      throw err;
+    }
+    return data.data;
+  }
+
   return data;
 };
 
