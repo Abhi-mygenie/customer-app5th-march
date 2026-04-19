@@ -435,9 +435,25 @@ export const crmGetAddresses = async (token) => {
 
 /**
  * Add a new delivery address
- * Returns: address object with generated id
+ * Returns: { success, message, address_id, address?, deduplicated }
+ *
+ * v1 path: POST /customer/me/addresses
+ * v2 path: POST /scan/addresses  (flat route; server-side dedup on address+pincode)
  */
 export const crmAddAddress = async (token, addressData) => {
+  if (isV2()) {
+    const data = await crmAuthFetch('/scan/addresses', token, {
+      method: 'POST',
+      body: JSON.stringify(addressData),
+    });
+    return {
+      success: true,
+      message: data?.deduplicated ? 'Address already exists' : 'Address added',
+      address_id: data?.address_id,
+      address: data?.address,
+      deduplicated: !!data?.deduplicated,
+    };
+  }
   return crmAuthFetch('/customer/me/addresses', token, {
     method: 'POST',
     body: JSON.stringify(addressData),
@@ -446,9 +462,23 @@ export const crmAddAddress = async (token, addressData) => {
 
 /**
  * Update an existing address (send only fields to change)
- * Returns: updated address object
+ * Returns: { success, message, address_id }
+ *
+ * v1 path: PUT /customer/me/addresses/{id}
+ * v2 path: PUT /scan/addresses/{addr_id}  (flat route; returns only address_id — re-fetch for latest)
  */
 export const crmUpdateAddress = async (token, addressId, addressData) => {
+  if (isV2()) {
+    const data = await crmAuthFetch(`/scan/addresses/${addressId}`, token, {
+      method: 'PUT',
+      body: JSON.stringify(addressData),
+    });
+    return {
+      success: true,
+      message: 'Address updated',
+      address_id: data?.address_id || addressId,
+    };
+  }
   return crmAuthFetch(`/customer/me/addresses/${addressId}`, token, {
     method: 'PUT',
     body: JSON.stringify(addressData),
@@ -457,9 +487,22 @@ export const crmUpdateAddress = async (token, addressId, addressData) => {
 
 /**
  * Delete an address
- * Returns: { message, remaining_addresses }
+ * Returns: { success, message, address_id }
+ *
+ * v1 path: DELETE /customer/me/addresses/{id}  (returned { remaining_addresses })
+ * v2 path: DELETE /scan/addresses/{addr_id}    (remaining_addresses not returned; re-fetch for list)
  */
 export const crmDeleteAddress = async (token, addressId) => {
+  if (isV2()) {
+    const data = await crmAuthFetch(`/scan/addresses/${addressId}`, token, {
+      method: 'DELETE',
+    });
+    return {
+      success: true,
+      message: 'Address deleted',
+      address_id: data?.address_id || addressId,
+    };
+  }
   return crmAuthFetch(`/customer/me/addresses/${addressId}`, token, {
     method: 'DELETE',
   });
