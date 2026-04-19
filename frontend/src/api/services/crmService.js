@@ -435,7 +435,8 @@ export const crmGetAddresses = async (token) => {
 
 /**
  * Add a new delivery address
- * Returns: { success, message, address_id, address?, deduplicated }
+ * Returns: flat address object (v1 shape) — so DeliveryAddress.jsx can read newAddr.id / .latitude / .longitude directly.
+ *          Dedup case: adds _deduplicated: true so caller can detect it if needed.
  *
  * v1 path: POST /customer/me/addresses
  * v2 path: POST /scan/addresses  (flat route; server-side dedup on address+pincode)
@@ -446,12 +447,15 @@ export const crmAddAddress = async (token, addressData) => {
       method: 'POST',
       body: JSON.stringify(addressData),
     });
+    if (data?.address) {
+      // Normal add — return full flat address object
+      return data.address;
+    }
+    // Dedup case — v2 only returns address_id; synthesize from request payload
     return {
-      success: true,
-      message: data?.deduplicated ? 'Address already exists' : 'Address added',
-      address_id: data?.address_id,
-      address: data?.address,
-      deduplicated: !!data?.deduplicated,
+      id: data?.address_id,
+      ...addressData,
+      _deduplicated: true,
     };
   }
   return crmAuthFetch('/customer/me/addresses', token, {
