@@ -183,8 +183,34 @@ const crmAuthFetch = async (endpoint, token, options = {}) => {
  * Register customer with phone + password
  * Creates new customer or links password to existing (no password set)
  * Returns: { success, token, customer, is_new_customer }
+ *
+ * v1 path: POST /customer/register — body { phone, password, user_id, name?, email? }
+ * v2 path: POST /scan/auth/register — body { phone, name, password, restaurant_id, email? }
+ *          (name required in v2; customer object synthesized in response)
  */
 export const crmRegister = async (phone, password, userId, name = '', email = '') => {
+  if (isV2()) {
+    const restaurantId = getRestaurantIdFromUserId(userId);
+    const body = {
+      phone: stripPhonePrefix(phone),
+      password,
+      name,
+      restaurant_id: restaurantId,
+    };
+    if (email) body.email = email;
+    const data = await crmFetch('/scan/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      userId,
+    });
+    return {
+      success: true,
+      token: data?.token,
+      customer: { id: data?.customer_id, phone: stripPhonePrefix(phone), name },
+    };
+  }
+
+  // v1 — unchanged
   const body = { phone: stripPhonePrefix(phone), password, user_id: userId };
   if (name) body.name = name;
   if (email) body.email = email;
@@ -198,8 +224,31 @@ export const crmRegister = async (phone, password, userId, name = '', email = ''
 /**
  * Login customer with phone + password
  * Returns: { success, token, customer } (customer includes addresses)
+ *
+ * v1 path: POST /customer/login — body { phone, password, user_id }
+ * v2 path: POST /scan/auth/login — body { phone, password, restaurant_id }
+ *          (no addresses returned in v2; synthesized customer with name='')
  */
 export const crmLogin = async (phone, password, userId) => {
+  if (isV2()) {
+    const restaurantId = getRestaurantIdFromUserId(userId);
+    const data = await crmFetch('/scan/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        phone: stripPhonePrefix(phone),
+        password,
+        restaurant_id: restaurantId,
+      }),
+      userId,
+    });
+    return {
+      success: true,
+      token: data?.token,
+      customer: { id: data?.customer_id, phone: stripPhonePrefix(phone), name: '' },
+    };
+  }
+
+  // v1 — unchanged
   return crmFetch('/customer/login', {
     method: 'POST',
     body: JSON.stringify({ phone: stripPhonePrefix(phone), password, user_id: userId }),
