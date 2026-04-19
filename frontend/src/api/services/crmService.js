@@ -224,9 +224,35 @@ const stripPhonePrefix = (phone) => {
 
 /**
  * Send OTP to customer phone
- * Returns: { success, message, expires_in_minutes, restaurant_name }
+ * Returns: { success, message, expires_in_minutes, debug_otp? }
+ *
+ * v1 path: POST /customer/send-otp  — body { phone, user_id, country_code }
+ * v2 path: POST /scan/auth/request-otp — body { phone, restaurant_id }
+ *          response normalized to v1 shape so PasswordSetup.jsx is unaffected.
  */
 export const crmSendOtp = async (phone, userId, countryCode = '91') => {
+  if (isV2()) {
+    const restaurantId = getRestaurantIdFromUserId(userId);
+    const data = await crmFetch('/scan/auth/request-otp', {
+      method: 'POST',
+      body: JSON.stringify({
+        phone: stripPhonePrefix(phone),
+        restaurant_id: restaurantId,
+      }),
+      userId, // used by crmFetch to resolve restaurant -> x-api-key
+    });
+    return {
+      success: true,
+      message: 'OTP sent',
+      expires_in_minutes: data?.expires_in_seconds
+        ? Math.ceil(data.expires_in_seconds / 60)
+        : 10,
+      debug_otp: data?.dev_otp,
+      phone: data?.phone,
+    };
+  }
+
+  // v1 — unchanged
   return crmFetch('/customer/send-otp', {
     method: 'POST',
     body: JSON.stringify({ phone: stripPhonePrefix(phone), user_id: userId, country_code: countryCode }),
