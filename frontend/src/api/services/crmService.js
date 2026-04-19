@@ -327,8 +327,14 @@ export const crmResetPassword = async (phone, otp, userId, newPassword) => {
 /**
  * Get current customer profile (same data as login/verify-otp response)
  * Returns: { id, name, phone, email, tier, total_points, addresses, ... }
+ *
+ * v1 path: GET /customer/me
+ * v2 path: GET /scan/auth/me  (envelope unwrapped by crmFetch -> bare profile)
  */
 export const crmGetProfile = async (token) => {
+  if (isV2()) {
+    return crmAuthFetch('/scan/auth/me', token, { method: 'GET' });
+  }
   return crmAuthFetch('/customer/me', token, { method: 'GET' });
 };
 
