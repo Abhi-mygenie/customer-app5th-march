@@ -418,8 +418,18 @@ export const crmGetWallet = async (token, limit = 50) => {
 /**
  * Get all saved addresses
  * Returns: { customer_id, addresses: [...], total }
+ *
+ * v1 path: GET /customer/me/addresses
+ * v2 path: GET /scan/addresses  (flat route; envelope unwrapped to { addresses, count })
  */
 export const crmGetAddresses = async (token) => {
+  if (isV2()) {
+    const data = await crmAuthFetch('/scan/addresses', token, { method: 'GET' });
+    if (data && Array.isArray(data.addresses)) {
+      return { addresses: data.addresses };
+    }
+    return data;
+  }
   return crmAuthFetch('/customer/me/addresses', token, { method: 'GET' });
 };
 
