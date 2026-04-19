@@ -261,9 +261,37 @@ export const crmSendOtp = async (phone, userId, countryCode = '91') => {
 
 /**
  * Verify OTP and get token + profile
- * Returns: { success, token, customer } (customer includes addresses)
+ * Returns: { success, token, customer, is_new_customer? }
+ *
+ * v1 path: POST /customer/verify-otp — returns { token, customer: { name, phone, addresses, ... } }
+ * v2 path: POST /scan/auth/verify-otp — returns { token, customer_id, is_new_customer, phone }
+ *          Synthesized to v1 shape. v2 has no `customer.name` here — caller falls back to displayName.
  */
 export const crmVerifyOtp = async (phone, otp, userId, countryCode = '91') => {
+  if (isV2()) {
+    const restaurantId = getRestaurantIdFromUserId(userId);
+    const data = await crmFetch('/scan/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({
+        phone: stripPhonePrefix(phone),
+        otp,
+        restaurant_id: restaurantId,
+      }),
+      userId,
+    });
+    return {
+      success: true,
+      token: data?.token,
+      customer: {
+        id: data?.customer_id,
+        phone: data?.phone,
+        name: '',
+      },
+      is_new_customer: data?.is_new_customer,
+    };
+  }
+
+  // v1 — unchanged
   return crmFetch('/customer/verify-otp', {
     method: 'POST',
     body: JSON.stringify({ phone: stripPhonePrefix(phone), otp, user_id: userId, country_code: countryCode }),
