@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { crmRegister, crmLogin, crmForgotPassword, crmResetPassword, crmSendOtp, crmVerifyOtp, buildUserId } from '../api/services/crmService';
+import { crmRegister, crmLogin, crmForgotPassword, crmResetPassword, crmSendOtp, crmVerifyOtp, crmSkipOtp, buildUserId } from '../api/services/crmService';
 import { IoEyeOutline, IoEyeOffOutline, IoArrowBack } from 'react-icons/io5';
 import './PasswordSetup.css';
 
@@ -89,6 +89,20 @@ const PasswordSetup = () => {
     return () => {
       if (resendIntervalRef.current) clearInterval(resendIntervalRef.current);
     };
+  }, []);
+
+  // UX-GAP-01: Direct-to-password routing
+  // Skip the intermediate "choose" screen when we already know what the user needs.
+  // - Existing customer WITH password → jump to password login
+  // - Existing customer WITHOUT password (or new) → jump to set-password
+  // - Edge case (customerExists undefined) → stay on 'choose' as safety fallback
+  useEffect(() => {
+    if (customerExists && hasPassword) {
+      setAuthMethod('password');
+    } else if (customerExists && !hasPassword) {
+      setAuthMethod('set-password');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Step 3: Send OTP for login (existing customer)
@@ -655,7 +669,13 @@ const PasswordSetup = () => {
         </button>
 
         <div className="otp-actions">
-          <button className="password-forgot-link" onClick={() => setForgotMode(true)} data-testid="forgot-password-btn">
+          <button
+            className="password-forgot-link"
+            onClick={() => toast('Password reset coming soon', { icon: 'ℹ️' })}
+            style={{ color: '#9ca3af', cursor: 'not-allowed' }}
+            title="Available soon"
+            data-testid="forgot-password-btn"
+          >
             Forgot password?
           </button>
           <button
