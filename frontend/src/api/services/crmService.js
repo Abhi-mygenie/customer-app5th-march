@@ -348,6 +348,34 @@ export const crmVerifyOtp = async (phone, otp, userId, countryCode = '91') => {
 };
 
 /**
+ * Skip-OTP frictionless login (v2 only — added post-Phase-1 for UX-GAP-01)
+ * Grants a valid customer JWT without OTP verification.
+ * Auto-creates customer record if phone doesn't exist.
+ * Returns: { success, token, customer, is_new_customer }
+ *
+ * v2 path: POST /scan/auth/skip-otp — body { phone, restaurant_id }
+ *          Response envelope unwrapped by crmFetch; synthesized to v1-like shape.
+ * No v1 equivalent — this call always uses v2.
+ */
+export const crmSkipOtp = async (phone, userId) => {
+  const restaurantId = getRestaurantIdFromUserId(userId);
+  const data = await crmFetch('/scan/auth/skip-otp', {
+    method: 'POST',
+    body: JSON.stringify({
+      phone: stripPhonePrefix(phone),
+      restaurant_id: restaurantId,
+    }),
+    userId, // used by crmFetch to resolve restaurant -> x-api-key
+  });
+  return {
+    success: true,
+    token: data?.token,
+    customer: { id: data?.customer_id, phone: data?.phone, name: '' },
+    is_new_customer: data?.is_new_customer,
+  };
+};
+
+/**
  * Send OTP for password reset
  * Returns: { success, message, expires_in_minutes }
  *
