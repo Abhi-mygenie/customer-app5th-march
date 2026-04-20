@@ -301,6 +301,77 @@ POST /api/scan/auth/login
 **Failure:** `{ "success": false, "message": "Invalid credentials" }`
 
 ---
+
+### 1.6 Skip OTP (Frictionless Login)
+
+Grants a valid customer JWT without OTP verification. Intended for "Skip for now" / frictionless-login UX flows where the user provides phone + restaurant_id without completing OTP verification. Auto-creates a customer record on first use.
+
+```
+POST /api/scan/auth/skip-otp
+```
+
+**Auth:** None (public)
+
+**Request:**
+
+```json
+{
+  "phone": "9876543210",
+  "restaurant_id": "478"
+}
+```
+
+**Required fields:**
+- `phone` — digits only, no `+` country-code prefix
+- `restaurant_id` — string, either short (`"478"`) or full (`"pos_0001_restaurant_478"`)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "customer_id": "b853cea3-3a5a-4567-aec2-f69a91467ab4",
+    "is_new_customer": false,
+    "phone": "9876543210"
+  }
+}
+```
+
+**Response fields:**
+- `token` — JWT customer token, 24h expiry (same as other customer tokens)
+- `customer_id` — UUID of the customer record (existing or newly created)
+- `is_new_customer` — `true` if a new customer record was created on this call
+- `phone` — echoed phone for client verification
+
+**Behavior:**
+- Existing customer → returns token for existing record (`is_new_customer: false`)
+- New phone → auto-creates customer record → returns token (`is_new_customer: true`)
+- Token is portable across CRM hosts (verified against shared signing key)
+
+**Error responses:**
+- `422` — validation error (missing phone or restaurant_id)
+- `500` — server error (restaurant_id invalid or customer creation failed)
+
+**Security note:**
+This endpoint issues a customer token **without proving phone ownership**. Intended only for low-trust scenarios (guest browsing, non-sensitive views). Not suitable for payment authorization or account-modifying actions by itself. Rate-limiting is strongly recommended upstream. Currently issues tokens with or without `x-api-key` — see hardening backlog.
+
+**Client use-case example (frontend):**
+
+```javascript
+// UX: "Skip for now" button in PasswordSetup
+const data = await crmSkipOtp(phone, userId);
+if (data?.token) {
+  setCrmAuth(data.token, { id: data.customer.id, phone, name: displayName }, restaurantId);
+  navigateToMenu();
+}
+```
+
+**Added:** Phase-1 addendum (post-v2 initial release) to unblock UX-GAP-01.
+
+---
 ---
 
 ## 2. Customer Profile
@@ -1103,6 +1174,7 @@ POST /api/scan/request-bill
 | 1.3 | GET | `/scan/auth/me` | Customer | Get my profile |
 | 1.4 | POST | `/scan/auth/register` | Public | Register with password |
 | 1.5 | POST | `/scan/auth/login` | Public | Login with password |
+| 1.6 | POST | `/scan/auth/skip-otp` | Public | Frictionless login (no OTP) |
 | **Profile** | | | | |
 | 2.1 | GET | `/scan/profile` | Customer | Get profile |
 | 2.2 | PUT | `/scan/profile` | Customer | Update profile |
