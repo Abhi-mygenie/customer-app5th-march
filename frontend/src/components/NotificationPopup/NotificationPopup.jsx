@@ -22,6 +22,7 @@ const NotificationPopup = ({ page }) => {
   const { content = {}, style = {} } = popup;
   const { title, message, imageUrl, ctaText, ctaLink, ctaAction } = content;
   const { position = 'center', type = 'modal' } = style;
+  const isAutoClose = Number(popup.autoDismissSeconds || 0) > 0;
 
   const handleCTA = () => {
     if (!ctaAction || ctaAction === 'dismiss') {
@@ -70,10 +71,19 @@ const NotificationPopup = ({ page }) => {
               {ctaText}
             </button>
           )}
-          {secondsRemaining !== null && secondsRemaining > 0 && (
+          {isAutoClose && secondsRemaining !== null && secondsRemaining > 0 && (
             <span className="np-countdown" data-testid="notification-popup-countdown">
               Closing in {secondsRemaining}s
             </span>
+          )}
+          {!isAutoClose && (
+            <button
+              className="np-ack-btn"
+              onClick={dismiss}
+              data-testid="notification-popup-ok"
+            >
+              OK
+            </button>
           )}
         </div>
       </div>

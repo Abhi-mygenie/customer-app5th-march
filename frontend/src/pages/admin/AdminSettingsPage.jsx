@@ -571,7 +571,7 @@ const AdminSettingsPage = () => {
                       />
                       <span className="np-admin-suffix">seconds</span>
                     </div>
-                    <span className="np-admin-hint">0 = manual close only</span>
+                    <span className="np-admin-hint">0 = manual close with OK button instead of countdown</span>
                   </div>
                 </div>
               </div>

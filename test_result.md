@@ -102,46 +102,70 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Verify the frontend fix for MAPS-01: Google Maps Geocoding API was being called with empty params, causing INVALID_REQUEST on the Delivery Address screen. The fix adds guards to prevent reverse geocoding, address geocoding, and distance checks from running when lat/lng or address query data is empty/invalid."
+user_problem_statement: "Verify the NotificationPopup behavior update: Manual close popups (autoDismissSeconds = 0) should show an OK button instead of countdown text. OK button should dismiss the popup. Auto-close popups should still show countdown. If a manual modal has a CTA, both CTA and OK buttons should be visible."
 
 frontend:
-  - task: "Google Maps API guard for empty coordinates"
+  - task: "NotificationPopup OK button for manual close"
     implemented: true
     working: true
-    file: "/app/frontend/src/pages/DeliveryAddress.jsx"
+    file: "/app/frontend/src/components/NotificationPopup/NotificationPopup.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
-          comment: "✓ Fix verified successfully. Added validation guards (isValidCoordinate, hasValidLatLng, buildGeocodeQuery) to prevent Google Maps API calls with empty/invalid parameters. Frontend unit test passes - confirms no geocode API is called for empty addresses. Browser testing shows no INVALID_REQUEST errors. The guards are working correctly in reverseGeocode (line 192), checkDistance (line 212), and geocodeAddress (line 274) functions."
+          comment: "✓ Implementation verified through code review and unit tests. Lines 74-87 correctly implement conditional rendering: auto-close popups (autoDismissSeconds > 0) show countdown, manual popups (autoDismissSeconds = 0) show OK button. OK button (data-testid='notification-popup-ok') calls dismiss() on click. All 5 unit tests pass successfully."
   
-  - task: "Frontend unit test for empty address geocoding"
+  - task: "NotificationPopup OK button styling"
     implemented: true
     working: true
-    file: "/app/frontend/src/__tests__/pages/DeliveryAddress.test.js"
+    file: "/app/frontend/src/components/NotificationPopup/NotificationPopup.css"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
-          comment: "✓ Test passes successfully. Verifies that clicking on a saved address with no queryable fields (empty address, house, road, city, state, pincode, latitude, longitude) does not trigger any geocode API calls. Test execution time: 0.557s."
+          comment: "✓ CSS styling verified. Lines 101-121 define .np-ack-btn styles with proper border, padding, hover effects, and color scheme matching the design system. Button has min-width: 112px and proper spacing (margin-top: 12px)."
+  
+  - task: "Admin settings hint text update"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/admin/AdminSettingsPage.jsx"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✓ Documentation update verified. Line 574 updated hint text to '0 = manual close with OK button instead of countdown' - provides clear guidance to admin users."
+  
+  - task: "NotificationPopup unit tests"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/__tests__/components/NotificationPopup.test.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✓ All 5 unit tests pass (0.544s execution time): (1) Manual modal shows OK button, not countdown ✓ (2) OK button dismisses popup ✓ (3) Auto-close modal shows countdown, not OK ✓ (4) Manual modal with CTA shows both CTA and OK buttons ✓ (5) CTA action works correctly with OK present ✓"
 
 metadata:
   created_by: "testing_agent"
-  version: "1.0"
-  test_sequence: 1
+  version: "1.1"
+  test_sequence: 2
 
 test_plan:
   current_focus:
-    - "Google Maps API guard for empty coordinates"
-    - "Frontend unit test for empty address geocoding"
+    - "NotificationPopup OK button for manual close"
+    - "NotificationPopup unit tests"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "testing"
-      message: "MAPS-01 fix verification completed. The fix is working correctly - no Google Maps INVALID_REQUEST errors detected. Frontend unit test passes. Browser testing confirms no Maps API errors. Note: Could not reach Delivery Address page through normal UI flow due to pre-existing auth/CRM issue (documented in review: /api/scan/auth/skip-otp returns 404), but this is unrelated to the Maps fix. The code changes are correct and the validation guards are functioning as intended."
+      message: "NotificationPopup OK button feature verification completed. Code implementation is correct and all unit tests pass. Browser testing shows app loads normally with no regressions on landing/menu pages. LIMITATION: Could not test runtime popup behavior in browser because app uses external CRM system (preprod.mygenie.online) for config data - local database changes don't affect the live app. However, code review + passing unit tests confirm the feature works as specified."
