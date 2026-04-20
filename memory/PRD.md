@@ -31,6 +31,8 @@ MyGenie Customer App is a restaurant-scoped React + FastAPI + MongoDB applicatio
 - Fixed MAPS-01 in `frontend/src/pages/DeliveryAddress.jsx`
 - Added guard helpers so Google geocoding and distance checks do not run with empty address data or invalid coordinates
 - Added focused frontend regression test: `frontend/src/__tests__/pages/DeliveryAddress.test.js`
+- Updated notification modal behavior so manual popups show an `OK` button instead of countdown text while preserving auto-close behavior
+- Added popup regression test coverage: `frontend/src/__tests__/components/NotificationPopup.test.js`
 
 ## MAPS-01 fix details
 Problem:
@@ -49,9 +51,14 @@ Resolution:
 - ESLint passed for:
   - `frontend/src/pages/DeliveryAddress.jsx`
   - `frontend/src/__tests__/pages/DeliveryAddress.test.js`
+  - `frontend/src/components/NotificationPopup/NotificationPopup.jsx`
+  - `frontend/src/pages/admin/AdminSettingsPage.jsx`
+  - `frontend/src/__tests__/components/NotificationPopup.test.js`
 - Focused frontend test passed:
   - `CI=true yarn test --watchAll=false --runTestsByPath src/__tests__/pages/DeliveryAddress.test.js`
+  - `CI=true yarn test --watchAll=false --runTestsByPath src/__tests__/components/NotificationPopup.test.js`
 - Frontend testing agent verified MAPS-01 fix and reported zero Google Maps `INVALID_REQUEST` errors for the guarded flow
+- Frontend testing agent verified the new manual popup `OK` button behavior and reported no regressions
 
 ### Known unrelated issue still present
 - Interactive browser path into Delivery Address is still partially blocked by a pre-existing CRM/auth issue: `/api/scan/auth/skip-otp` returns 404 in the UI flow
@@ -73,3 +80,4 @@ Resolution:
 1. Validate Address CRUD end-to-end once the skip-otp/auth path is restored
 2. Investigate the pre-existing `/api/scan/auth/skip-otp` 404 in the browser flow
 3. Continue remaining CRM v2 migration items from Phase 2
+4. If needed later, extend the popup close-behavior UX to banner/toast variants too
