@@ -62,10 +62,23 @@ const PasswordSetup = () => {
     }
   };
 
-  const handleSkip = () => {
-    const guestData = { name: displayName, phone, restaurantId };
-    localStorage.setItem('guestCustomer', JSON.stringify(guestData));
-    navigateToMenu();
+  const handleSkip = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const data = await crmSkipOtp(phone, userId);
+      if (data?.token) {
+        const customerProfile = { name: displayName, phone, ...data.customer };
+        setCrmAuth(data.token, customerProfile, restaurantId);
+        navigateToMenu();
+      } else {
+        toast.error('Could not continue. Please try again.');
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Could not continue. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Step 3: Start resend countdown timer
