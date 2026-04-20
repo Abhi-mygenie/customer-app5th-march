@@ -4,7 +4,7 @@
     "critical_bugs": [],
     "flaky_endpoints": [
       {
-        "endpoint": "https://customer-app-march-2.preview.emergentagent.com/api/restaurant-info/698",
+        "endpoint": "https://delivery-maps-fix.preview.emergentagent.com/api/restaurant-info/698",
         "failure_rate": "100%",
         "symptoms": "404 Not Found - but frontend uses different API endpoints (preprod.mygenie.online)",
         "workaround": "Frontend functionality unaffected as it uses alternative API endpoints"

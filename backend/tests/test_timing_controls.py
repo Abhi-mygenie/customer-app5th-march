@@ -8,7 +8,7 @@ import os
 import json
 
 # Use REACT_APP_BACKEND_URL for testing via public endpoint
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://customer-app-march-2.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://delivery-maps-fix.preview.emergentagent.com')
 
 # Admin credentials
 ADMIN_EMAIL = "owner@youngmonk.com"

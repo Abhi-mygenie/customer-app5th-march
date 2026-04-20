@@ -11,7 +11,7 @@
     ],
     "flaky_endpoints": [
       {
-        "endpoint": "https://customer-app-march-2.preview.emergentagent.com/api/",
+        "endpoint": "https://delivery-maps-fix.preview.emergentagent.com/api/",
         "failure_rate": "100%",
         "symptoms": "404 page not found - servers need to be woken up",
         "workaround": "Wake up servers using the frontend wake button"

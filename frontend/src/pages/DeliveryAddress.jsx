@@ -32,6 +32,17 @@ const ADDRESS_TYPE_ICONS = {
   Other: MdOutlineLocationOn,
 };
 
+const isValidCoordinate = (value) => Number.isFinite(Number(value));
+
+const hasValidLatLng = (lat, lng) => isValidCoordinate(lat) && isValidCoordinate(lng);
+
+const buildGeocodeQuery = (addr = {}) => (
+  [addr.address, addr.house, addr.road, addr.city, addr.state, addr.pincode]
+    .map((part) => (typeof part === 'string' ? part.trim() : ''))
+    .filter(Boolean)
+    .join(', ')
+);
+
 const DeliveryAddress = () => {
   const navigate = useNavigate();
   const { restaurantId } = useParams();
@@ -178,7 +189,7 @@ const DeliveryAddress = () => {
   // Reverse geocode (lat/lng → address text)
   // ============================================
   const reverseGeocode = useCallback(async (lat, lng) => {
-    if (!GOOGLE_MAPS_API_KEY) return;
+    if (!GOOGLE_MAPS_API_KEY || !hasValidLatLng(lat, lng)) return;
     try {
       const res = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`
@@ -197,6 +208,13 @@ const DeliveryAddress = () => {
   // ============================================
   const checkDistance = useCallback((lat, lng) => {
     if (distanceTimerRef.current) clearTimeout(distanceTimerRef.current);
+
+    if (!hasValidLatLng(lat, lng) || !restaurantId) {
+      setDistanceLoading(false);
+      setDistanceResult(null);
+      return;
+    }
+
     setDistanceLoading(true);
     setDistanceResult(null);
 
@@ -235,7 +253,7 @@ const DeliveryAddress = () => {
   const handleSelectAddress = (addr) => {
     setSelectedId(addr.id);
     setReverseAddress('');
-    if (addr.latitude && addr.longitude) {
+    if (hasValidLatLng(addr.latitude, addr.longitude)) {
       const pos = { lat: parseFloat(addr.latitude), lng: parseFloat(addr.longitude) };
       setMarkerPos(pos);
       setMapCenter(pos);
@@ -251,7 +269,13 @@ const DeliveryAddress = () => {
       toast.error('Cannot locate this address (no map key)');
       return;
     }
-    const query = [addr.address, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ');
+
+    const query = buildGeocodeQuery(addr);
+    if (!query) {
+      toast.error('This address needs more details before we can locate it');
+      return;
+    }
+
     try {
       const res = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`

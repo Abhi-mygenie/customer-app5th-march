@@ -1,0 +1,154 @@
+<analysis>**original_problem_statement**: 
+1. Pull code from  main branch 
+2. Ensure all documents are pulled from memory folder 
+3. Build and run the app as it is
+4. Don't run test agent. 
+Provided environment variables for frontend and backend including MongoDB, CRM API config, and Google Maps API keys.
+
+**User's preferred language**: English (INSTRUCT next agent to respond in English only)
+
+**what currently exists?** 
+A React frontend and FastAPI backend full-stack application interacting with a MongoDB database and an external CRM system. The app handles customer authentication (OTP, Password, and frictionless skip), address management, and POS service token proxying. The codebase has just undergone a Phase 1 API migration, moving 12 Auth and Address endpoints from a legacy v1 contract to a new v2 CRM contract (), managed behind a feature flag.
+
+**Last working item**: 
+    - Last item agent was working: Investigating **MAPS-01**, a Google Maps Geocoding API error () on the Delivery Address screen. The frontend is calling the Google Maps API without required parameters (address, latlng, place_id, or components).
+    - Status: NOT STARTED (Investigation complete, fix pending)
+    - Agent Testing Done: N
+    - Which testing method agent to use? Frontend testing agent / manual screenshot tool to verify Delivery Address screen renders without Maps errors.
+    - User Testing Done: N
+
+**All Pending/In progress Issue list**:
+  - Issue 1: MAPS-01: Google Maps Geocoding Error on Delivery Address (P0)
+     - Attempted fixes: Investigated only. Identified that empty parameters are being passed to the Geocoding API on mount or empty state.
+     - Next debug checklist: Check  and related map services to find where  is called. Add guards (e.g., ).
+     - Why fix this issue and what will be achieved with the fix? It currently breaks the Delivery Address screen, blocking users from adding addresses and blocking UI validation of the newly migrated Phase-1 Address CRUD endpoints.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: None
+  - Issue 2: UX-GAP-02: Forgot/Reset Password UI flow (P2)
+     - Attempted fixes: Disabled the UI link with a Coming soon toast.
+     - Next debug checklist: Await CRM backend team to implement a  endpoint in the v2 contract.
+     - Why fix this issue and what will be achieved with the fix? Allows users to reset passwords.
+     - Status: BLOCKED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: CRM backend endpoint availability.
+  - Issue 3: PROD-01: Swap CRM URL back to Production (P1)
+     - Attempted fixes: N/A
+     - Next debug checklist: Update  in  back to the production URL once the CRM team deploys the new  endpoint to production (currently pointing to a preview URL to facilitate testing).
+     - Why fix this issue and what will be achieved with the fix? Ensures production app hits production CRM.
+     - Status: BLOCKED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: CRM team production deployment.
+
+**In progress Task List**:
+  - Task 1: UI Validation of Address CRUD (UI-VAL-01)
+     - Where to resume:  UI testing.
+     - What will be achieved with this? Confirms Steps 7, 8, 9 of the Phase-1 CRM migration work end-to-end in the UI.
+     - Status: BLOCKED
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on something: Issue 1 (MAPS-01)
+
+**Upcoming and Future Tasks**:
+  - Phase 2 CRM API Migration (P1): Migrate remaining 8 actions (Profile, Loyalty, Orders, Coupons) from v1 to v2 endpoints as outlined in the comparison matrix.
+  - Fix missing  (P2): Currently missing in , falling back to  in code.
+
+**Completed work in this session**:
+- Bootstrapped application, installed dependencies, created  files.
+- Wired up  (JSON map) in  to automatically attach the  header per restaurant.
+- Refreshed all documentation in  with latest  versions from GitHub, keeping the original  and the CRMpreprod  as the source of truth.
+- Completed **Phase 1 CRM Migration**: Migrated 12 Auth and Address actions to the v2 CRM API () in .
+- Implemented **UX-GAP-01**: Re-routed  so Skip for now performs a silent OTP login () rather than creating a local guest session. Added direct-to-password routing for existing users.
+- Updated  with the new  endpoint documentation.
+
+**Earlier issues found/mentioned but not fixed**:
+   - Issue 1: Missing  in 
+   - Debug checklist: Add it to frontend  or ensure fallback logic is robust.
+   - Why to solve this issue and what will be achieved with this? Prevents default restaurant fetching bugs.
+   - Should Test frontend/backend/both after fix: Frontend
+   - Is recurring issue? N
+   - Issue 2: Frontend bundle exposing X-API-Keys
+   - Debug checklist: Move  logic to the FastAPI backend proxy before production launch.
+   - Why to solve this issue and what will be achieved with this? Resolves a major security tech debt.
+   - Should Test frontend/backend/both after fix: Both
+   - Is recurring issue? N
+
+**Known issue recurrence from previous fork**:
+  - Issue recurrence in previous fork: N/A
+  - Recurrence count: 0
+  - Status: N/A
+
+**Code Architecture**:
+- React Frontend ()
+- FastAPI Backend ()
+- MongoDB (Database)
+- 3rd Party CRM Integration
+
+**Key Technical Concepts**:
+React.js, FastAPI, MongoDB, REST CRM integration, JWT Authentication, React Router, Context API (), Environment variable-based feature flags ().
+
+**key DB schema**:
+  - N/A (App acts largely as a proxy to the external CRM).
+
+**changes in tech stack**:
+  - None
+
+**All files of reference**:
+  - : Core file updated heavily. Contains the v2 dispatcher logic (), the response envelope adapter, the  implementation, and the  header logic.
+  - : Updated for UX-GAP-01 (silent skip-otp login, direct routing for returning users, disabling forgot password).
+  - : The authoritative v2 CRM API contract. Manually updated to include .
+
+**Areas that need refactoring**:
+  - The  inline styling for the disabled Forgot Password link should be moved to CSS.
+
+**key api endpoints**:
+  - 
+  - 
+  -  (Frictionless silent login)
+  - 
+  - 
+  - 
+
+**Critical Info for New Agent**:
+  - **DO NOT** use or include external deployment/preview URLs in your code or configurations.
+  - The feature flag  is active in . Keep it active to ensure the app uses the migrated endpoints.
+  - The  uses a response adapter for v2 endpoints that automatically unwraps the  envelope and throws an Error if .
+  - Forgot Password and Reset Password functions are deliberately held on the v1 paths (which 404) and disabled in the UI because the v2 CRM API lacks these endpoints.
+
+**documents and test reports created in this job**:
+  -  (Updated)
+
+**Last 10 User Messages and any pending HUMAN messages**:
+  - User: 
+  - Agent: Summarized MAPS-01 (Google Maps Geocoding API  due to missing params). 
+  - *Pending*: Next steps to fix MAPS-01 and unblock Address UI testing.
+
+**Project Health Check**:
+  - Broken: Delivery Address screen (MAPS-01).
+
+**3rd Party Integrations**:
+  - External CRM API ( and ) - requires User API Key (Provided in ).
+  - Google Maps API ( / ) - requires User API Key (Provided in ).
+
+**Testing status**:
+  - Testing agent used after significant changes: NO
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: None
+  - Known regressions: MAPS-01 (pre-existing, but blocking current tests).
+
+**Credentials to test flow**:
+  - Hardcoded POS login phone/password present in .
+
+**What agent forgot to execute**:
+  - Did not execute the actual code fix for MAPS-01 after diagnosing it.
+
+**Debugging checklist for current issue**
+    Issue: MAPS-01 (Google Maps  on Delivery Address)
+
+    Frontend files to check: 
+    - 
+    - Any related maps/geocoding service utilities.
+    
+    Check for:  hooks or mounting logic that calls geocode/reverse-geocode with empty state variables ( or ). Add guard clauses  to prevent the invalid call.</analysis>
