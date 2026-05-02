@@ -1,0 +1,70 @@
+{
+  "summary": "Completed testing of restaurant-scoped authentication system. Verified restaurant switching behavior, customer capture fields, and token management. Found critical issues with token persistence and auth restoration.",
+
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "LandingPage customer capture",
+        "issue": "Browse Menu button remains disabled even with valid phone/name input for takeaway orders",
+        "selector": "[data-testid='landing-browse-menu-btn']",
+        "fix_priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Restaurant-scoped authentication",
+        "issue": "Restaurant-scoped tokens (crm_token_509) are not persisting in localStorage when switching between restaurants",
+        "affected_selectors": ["localStorage crm_token_509"],
+        "fix_priority": "CRITICAL"
+      },
+      {
+        "flow": "Auth auto-restore",
+        "issue": "When returning to previously authenticated restaurant, auth state is not automatically restored",
+        "affected_selectors": ["customer capture fields"],
+        "fix_priority": "CRITICAL"
+      },
+      {
+        "flow": "Delivery address access",
+        "issue": "Cannot access /509/delivery-address page - redirects to landing page due to auth issues",
+        "affected_selectors": ["/delivery-address route"],
+        "fix_priority": "HIGH"
+      },
+      {
+        "flow": "Phone number validation",
+        "issue": "Phone input validation too strict - prevents valid 10-digit numbers from enabling Browse Menu button",
+        "affected_selectors": ["phone input validation"],
+        "fix_priority": "MEDIUM"
+      }
+    ]
+  },
+
+  "passed_tests": [
+    "Restaurant 509 landing page loads correctly with 'Pav & Pages Cafe' name",
+    "Restaurant 675 landing page loads correctly with 'mantri' name", 
+    "Customer capture fields appear for takeaway orders when not authenticated",
+    "Customer capture fields hide when switching restaurants (auth state cleared)",
+    "Restaurant switching triggers cart state clearing",
+    "Phone and name input fields accept user input correctly",
+    "Order type selector (Takeaway/Delivery) works correctly"
+  ],
+
+  "test_report_links": [],
+
+  "action_item_for_main_agent": "CRITICAL: Fix restaurant-scoped token persistence - tokens should remain in localStorage when switching restaurants. Fix auth auto-restore functionality so users don't need to re-login when returning to previously authenticated restaurants. Fix phone validation to allow valid 10-digit numbers. Test the complete login flow with real CRM API integration.",
+
+  "updated_files": [],
+
+  "success_percentage": {
+    "frontend": "40%",
+    "backend": "N/A - not tested",
+    "integration": "30%"
+  },
+
+  "should_call_test_agent_after_fix": "true",
+  "should_main_agent_test_itself": "false"
+}
