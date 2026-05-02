@@ -27,6 +27,7 @@ import {
   extractPhoneNumber,
   getDialCode,
   buildMultiMenuPayload,
+  allocateServiceChargePerItem,
 } from '../transformers/helpers';
 
 import { calculateTaxBreakdown } from '../../utils/taxCalculation';
@@ -290,6 +291,8 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
         ? orderData.finalSubtotal
         : (orderData.subtotal || 0)
     );
+    // Allocate per-item service_charge (R7: identical across writers; backend stores at item level)
+    allocateServiceChargePerItem(cart, serviceCharge, itemTotal);
 
     const payloadData = {
       address_id: '',
@@ -403,6 +406,8 @@ export const updateCustomerOrder = async ({
 
     // Transform cart items using centralized transformer
     const cart = transformCartItemsForApi(cartItems);
+    // Allocate per-item service_charge (R7: identical across writers; backend stores at item level)
+    allocateServiceChargePerItem(cart, parseFloat(serviceCharge) || 0, parseFloat(itemTotal) || 0);
 
     const effectiveSubtotal = finalSubtotal !== undefined && finalSubtotal !== null
       ? finalSubtotal

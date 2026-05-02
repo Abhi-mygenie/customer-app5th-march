@@ -432,6 +432,47 @@ describe('placeOrder - Service Charge Mapping (multi-menu)', () => {
     // total_gst_tax_amount = item GST (200*18%=36) + SC-GST (10.80) = 46.80
     expect(payload.total_gst_tax_amount).toBeCloseTo(46.80, 2);
   });
+
+  test('per-item service_charge allocated proportionally; sum equals total SC', async () => {
+    // 3 items, total 1000; SC 50 (5%); allocation: 200/1000*50=10, 300/1000*50=15, last gets remainder 25
+    const cartItem1 = makeCartItem({ cartId: 'c1', itemId: '1', item: { id: '1', name: 'A', price: 200, tax: 0, tax_type: 'GST' }, quantity: 1 });
+    const cartItem2 = makeCartItem({ cartId: 'c2', itemId: '2', item: { id: '2', name: 'B', price: 300, tax: 0, tax_type: 'GST' }, quantity: 1 });
+    const cartItem3 = makeCartItem({ cartId: 'c3', itemId: '3', item: { id: '3', name: 'C', price: 500, tax: 0, tax_type: 'GST' }, quantity: 1 });
+    await placeOrder(makeOrderData({
+      cartItems: [cartItem1, cartItem2, cartItem3],
+      isMultipleMenuType: true,
+      subtotal: 1000,
+      totalToPay: 1050,
+      totalTax: 0,
+      serviceCharge: 50,
+      gstOnServiceCharge: 0,
+      itemTotal: 1000,
+      finalSubtotal: 1050,
+    }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractPayload(formArg);
+    expect(payload).not.toBeNull();
+    const cart = payload.cart;
+    expect(cart).toHaveLength(3);
+    expect(cart[0].service_charge).toBeCloseTo(10, 2);
+    expect(cart[1].service_charge).toBeCloseTo(15, 2);
+    // Last item gets the remainder (handles rounding drift)
+    expect(cart[2].service_charge).toBeCloseTo(25, 2);
+    const sum = cart.reduce((s, it) => s + it.service_charge, 0);
+    expect(sum).toBeCloseTo(50, 2);
+  });
+
+  test('zero SC: per-item service_charge = 0 on every line (zero regression)', async () => {
+    await placeOrder(makeOrderData({
+      isMultipleMenuType: true,
+    }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractPayload(formArg);
+    expect(payload).not.toBeNull();
+    payload.cart.forEach((item) => {
+      expect(item.service_charge).toBe(0);
+    });
+  });
 });
 
 describe('placeOrder - Service Charge Mapping (normal path)', () => {

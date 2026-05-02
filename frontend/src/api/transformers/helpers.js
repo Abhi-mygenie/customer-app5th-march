@@ -314,6 +314,49 @@ export const transformCartItemsForMultiMenu = (cartItems, gstEnabled = true) => 
 };
 
 /**
+ * Allocate total service charge per cart item proportionally to each item's line value.
+ * Last item gets the rounding remainder so Σ(item.service_charge) === totalServiceCharge.
+ * Mutates `cart` in place AND returns it.
+ *
+ * Mathematically equivalent to applying SC at the aggregate (handover R3/R4): SC is a flat
+ * percentage of the cart, so per-item SC = (item_full_price / itemTotal) × totalSC and the sum
+ * equals totalSC. Per-item field is sent because backend stores SC at the item level.
+ *
+ * @param {Array} cart - Cart array (each item must have { price, quantity })
+ * @param {number} totalServiceCharge - Aggregate SC amount (computed in ReviewOrder)
+ * @param {number} itemTotal - Sum of item line values (also from ReviewOrder)
+ * @returns {Array} The same cart, mutated with `service_charge` per item
+ */
+export const allocateServiceChargePerItem = (cart, totalServiceCharge, itemTotal) => {
+  if (!Array.isArray(cart) || cart.length === 0) return cart;
+
+  const totalSc = parseFloat(totalServiceCharge) || 0;
+  const total = parseFloat(itemTotal) || 0;
+
+  if (totalSc <= 0 || total <= 0) {
+    cart.forEach((item) => { item.service_charge = 0; });
+    return cart;
+  }
+
+  let allocated = 0;
+  const lastIdx = cart.length - 1;
+  cart.forEach((item, idx) => {
+    if (idx === lastIdx) {
+      // Last item gets the remainder to avoid rounding drift
+      item.service_charge = parseFloat((totalSc - allocated).toFixed(2));
+    } else {
+      const unitPrice = parseFloat(item.price || 0);
+      const qty = parseFloat(item.quantity || 1);
+      const lineValue = unitPrice * qty;
+      const sc = parseFloat(((lineValue / total) * totalSc).toFixed(2));
+      item.service_charge = sc;
+      allocated += sc;
+    }
+  });
+  return cart;
+};
+
+/**
  * Build complete payload for multi-menu order
  * @param {Object} orderData - Order data from ReviewOrder
  * @param {boolean} gstEnabled - Whether GST is enabled
@@ -344,6 +387,8 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
   } = orderData;
 
   const cart = transformCartItemsForMultiMenu(cartItems, gstEnabled);
+  // Allocate service charge per item (SERVICE_CHARGE_MAPPING CR)
+  allocateServiceChargePerItem(cart, serviceCharge, itemTotal);
   const custPhone = extractPhoneNumber(customerPhone || '');
   const dialCode = getDialCode(customerPhone || '');
 
