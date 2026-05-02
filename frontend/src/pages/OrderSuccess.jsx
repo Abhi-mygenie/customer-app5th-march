@@ -298,26 +298,41 @@ const OrderSuccess = () => {
           const persistedPointsRedeemed = passedBillSummary?.pointsRedeemed || 0;
           // SERVICE_CHARGE_MAPPING CR — pick up SC from passed bill summary or API response
           const persistedServiceCharge = passedBillSummary?.serviceCharge || apiBillSummary.serviceCharge || 0;
-          
+
           // Recalculate subtotal with loyalty discount applied
           const itemTotal = apiBillSummary.itemTotal || 0;
           const subtotalAfterDiscount = Math.max(0, itemTotal - persistedPointsDiscount);
-          
-          // Recalculate tax on discounted subtotal (same logic as ReviewOrder)
-          // Tax should be calculated on subtotal after discount
-          const taxRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
-          const adjustedCgst = parseFloat((apiBillSummary.cgst * taxRatio).toFixed(2));
-          const adjustedSgst = parseFloat((apiBillSummary.sgst * taxRatio).toFixed(2));
-          const adjustedVat = parseFloat((apiBillSummary.vat * taxRatio).toFixed(2));
-          const adjustedTotalTax = parseFloat((adjustedCgst + adjustedSgst + adjustedVat).toFixed(2));
-          
-          // Local grand total = subtotal after discount + adjusted tax (no rounding)
-          const localGrandTotal = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
-          
-          // Use order_amount from API as grand total (includes rounding applied at order placement)
-          const apiOrderAmount = orderDetails.orderAmount || localGrandTotal;
-          const hasRoundingDiff = apiOrderAmount !== localGrandTotal;
-          
+          const apiOrderAmount = orderDetails.orderAmount || 0;
+
+          // R-runtime-2 mitigation: when passedBillSummary carries the freshly-computed
+          // SC-aware cgst/sgst/totalTax/originalTotal from ReviewOrder, prefer those values.
+          // The API order-details endpoint does not yet expose SC fields, so its cgst/sgst
+          // are item-only and would mis-render the GST rows + bracket on a SC order.
+          const hasFreshSCBill = persistedServiceCharge > 0 && !!passedBillSummary;
+
+          let cgst, sgst, vat, totalTax, grandTotal, originalTotal;
+
+          if (hasFreshSCBill) {
+            cgst = passedBillSummary.cgst;
+            sgst = passedBillSummary.sgst;
+            vat = passedBillSummary.vat || 0;
+            totalTax = passedBillSummary.totalTax;
+            grandTotal = apiOrderAmount || passedBillSummary.grandTotal;
+            originalTotal = passedBillSummary.originalTotal != null ? passedBillSummary.originalTotal : null;
+          } else {
+            // Recalculate tax on discounted subtotal (same logic as ReviewOrder)
+            // Tax should be calculated on subtotal after discount
+            const taxRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
+            cgst = parseFloat((apiBillSummary.cgst * taxRatio).toFixed(2));
+            sgst = parseFloat((apiBillSummary.sgst * taxRatio).toFixed(2));
+            vat = parseFloat((apiBillSummary.vat * taxRatio).toFixed(2));
+            totalTax = parseFloat((cgst + sgst + vat).toFixed(2));
+            // Local grand total = subtotal after discount + adjusted tax (no rounding)
+            const localGrandTotal = parseFloat((subtotalAfterDiscount + totalTax).toFixed(2));
+            grandTotal = apiOrderAmount || localGrandTotal;
+            originalTotal = grandTotal !== localGrandTotal ? localGrandTotal : null;
+          }
+
           setBillSummary({
             ...apiBillSummary,
             pointsDiscount: persistedPointsDiscount,
@@ -325,12 +340,12 @@ const OrderSuccess = () => {
             // SERVICE_CHARGE_MAPPING CR — keep SC visible on success page
             serviceCharge: persistedServiceCharge,
             subtotal: subtotalAfterDiscount + persistedServiceCharge,
-            cgst: adjustedCgst,
-            sgst: adjustedSgst,
-            vat: adjustedVat,
-            totalTax: adjustedTotalTax,
-            grandTotal: apiOrderAmount,
-            originalTotal: hasRoundingDiff ? localGrandTotal : null
+            cgst,
+            sgst,
+            vat,
+            totalTax,
+            grandTotal,
+            originalTotal,
           });
         }
       }
