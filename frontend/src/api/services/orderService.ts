@@ -282,6 +282,15 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
     const custPhone = extractPhoneNumber(orderData.customerPhone || '');
     const dialCode = getDialCode(orderData.customerPhone || '') || orderData.dialCode || '+91';
 
+    // SC fields (SERVICE_CHARGE_MAPPING CR)
+    const serviceCharge = parseFloat(orderData.serviceCharge || 0);
+    const itemTotal     = parseFloat(orderData.itemTotal || 0);
+    const finalSubtotal = parseFloat(
+      orderData.finalSubtotal !== undefined && orderData.finalSubtotal !== null
+        ? orderData.finalSubtotal
+        : (orderData.subtotal || 0)
+    );
+
     const payloadData = {
       address_id: '',
       dial_code: dialCode,
@@ -315,8 +324,11 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       contact_person_number: orderData.deliveryAddress?.contact_person_number || '',
       discount_amount: orderData.pointsDiscount || 0,
       tax_amount: parseFloat((orderData.totalTax || 0).toFixed(2)),
-      order_sub_total_amount: parseFloat((orderData.subtotal || 0).toFixed(2)),
-      order_sub_total_without_tax: parseFloat((orderData.subtotal || 0).toFixed(2)),
+      order_sub_total_amount: parseFloat(finalSubtotal.toFixed(2)),
+      order_sub_total_without_tax: parseFloat(((itemTotal > 0) ? itemTotal : (orderData.subtotal || 0)).toFixed(2)),
+      // SC fields (SERVICE_CHARGE_MAPPING CR)
+      total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
+      service_gst_tax_amount: 0,
       road: orderData.deliveryAddress?.road || '',
       house: orderData.deliveryAddress?.house || '',
       floor: orderData.deliveryAddress?.floor || '',
@@ -380,12 +392,22 @@ export const updateCustomerOrder = async ({
   totalTax = 0,
   pointsDiscount = 0,
   pointsRedeemed = 0,
+  // SC fields (SERVICE_CHARGE_MAPPING CR)
+  serviceCharge = 0,
+  gstOnServiceCharge = 0,
+  itemTotal = 0,
+  finalSubtotal,
 }: any): Promise<ApiPlaceOrderResponse> => {
   try {
     const formData = new FormData();
 
     // Transform cart items using centralized transformer
     const cart = transformCartItemsForApi(cartItems);
+
+    const effectiveSubtotal = finalSubtotal !== undefined && finalSubtotal !== null
+      ? finalSubtotal
+      : subtotal;
+    const effectiveItemTotal = (itemTotal && itemTotal > 0) ? itemTotal : subtotal;
 
     const payloadData = {
       order_id: String(orderId),
@@ -421,8 +443,11 @@ export const updateCustomerOrder = async ({
       contact_person_number: '',
       discount_amount: pointsDiscount,
       tax_amount: parseFloat(totalTax.toFixed(2)),
-      order_sub_total_amount: parseFloat(subtotal.toFixed(2)),
-      order_sub_total_without_tax: parseFloat(subtotal.toFixed(2)),
+      order_sub_total_amount: parseFloat(effectiveSubtotal.toFixed(2)),
+      order_sub_total_without_tax: parseFloat(effectiveItemTotal.toFixed(2)),
+      // SC fields (SERVICE_CHARGE_MAPPING CR)
+      total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
+      service_gst_tax_amount: 0,
       road: '',
       house: '',
       floor: '',

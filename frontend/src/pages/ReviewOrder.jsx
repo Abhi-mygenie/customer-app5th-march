@@ -33,15 +33,17 @@ import './ReviewOrder.css';
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
 
-const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay }) => ({
+const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, finalCgst, finalSgst, finalVat, finalTotalTax, roundedTotal, hasRoundingDiff, totalToPay }) => ({
   itemTotal,
   pointsDiscount,
   pointsRedeemed: pointsToRedeem,
-  subtotal: subtotalAfterDiscount,
-  cgst: adjustedCgst,
-  sgst: adjustedSgst,
-  vat: adjustedVat,
-  totalTax: adjustedTotalTax,
+  serviceCharge,
+  subtotal: finalSubtotal,
+  subtotalBeforeServiceCharge: subtotalAfterDiscount,
+  cgst: finalCgst,
+  sgst: finalSgst,
+  vat: finalVat,
+  totalTax: finalTotalTax,
   grandTotal: roundedTotal,
   originalTotal: hasRoundingDiff ? totalToPay : null
 });
@@ -583,9 +585,34 @@ const ReviewOrder = () => {
   const adjustedSgst = parseFloat((sgst * discountRatio).toFixed(2));
   const adjustedVat = parseFloat((vat * discountRatio).toFixed(2));
   const adjustedTotalTax = parseFloat((adjustedCgst + adjustedSgst + adjustedVat).toFixed(2));
-  
-  // Grand Total = Subtotal after discounts + Adjusted Tax
-  const totalToPay = parseFloat((subtotalAfterDiscount + adjustedTotalTax).toFixed(2));
+
+  // ─── Service Charge Mapping (SERVICE_CHARGE_MAPPING CR) ─────────
+  // Read service-charge keys from restaurant_details API
+  const scAutoApply        = restaurant?.auto_service_charge === 'Yes';
+  const scPct              = parseFloat(restaurant?.service_charge_percentage) || 0;
+  const scGstRate          = parseFloat(restaurant?.service_charge_tax) || 0;
+  const applyServiceCharge = scAutoApply && scPct > 0;
+  const isGstEnabledForSc  = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
+
+  // SC base = subtotalAfterDiscount (R2). GST-on-SC gated by gst_status & scGstRate (R3).
+  const serviceCharge      = applyServiceCharge
+                              ? subtotalAfterDiscount * scPct / 100
+                              : 0;
+  const gstOnServiceCharge = (applyServiceCharge && isGstEnabledForSc && scGstRate > 0)
+                              ? serviceCharge * scGstRate / 100
+                              : 0;
+  const scCgst             = parseFloat((gstOnServiceCharge / 2).toFixed(2));
+  const scSgst             = parseFloat((gstOnServiceCharge / 2).toFixed(2));
+
+  // Aggregates (R4: SC-GST merges into CGST/SGST bucket; VAT untouched)
+  const finalCgst     = parseFloat((adjustedCgst + scCgst).toFixed(2));
+  const finalSgst     = parseFloat((adjustedSgst + scSgst).toFixed(2));
+  const finalVat      = adjustedVat;
+  const finalTotalTax = parseFloat((finalCgst + finalSgst + finalVat).toFixed(2));
+  const finalSubtotal = parseFloat((subtotalAfterDiscount + serviceCharge).toFixed(2));
+
+  // Grand Total = finalSubtotal + finalTotalTax (R5: single round at the end)
+  const totalToPay = parseFloat((finalSubtotal + finalTotalTax).toFixed(2));
 
   // Round up to ceiling if restaurant has total_round enabled
   const isRoundingEnabled = restaurant?.total_round === 'Yes';
@@ -787,7 +814,7 @@ const ReviewOrder = () => {
         throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
       }
 
-      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay });
+      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, finalCgst, finalSgst, finalVat, finalTotalTax, roundedTotal, hasRoundingDiff, totalToPay });
 
       const options = {
         key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
@@ -910,9 +937,14 @@ const ReviewOrder = () => {
               customerPhone: customerPhone || '',
               totalToPay: roundedTotal,
               subtotal: subtotalAfterDiscount,
-              totalTax: adjustedTotalTax,
+              totalTax: finalTotalTax,
               pointsDiscount,
               pointsRedeemed: pointsToRedeem,
+              // SC fields (SERVICE_CHARGE_MAPPING CR)
+              serviceCharge,
+              gstOnServiceCharge,
+              itemTotal,
+              finalSubtotal,
             });
 
             // Clear edit mode after successful update
@@ -936,9 +968,14 @@ const ReviewOrder = () => {
             customerPhone: customerPhone || '',
             totalToPay: roundedTotal,
             subtotal: subtotalAfterDiscount,
-            totalTax: adjustedTotalTax,
+            totalTax: finalTotalTax,
             pointsDiscount,
             pointsRedeemed: pointsToRedeem,
+            // SC fields (SERVICE_CHARGE_MAPPING CR)
+            serviceCharge,
+            gstOnServiceCharge,
+            itemTotal,
+            finalSubtotal,
           });
           clearEditMode();
           toast.success('Order updated successfully!');
@@ -1007,7 +1044,7 @@ const ReviewOrder = () => {
           restaurantId,
           subtotal,
           totalToPay: roundedTotal,
-          totalTax,
+          totalTax: finalTotalTax,
           orderType: scannedOrderType,
           isMultipleMenuType: isMultiMenu,
           token,
@@ -1021,6 +1058,11 @@ const ReviewOrder = () => {
           // Delivery address (Phase 3)
           deliveryAddress: deliveryAddress || null,
           deliveryCharge: deliveryCharge || 0,
+          // SC fields (SERVICE_CHARGE_MAPPING CR)
+          serviceCharge,
+          gstOnServiceCharge,
+          itemTotal,
+          finalSubtotal,
         });
       }
 
@@ -1061,7 +1103,7 @@ const ReviewOrder = () => {
             isEditedOrder: isEditMode,
             items: buildOrderItems(cartItems),
             previousItems: buildPreviousItems(previousOrderItems, isEditMode),
-            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay })
+            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, finalCgst, finalSgst, finalVat, finalTotalTax, roundedTotal, hasRoundingDiff, totalToPay })
           }
         }
       });
@@ -1118,9 +1160,14 @@ const ReviewOrder = () => {
               customerPhone: customerPhone || '',
               totalToPay: roundedTotal,
               subtotal: subtotalAfterDiscount,
-              totalTax: adjustedTotalTax,
+              totalTax: finalTotalTax,
               pointsDiscount,
               pointsRedeemed: pointsToRedeem,
+              // SC fields (SERVICE_CHARGE_MAPPING CR)
+              serviceCharge,
+              gstOnServiceCharge,
+              itemTotal,
+              finalSubtotal,
             });
 
             // Clear edit mode after successful update
@@ -1142,14 +1189,19 @@ const ReviewOrder = () => {
               orderType: scannedOrderType,
               subtotal,
               totalToPay: roundedTotal,
-              totalTax,
+              totalTax: finalTotalTax,
               isMultipleMenuType: isMultiMenu,
               token: newToken,
               // Points redemption
               pointsRedeemed: pointsToRedeem,
               pointsDiscount: pointsDiscount,
               // BUG-041 FIX: payment type from user selection, not key existence
-              paymentType: retryPaymentType
+              paymentType: retryPaymentType,
+              // SC fields (SERVICE_CHARGE_MAPPING CR)
+              serviceCharge,
+              gstOnServiceCharge,
+              itemTotal,
+              finalSubtotal,
             });
           }
 
@@ -1379,6 +1431,14 @@ const ReviewOrder = () => {
                 <span className="price-value">₹{itemTotal.toFixed(2)}</span>
               </div>
 
+              {/* Service Charge (SERVICE_CHARGE_MAPPING CR) */}
+              {serviceCharge > 0 && (
+                <div className="price-row price-row-sub" data-testid="row-service-charge">
+                  <span className="price-label-sub">Service Charge ({scPct}%)</span>
+                  <span className="price-value-sub">₹{serviceCharge.toFixed(2)}</span>
+                </div>
+              )}
+
               {/* Coupon Code - inline */}
               {showCoupon && (
                 <div className="price-row price-row-input">
@@ -1476,19 +1536,19 @@ const ReviewOrder = () => {
               {/* Subtotal (before taxes) */}
               <div className="price-row price-row-subtotal">
                 <span className="price-label">Subtotal</span>
-                <span className="price-value">₹{subtotalAfterDiscount.toFixed(2)}</span>
+                <span className="price-value">₹{finalSubtotal.toFixed(2)}</span>
               </div>
 
               {/* GST/VAT if applicable */}
-              {totalGst > 0 && (
+              {finalCgst > 0 && (
                 <>
                   <div className="price-row price-row-sub">
                     <span className="price-label-sub">CGST</span>
-                    <span className="price-value-sub">₹{adjustedCgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{finalCgst.toFixed(2)}</span>
                   </div>
                   <div className="price-row price-row-sub">
                     <span className="price-label-sub">SGST</span>
-                    <span className="price-value-sub">₹{adjustedSgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{finalSgst.toFixed(2)}</span>
                   </div>
                 </>
               )}

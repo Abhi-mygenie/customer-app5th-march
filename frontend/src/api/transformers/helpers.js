@@ -336,19 +336,27 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
     pointsDiscount = 0,
     deliveryAddress = null,
     deliveryCharge = 0,
+    // SC fields (SERVICE_CHARGE_MAPPING CR)
+    serviceCharge = 0,
+    gstOnServiceCharge = 0,
+    itemTotal = 0,
+    finalSubtotal,
   } = orderData;
 
   const cart = transformCartItemsForMultiMenu(cartItems, gstEnabled);
   const custPhone = extractPhoneNumber(customerPhone || '');
   const dialCode = getDialCode(customerPhone || '');
 
-  // Root level tax amounts (sum from all items)
-  const totalGstTaxAmount = parseFloat(
+  // Root level tax amounts (sum from all items + SC-GST at root, NOT inside cart loop)
+  const itemGstTaxAmount = parseFloat(
     cart.reduce((sum, item) => sum + (item.gst_tax_amount || 0), 0).toFixed(2)
   );
-  const totalVatTaxAmount = parseFloat(
+  const itemVatTaxAmount = parseFloat(
     cart.reduce((sum, item) => sum + (item.vat_tax_amount || 0), 0).toFixed(2)
   );
+  const gstOnSc = parseFloat((gstOnServiceCharge || 0).toFixed(2));
+  const totalGstTaxAmount = parseFloat((itemGstTaxAmount + gstOnSc).toFixed(2));
+  const totalVatTaxAmount = itemVatTaxAmount;
   const rootTaxAmount = parseFloat((totalGstTaxAmount + totalVatTaxAmount).toFixed(2));
 
   return {
@@ -372,8 +380,8 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       schedule_at: null,
       discount_amount: pointsDiscount,
       tax_amount: rootTaxAmount,
-      order_sub_total_amount: parseFloat((subtotal || 0).toFixed(2)),
-      order_sub_total_without_tax: parseFloat((subtotal || 0).toFixed(2)),
+      order_sub_total_amount: parseFloat(((finalSubtotal !== undefined ? finalSubtotal : subtotal) || 0).toFixed(2)),
+      order_sub_total_without_tax: parseFloat(((itemTotal && itemTotal > 0) ? itemTotal : (subtotal || 0)).toFixed(2)),
       address: deliveryAddress?.address || '',
       latitude: deliveryAddress?.latitude || '',
       longitude: deliveryAddress?.longitude || '',
@@ -404,7 +412,7 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       // Multi-menu specific root fields
       total_gst_tax_amount: totalGstTaxAmount,
       total_vat_tax_amount: totalVatTaxAmount,
-      total_service_tax_amount: 0,
+      total_service_tax_amount: parseFloat((serviceCharge || 0).toFixed(2)),
       service_gst_tax_amount: 0,
       round_up: 0,
       tip_tax_amount: 0

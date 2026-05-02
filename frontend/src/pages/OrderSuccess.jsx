@@ -296,6 +296,8 @@ const OrderSuccess = () => {
           // Read directly from passedBillSummary (sync) to avoid race condition with async state
           const persistedPointsDiscount = passedBillSummary?.pointsDiscount || 0;
           const persistedPointsRedeemed = passedBillSummary?.pointsRedeemed || 0;
+          // SERVICE_CHARGE_MAPPING CR — pick up SC from passed bill summary or API response
+          const persistedServiceCharge = passedBillSummary?.serviceCharge || apiBillSummary.serviceCharge || 0;
           
           // Recalculate subtotal with loyalty discount applied
           const itemTotal = apiBillSummary.itemTotal || 0;
@@ -320,7 +322,9 @@ const OrderSuccess = () => {
             ...apiBillSummary,
             pointsDiscount: persistedPointsDiscount,
             pointsRedeemed: persistedPointsRedeemed,
-            subtotal: subtotalAfterDiscount,
+            // SERVICE_CHARGE_MAPPING CR — keep SC visible on success page
+            serviceCharge: persistedServiceCharge,
+            subtotal: subtotalAfterDiscount + persistedServiceCharge,
             cgst: adjustedCgst,
             sgst: adjustedSgst,
             vat: adjustedVat,
@@ -658,6 +662,13 @@ const OrderSuccess = () => {
                     <span className="bill-value bill-discount">
                       -₹{(billSummary.pointsDiscount || billSummary.discount || 0).toFixed(2)}
                     </span>
+                  </div>
+                )}
+                {/* Service Charge (SERVICE_CHARGE_MAPPING CR) */}
+                {billSummary.serviceCharge > 0 && (
+                  <div className="bill-row" data-testid="bill-row-service-charge">
+                    <span className="bill-label">Service Charge</span>
+                    <span className="bill-value">₹{billSummary.serviceCharge.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="bill-row bill-row-subtotal">

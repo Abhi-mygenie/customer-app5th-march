@@ -378,3 +378,93 @@ describe('placeOrder - Error handling', () => {
     await expect(placeOrder(makeOrderData())).rejects.toThrow('Network error');
   });
 });
+
+// ─── SERVICE_CHARGE_MAPPING CR ───────────────────────────────────
+//
+// Note: placeOrder() wraps the payload in a FormData. Existing tests in this file
+// read `payload.data` directly (which is undefined because the 2nd post arg is a
+// FormData instance, not a plain object). That's a pre-existing test-infra issue
+// — out of scope for SERVICE_CHARGE_MAPPING. The tests below correctly deserialize
+// the FormData so they actually validate the SC fields in the JSON payload.
+
+const extractPayload = (formDataArg) => {
+  // jsdom FormData supports .get(); the source code does formData.append('data', JSON.stringify(payloadData))
+  const json = formDataArg && typeof formDataArg.get === 'function' ? formDataArg.get('data') : null;
+  return json ? JSON.parse(json) : null;
+};
+
+describe('placeOrder - Service Charge Mapping (multi-menu)', () => {
+  test('zero-baseline: no SC fields populated when serviceCharge omitted (auto_service_charge != Yes)', async () => {
+    await placeOrder(makeOrderData({
+      isMultipleMenuType: true,
+    }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractPayload(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload.total_service_tax_amount).toBe(0);
+    expect(payload.service_gst_tax_amount).toBe(0);
+  });
+
+  test('positive: SC populates total_service_tax_amount, inflates total_gst_tax_amount, maps subtotal & itemTotal correctly', async () => {
+    // Worked example (handover §3): cart 1 item GST 18%, SC=60 (5%), gstOnSc=10.80 (18%), totalTax=246.80
+    const cartItem = makeCartItem({
+      item: { price: 200, tax: 18, tax_type: 'GST' },
+      quantity: 1,
+    });
+    await placeOrder(makeOrderData({
+      cartItems: [cartItem],
+      isMultipleMenuType: true,
+      subtotal: 200,
+      totalToPay: 1507,
+      totalTax: 246.80,
+      serviceCharge: 60,
+      gstOnServiceCharge: 10.80,
+      itemTotal: 1200,
+      finalSubtotal: 1260,
+    }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractPayload(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload.total_service_tax_amount).toBeCloseTo(60, 2);
+    expect(payload.service_gst_tax_amount).toBe(0);
+    expect(payload.order_sub_total_without_tax).toBeCloseTo(1200, 2);
+    expect(payload.order_sub_total_amount).toBeCloseTo(1260, 2);
+    // total_gst_tax_amount = item GST (200*18%=36) + SC-GST (10.80) = 46.80
+    expect(payload.total_gst_tax_amount).toBeCloseTo(46.80, 2);
+  });
+});
+
+describe('placeOrder - Service Charge Mapping (normal path)', () => {
+  test('SC fields appear on normal placeOrder payload', async () => {
+    await placeOrder(makeOrderData({
+      isMultipleMenuType: false,
+      subtotal: 1000,
+      totalToPay: 1115,
+      totalTax: 65,
+      serviceCharge: 50,
+      gstOnServiceCharge: 9,
+      itemTotal: 1000,
+      finalSubtotal: 1050,
+    }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractPayload(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload.total_service_tax_amount).toBeCloseTo(50, 2);
+    expect(payload.service_gst_tax_amount).toBe(0);
+    expect(payload.order_sub_total_amount).toBeCloseTo(1050, 2);
+    expect(payload.order_sub_total_without_tax).toBeCloseTo(1000, 2);
+    expect(payload.tax_amount).toBeCloseTo(65, 2);
+  });
+
+  test('zero-baseline: normal placeOrder without SC keeps existing field shape', async () => {
+    await placeOrder(makeOrderData({
+      isMultipleMenuType: false,
+    }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractPayload(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload.total_service_tax_amount).toBe(0);
+    expect(payload.service_gst_tax_amount).toBe(0);
+  });
+});
+
