@@ -53,7 +53,12 @@ const TableRoomSelector = ({
   tablesErrorMessage,
   onRoomOrTableChange,
   onTableNumberChange,
+  // Restaurant-specific overrides
+  restaurantId,
 }) => {
+  // Restaurant 716 (Hyatt Centric) — always show manual room selector even without a scanned tableId,
+  // and hide the Room/Table radio group (force "room" mode).
+  const is716 = String(restaurantId) === '716';
   // Get options based on roomOrTable selection (memoized for performance)
   const allOptions = useMemo(() => {
     const source = roomOrTable === 'room' ? rooms : tables;
@@ -99,40 +104,42 @@ const TableRoomSelector = ({
         </>
       )}
 
-      {/* Manual Room/Table Selection — multi-menu restaurants, only when table was scanned */}
-      {isMultiMenu && hasAssignedTable(scannedTableId) && (
+      {/* Manual Room/Table Selection — multi-menu restaurants, only when table was scanned (or restaurant 716 always) */}
+      {isMultiMenu && (hasAssignedTable(scannedTableId) || is716) && (
         <>
           <div className="review-order-section">
             <h2 className="review-order-section-title">Room/Table</h2>
             <div className="review-order-room-table-container">
-              {/* Radio Buttons */}
-              <div className="review-order-room-table-radio-group">
-                <span className='review-order-radio-text'>Select : </span>
-                <label className="review-order-radio-label">
-                  <input
-                    type="radio"
-                    name="roomOrTable"
-                    value="room"
-                    checked={roomOrTable === 'room'}
-                    onChange={(e) => handleRoomOrTableChange(e.target.value)}
-                    className="review-order-radio-input"
-                    data-testid="room-radio"
-                  />
-                  <span className="review-order-radio-text">Room</span>
-                </label>
-                <label className="review-order-radio-label">
-                  <input
-                    type="radio"
-                    name="roomOrTable"
-                    value="table"
-                    checked={roomOrTable === 'table'}
-                    onChange={(e) => handleRoomOrTableChange(e.target.value)}
-                    className="review-order-radio-input"
-                    data-testid="table-radio"
-                  />
-                  <span className="review-order-radio-text">Table</span>
-                </label>
-              </div>
+              {/* Radio Buttons — hidden for restaurant 716 (room-only flow) */}
+              {!is716 && (
+                <div className="review-order-room-table-radio-group">
+                  <span className='review-order-radio-text'>Select : </span>
+                  <label className="review-order-radio-label">
+                    <input
+                      type="radio"
+                      name="roomOrTable"
+                      value="room"
+                      checked={roomOrTable === 'room'}
+                      onChange={(e) => handleRoomOrTableChange(e.target.value)}
+                      className="review-order-radio-input"
+                      data-testid="room-radio"
+                    />
+                    <span className="review-order-radio-text">Room</span>
+                  </label>
+                  <label className="review-order-radio-label">
+                    <input
+                      type="radio"
+                      name="roomOrTable"
+                      value="table"
+                      checked={roomOrTable === 'table'}
+                      onChange={(e) => handleRoomOrTableChange(e.target.value)}
+                      className="review-order-radio-input"
+                      data-testid="table-radio"
+                    />
+                    <span className="review-order-radio-text">Table</span>
+                  </label>
+                </div>
+              )}
 
               {/* Searchable Dropdown */}
               {roomOrTable && (

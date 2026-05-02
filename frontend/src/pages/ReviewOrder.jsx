@@ -488,12 +488,28 @@ const ReviewOrder = () => {
 
   // FEAT-002-PREP: Auto-fill table only for dine-in/room orders
   useEffect(() => {
+    const is716 = String(restaurantId) === '716';
     const needsTableAutoFill = isDineInOrRoom(scannedOrderType) && scannedTableId;
     if (isScanned && needsTableAutoFill) {
       setTableNumber(scannedTableId); // Set table_id for API payload
-      setRoomOrTable(scannedRoomOrTable || 'table'); // Set type for display
+      // Restaurant 716 (Hyatt Centric) is a room-only hotel — always use 'room' regardless of QR type
+      setRoomOrTable(is716 ? 'room' : (scannedRoomOrTable || 'table'));
     }
-  }, [isScanned, scannedTableId, scannedRoomOrTable, scannedOrderType]);
+  }, [isScanned, scannedTableId, scannedRoomOrTable, scannedOrderType, restaurantId]);
+
+  // Restaurant 716: force 'room' type and start every new order with an empty selection.
+  // Runs on mount (and whenever restaurantId changes) so returning to Review after a success
+  // or switching restaurants always requires a fresh room pick.
+  useEffect(() => {
+    if (String(restaurantId) !== '716') return;
+    setRoomOrTable('room');
+    // Only clear tableNumber if the URL/scan didn't pre-fill it — the auto-fill effect above
+    // will re-populate it on the next tick when a scanned tableId is present.
+    if (!scannedTableId) {
+      setTableNumber('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantId]);
 
   const totalItems = getTotalItems();
   const subtotal = getTotalPrice();
@@ -682,9 +698,14 @@ const ReviewOrder = () => {
 
   // Handle place order
   const handlePlaceOrder = async () => {
-    // Phase 1: Table/room validation only when a table was scanned AND it's a multi-menu restaurant
-    if (isMultiMenu && hasAssignedTable(scannedTableId)) {
-      // Table was scanned — it's auto-filled, no manual validation needed
+    // Restaurant 716 (Hyatt Centric): room selection is mandatory for every new order, no fallback.
+    if (String(restaurantId) === '716') {
+      if (!tableNumber.trim() || !hasAssignedTable(tableNumber)) {
+        toast('Please select your Room');
+        return;
+      }
+    } else if (isMultiMenu && hasAssignedTable(scannedTableId)) {
+      // Phase 1: Table was scanned — it's auto-filled, no manual validation needed
     } else if (isMultiMenu && !hasAssignedTable(scannedTableId) && isDineInOrRoom(scannedOrderType) && !scannedOrderType) {
       // Legacy: multi-menu with no QR scan and no orderType — require manual table selection
       if (!roomOrTable) {
@@ -778,6 +799,11 @@ const ReviewOrder = () => {
         handler: function (paymentResponse) {
           logger.razorpay(`[${label}] Payment success:`, paymentResponse);
           clearCart();
+          // Restaurant 716: every new order must require a fresh room selection.
+          if (String(restaurantId) === '716') {
+            setTableNumber('');
+            setRoomOrTable('room');
+          }
           navigate(`/${restaurantId}/order-success`, {
             state: {
               orderData: {
@@ -822,6 +848,14 @@ const ReviewOrder = () => {
       const finalTableId = hasAssignedTable(scannedTableId)
         ? scannedTableId
         : (isMultiMenu && tableNumber && hasAssignedTable(tableNumber) ? tableNumber : '0');
+
+      // Restaurant 716: room pick is mandatory, never send '0' to POS.
+      if (String(restaurantId) === '716' && !hasAssignedTable(finalTableId)) {
+        toast('Please select your Room');
+        setIsPlacingOrder(false);
+        isPlacingOrderRef.current = false;
+        return;
+      }
 
       let response;
 
@@ -1012,6 +1046,12 @@ const ReviewOrder = () => {
       // Clear cart after successful order (non-payment flow)
       clearCart();
 
+      // Restaurant 716: every new order must require a fresh room selection.
+      if (String(restaurantId) === '716') {
+        setTableNumber('');
+        setRoomOrTable('room');
+      }
+
       // Navigate to success page with order data
       navigate(`/${restaurantId}/order-success`, {
         state: {
@@ -1052,6 +1092,14 @@ const ReviewOrder = () => {
           const retryTableId = hasAssignedTable(scannedTableId)
             ? scannedTableId
             : (isMultiMenu && tableNumber && hasAssignedTable(tableNumber) ? tableNumber : '0');
+
+          // Restaurant 716: room pick is mandatory on retry too.
+          if (String(restaurantId) === '716' && !hasAssignedTable(retryTableId)) {
+            toast('Please select your Room');
+            setIsPlacingOrder(false);
+            isPlacingOrderRef.current = false;
+            return;
+          }
 
           let retryResponse;
 
@@ -1123,6 +1171,12 @@ const ReviewOrder = () => {
 
           // COD retry: navigate to success directly
           clearCart();
+
+          // Restaurant 716: every new order must require a fresh room selection.
+          if (String(restaurantId) === '716') {
+            setTableNumber('');
+            setRoomOrTable('room');
+          }
 
           navigate(`/${restaurantId}/order-success`, {
             state: {
@@ -1237,6 +1291,7 @@ const ReviewOrder = () => {
             tablesErrorMessage={tablesErrorMessage}
             onRoomOrTableChange={handleRoomOrTableChange}
             onTableNumberChange={setTableNumber}
+            restaurantId={restaurantId}
           />
 
 
