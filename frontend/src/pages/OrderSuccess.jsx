@@ -646,20 +646,33 @@ const OrderSuccess = () => {
                 </div>
                 {billSummary.cgst > 0 && (
                   <div className="bill-row bill-row-tax">
-                    <span className="bill-label-sub">CGST</span>
+                    <span className="bill-label-sub">CGST{billSummary.gstRate ? ` ${(billSummary.gstRate / 2).toFixed(billSummary.gstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
                     <span className="bill-value-sub">₹{billSummary.cgst.toFixed(2)}</span>
                   </div>
                 )}
                 {billSummary.sgst > 0 && (
                   <div className="bill-row bill-row-tax">
-                    <span className="bill-label-sub">SGST</span>
+                    <span className="bill-label-sub">SGST{billSummary.gstRate ? ` ${(billSummary.gstRate / 2).toFixed(billSummary.gstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
                     <span className="bill-value-sub">₹{billSummary.sgst.toFixed(2)}</span>
                   </div>
                 )}
                 {billSummary.vat > 0 && (
                   <div className="bill-row bill-row-tax">
-                    <span className="bill-label-sub">VAT</span>
+                    <span className="bill-label-sub">VAT{billSummary.vatRate ? ` ${billSummary.vatRate}%` : ''}</span>
                     <span className="bill-value-sub">₹{billSummary.vat.toFixed(2)}</span>
+                  </div>
+                )}
+                {/* CGST/SGST on Service Charge — compliance rows (SERVICE_CHARGE_MAPPING CR) */}
+                {billSummary.scCgst > 0 && (
+                  <div className="bill-row bill-row-tax" data-testid="bill-row-sc-cgst">
+                    <span className="bill-label-sub">CGST on SC{billSummary.scGstRate ? ` ${(billSummary.scGstRate / 2).toFixed(billSummary.scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="bill-value-sub">₹{billSummary.scCgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {billSummary.scSgst > 0 && (
+                  <div className="bill-row bill-row-tax" data-testid="bill-row-sc-sgst">
+                    <span className="bill-label-sub">SGST on SC{billSummary.scGstRate ? ` ${(billSummary.scGstRate / 2).toFixed(billSummary.scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="bill-value-sub">₹{billSummary.scSgst.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="bill-row bill-row-total">

@@ -164,22 +164,36 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
     // ─── SERVICE_CHARGE_MAPPING CR — pure API mapping, no client-side recompute ───
     // All values come directly from backend response fields.
     // Reference: handover R-runtime-2 resolution, SUMMARY.md §5.
-    const totalVat = details.reduce(
-      (sum, d: any) => sum + (parseFloat(d.vat_tax_amount) || 0),
-      0
-    );
-    const serviceCharge = details.reduce(
-      (sum, d: any) => sum + (parseFloat(d.service_charge) || 0),
-      0
-    );
+    const restaurantMeta: any = (orderData as any).restaurant || {};
+    const totalVat = parseFloat(firstDetail.total_vat_tax_amount)
+      || details.reduce((sum, d: any) => sum + (parseFloat(d.vat_tax_amount) || 0), 0);
+    const serviceCharge = parseFloat(firstDetail.total_service_tax_amount)
+      || details.reduce((sum, d: any) => sum + (parseFloat(d.service_charge) || 0), 0);
     const itemTotal   = parseFloat(firstDetail.order_sub_total_without_tax) || 0;
     const subtotal    = parseFloat(firstDetail.order_sub_total_amount) || 0;
     const totalTax    = parseFloat(firstDetail.total_tax_amount) || 0;
     const grandTotal  = parseFloat(firstDetail.order_amount) || 0;
     const orderDiscount = parseFloat(firstDetail.order_discount) || 0;
-    const totalGst    = parseFloat((totalTax - totalVat).toFixed(2));
-    const cgst        = parseFloat((totalGst / 2).toFixed(2));
-    const sgst        = parseFloat((totalGst / 2).toFixed(2));
+    // Total GST: prefer backend's correctly-labeled payload_total_gst_tax_amount; fallback to derivation
+    const totalGst = parseFloat(firstDetail.payload_total_gst_tax_amount)
+      || parseFloat((totalTax - totalVat).toFixed(2));
+    // SC-GST: prefer direct backend field; fallback to derivation
+    const scGst = parseFloat(firstDetail.service_gst_tax_amount)
+      || parseFloat(((totalGst) - details.reduce((sum, d: any) => sum + (parseFloat(d.gst_tax_amount) || 0), 0)).toFixed(2));
+    const itemGst = parseFloat((totalGst - scGst).toFixed(2));
+    const cgst   = parseFloat((itemGst / 2).toFixed(2));
+    const sgst   = parseFloat((itemGst / 2).toFixed(2));
+    const scCgst = parseFloat((scGst / 2).toFixed(2));
+    const scSgst = parseFloat((scGst / 2).toFixed(2));
+    // Rates — uniform derivation from items (null if mixed)
+    const gstRates = [...new Set(details.filter((d: any) => (d?.food_details?.tax_type || '').toUpperCase() === 'GST').map((d: any) => parseFloat(d?.food_details?.tax) || 0))];
+    const vatRates = [...new Set(details.filter((d: any) => (d?.food_details?.tax_type || '').toUpperCase() === 'VAT').map((d: any) => parseFloat(d?.food_details?.tax) || 0))];
+    const gstRate = gstRates.length === 1 ? gstRates[0] : null;
+    const vatRate = vatRates.length === 1 ? vatRates[0] : (parseFloat(restaurantMeta.vat_percent) || null);
+    // SC-GST rate: derive from amounts if possible (scGst / serviceCharge * 100)
+    const scGstRate = (serviceCharge > 0 && scGst > 0)
+      ? parseFloat(((scGst / serviceCharge) * 100).toFixed(2))
+      : (parseFloat(restaurantMeta.service_charge_tax) || null);
     const localTotal  = parseFloat((subtotal + totalTax).toFixed(2));
     const originalTotal = (grandTotal !== localTotal && localTotal > 0) ? localTotal : null;
 
@@ -196,7 +210,7 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       restaurantOrderId,
       items: [],
       previousItems,
-      restaurant: (orderData as any).restaurant,
+      restaurant: restaurantMeta,
       deliveryCharge: (orderData as any).delivery_charge,
       billSummary: {
         itemTotal,
@@ -205,11 +219,16 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
         subtotal,
         cgst,
         sgst,
+        scCgst,
+        scSgst,
         vat: totalVat,
+        gstRate,
+        vatRate,
+        scGstRate,
         totalTax,
         grandTotal,
         originalTotal,
-      }
+      } as any
     };
   } catch (error) {
     logger.error('order', 'Failed to fetch order details:', error);

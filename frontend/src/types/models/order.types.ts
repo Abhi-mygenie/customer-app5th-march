@@ -140,8 +140,13 @@ export interface BillSummary {
   grandTotal: number;
   originalTotal?: number | null;
   roundingAdjustment?: number;
-  // SERVICE_CHARGE_MAPPING CR — total service charge across all items
+  // SERVICE_CHARGE_MAPPING CR — SC breakdown
   serviceCharge?: number;
+  scCgst?: number;      // CGST on service charge (per side)
+  scSgst?: number;      // SGST on service charge (per side)
+  gstRate?: number;     // uniform GST % across items (e.g., 18); null if mixed
+  vatRate?: number;     // uniform VAT % across items (e.g., 22); null if mixed
+  scGstRate?: number;   // GST rate applied on service charge (e.g., 18)
 }
 
 // ============================================

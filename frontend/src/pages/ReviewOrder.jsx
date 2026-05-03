@@ -31,24 +31,27 @@ import logger from '../utils/logger';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import './ReviewOrder.css';
 
-// ─── UI display flag (SERVICE_CHARGE_MAPPING CR) ───────────────────────────
-// Hide-not-delete toggle. Flip to true to restore the pre-rounding "(₹494.37)" value
-// next to the Grand Total. Underlying computation (hasRoundingDiff / totalToPay) stays.
-const SHOW_PRE_ROUND_BRACKET = false;
-
 // === CA-008 Phase 2: Extracted pure helper functions ===
 
-const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, finalCgst, finalSgst, finalVat, finalTotalTax, roundedTotal, hasRoundingDiff, totalToPay }) => ({
+const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay }) => ({
   itemTotal,
   pointsDiscount,
   pointsRedeemed: pointsToRedeem,
   serviceCharge,
   subtotal: finalSubtotal,
   subtotalBeforeServiceCharge: subtotalAfterDiscount,
-  cgst: finalCgst,
-  sgst: finalSgst,
+  cgst: itemCgst,
+  sgst: itemSgst,
+  scCgst,
+  scSgst,
   vat: finalVat,
+  gstRate,
+  vatRate,
+  scGstRate,
   totalTax: finalTotalTax,
+  // Kept for any legacy consumer expecting combined values
+  finalCgst,
+  finalSgst,
   grandTotal: roundedTotal,
   originalTotal: hasRoundingDiff ? totalToPay : null
 });
@@ -609,7 +612,17 @@ const ReviewOrder = () => {
   const scCgst             = parseFloat((gstOnServiceCharge / 2).toFixed(2));
   const scSgst             = parseFloat((gstOnServiceCharge / 2).toFixed(2));
 
-  // Aggregates (R4: SC-GST merges into CGST/SGST bucket; VAT untouched)
+  // Uniform tax rates across items (for compliance display). null if mixed.
+  const gstItems = (cartItems || []).filter(i => (i?.item?.tax_type || '').toUpperCase() === 'GST');
+  const vatItems = (cartItems || []).filter(i => (i?.item?.tax_type || '').toUpperCase() === 'VAT');
+  const uniqueGstRates = [...new Set(gstItems.map(i => parseFloat(i?.item?.tax) || 0))];
+  const uniqueVatRates = [...new Set(vatItems.map(i => parseFloat(i?.item?.tax) || 0))];
+  const gstRate = uniqueGstRates.length === 1 ? uniqueGstRates[0] : null;
+  const vatRate = uniqueVatRates.length === 1 ? uniqueVatRates[0] : null;
+
+  // Split aggregates (R4: SC-GST kept separate for display; VAT untouched)
+  const itemCgst      = adjustedCgst;
+  const itemSgst      = adjustedSgst;
   const finalCgst     = parseFloat((adjustedCgst + scCgst).toFixed(2));
   const finalSgst     = parseFloat((adjustedSgst + scSgst).toFixed(2));
   const finalVat      = adjustedVat;
@@ -819,7 +832,7 @@ const ReviewOrder = () => {
         throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
       }
 
-      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, finalCgst, finalSgst, finalVat, finalTotalTax, roundedTotal, hasRoundingDiff, totalToPay });
+      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay });
 
       const options = {
         key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
@@ -1108,7 +1121,7 @@ const ReviewOrder = () => {
             isEditedOrder: isEditMode,
             items: buildOrderItems(cartItems),
             previousItems: buildPreviousItems(previousOrderItems, isEditMode),
-            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, finalCgst, finalSgst, finalVat, finalTotalTax, roundedTotal, hasRoundingDiff, totalToPay })
+            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay })
           }
         }
       });
@@ -1243,7 +1256,7 @@ const ReviewOrder = () => {
                 isEditedOrder: isEditMode,
                 items: buildOrderItems(cartItems),
                 previousItems: buildPreviousItems(previousOrderItems, isEditMode),
-                billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, adjustedCgst, adjustedSgst, adjustedVat, adjustedTotalTax, roundedTotal, hasRoundingDiff, totalToPay })
+                billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay })
               }
             }
           });
@@ -1544,24 +1557,36 @@ const ReviewOrder = () => {
                 <span className="price-value">₹{finalSubtotal.toFixed(2)}</span>
               </div>
 
-              {/* GST/VAT if applicable */}
-              {finalCgst > 0 && (
+              {/* GST/VAT breakdown — Variant 2 (SERVICE_CHARGE_MAPPING CR): split item-tax and SC-tax rows, each with % suffix for compliance */}
+              {itemCgst > 0 && (
                 <>
                   <div className="price-row price-row-sub">
-                    <span className="price-label-sub">CGST</span>
-                    <span className="price-value-sub">₹{finalCgst.toFixed(2)}</span>
+                    <span className="price-label-sub">CGST{gstRate ? ` ${(gstRate / 2).toFixed(gstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="price-value-sub">₹{itemCgst.toFixed(2)}</span>
                   </div>
                   <div className="price-row price-row-sub">
-                    <span className="price-label-sub">SGST</span>
-                    <span className="price-value-sub">₹{finalSgst.toFixed(2)}</span>
+                    <span className="price-label-sub">SGST{gstRate ? ` ${(gstRate / 2).toFixed(gstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="price-value-sub">₹{itemSgst.toFixed(2)}</span>
                   </div>
                 </>
               )}
               {vat > 0 && (
                 <div className="price-row price-row-sub">
-                  <span className="price-label-sub">VAT</span>
+                  <span className="price-label-sub">VAT{vatRate ? ` ${vatRate}%` : ''}</span>
                   <span className="price-value-sub">₹{adjustedVat.toFixed(2)}</span>
                 </div>
+              )}
+              {scCgst > 0 && (
+                <>
+                  <div className="price-row price-row-sub" data-testid="row-sc-cgst">
+                    <span className="price-label-sub">CGST on SC{scGstRate ? ` ${(scGstRate / 2).toFixed(scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="price-value-sub">₹{scCgst.toFixed(2)}</span>
+                  </div>
+                  <div className="price-row price-row-sub" data-testid="row-sc-sgst">
+                    <span className="price-label-sub">SGST on SC{scGstRate ? ` ${(scGstRate / 2).toFixed(scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="price-value-sub">₹{scSgst.toFixed(2)}</span>
+                  </div>
+                </>
               )}
 
               {/* Total */}
@@ -1569,7 +1594,7 @@ const ReviewOrder = () => {
                 <span className="price-label-total">Grand Total</span>
                 <span className="price-value-total">
                   ₹{roundedTotal.toFixed(2)}
-                  {SHOW_PRE_ROUND_BRACKET && hasRoundingDiff && (
+                  {hasRoundingDiff && (
                     <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{totalToPay.toFixed(2)})</span>
                   )}
                 </span>
