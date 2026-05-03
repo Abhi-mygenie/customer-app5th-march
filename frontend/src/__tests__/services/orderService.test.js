@@ -426,7 +426,7 @@ describe('placeOrder - Service Charge Mapping (multi-menu)', () => {
     const payload = extractPayload(formArg);
     expect(payload).not.toBeNull();
     expect(payload.total_service_tax_amount).toBeCloseTo(60, 2);
-    expect(payload.service_gst_tax_amount).toBe(0);
+    expect(payload.service_gst_tax_amount).toBeCloseTo(10.80, 2);
     expect(payload.order_sub_total_without_tax).toBeCloseTo(1200, 2);
     expect(payload.order_sub_total_amount).toBeCloseTo(1260, 2);
     // total_gst_tax_amount = item GST (200*18%=36) + SC-GST (10.80) = 46.80
@@ -491,7 +491,7 @@ describe('placeOrder - Service Charge Mapping (normal path)', () => {
     const payload = extractPayload(formArg);
     expect(payload).not.toBeNull();
     expect(payload.total_service_tax_amount).toBeCloseTo(50, 2);
-    expect(payload.service_gst_tax_amount).toBe(0);
+    expect(payload.service_gst_tax_amount).toBeCloseTo(9, 2);
     expect(payload.order_sub_total_amount).toBeCloseTo(1050, 2);
     expect(payload.order_sub_total_without_tax).toBeCloseTo(1000, 2);
     expect(payload.tax_amount).toBeCloseTo(65, 2);

@@ -1439,7 +1439,7 @@ const ReviewOrder = () => {
               {/* Service Charge (SERVICE_CHARGE_MAPPING CR) */}
               {serviceCharge > 0 && (
                 <div className="price-row price-row-sub" data-testid="row-service-charge">
-                  <span className="price-label-sub">Service Charge ({scPct}%)</span>
+                  <span className="price-label-sub">Service Charge (Optional)</span>
                   <span className="price-value-sub">₹{serviceCharge.toFixed(2)}</span>
                 </div>
               )}

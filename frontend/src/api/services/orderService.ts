@@ -313,7 +313,7 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       order_sub_total_without_tax: parseFloat(((itemTotal > 0) ? itemTotal : (orderData.subtotal || 0)).toFixed(2)),
       // SC fields (SERVICE_CHARGE_MAPPING CR)
       total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
-      service_gst_tax_amount: 0,
+      service_gst_tax_amount: parseFloat((parseFloat(orderData.gstOnServiceCharge || 0)).toFixed(2)),
       road: orderData.deliveryAddress?.road || '',
       house: orderData.deliveryAddress?.house || '',
       floor: orderData.deliveryAddress?.floor || '',
@@ -434,7 +434,7 @@ export const updateCustomerOrder = async ({
       order_sub_total_without_tax: parseFloat(effectiveItemTotal.toFixed(2)),
       // SC fields (SERVICE_CHARGE_MAPPING CR)
       total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
-      service_gst_tax_amount: 0,
+      service_gst_tax_amount: parseFloat((parseFloat(gstOnServiceCharge as any) || 0).toFixed(2)),
       road: '',
       house: '',
       floor: '',

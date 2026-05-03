@@ -636,7 +636,7 @@ const OrderSuccess = () => {
                 {/* Service Charge (SERVICE_CHARGE_MAPPING CR) */}
                 {billSummary.serviceCharge > 0 && (
                   <div className="bill-row" data-testid="bill-row-service-charge">
-                    <span className="bill-label">Service Charge</span>
+                    <span className="bill-label">Service Charge (Optional)</span>
                     <span className="bill-value">₹{billSummary.serviceCharge.toFixed(2)}</span>
                   </div>
                 )}

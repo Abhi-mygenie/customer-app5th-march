@@ -458,7 +458,7 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       total_gst_tax_amount: totalGstTaxAmount,
       total_vat_tax_amount: totalVatTaxAmount,
       total_service_tax_amount: parseFloat((serviceCharge || 0).toFixed(2)),
-      service_gst_tax_amount: 0,
+      service_gst_tax_amount: parseFloat((gstOnServiceCharge || 0).toFixed(2)),
       round_up: 0,
       tip_tax_amount: 0
     }
