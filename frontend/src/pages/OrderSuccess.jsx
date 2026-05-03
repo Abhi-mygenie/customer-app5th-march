@@ -22,6 +22,12 @@ import { FaDoorOpen } from 'react-icons/fa';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import './OrderSuccess.css';
 
+// ─── UI display flags (SERVICE_CHARGE_MAPPING CR) ───────────────────────────
+// Hide-not-delete toggles. Flip to true to restore the display. Underlying
+// computation / data flow is preserved intentionally.
+const SHOW_INTERNAL_ORDER_ID  = false;   // hides the "(825153)" next to "#000065"
+const SHOW_PRE_ROUND_BRACKET  = false;   // hides the "(₹494.37)" pre-rounding value next to Grand Total
+
 /**
  * Maps food_status numeric value to status string
  * 1 → Preparing, 2 → Ready, 3 → Cancelled, 5 → Served, 6 → Paid, 7 → Yet to be confirmed
@@ -290,63 +296,11 @@ const OrderSuccess = () => {
           }
         }
 
-        // Recalculate billSummary with API data + persisted loyalty discount
+        // SERVICE_CHARGE_MAPPING CR — pure API mapping (see getOrderDetails in orderService.ts).
+        // The billSummary returned from getOrderDetails already carries correct
+        // itemTotal / serviceCharge / subtotal / cgst / sgst / vat / totalTax / grandTotal / originalTotal.
         if (orderDetails.billSummary) {
-          const apiBillSummary = orderDetails.billSummary;
-          // Read directly from passedBillSummary (sync) to avoid race condition with async state
-          const persistedPointsDiscount = passedBillSummary?.pointsDiscount || 0;
-          const persistedPointsRedeemed = passedBillSummary?.pointsRedeemed || 0;
-          // SERVICE_CHARGE_MAPPING CR — pick up SC from passed bill summary or API response
-          const persistedServiceCharge = passedBillSummary?.serviceCharge || apiBillSummary.serviceCharge || 0;
-
-          // Recalculate subtotal with loyalty discount applied
-          const itemTotal = apiBillSummary.itemTotal || 0;
-          const subtotalAfterDiscount = Math.max(0, itemTotal - persistedPointsDiscount);
-          const apiOrderAmount = orderDetails.orderAmount || 0;
-
-          // R-runtime-2 mitigation: when passedBillSummary carries the freshly-computed
-          // SC-aware cgst/sgst/totalTax/originalTotal from ReviewOrder, prefer those values.
-          // The API order-details endpoint does not yet expose SC fields, so its cgst/sgst
-          // are item-only and would mis-render the GST rows + bracket on a SC order.
-          const hasFreshSCBill = persistedServiceCharge > 0 && !!passedBillSummary;
-
-          let cgst, sgst, vat, totalTax, grandTotal, originalTotal;
-
-          if (hasFreshSCBill) {
-            cgst = passedBillSummary.cgst;
-            sgst = passedBillSummary.sgst;
-            vat = passedBillSummary.vat || 0;
-            totalTax = passedBillSummary.totalTax;
-            grandTotal = apiOrderAmount || passedBillSummary.grandTotal;
-            originalTotal = passedBillSummary.originalTotal != null ? passedBillSummary.originalTotal : null;
-          } else {
-            // Recalculate tax on discounted subtotal (same logic as ReviewOrder)
-            // Tax should be calculated on subtotal after discount
-            const taxRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
-            cgst = parseFloat((apiBillSummary.cgst * taxRatio).toFixed(2));
-            sgst = parseFloat((apiBillSummary.sgst * taxRatio).toFixed(2));
-            vat = parseFloat((apiBillSummary.vat * taxRatio).toFixed(2));
-            totalTax = parseFloat((cgst + sgst + vat).toFixed(2));
-            // Local grand total = subtotal after discount + adjusted tax (no rounding)
-            const localGrandTotal = parseFloat((subtotalAfterDiscount + totalTax).toFixed(2));
-            grandTotal = apiOrderAmount || localGrandTotal;
-            originalTotal = grandTotal !== localGrandTotal ? localGrandTotal : null;
-          }
-
-          setBillSummary({
-            ...apiBillSummary,
-            pointsDiscount: persistedPointsDiscount,
-            pointsRedeemed: persistedPointsRedeemed,
-            // SERVICE_CHARGE_MAPPING CR — keep SC visible on success page
-            serviceCharge: persistedServiceCharge,
-            subtotal: subtotalAfterDiscount + persistedServiceCharge,
-            cgst,
-            sgst,
-            vat,
-            totalTax,
-            grandTotal,
-            originalTotal,
-          });
+          setBillSummary(orderDetails.billSummary);
         }
       }
     } catch (error) {
@@ -533,7 +487,7 @@ const OrderSuccess = () => {
               <span className="order-success-order-label">Order</span>
               <span className="order-success-order-id">
                 #{restaurantOrderId || orderData.orderId || 'N/A'}
-                {restaurantOrderId && <span> ({orderData.orderId})</span>}
+                {SHOW_INTERNAL_ORDER_ID && restaurantOrderId && <span> ({orderData.orderId})</span>}
               </span>
             </div>
             <span className="order-success-total">₹{liveOrderAmount || orderData.totalToPay || '0.00'}</span>
@@ -712,7 +666,7 @@ const OrderSuccess = () => {
                   <span className="bill-label-total">Grand Total</span>
                   <span className="bill-value-total">
                     ₹{billSummary.grandTotal.toFixed(2)}
-                    {billSummary.originalTotal != null && (
+                    {SHOW_PRE_ROUND_BRACKET && billSummary.originalTotal != null && (
                       <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{billSummary.originalTotal.toFixed(2)})</span>
                     )}
                   </span>

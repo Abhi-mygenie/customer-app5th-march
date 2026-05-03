@@ -30,7 +30,7 @@ import {
   allocateServiceChargePerItem,
 } from '../transformers/helpers';
 
-import { calculateTaxBreakdown } from '../../utils/taxCalculation';
+// calculateTaxBreakdown import removed — getOrderDetails now uses pure API mapping (SERVICE_CHARGE_MAPPING CR).
 
 // Import types
 import {
@@ -135,30 +135,16 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
 
     const orderData: ApiOrderDetailsResponse = response.data;
     const details = orderData.details || [];
-    const firstDetail = details[0] || {};
+    const firstDetail: any = details[0] || {};
 
-    // Calculate totals from items — CA-004: use centralized tax utility
-    let itemTotal = 0;
-    const orderDiscount = parseFloat((firstDetail as any).order_discount) || 0;
-
-    // Transform previous items using centralized transformer
-    // Returns CLEAN transformed data - components should use these standardized properties
+    // Transform previous items using centralized transformer (needed for UI rendering)
     const previousItems = details.map(detail => {
       const item = transformPreviousOrderItem(detail);
-      const isCancelled = detail.foodStatus === ORDER_STATUS.CANCELLED;
-      
-      if (!isCancelled) {
-        itemTotal += item.fullPrice * item.quantity;
-      }
-      
-      // Return transformed item with standardized properties
-      // Components should use: name, price, fullPrice, variations[], addons[]
       return {
         ...item,
-        // Legacy aliases for backward compatibility during migration
         orderId: (detail as any).order_id,
-        unitPrice: item.price,           // Alias: use 'price' instead
-        item: {                           // Legacy nested structure
+        unitPrice: item.price,
+        item: {
           id: item.foodId,
           name: item.name,
           description: item.description || '',
@@ -172,41 +158,36 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       };
     });
 
-    // Normalize items for tax calculation
-    const taxItems = details.map(detail => {
-      const item = transformPreviousOrderItem(detail);
-      const isCancelled = detail.foodStatus === ORDER_STATUS.CANCELLED;
-      return {
-        fullPrice: item.fullPrice,
-        quantity: item.quantity,
-        taxPercent: item.tax || 0,
-        taxType: item.taxType || 'GST',
-        isCancelled,
-      };
-    });
+    const fOrderStatus = firstDetail.f_order_status ?? ORDER_STATUS.YET_TO_CONFIRM;
+    const restaurantOrderId = firstDetail.restaurant_order_id ?? null;
 
-    // Note: orderService does not have restaurant context, so isGstEnabled defaults to true
-    // This matches previous behavior — gst_status check is only in ReviewOrder.jsx
-    const { cgst, sgst, totalGst, vat: totalVat, totalTax } = calculateTaxBreakdown(taxItems, true);
-
-    // Extract order-level status
-    const fOrderStatus = (firstDetail as any).f_order_status ?? ORDER_STATUS.YET_TO_CONFIRM;
-    const restaurantOrderId = (firstDetail as any).restaurant_order_id ?? null;
-
-    // API fields mapping
-    const orderAmount = parseFloat((firstDetail as any).order_amount) || 0;
-    const apiItemTotal = parseFloat((firstDetail as any).order_sub_total_amount) || 0;
-    const apiSubtotal = parseFloat((firstDetail as any).order_sub_total_without_tax) || 0;
-
-    const finalItemTotal = apiItemTotal > 0 ? apiItemTotal : parseFloat(itemTotal.toFixed(2));
-    const finalSubtotal = apiSubtotal > 0 ? apiSubtotal : parseFloat((itemTotal - orderDiscount).toFixed(2));
-    const finalGrandTotal = orderAmount > 0 ? orderAmount : parseFloat((finalSubtotal + totalTax).toFixed(2));
+    // ─── SERVICE_CHARGE_MAPPING CR — pure API mapping, no client-side recompute ───
+    // All values come directly from backend response fields.
+    // Reference: handover R-runtime-2 resolution, SUMMARY.md §5.
+    const totalVat = details.reduce(
+      (sum, d: any) => sum + (parseFloat(d.vat_tax_amount) || 0),
+      0
+    );
+    const serviceCharge = details.reduce(
+      (sum, d: any) => sum + (parseFloat(d.service_charge) || 0),
+      0
+    );
+    const itemTotal   = parseFloat(firstDetail.order_sub_total_without_tax) || 0;
+    const subtotal    = parseFloat(firstDetail.order_sub_total_amount) || 0;
+    const totalTax    = parseFloat(firstDetail.total_tax_amount) || 0;
+    const grandTotal  = parseFloat(firstDetail.order_amount) || 0;
+    const orderDiscount = parseFloat(firstDetail.order_discount) || 0;
+    const totalGst    = parseFloat((totalTax - totalVat).toFixed(2));
+    const cgst        = parseFloat((totalGst / 2).toFixed(2));
+    const sgst        = parseFloat((totalGst / 2).toFixed(2));
+    const localTotal  = parseFloat((subtotal + totalTax).toFixed(2));
+    const originalTotal = (grandTotal !== localTotal && localTotal > 0) ? localTotal : null;
 
     return {
       orderId: typeof orderId === 'string' ? parseInt(orderId, 10) : orderId,
-      orderAmount,
-      subtotal: finalSubtotal,
-      subtotalWithoutTax: finalSubtotal,
+      orderAmount: grandTotal,
+      subtotal,
+      subtotalWithoutTax: itemTotal,
       tableNo: orderData.table_no,
       tableId: (orderData as any).table_id,
       orderStatus: orderData.order_status,
@@ -218,15 +199,16 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       restaurant: (orderData as any).restaurant,
       deliveryCharge: (orderData as any).delivery_charge,
       billSummary: {
-        itemTotal: finalItemTotal,
+        itemTotal,
+        serviceCharge,
         discount: orderDiscount,
-        subtotal: finalSubtotal,
+        subtotal,
         cgst,
         sgst,
         vat: totalVat,
         totalTax,
-        grandTotal: finalGrandTotal,
-        originalTotal: orderAmount,
+        grandTotal,
+        originalTotal,
       }
     };
   } catch (error) {

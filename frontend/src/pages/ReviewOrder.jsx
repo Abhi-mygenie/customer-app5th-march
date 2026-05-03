@@ -31,6 +31,11 @@ import logger from '../utils/logger';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import './ReviewOrder.css';
 
+// ─── UI display flag (SERVICE_CHARGE_MAPPING CR) ───────────────────────────
+// Hide-not-delete toggle. Flip to true to restore the pre-rounding "(₹494.37)" value
+// next to the Grand Total. Underlying computation (hasRoundingDiff / totalToPay) stays.
+const SHOW_PRE_ROUND_BRACKET = false;
+
 // === CA-008 Phase 2: Extracted pure helper functions ===
 
 const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, finalCgst, finalSgst, finalVat, finalTotalTax, roundedTotal, hasRoundingDiff, totalToPay }) => ({
@@ -1564,7 +1569,7 @@ const ReviewOrder = () => {
                 <span className="price-label-total">Grand Total</span>
                 <span className="price-value-total">
                   ₹{roundedTotal.toFixed(2)}
-                  {hasRoundingDiff && (
+                  {SHOW_PRE_ROUND_BRACKET && hasRoundingDiff && (
                     <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{totalToPay.toFixed(2)})</span>
                   )}
                 </span>
