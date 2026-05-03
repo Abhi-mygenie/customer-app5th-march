@@ -1,247 +1,202 @@
-# Service Charge Mapping — Implementation Summary
+# Service Charge Mapping — Implementation Summary (Final)
 
 | Field | Value |
 |---|---|
 | **CR name** | `SERVICE_CHARGE_MAPPING` |
 | **Repo / Branch** | `customer-app5th-march` / `abhi-2-may` |
-| **Base commit (handover)** | `7ddb458` (diff vs current HEAD `d3c9f63` = empty for in-scope files) |
 | **Implementation Agent** | E1 |
-| **Implementation date** | 2026-05-02 |
-| **Final verdict** | **implementation_done** (pending user manual validation on 716 + 478) |
+| **Final verdict** | **implementation_done** — 716 validated end-to-end; 478 pending |
 
 ---
 
 ## 1. Requirement implemented
 
-Mapped 3 keys from `restaurant_details` API (`auto_service_charge`, `service_charge_percentage`, `service_charge_tax`) into the customer-ordering billing flow:
-- New `serviceCharge` line + GST-on-SC merged into existing CGST/SGST bucket per locked rule R4.
-- Threaded through to all 3 payload writers (`buildMultiMenuPayload`, normal `placeOrder`, `updateCustomerOrder`) per R7.
-- Surfaced on ReviewOrder Price Breakdown UI and OrderSuccess Bill Summary.
-- Zero-regression contract preserved (§7): when `auto_service_charge !== 'Yes'` or `pct=0` or keys absent, output is byte-identical to pre-CR behaviour.
+Complete service-charge billing flow wired into customer-app:
+- 3 `restaurant_details` keys (`auto_service_charge`, `service_charge_percentage`, `service_charge_tax`) fully consumed.
+- Tax math in ReviewOrder: SC on `subtotalAfterDiscount`, SC-GST computed + split CGST/SGST.
+- Payload sent in all 3 writers identically (multi-menu, normal `placeOrder`, `updateCustomerOrder`), including per-item `service_charge` allocation and root-level aggregates.
+- OrderSuccess Bill Summary refactored to pure-API mapping (zero client-side recompute).
+- Compliance-grade display: CGST/SGST/VAT rows + CGST-on-SC/SGST-on-SC rows with `%` suffix. Conditional hiding when amounts are zero.
+- Feature-flag-gated hide of pre-round bracket + internal order ID on Collect Bill page.
+- Adjacent fix: manually-selected room/table (716 flow) now persists to `sessionStorage` (pre-order UX) and reads from API post-order.
 
 ---
 
-## 2. Bucket-wise implementation summary
+## 2. Final file list (8 files touched across the CR lifetime)
 
-| Bucket | Scope | Status |
-|---|---|---|
-| **A** | `ReviewOrder.jsx` math: SC keys, `serviceCharge`, `gstOnServiceCharge`, `scCgst/Sgst`, `finalCgst/Sgst/Vat`, `finalTotalTax`, `finalSubtotal`, new `totalToPay`. Extended `buildBillSummary` helper. | ✅ done |
-| **B** | `helpers.js` `buildMultiMenuPayload`: destructured 4 new fields, added `gstOnSc` into root totals, updated 3 payload field values. | ✅ done |
-| **C** | `ReviewOrder.jsx` wiring: passed `serviceCharge`, `gstOnServiceCharge`, `itemTotal`, `finalSubtotal` to all 4 outbound calls (placeOrder, placeOrder-retry, updateCustomerOrder ×2). Changed `totalTax` arg to `finalTotalTax`. | ✅ done |
-| **D** | `ReviewOrder.jsx` UI: SC row (gated by `serviceCharge > 0`), Subtotal value → `finalSubtotal`, CGST/SGST values → `finalCgst/Sgst`, gate change `totalGst > 0` → `finalCgst > 0`. | ✅ done |
-| **E** | `orderService.ts`: normal `placeOrder` + `updateCustomerOrder` payloads — pulled SC fields, added `total_service_tax_amount`, `service_gst_tax_amount: 0`, updated `order_sub_total_amount`/`order_sub_total_without_tax`. | ✅ done |
-| **F** | `OrderSuccess.jsx`: persisted `serviceCharge` from passed/API bill summary, set on state, added bill row between Discount and Subtotal. | ✅ done |
-| **G** | `orderService.test.js`: added 4 new tests (2 multi-menu + 2 normal-path, covering zero-baseline and positive cases). | ✅ done — 4/4 pass |
+| File | Role |
+|---|---|
+| `frontend/src/pages/ReviewOrder.jsx` | Math, UI rows, payload wiring, sessionStorage persist |
+| `frontend/src/api/transformers/helpers.js` | `buildMultiMenuPayload` + `allocateServiceChargePerItem` helper |
+| `frontend/src/api/services/orderService.ts` | `placeOrder` / `updateCustomerOrder` payload fields; `getOrderDetails` pure-API mapping |
+| `frontend/src/pages/OrderSuccess.jsx` | Bill Summary refactor, tax row splits, UI flags, table fallback |
+| `frontend/src/types/models/order.types.ts` | `BillSummary` interface extended with `serviceCharge`, `scCgst`, `scSgst`, `gstRate`, `vatRate`, `scGstRate` |
+| `frontend/src/__tests__/services/orderService.test.js` | 6 new SC unit tests (+ extractPayload helper) |
+| `frontend/yarn.lock` | dep install only; no manual changes |
 
-User explicit decision: one-shot implementation across all buckets, validation via 2 manual test cases (716 + 478) instead of bucket-by-bucket sign-off.
-
----
-
-## 3. Files changed
-
-| # | File | LOC delta |
-|---|---|---|
-| 1 | `frontend/src/pages/ReviewOrder.jsx` | +84 / −18 (helper extension + math block + 4 call sites + UI rows + gate) |
-| 2 | `frontend/src/api/transformers/helpers.js` | +13 / −7 (`buildMultiMenuPayload` only) |
-| 3 | `frontend/src/api/services/orderService.ts` | +27 / −6 (`placeOrder` normal path + `updateCustomerOrder`) |
-| 4 | `frontend/src/pages/OrderSuccess.jsx` | +10 / −3 (recalc + bill row) |
-| 5 | `frontend/src/__tests__/services/orderService.test.js` | +90 / −0 (4 new tests + helper) |
-
-`taxCalculation.js` was **not** touched (handover §5.2(c) "Revised approach" supersedes §5.1).
+`taxCalculation.js`, `CartContext.js`, `getTotalPrice()`, `transformCartItemForMultiMenu`, `transformPreviousOrderItem`, `LandingPage.jsx`, coupon/Razorpay/loyalty flows — all untouched per handover §6.
 
 ---
 
-## 4. Logic changed per file
+## 3. Final payload contract (from all 3 writers)
 
-### `ReviewOrder.jsx`
-- `buildBillSummary({...})` signature now accepts `serviceCharge`, `finalSubtotal`, `finalCgst`, `finalSgst`, `finalVat`, `finalTotalTax`. Returns `subtotal: finalSubtotal`, `subtotalBeforeServiceCharge: subtotalAfterDiscount`, `cgst: finalCgst`, `sgst: finalSgst`, plus new `serviceCharge`.
-- After `adjustedCgst/Sgst/Vat/TotalTax` (line ~585) inserted SC block: derives `scAutoApply`, `scPct`, `scGstRate`, `applyServiceCharge`, `isGstEnabledForSc`, then computes `serviceCharge`, `gstOnServiceCharge`, `scCgst`, `scSgst`, `finalCgst`, `finalSgst`, `finalVat`, `finalTotalTax`, `finalSubtotal`.
-- `totalToPay` now = `finalSubtotal + finalTotalTax` (was `subtotalAfterDiscount + adjustedTotalTax`). When SC=0 these are byte-identical.
-- All 3 `buildBillSummary` call sites (Razorpay 790, success 1064, 401-retry 1189) updated.
-- 4 outbound API calls (placeOrder + retry + updateCustomerOrder ×2) now pass new SC fields. `totalTax: totalTax` → `totalTax: finalTotalTax`. `totalTax: adjustedTotalTax` → `totalTax: finalTotalTax`.
-- Inline price breakdown UI: new SC row between Item Total and the existing rows; Subtotal value → `finalSubtotal`; CGST/SGST values → `finalCgst/Sgst`; gate `totalGst > 0` → `finalCgst > 0` (so a VAT-only cart with SC-GST still renders the rows per Q4).
+**Per cart item:**
+```json
+{
+  "gst_tax_amount": <item-only GST>,
+  "vat_tax_amount": <item-only VAT>,
+  "service_charge": <allocated proportionally>
+}
+```
 
-### `helpers.js` — `buildMultiMenuPayload`
-- Destructure adds: `serviceCharge=0`, `gstOnServiceCharge=0`, `itemTotal=0`, `finalSubtotal` (no default).
-- Replaced root totals computation: split into `itemGstTaxAmount` / `itemVatTaxAmount`, then `totalGstTaxAmount = itemGstTaxAmount + gstOnSc`, `totalVatTaxAmount = itemVatTaxAmount` (untouched).
-- `order_sub_total_amount`: `(finalSubtotal !== undefined ? finalSubtotal : subtotal)` — falls back when CR fields absent.
-- `order_sub_total_without_tax`: `itemTotal > 0 ? itemTotal : subtotal`.
-- `total_service_tax_amount`: `serviceCharge` (was hardcoded 0).
-- `service_gst_tax_amount`: stays `0` per R9.
-- `total_vat_tax_amount`: untouched.
-- `tax_amount` (root): now = `totalGstTaxAmount + totalVatTaxAmount` so it picks up SC-GST automatically.
-
-### `orderService.ts`
-**`placeOrder` normal path:** pulls `serviceCharge`, `itemTotal`, `finalSubtotal` from `orderData`. `order_sub_total_amount` → `finalSubtotal`. `order_sub_total_without_tax` → `itemTotal > 0 ? itemTotal : subtotal`. Adds `total_service_tax_amount: serviceCharge`, `service_gst_tax_amount: 0`. `tax_amount` continues to use `orderData.totalTax` (which now holds `finalTotalTax` from ReviewOrder).
-**`updateCustomerOrder`:** destructure adds `serviceCharge=0`, `gstOnServiceCharge=0`, `itemTotal=0`, `finalSubtotal` (no default). `effectiveSubtotal` falls back to existing `subtotal`. `effectiveItemTotal` falls back to `subtotal`. Adds `total_service_tax_amount`, `service_gst_tax_amount: 0`.
-
-### `OrderSuccess.jsx`
-- Recalc block at lines 293-331: derives `persistedServiceCharge = passedBillSummary?.serviceCharge || apiBillSummary.serviceCharge || 0`. `setBillSummary({...})` now spreads `serviceCharge: persistedServiceCharge`, `subtotal: subtotalAfterDiscount + persistedServiceCharge`.
-- Bill rendering at lines 651-666: new conditional row between Discount and Subtotal.
-
-### `orderService.test.js`
-- Added `extractPayload(formArg)` helper that deserializes `formData.get('data')` into a JSON object (the existing 21 tests in the file rely on `payload.data` which is `undefined` — pre-existing test-infra issue, **out of scope per §6**).
-- Added 4 tests:
-  1. multi-menu zero-baseline (no SC fields when SC omitted).
-  2. multi-menu positive (SC=60, gstOnSc=10.80, asserts `total_service_tax_amount=60`, `total_gst_tax_amount=46.80`, `order_sub_total_without_tax=1200`, `order_sub_total_amount=1260`).
-  3. normal-path positive (SC=50, asserts payload field shape).
-  4. normal-path zero-baseline.
+**Root level:**
+```json
+{
+  "total_service_tax_amount": <SC total>,
+  "service_gst_tax_amount": <SC-GST total>,            // deviates from handover R9 (was 0); now populated per stakeholder direction
+  "total_gst_tax_amount": <item GST + SC-GST combined>,
+  "total_vat_tax_amount": <item VAT total>,
+  "tax_amount": <grand total tax, root>,
+  "order_sub_total_amount": <itemTotal + SC>,
+  "order_sub_total_without_tax": <itemTotal>
+}
+```
 
 ---
 
-## 5. Payload fields updated
+## 4. Final retrieval contract (`getOrderDetails` — pure API mapping)
 
-| Writer | Field | Old | New |
+Reads from backend response fields directly with defensive fallbacks:
+- `firstDetail.order_sub_total_without_tax` → `itemTotal`
+- `firstDetail.order_sub_total_amount` → `subtotal` (post-SC)
+- `firstDetail.total_tax_amount` → `totalTax`
+- `firstDetail.total_vat_tax_amount` (or Σ item `vat_tax_amount`) → `totalVat`
+- `firstDetail.total_service_tax_amount` (or Σ item `service_charge`) → `serviceCharge`
+- `firstDetail.payload_total_gst_tax_amount` (or `totalTax − totalVat`) → `totalGst`
+- `firstDetail.service_gst_tax_amount` (or derived) → `scGst`
+- `totalGst − scGst` → `itemGst` → `cgst` / `sgst` = `itemGst / 2`
+- `scGst / 2` → `scCgst` / `scSgst`
+- `firstDetail.order_amount` → `grandTotal`
+- Rates: uniform GST / VAT rates from items (null if mixed); `scGstRate` derived from `scGst / serviceCharge × 100`
+- `firstDetail.table_type` → `tableType` (new)
+
+No client-side recomputation. No `calculateTaxBreakdown` call. No `taxRatio` adjustment.
+
+---
+
+## 5. UI contract (final)
+
+### ReviewOrder Price Breakdown
+```
+Item Total                  ₹X
+Service Charge (Optional)   ₹SC              [hidden if SC=0]
+────────────────────────────────
+Subtotal                    ₹X+SC
+CGST 9%                     ₹itemCgst        [hidden if itemGst=0]
+SGST 9%                     ₹itemSgst        [hidden if itemGst=0]
+VAT 22%                     ₹VAT              [hidden if itemVat=0]
+CGST on SC 9%               ₹scCgst          [hidden if scGst=0]
+SGST on SC 9%               ₹scSgst          [hidden if scGst=0]
+────────────────────────────────
+Grand Total  ₹ceil(total) (₹preRound)  ← bracket visible (pre-round shown)
+```
+
+### OrderSuccess Bill Summary (Collect Bill)
+Same 6 tax-band rows with same hide rules. Grand Total shows **without** pre-round bracket (flag `SHOW_PRE_ROUND_BRACKET=false`).
+Order ID row shows `#000XXX` only (internal id hidden via `SHOW_INTERNAL_ORDER_ID=false`).
+Room/Table row: prefers API `table_no`/`table_type`; fallback to sessionStorage.
+
+`%` suffix sourced from uniform rate across items (single-rate carts), from restaurant config (`service_charge_tax`) for SC rows. Mixed-rate carts show labels without `%`.
+
+---
+
+## 6. Deviations from handover (documented)
+
+| Rule | Original | Final | Reason |
 |---|---|---|---|
-| `buildMultiMenuPayload` | `order_sub_total_amount` | `subtotal` | `finalSubtotal` (fallback `subtotal`) |
-| `buildMultiMenuPayload` | `order_sub_total_without_tax` | `subtotal` | `itemTotal` (fallback `subtotal`) |
-| `buildMultiMenuPayload` | `total_service_tax_amount` | hardcoded `0` | `serviceCharge` |
-| `buildMultiMenuPayload` | `total_gst_tax_amount` | item-GST sum | item-GST sum + `gstOnSc` |
-| `buildMultiMenuPayload` | `tax_amount` (root) | item-GST + VAT | item-GST + `gstOnSc` + VAT |
-| `buildMultiMenuPayload` | `service_gst_tax_amount` | `0` | `0` (R9, unchanged) |
-| `buildMultiMenuPayload` | `total_vat_tax_amount` | item-VAT | item-VAT (unchanged) |
-| Normal `placeOrder` | `order_sub_total_amount` | `subtotal` | `finalSubtotal` (fallback `subtotal`) |
-| Normal `placeOrder` | `order_sub_total_without_tax` | `subtotal` | `itemTotal` (fallback `subtotal`) |
-| Normal `placeOrder` | `total_service_tax_amount` | (not present) | `serviceCharge` |
-| Normal `placeOrder` | `service_gst_tax_amount` | (not present) | `0` |
-| Normal `placeOrder` | `tax_amount` | `orderData.totalTax` | `orderData.totalTax` (now = `finalTotalTax` from ReviewOrder) |
-| `updateCustomerOrder` | mirror of normal `placeOrder` | — | — |
+| **R9** `service_gst_tax_amount=0` | locked to 0 | populated with actual SC-GST | stakeholder direction post-handover; field name matches semantics |
+| **R4** SC-GST merged into CGST/SGST | single CGST/SGST row | **split** into 4 rows (item + SC) | compliance requirement (restaurant receipt format) |
+| **§5.1** change `taxCalculation.js` | required | NOT changed | §5.2(c) revised approach overrides §5.1 |
+
+All other locked rules (R1 gate, R2 SC base, R3 GST gate, R5 single round, R7 all-writers-identical, R8 VAT untouched) preserved.
 
 ---
 
-## 6. OrderSuccess / Bill Summary UI changes
+## 7. Validation status
 
-ReviewOrder Price Breakdown:
-```
-Item Total
-+ Service Charge (X%)             [NEW; gated by serviceCharge > 0]
-  Coupon / Loyalty / Delivery (existing)
-Subtotal                           [value now = finalSubtotal]
-  CGST                             [value now = finalCgst; gate now = finalCgst > 0]
-  SGST                             [value now = finalSgst]
-  VAT                              [unchanged]
-Grand Total                        [unchanged formula; driven by new totalToPay]
-```
+### Unit tests
+✅ 6/6 SC tests pass:
+1. multi-menu zero-baseline
+2. multi-menu positive (worked example from §3)
+3. multi-menu per-item allocation (3 items, remainder handling)
+4. multi-menu zero-SC per-item regression
+5. normal-path positive
+6. normal-path zero-baseline
 
-OrderSuccess Bill Summary:
-```
-Item Total
-Loyalty/Discount
-+ Service Charge                   [NEW; gated by billSummary.serviceCharge > 0]
-Subtotal                           [now includes SC]
-CGST / SGST / VAT
-Grand Total
-```
+### Manual validation (716)
+✅ Single-item cart with SC (GST-only) — ReviewOrder & OrderSuccess reconcile
+✅ Multi-item cart (GST + VAT + SC) — all tax rows correct, numbers match backend response
+✅ Per-item `service_charge` allocation (last-item-remainder) verified
+✅ Page refresh on OrderSuccess → values persist (pure API)
+✅ Grand Total bracket visible on ReviewOrder, hidden on OrderSuccess
+✅ Internal order ID hidden on OrderSuccess
+✅ `%` suffix rendered for all tax rows
+
+### Pending
+🟡 478 flow validation (loyalty + coupon + wallet + edit-order) — requires stakeholder testing
+🟡 Room/table display on 716 Collect Bill — pending user validation after this iteration
 
 ---
 
-## 7. Validation performed (by Implementation Agent)
+## 8. Backend contract changes (deployed during CR)
 
-| Step | Result |
+Backend team added these fields to `/order-details` response during CR testing:
+- `total_vat_tax_amount`
+- `total_service_tax_amount`
+- `service_gst_tax_amount`
+- `payload_total_gst_tax_amount` (correctly-labeled total GST; `total_gst_tax_amount` keeps its legacy combined-with-tax semantic)
+
+Also fixed backend data-persistence issues:
+- `order_sub_total_amount` / `order_sub_total_without_tax` now persist correctly (were stored as 0 initially)
+- Per-item `service_charge` now persists and echoes correctly
+
+---
+
+## 9. Known residual backend gaps (out of CR scope — flag to backend team)
+
+| Priority | Gap |
 |---|---|
-| Static lint of changed JS / JSX files | ✅ no issues |
-| ESLint of `.ts` file | ⚠️ pre-existing TS-syntax parse error (lint config doesn't grok `.ts`); **NOT introduced by this CR** |
-| Frontend webpack compilation (post supervisor restart) | ✅ "Compiled with warnings" (1 unrelated warning) |
-| Backend & frontend supervisor status | ✅ both `RUNNING` |
-| `curl http://localhost:3000/` | ✅ HTTP 200 |
-| Unit tests for SC mapping (4 new tests) | ✅ 4/4 pass |
-| `git diff --stat` scope check | ✅ exactly 5 in-scope files changed; nothing else |
-
-Manual end-to-end validation (716 / 478 cart flows) is the user's pending step.
+| Low | `total_gst_tax_amount` in response still mislabeled (= total_tax); frontend uses `payload_total_gst_tax_amount` instead. Rename in backend for clarity. |
+| Low | `transaction_reference` duplicates `order_sub_total_amount`. Either rename or deprecate. |
+| Low | Echo consistency: `service_gst_tax_amount` is sent in our payload but inconsistently echoed in response (sometimes absent). |
 
 ---
 
-## 8. Acceptance criteria status
+## 10. Adjacent fix included in CR (explicit note)
 
-| § | Criterion | Status |
-|---|---|---|
-| 12 | Q1–Q6 positive cases (716 SC math + UI) | ⏳ awaiting user 716 manual test |
-| 12 | Q7–Q12 regression cases | ⏳ awaiting user manual test |
-| 12 | `orderService.test.js` passes green | ✅ for the 4 new SC tests; pre-existing 21 tests remain broken (out of scope) |
-| 12 | No imports added/removed beyond spec | ✅ |
-| 12 | No changes to `taxCalculation.js`, `CartContext.js`, `getTotalPrice()`, `transformCartItemForMultiMenu`, `LandingPage.jsx` | ✅ |
-| 12 | New conditional rows render only when SC > 0 | ✅ both `serviceCharge > 0` and `billSummary.serviceCharge > 0` gates |
-| 12 | No console errors when `restaurant` is null | ✅ all SC derivations use `restaurant?.x` and default to 0 / false |
-| 12 | §6 must-not-change list respected | ✅ |
+**Room/Table display on OrderSuccess for 716 (manual room-selection flow).**
+
+- **Problem**: 716 uses a dropdown for room selection instead of QR URL → `useScannedTable` never got populated → Collect Bill hid the room row.
+- **Fix**:
+  1. ReviewOrder writes manually-picked room/table into `sessionStorage` using same key shape as `useScannedTable` → pre-order screens (menu, ReviewOrder, etc.) work.
+  2. OrderSuccess fetches `table_no` + `table_type` from `/order-details` API as **primary** source post-order; sessionStorage used as fallback only. Matches stakeholder direction: "after order is placed, everything should come from API".
+- **Zero impact on QR-flow restaurants**: their sessionStorage was already populated; their render path also now prefers API (both sources agree).
 
 ---
 
-## 9. Known risks / runtime-TBC items (carry-over from handover §9)
+## 11. Final verdict
 
-| ID | Status |
-|---|---|
-| **R-runtime-1** — backend field acceptance for non-716 (`/place_order`) | ⏳ open — needs runtime verification on a non-716 (478) test order |
-| **R-runtime-2** — `transformPreviousOrderItem` / `getOrderDetails` SC field mapping (so reloading OrderSuccess pulls SC from API) | ⏳ open — until first SC order is placed and order-details API shape captured. Current code uses `passedBillSummary.serviceCharge` fallback → SC visible in fresh-order success page; may show 0 after refresh until R-runtime-2 wired. |
-| **R-runtime-3** — string vs number for `service_charge_percentage` / `service_charge_tax` | ✅ handled (parseFloat) |
-| **R-adjacent-1** — `tax_type \|\| 'percentage'` zeroing item GST/VAT in `orderTransformer.ts` | 🚫 not fixed (out of scope per stakeholder direction) |
-| **R-adjacent-2** — `Math.ceil` vs `parseFloat(toFixed(2))` divergence between writers | 🚫 not fixed (out of scope) |
+**implementation_done.**
 
----
-
-## 10. Items intentionally not changed
-
-- `frontend/src/utils/taxCalculation.js` (handover §5.2(c) override).
-- `frontend/src/context/CartContext.js`, `useCart().getTotalPrice()`.
-- `transformCartItemForMultiMenu`, `transformPreviousOrderItem`, `getOrderDetails`.
-- `frontend/src/pages/LandingPage.jsx`.
-- `frontend/src/components/ReviewOrderPriceBreakdown/*`.
-- Coupon UI / Razorpay flow / `total_round` ceil logic.
-- `frontend/src/api/transformers/orderTransformer.ts` (R-adjacent-1).
-- Pre-existing 21 broken tests in `orderService.test.js` (FormData mock issue — different concern from SC CR).
-- Admin app and any backend code (CR is frontend-only).
-
----
-
-## 11. QA handover notes
-
-**First validation cycle = 716 only** (per user direction):
-1. Open 716 menu → add items → ReviewOrder. Verify Price Breakdown shows the new SC row and Subtotal/CGST/SGST values match handover §3 worked example for the configured SC%.
-2. Place order → check network tab → confirm `total_service_tax_amount`, `total_gst_tax_amount`, `order_sub_total_amount`, `order_sub_total_without_tax` carry the values per §4.
-3. Land on OrderSuccess → confirm Service Charge row visible → Grand Total matches Razorpay charged amount (and `total_round` ceil where enabled).
-
-**Second cycle = 478** (after 716 sign-off):
-1. Loyalty redemption + SC enabled: verify SC base = `subtotalAfterDiscount` (R2). E2E discount math intact.
-2. Coupon flow with SC=0 (zero-regression): byte-identical payload to today.
-3. Edit existing order on 478 → updateCustomerOrder payload carries SC fields.
-
-**Optional smoke:** any restaurant with `auto_service_charge !== 'Yes'` → SC row hidden, payload mirrors pre-CR behaviour.
-
-Suggested DevTools/network field check on the placed-order request:
-```
-total_service_tax_amount
-service_gst_tax_amount = 0
-order_sub_total_amount  (= itemTotal + serviceCharge − pointsDiscount)
-order_sub_total_without_tax  (= itemTotal raw)
-total_gst_tax_amount  (= item-GST + scGst)
-tax_amount  (root)
-```
-
----
-
-## 12. Manual user approvals received per bucket
-
-User explicitly opted out of bucket-by-bucket gates and chose **one-shot implementation**, gated by 2 manual test cases (716 + 478) at the end. Approvals on key spec decisions:
-
-| Decision | User reply |
-|---|---|
-| Q1: SC-GST display | **A1** — fold into existing CGST/SGST rows (matches R4) |
-| Q2: `subtotal` arg in `placeOrder` | **(a)** — keep existing `subtotal` arg as-is, add new fields |
-| Implementation approach | **One-shot all buckets**, validate via 2 cases (716 + 478) |
-| Local jest unit-test execution | **Yes**, since it's read-only |
-
----
-
-## Final verdict
-
-**implementation_done** — code changes complete, lint clean (for JS/JSX), webpack compiles, 4/4 new SC unit tests pass.
-
-**Files changed (5):**
+**Files changed (final, 7 source files + 1 lockfile + this summary):**
 1. `frontend/src/pages/ReviewOrder.jsx`
 2. `frontend/src/api/transformers/helpers.js`
 3. `frontend/src/api/services/orderService.ts`
 4. `frontend/src/pages/OrderSuccess.jsx`
-5. `frontend/src/__tests__/services/orderService.test.js`
+5. `frontend/src/types/models/order.types.ts`
+6. `frontend/src/__tests__/services/orderService.test.js`
+7. `frontend/yarn.lock` (generated)
 
-**Working tree contains only intended changes:** ✅ confirmed via `git diff --stat`.
+**Working tree scope:** ✅ only intended files changed.
 
-**Pending user action:** manual end-to-end validation on 716 first, then 478. After approval, runtime-TBC items R-runtime-1 and R-runtime-2 can be addressed in a follow-up.
+**Next steps:** stakeholder validation on 716 (current iteration output) and 478 (full loyalty/coupon/wallet cycle). If 478 reveals issues, address in a follow-up iteration.

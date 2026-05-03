@@ -170,6 +170,33 @@ const ReviewOrder = () => {
   // Session storage key for customer info persistence during edit order
   const SESSION_CUSTOMER_KEY = 'sessionCustomerInfo';
 
+  // ─── SERVICE_CHARGE_MAPPING CR (adjacent fix) — persist manually-selected room/table ───
+  // For restaurants where the user PICKS a room/table (e.g. 716) instead of arriving via QR,
+  // write the selection to sessionStorage using the same key shape as useScannedTable, so
+  // downstream screens (OrderSuccess, menu) can read via the hook without parallel code paths.
+  // Effective only for pre-order screens; OrderSuccess prefers API values post-order.
+  useEffect(() => {
+    if (!numericRestaurantId || !roomOrTable) return;
+    if (!tableNumber) return;
+    const pool = roomOrTable === 'room' ? rooms : tables;
+    const entry = (pool || []).find((x) => String(x.id) === String(tableNumber));
+    if (!entry) return;
+    try {
+      sessionStorage.setItem(
+        `scanned_table_${numericRestaurantId}`,
+        JSON.stringify({
+          table_id: entry.id,
+          table_no: entry.table_no,
+          room_or_table: roomOrTable,
+          order_type: 'dinein',
+          food_for: null,
+        })
+      );
+    } catch (e) {
+      // ignore quota / privacy errors
+    }
+  }, [numericRestaurantId, tableNumber, roomOrTable, rooms, tables]);
+
   // Save customer info to sessionStorage whenever it changes
   useEffect(() => {
     if ((customerName || customerPhone) && numericRestaurantId) {

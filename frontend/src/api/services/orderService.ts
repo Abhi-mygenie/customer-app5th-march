@@ -212,6 +212,8 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       previousItems,
       restaurant: restaurantMeta,
       deliveryCharge: (orderData as any).delivery_charge,
+      // SERVICE_CHARGE_MAPPING CR (adjacent fix) — expose table meta for OrderSuccess to read
+      tableType: firstDetail.table_type || null,
       billSummary: {
         itemTotal,
         serviceCharge,

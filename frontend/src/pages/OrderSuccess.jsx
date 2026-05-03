@@ -141,6 +141,9 @@ const OrderSuccess = () => {
   const [liveOrderAmount, setLiveOrderAmount] = useState(null);
   const [paymentVerified, setPaymentVerified] = useState(false);
   const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  // SERVICE_CHARGE_MAPPING CR (adjacent fix) — post-order table/room from API (single source of truth)
+  const [apiTableNo, setApiTableNo] = useState(null);
+  const [apiTableType, setApiTableType] = useState(null);
 
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
@@ -302,6 +305,13 @@ const OrderSuccess = () => {
         if (orderDetails.billSummary) {
           setBillSummary(orderDetails.billSummary);
         }
+        // SERVICE_CHARGE_MAPPING CR (adjacent fix) — post-order table/room from API
+        if (orderDetails.tableNo) {
+          setApiTableNo(String(orderDetails.tableNo).trim());
+        }
+        if (orderDetails.tableType) {
+          setApiTableType(orderDetails.tableType);
+        }
       }
     } catch (error) {
       logger.error('order', 'Failed to fetch order status:', error);
@@ -448,7 +458,13 @@ const OrderSuccess = () => {
   const showOrderStatus = showOrderStatusTracker;
   const showCallWaiter = configShowCallWaiter && isDineInContext;
   const showPayBill = configShowPayBill && isDineInContext;
-  const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && isScanned && scannedTableNo && hasAssignedTable(scannedTableId);
+  // SERVICE_CHARGE_MAPPING CR (adjacent fix) — prefer API for post-order display (single source of truth).
+  // Fallback to useScannedTable (sessionStorage) only if API hasn't loaded yet.
+  const effectiveTableNo = apiTableNo || scannedTableNo;
+  const effectiveRoomOrTable = apiTableType
+    ? (apiTableType === 'RM' ? 'room' : 'table')
+    : scannedRoomOrTable;
+  const showTableNumber = isConfigEnabled(restaurant, 'show_table_number') && !!effectiveTableNo;
   
   // Edit Order vs Browse Menu — based on whether a table was scanned and order status
   // Phase 1: hasTable is true only when a specific table/room was scanned (not walk-in)
@@ -512,16 +528,16 @@ const OrderSuccess = () => {
             </div>
           )}
 
-          {/* Table Number - inline */}
+          {/* Table Number - inline (SERVICE_CHARGE_MAPPING CR adjacent fix — effective* prefers API post-order) */}
           {showTableNumber && (
             <div className="order-success-table-row">
               <span className="order-success-table-icon">
-                {scannedRoomOrTable === 'room' ? <FaDoorOpen /> : <MdOutlineTableRestaurant />}
+                {effectiveRoomOrTable === 'room' ? <FaDoorOpen /> : <MdOutlineTableRestaurant />}
               </span>
               <span className="order-success-table-label">
-                {scannedRoomOrTable === 'room' ? 'Room' : 'Table'}
+                {effectiveRoomOrTable === 'room' ? 'Room' : 'Table'}
               </span>
-              <span className="order-success-table-value">{scannedTableNo}</span>
+              <span className="order-success-table-value">{effectiveTableNo}</span>
             </div>
           )}
         </div>
