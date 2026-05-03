@@ -123,6 +123,7 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
   restaurantOrderId?: string;
   tableId?: string;
   tableNo?: string;
+  tableType?: string | null;
   restaurant?: any;
   deliveryCharge?: number;
 }> => {
