@@ -138,8 +138,10 @@ export interface BillSummary {
   totalTax: number;
   discount: number;
   grandTotal: number;
-  originalTotal?: number;
+  originalTotal?: number | null;
   roundingAdjustment?: number;
+  // SERVICE_CHARGE_MAPPING CR — total service charge across all items
+  serviceCharge?: number;
 }
 
 // ============================================
