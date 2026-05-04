@@ -296,11 +296,14 @@ const OrderSuccess = () => {
             clearCart();
             clearEditMode();
             clearScannedTable();
-            if (orderDetails.fOrderStatus === 3) {
-              toast('Your order has been cancelled.', { icon: '❌', duration: 4000 });
-            } else {
-              toast.success('Payment received. Thank you!', { duration: 4000 });
-            }
+            // TEMP: customer-facing toasts disabled pending UX/product review.
+            // Previously fired: status 3 → "Your order has been cancelled." (icon ❌)
+            //                   status 6 → "Payment received. Thank you!" (toast.success)
+            // if (orderDetails.fOrderStatus === 3) {
+            //   toast('Your order has been cancelled.', { icon: '❌', duration: 4000 });
+            // } else {
+            //   toast.success('Payment received. Thank you!', { duration: 4000 });
+            // }
             navigate(`/${restaurantId}`, { replace: true });
             return;
           }
