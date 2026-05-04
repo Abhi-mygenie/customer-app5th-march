@@ -97,27 +97,68 @@ Originally proposed a `restaurantId === '716'` TEMP hardcode. Replaced with the 
 
 ## 2. ⚠️ Open Issues — Not Investigated This Session
 
-### 2.1 🔴 P1 — "Failed to place order. Please try again." on COD path
+### 2.1 🔴 P1 — "Failed to place order. Please try again." on COD path  ⏸ PARKED FOR BACKEND
 **Reported by:** user (2026-05-04)
 **Artefact:** `qa_artifacts/cod_failed_to_place_order_2026-05-04.png`
+**Owner:** Backend / POS team
+**Frontend status:** No change needed per user decision — backend will handle.
+
 **Symptom (per screenshot):**
 - Customer (Sahil singh, +91 97619 80190) on a delivery order screen
 - Item: "Chicken Noodle Full" × 1, ₹199
-- Delivery to: "149, Grand Trunk Rd, Old…" (truncated)
 - Toast banner: **"Failed to place order. Please try again."**
-- Triggered when COD ("Pay at Counter") was chosen as payment method.
 
-**Status:** NOT investigated this session — reported at session end.
-**Next-session action items (suggested):**
-1. Reproduce flow: pick a restaurant with `codEnabled === true` AND a delivery `orderType` AND open the same checkout. Identify the restaurant id from the customer's session (Sahil singh / +91 97619 80190). Likely **NOT 716** (716 has `codEnabled=false`).
-2. Inspect browser network panel during the failing `placeOrder` call. Compare `payment_type` (should be `'postpaid'` for COD per `ReviewOrder.jsx:1067`) and the rest of the payload against POS expectations.
-3. Inspect `placeOrder` flow in `frontend/src/pages/ReviewOrder.jsx:1056-1112` and `frontend/src/api/services/orderService.ts:285-389` (non-multi-menu branch).
-4. Check whether the POS endpoint `/customer/order/place` is rejecting the payload (HTTP error → caught → generic toast). If yes, inspect server response body for the actual error.
-5. Possible suspects:
-   - Delivery payload missing required `address_id`/`address`/`pincode`/coords (see line 309-315, 326-330 of `orderService.ts`).
-   - `payment_method: 'cash_on_delivery'` hardcoded at line 323 of `orderService.ts`; if POS now expects something else for the COD path, it'd reject.
-   - `paymentMethod` state defaulting wrong for delivery — check `ReviewOrder.jsx:495-504` interaction with `onlinePaymentDelivery` config.
-6. The COD error is **independent** of all changes made in this session.
+**Investigation completed this session:**
+
+The actual failing request payload (captured from network):
+```json
+{
+  "restaurant_id": "739",
+  "order_type": "dinein",
+  "payment_type": "postpaid",
+  "payment_method": "cash_on_delivery",
+  "table_id": "0",
+  "cart": [{"food_id": "175252", "price": "249.00", "quantity": 1, ...}],
+  "order_amount": 309,
+  ...
+}
+```
+
+POS server response:
+```json
+{ "error": "Only prepaid orders are allowed for this restaurant" }
+```
+
+**Root cause — server-side gate identified:**
+The POS backend rejects postpaid orders for restaurant 739 based on the field `live_payment.<order_type>_online_payment === 'Yes'` returned by `POST /api/v1/web/restaurant-info`. Comparison across three restaurants confirms the pattern:
+
+| Restaurant | `order_payment_type` | `live_payment.dinein_online_payment` | `razorpay.razorpay_key` | COD result for dine-in |
+|---|---|---|---|---|
+| **739 Five star** | `'both'` | **`'Yes'`** | configured | ❌ rejected "Only prepaid orders allowed" |
+| **716 Hyatt** | `'postpaid'` | `'No'` | `None` | uses autopaid endpoint (separate flow) |
+| **699 Brew** | `'both'` | `'Yes'` | configured | would be rejected if attempted |
+
+The root-level `order_payment_type` field is misleading — `'both'` for 739 does not actually allow both. The per-order-type `live_payment.<type>_online_payment` flag is the real gate.
+
+**Why frontend submitted COD for 739** (not the bug to fix per user decision, but documented):
+- `/api/config/739` returns `codEnabled=false`, `onlinePaymentDinein=true`
+- `paymentMethod` state initialized to `'cod'` default (`ReviewOrder.jsx:169` `useState('cod')`)
+- `useEffect` (lines 495-504) is supposed to switch to `'online'` when `onlinePaymentEnabled && !codEnabled`, but this depends on `restaurant.razorpay.razorpay_key` being loaded
+- Race condition: if customer clicks Place Order before `restaurant` data lands, `paymentMethod` is still `'cod'` default → `selectedPaymentType='postpaid'` → POS rejects
+
+**Backend ticket — what's expected from POS team:**
+1. Decide whether the POS rejection is the right behaviour for restaurants like 739 (online-payment-enabled-but-not-prepaid-only). If yes:
+   - Make `/api/v1/web/restaurant-info` expose a clear, frontend-consumable flag (e.g. `accepts_postpaid: false`) instead of forcing the customer-app to derive prepaid-only status from `live_payment.<type>_online_payment`.
+   - Optionally, return a structured error code so the customer-app can show a meaningful message ("Online payment is required for this restaurant") instead of the generic toast.
+2. Or: relax the POS rule to allow postpaid when `order_payment_type === 'both'` (matching the field name's apparent intent).
+3. Sync `customer_app_config.codEnabled` (in our Mongo) with the POS-side `live_payment` flags so the frontend's gate stays consistent.
+
+**No frontend changes made or required this session.** The race-condition mitigation in the customer-app is intentionally NOT being implemented because the user decided the backend should be the source of truth.
+
+**For QA reproduction:**
+- Open preview URL for restaurant 739, scan or land on a dine-in flow.
+- In customer-app config, confirm `codEnabled: false`, but no payment-selector renders (because online is enabled and COD is disabled).
+- Click Place Order quickly (or use slow network throttling). Frontend submits `payment_type: "postpaid"`, POS rejects with the error above.
 
 ### 2.2 🟡 P2 — Unknown `f_order_status: 8` returned by POS
 Encountered during sample-pull on order 838291 (rest 739 "Five star").
@@ -224,8 +265,8 @@ Both changes are isolated and revertable independently:
 
 ## 7. Outstanding Decisions for Next Session
 
-1. **Status `8` handling** (Issue 2.2) — define and implement.
-2. **COD failure** (Issue 2.1) — investigate and fix.
+1. **COD failure on restaurant 739** (Issue 2.1) — ⏸ **PARKED FOR BACKEND**. POS team to decide between exposing a clean `accepts_postpaid` flag, returning a structured error code, or relaxing the prepaid-only rule. No frontend work pending.
+2. **Status `8` handling** (Issue 2.2) — define and implement after POS team confirms enum.
 3. **Cleanup of legacy `restaurantId === '716'` hardcodes** — found in:
    - `frontend/src/api/services/orderService.ts:265` (autopaid endpoint selection — keep, it's the prepaid POS contract)
    - `frontend/src/components/TableRoomSelector/TableRoomSelector.jsx:61` (`is716` UI rule)
