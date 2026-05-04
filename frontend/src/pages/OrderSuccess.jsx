@@ -137,6 +137,7 @@ const OrderSuccess = () => {
   const [billSummary, setBillSummary] = useState(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [fOrderStatus, setFOrderStatus] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(null);
   const [restaurantOrderId, setRestaurantOrderId] = useState(null);
   const [liveOrderAmount, setLiveOrderAmount] = useState(null);
   const [paymentVerified, setPaymentVerified] = useState(false);
@@ -274,6 +275,12 @@ const OrderSuccess = () => {
         if (orderDetails.fOrderStatus !== undefined && orderDetails.fOrderStatus !== null) {
           setFOrderStatus(orderDetails.fOrderStatus);
           
+          // Hydrate payment status (normalized lowercase: 'paid' | 'unpaid' | null)
+          // Drives the EDIT ORDER → BROWSE MENU gate when payment_status === 'paid'.
+          if (orderDetails.paymentStatus !== undefined) {
+            setPaymentStatus(orderDetails.paymentStatus);
+          }
+          
           // Store restaurant_order_id from API
           if (orderDetails.restaurantOrderId) {
             setRestaurantOrderId(orderDetails.restaurantOrderId);
@@ -387,6 +394,12 @@ const OrderSuccess = () => {
       return;
     }
 
+    // Defensive guard: if payment_status is 'paid', refuse edit (matches OrderSuccess gate)
+    if (paymentStatus === 'paid') {
+      toast('This order has been paid and cannot be edited.', { icon: 'ℹ️' });
+      return;
+    }
+
     setIsLoadingEdit(true);
     try {
       // FIRST: Check if table is still occupied (only when a table was scanned)
@@ -468,10 +481,12 @@ const OrderSuccess = () => {
   
   // Edit Order vs Browse Menu — based on whether a table was scanned and order status
   // Phase 1: hasTable is true only when a specific table/room was scanned (not walk-in)
+  // Phase 2: paid orders (payment_status === 'paid') are non-editable — show Browse Menu.
   const hasTable = hasAssignedTable(scannedTableId) && isScanned && scannedTableNo;
+  const isPaid = paymentStatus === 'paid';
   const showYetToBeConfirmed = hasTable && fOrderStatus === 7;
-  const showEditOrder = hasTable && fOrderStatus !== 7 && fOrderStatus !== null;
-  const showBrowseMenu = !hasTable;
+  const showEditOrder = hasTable && fOrderStatus !== 7 && fOrderStatus !== null && !isPaid;
+  const showBrowseMenu = !hasTable || (hasTable && isPaid && fOrderStatus !== 7);
 
   return (
     <div className="order-success-page" data-testid="order-success-page">

@@ -120,6 +120,7 @@ export const checkTableStatus = async (
 // ============================================
 export const getOrderDetails = async (orderId: number | string): Promise<OrderDetails & {
   fOrderStatus: number;
+  paymentStatus: string | null;
   restaurantOrderId?: string;
   tableId?: string;
   tableNo?: string;
@@ -161,6 +162,16 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
 
     const fOrderStatus = firstDetail.f_order_status ?? ORDER_STATUS.YET_TO_CONFIRM;
     const restaurantOrderId = firstDetail.restaurant_order_id ?? null;
+
+    // Payment status — read defensively from per-detail or root, normalize to lowercase.
+    // Used by OrderSuccess/LandingPage to gate the EDIT ORDER button (paid → no edit).
+    const rawPaymentStatus =
+      (firstDetail as any).payment_status ??
+      (orderData as any).payment_status ??
+      null;
+    const paymentStatus = rawPaymentStatus
+      ? String(rawPaymentStatus).toLowerCase()
+      : null;
 
     // ─── SERVICE_CHARGE_MAPPING CR — pure API mapping, no client-side recompute ───
     // All values come directly from backend response fields.
@@ -208,6 +219,7 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       orderStatus: orderData.order_status,
       orderType: orderData.order_type,
       fOrderStatus,
+      paymentStatus,
       restaurantOrderId,
       items: [],
       previousItems,

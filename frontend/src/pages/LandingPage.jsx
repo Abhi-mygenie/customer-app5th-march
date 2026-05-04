@@ -431,6 +431,19 @@ const LandingPage = () => {
         return;
       }
 
+      // CHECK: Paid orders (payment_status === 'paid') cannot be edited.
+      // Server-side gate matching OrderSuccess.jsx — prevents prepaid/settled orders from entering edit mode.
+      if (orderDetails.paymentStatus === 'paid') {
+        toast('This order has been paid.', { icon: 'ℹ️' });
+        const actualRestaurantId = restaurant?.id || restaurantId;
+        if (isMultipleMenu(restaurant)) {
+          navigate(`/${actualRestaurantId}/stations`);
+        } else {
+          navigate(`/${actualRestaurantId}/menu`);
+        }
+        return;
+      }
+
       // Start edit mode with previous items (only for confirmed orders: fOrderStatus 1, 2, 5)
       startEditOrder(
         tableStatusCheck.existingOrderId,

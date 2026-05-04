@@ -41,6 +41,9 @@ export interface ApiOrderDetailsResponse {
   table_no: string;
   order_status: string;
   order_type: string;
+  // Payment fields (newly added by POS) — may appear at root or per-detail
+  payment_status?: string | null; // 'paid' | 'unpaid' | null
+  payment_type?: string | null;   // 'prepaid' | 'postpaid' | null
   details: ApiOrderDetailItem[];
 }
 
@@ -61,6 +64,11 @@ export interface ApiOrderDetailItem {
   item_campaign_id: number | null;
   price: number;
   total_add_on_price: number;
+  // Payment fields (newly added by POS at detail level)
+  payment_status?: string | null; // 'paid' | 'unpaid' | null
+  payment_type?: string | null;   // 'prepaid' | 'postpaid' | null
+  paid_status?: number;
+  payment_id?: string | null;
 }
 
 export interface ApiFoodDetails {

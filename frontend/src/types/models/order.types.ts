@@ -116,6 +116,7 @@ export interface OrderDetails {
   orderStatus: string;
   orderType: string;
   fOrderStatus: OrderStatusType;
+  paymentStatus?: string | null; // normalized lowercase: 'paid' | 'unpaid' | null
   items: OrderItem[];
   previousItems: OrderItem[];
   
