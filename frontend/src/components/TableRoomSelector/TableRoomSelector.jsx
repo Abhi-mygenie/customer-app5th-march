@@ -79,7 +79,7 @@ const TableRoomSelector = ({
   const isTableNumberValid = () => {
     if (!isMultiMenu) return true;
     if (!roomOrTable) return false;
-    return tableNumber.trim().length > 0;
+    return String(tableNumber || '').trim().length > 0; // Defensive: tableNumber may arrive as a number
   };
 
   return (
@@ -176,7 +176,7 @@ const TableRoomSelector = ({
                       isClearable
                       isSearchable
                       isDisabled={tablesError || tablesLoading}
-                      className={`review-order-select ${!isTableNumberValid() && tableNumber.length > 0 ? 'error' : ''}`}
+                      className={`review-order-select ${!isTableNumberValid() && String(tableNumber || '').length > 0 ? 'error' : ''}`}
                       classNamePrefix="review-order-select"
                     />
                   )}

@@ -185,7 +185,7 @@ const ReviewOrder = () => {
       sessionStorage.setItem(
         `scanned_table_${numericRestaurantId}`,
         JSON.stringify({
-          table_id: entry.id,
+          table_id: String(entry.id), // Coerce to string — keeps the "URL-param" contract used by useScannedTable consumers (avoids tableNumber.trim crash downstream).
           table_no: entry.table_no,
           room_or_table: roomOrTable,
           order_type: 'dinein',
@@ -507,7 +507,7 @@ const ReviewOrder = () => {
   const isTableNumberValid = () => {
     if (!isMultiMenu) return true; // Not required for other restaurants
     if (!roomOrTable) return false; // Must select Room or Table
-    return tableNumber.trim().length > 0; // Must fill the input
+    return String(tableNumber || '').trim().length > 0; // Defensive: tableNumber may arrive as a number from session-storage write-back
   };
 
   // Handle room/table selection change
@@ -772,7 +772,7 @@ const ReviewOrder = () => {
   const handlePlaceOrder = async () => {
     // Restaurant 716 (Hyatt Centric): room selection is mandatory for every new order, no fallback.
     if (String(restaurantId) === '716') {
-      if (!tableNumber.trim() || !hasAssignedTable(tableNumber)) {
+      if (!String(tableNumber || '').trim() || !hasAssignedTable(tableNumber)) {
         toast('Please select your Room');
         return;
       }
@@ -784,7 +784,7 @@ const ReviewOrder = () => {
         toast('Please Select Your Room or Table');
         return;
       }
-      if (!tableNumber.trim()) {
+      if (!String(tableNumber || '').trim()) {
         const message = roomOrTable === 'room'
           ? 'Please Enter Your Room Number'
           : 'Please Enter Your Table Number';
