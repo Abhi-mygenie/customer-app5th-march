@@ -424,12 +424,16 @@ export const updateCustomerOrder = async ({
   gstOnServiceCharge = 0,
   itemTotal = 0,
   finalSubtotal,
+  // Multi-menu parity additions (478 edit contract alignment with 716)
+  totalGstTaxAmount = 0,
+  totalVatTaxAmount = 0,
+  gstEnabled = true,
 }: any): Promise<ApiPlaceOrderResponse> => {
   try {
     const formData = new FormData();
 
     // Transform cart items using centralized transformer
-    const cart = transformCartItemsForApi(cartItems);
+    const cart = transformCartItemsForApi(cartItems, gstEnabled);
     // Allocate per-item service_charge (R7: identical across writers; backend stores at item level)
     allocateServiceChargePerItem(cart, parseFloat(serviceCharge) || 0, parseFloat(itemTotal) || 0);
 
@@ -477,6 +481,11 @@ export const updateCustomerOrder = async ({
       // SC fields (SERVICE_CHARGE_MAPPING CR)
       total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
       service_gst_tax_amount: parseFloat((parseFloat(gstOnServiceCharge as any) || 0).toFixed(2)),
+      // Multi-menu parity additions (478 edit contract alignment with 716)
+      total_gst_tax_amount: parseFloat((parseFloat(totalGstTaxAmount as any) || 0).toFixed(2)),
+      total_vat_tax_amount: parseFloat((parseFloat(totalVatTaxAmount as any) || 0).toFixed(2)),
+      round_up: 0,
+      tip_tax_amount: 0,
       road: '',
       house: '',
       floor: '',
