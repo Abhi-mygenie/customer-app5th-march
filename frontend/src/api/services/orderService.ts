@@ -307,6 +307,9 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
         ? orderData.finalSubtotal
         : (orderData.subtotal || 0)
     );
+    // Root-level GST/VAT bucket totals (multi-menu parity for 478 normal contract)
+    const totalGstTaxAmount = parseFloat(orderData.totalGstTaxAmount || 0) || 0;
+    const totalVatTaxAmount = parseFloat(orderData.totalVatTaxAmount || 0) || 0;
     // Allocate per-item service_charge (R7: identical across writers; backend stores at item level)
     allocateServiceChargePerItem(cart, serviceCharge, itemTotal);
 
@@ -348,6 +351,11 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       // SC fields (SERVICE_CHARGE_MAPPING CR)
       total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
       service_gst_tax_amount: parseFloat((parseFloat(orderData.gstOnServiceCharge || 0)).toFixed(2)),
+      // Multi-menu parity additions (478 normal contract alignment with 716)
+      total_gst_tax_amount: parseFloat(totalGstTaxAmount.toFixed(2)),
+      total_vat_tax_amount: parseFloat(totalVatTaxAmount.toFixed(2)),
+      round_up: 0,
+      tip_tax_amount: 0,
       road: orderData.deliveryAddress?.road || '',
       house: orderData.deliveryAddress?.house || '',
       floor: orderData.deliveryAddress?.floor || '',
