@@ -256,7 +256,7 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
 // ============================================
 const transformCartItems = (cartItems: any[], gstEnabled = true) => {
   // Use centralized transformer from helpers.js
-  return transformCartItemsForApi(cartItems);
+  return transformCartItemsForApi(cartItems, gstEnabled);
 };
 
 // ============================================
