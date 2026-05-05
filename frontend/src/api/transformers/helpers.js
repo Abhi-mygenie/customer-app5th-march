@@ -176,11 +176,30 @@ export const calculateCartItemPrice = (cartItem) => {
  * @param {Object} cartItem - Cart item from CartContext
  * @returns {Object} API cart item format
  */
-export const transformCartItemForApi = (cartItem) => {
+export const transformCartItemForApi = (cartItem, gstEnabled = true) => {
   const variations = transformVariationsForApi(cartItem);
   const { add_on_ids, add_ons, add_on_qtys } = transformAddonsForApi(cartItem);
   const unitPrice = calculateCartItemPrice(cartItem);
   const itemPrice = unitPrice * (cartItem.quantity || 1);
+
+  // Variations and add-ons totals (mirrors transformCartItemForMultiMenu lines 267-272)
+  const variationsTotal = (cartItem.variations || []).reduce((sum, v) =>
+    sum + (parseFloat(v.optionPrice || v.price) || 0), 0
+  );
+  const addonsTotal = (cartItem.add_ons || []).reduce((sum, a) =>
+    sum + ((parseFloat(a.price) || 0) * (a.quantity || 1)), 0
+  );
+
+  // Per-item tax calculation — strict numeric parity with transformCartItemForMultiMenu (lines 274-283).
+  // In transformCartItemForMultiMenu the variable named `itemPrice` is the UNIT price (no qty multiplication);
+  // here the equivalent is `unitPrice`. Formula: (unitPrice * taxPercent / 100) * qty.
+  const taxPercent = parseFloat(cartItem.item?.tax) || 0;
+  const taxType = cartItem.item?.tax_type || 'GST';
+  const taxAmountPerUnit = parseFloat(((unitPrice * taxPercent) / 100).toFixed(2));
+  const taxAmount = taxAmountPerUnit * (cartItem.quantity || 1);
+  const gstTaxAmount = (taxType === 'GST' && gstEnabled) ? taxAmount : 0;
+  const vatTaxAmount = (taxType === 'VAT') ? taxAmount : 0;
+  const effectiveTaxAmount = gstTaxAmount + vatTaxAmount;
 
   return {
     food_id: String(cartItem.id || cartItem.itemId),
@@ -194,6 +213,13 @@ export const transformCartItemForApi = (cartItem) => {
     add_on_ids,
     add_ons,
     add_on_qtys,
+    // Multi-menu parity additions (478 normal/edit contract alignment with 716)
+    total_variation_price: parseFloat(variationsTotal * (cartItem.quantity || 1)),
+    total_add_on_price: parseFloat(addonsTotal * (cartItem.quantity || 1)),
+    gst_tax_amount: gstTaxAmount,
+    vat_tax_amount: vatTaxAmount,
+    tax_amount: effectiveTaxAmount,
+    discount_on_food: 0,
   };
 };
 
@@ -202,8 +228,8 @@ export const transformCartItemForApi = (cartItem) => {
  * @param {Array} cartItems - Array of cart items from CartContext
  * @returns {Array} Array of API-formatted cart items
  */
-export const transformCartItemsForApi = (cartItems) => {
-  return cartItems.map(transformCartItemForApi);
+export const transformCartItemsForApi = (cartItems, gstEnabled = true) => {
+  return cartItems.map(item => transformCartItemForApi(item, gstEnabled));
 };
 
 
