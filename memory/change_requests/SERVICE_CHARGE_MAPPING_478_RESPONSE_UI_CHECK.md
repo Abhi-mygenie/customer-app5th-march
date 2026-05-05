@@ -2,149 +2,132 @@
 
 ## 1. Verdict
 
-**`backend_response_issue`**
+**`backend_response_issue`** *(now CONFIRMED with raw payload + raw response provided by stakeholder)*
 
-The frontend mapping in `getOrderDetails` and the rendering in `OrderSuccess.jsx` are both correct. The `/order-details` response for restaurant 478 (placed via the normal `/customer/order/place` endpoint) is **omitting (or returning 0 for) `total_service_tax_amount`, `service_gst_tax_amount`, and per-item `service_charge` / `gst_tax_amount`**. The frontend's defensive fallback chain then produces the wrong-but-mathematically-explainable bill summary visible in screenshot 2.
-
-The same code path renders correctly for 716 (screenshot 3) because the 716 multi-menu/autopaid endpoint **does** echo all SC fields. The handover risks `R-runtime-1` and `R-runtime-2` (and the residual gap noted in `SUMMARY.md §9`: *"`service_gst_tax_amount` is sent in our payload but inconsistently echoed in response (sometimes absent)"*) have materialized for 478.
-
-I could not directly read `/air-bnb/get-order-details/{order_id}` for order `#002356` from this environment because `#002356` is the `restaurant_order_id` (display id), not the internal numeric `order_id` the endpoint expects. Probes with the displayed value returned `order_id must be an integer` / `Not found!`. The conclusion below therefore relies on the wrongness pattern visible in the UI plus the deterministic logic of `getOrderDetails`.
+The frontend payload is correct. `getOrderDetails` and `OrderSuccess.jsx` are correct. The backend's normal `/customer/order/place` endpoint (used by 478, single-menu) is **silently dropping** `total_service_tax_amount`, `service_gst_tax_amount`, per-item `service_charge`, and never populating `payload_total_gst_tax_amount`. On payment settle it additionally **recomputes** `order_amount`, `order_sub_total_amount`, `tax_amount` without SC. The 716 multi-menu endpoint (`/autopaid-place-prepaid-order`) does NOT have this gap, which is why 716 renders correctly with the same frontend code.
 
 ---
 
-## 2. Payload vs Response
+## 2. Direct evidence (stakeholder-provided payload + response)
 
-### 2.1 Outgoing payload (confirmed by you)
+### 2.1 Order `#002351` (478 normal endpoint, post-settle, `payment_status: "paid"`)
 
-| Field | Value |
-|---|---|
-| `order_sub_total_without_tax` | 100 |
-| `order_sub_total_amount` | 109 |
-| `total_service_tax_amount` | 9 |
-| `service_gst_tax_amount` | 1.62 |
-| `tax_amount` | 6.62 |
-| `order_amount` | 116 |
-| `cart[0].service_charge` | 9 |
+| Field | Payload | Response | Status |
+|---|---|---|---|
+| `order_amount` | 116 | **105** | ❌ backend re-computed without SC |
+| `order_sub_total_amount` | 109 | **100** | ❌ backend stripped SC |
+| `order_sub_total_without_tax` | 100 | 100 | ✅ |
+| `tax_amount` / `total_tax_amount` | 6.62 | **5** | ❌ backend dropped SC-GST (1.62) |
+| `total_service_tax_amount` | **9** | **"0.00"** | ❌ NOT persisted |
+| `service_gst_tax_amount` | **1.62** | **"0.00"** | ❌ NOT persisted |
+| `total_gst_tax_amount` (root) | not sent | "5.00" | backend stored item-GST only |
+| `total_vat_tax_amount` (root) | not sent | "0.00" | ✅ |
+| `payload_total_gst_tax_amount` | not sent | **null** | ❌ never populated |
+| per-item `service_charge` | **9** | **"0.00"** | ❌ NOT persisted per-line |
+| per-item `gst_tax_amount` | not sent | "5.00" | backend computed from food_details.tax |
+| per-item `tax_amount` | not sent | 5 | backend computed |
+| per-item `vat_tax_amount` | not sent | "0.00" | ✅ |
 
-### 2.2 ReviewOrder UI on 478 (screenshot 1) — frontend math source-of-truth
+### 2.2 Order `#002357` (478 normal endpoint, fresh, `payment_status: "unpaid"`)
+
+This is the response that produced screenshot 2's wrong UI on order `#002356`-style display.
+
+| Field | Payload | Response | Status |
+|---|---|---|---|
+| `order_amount` | 116 | 116 | ✅ |
+| `order_sub_total_amount` | 109 | 109 | ✅ |
+| `order_sub_total_without_tax` | 100 | 100 | ✅ |
+| `total_tax_amount` | 6.62 | 6.62 | ✅ |
+| `total_gst_tax_amount` (root) | not sent | **"6.62"** | ⚠️ rolls item-GST AND SC-GST together |
+| `total_vat_tax_amount` (root) | not sent | "0.00" | ✅ |
+| `total_service_tax_amount` | **9** | **"0.00"** | ❌ NOT persisted |
+| `service_gst_tax_amount` | **1.62** | **"0.00"** | ❌ NOT persisted |
+| `payload_total_gst_tax_amount` | not sent | **null** | ❌ never populated |
+| per-item `gst_tax_amount` | not sent | **"0.00"** | ❌ inconsistent with #002351 |
+| per-item `service_charge` | **9** | **"0.00"** | ❌ NOT persisted |
+| per-item `tax_amount` | not sent | **0** | ❌ inconsistent with #002351 |
+
+Plugging this response into `getOrderDetails` (`orderService.ts:180-208`):
 
 ```
-Item Total                 ₹100.00
-Service Charge (Optional)  ₹9.00
-Subtotal                   ₹109.00
-CGST 2.50%                 ₹2.50
-SGST 2.50%                 ₹2.50
-CGST on SC 9%              ₹0.81
-SGST on SC 9%              ₹0.81
-Grand Total                ₹116.00 (₹115.62)
+totalVat        = 0
+totalTax        = 6.62
+serviceCharge   = parseFloat("0.00") || Σ d.service_charge(0) = 0     → SC row HIDDEN ✓ matches screenshot
+totalGst        = parseFloat(null) || (6.62 − 0) = 6.62
+scGst           = parseFloat("0.00") || (6.62 − Σ d.gst_tax_amount(0)) = 6.62
+itemGst         = 6.62 − 6.62 = 0                                     → CGST/SGST rows HIDDEN ✓
+cgst = sgst     = 0
+scCgst = scSgst = 6.62 / 2 = 3.31                                     → matches screenshot 2 ✓
+grandTotal      = 116                                                 ✓
 ```
 
-This matches the payload exactly. So pre-place math is correct and the payload sent to backend is correct. ✅
+The frontend mapping is doing exactly what its inputs deterministically dictate.
 
-### 2.3 OrderSuccess UI on 478 (screenshot 2, order #002356)
+### 2.3 716 payload vs 478 payload — frontend-side asymmetry (G3 confirmed)
 
-```
-Item Total                 ₹100.00       ✅ matches order_sub_total_without_tax
-Subtotal                   ₹109.00       ✅ matches order_sub_total_amount
-Service Charge             — (HIDDEN)    ❌ should be ₹9.00
-CGST 2.50%                 — (HIDDEN)    ❌ should be ₹2.50
-SGST 2.50%                 — (HIDDEN)    ❌ should be ₹2.50
-CGST on SC                 ₹3.31         ❌ should be ₹0.81 (off by exactly 4.09×, see derivation)
-SGST on SC                 ₹3.31         ❌ should be ₹0.81
-Grand Total                ₹116.00       ✅ matches order_amount
-```
+| Field | 478 payload (normal) | 716 payload (multi-menu) |
+|---|---|---|
+| `cart[i].gst_tax_amount` | NOT sent | sent (54) |
+| `cart[i].vat_tax_amount` | NOT sent | sent (0) |
+| `cart[i].tax_amount` | NOT sent | sent (54) |
+| `cart[i].service_charge` | sent (9) | sent (15) |
+| `total_gst_tax_amount` (root) | NOT sent | sent (56.7) |
+| `total_vat_tax_amount` (root) | NOT sent | sent (0) |
+| `total_service_tax_amount` | sent (9) | sent (15) |
+| `service_gst_tax_amount` | sent (1.62) | sent (2.7) |
 
-Critical observation: **`scCgst + scSgst = 3.31 + 3.31 = 6.62`** which is exactly the **`tax_amount`** from the payload. So the entire tax bucket is being mis-attributed to SC-GST.
-
-### 2.4 What the response must have looked like (deterministic from §3 logic)
-
-For `OrderSuccess` to render exactly the values in §2.3, the `/order-details` response MUST satisfy ALL of the following:
-
-| Response field | Required state for the observed UI |
-|---|---|
-| `firstDetail.order_sub_total_without_tax` | `100` ✅ (UI shows itemTotal = 100) |
-| `firstDetail.order_sub_total_amount` | `109` ✅ (UI shows subtotal = 109) |
-| `firstDetail.total_tax_amount` | `6.62` ✅ (drives `totalTax`) |
-| `firstDetail.order_amount` | `116` ✅ (UI shows grandTotal = 116) |
-| `firstDetail.total_service_tax_amount` | **missing or `0`** ❌ — if it were `9`, the SC row would render |
-| Σ per-item `service_charge` (fallback) | **missing or `0`** ❌ — if it were `9`, the SC row would render |
-| `firstDetail.service_gst_tax_amount` | **missing or `0`** ❌ — if it were `1.62`, scGst would be 1.62 not 6.62 |
-| Σ per-item `gst_tax_amount` (fallback) | **missing or `0`** ❌ — fallback `totalGst − Σ gst_tax_amount` produces `6.62 − 0 = 6.62` |
-| `firstDetail.payload_total_gst_tax_amount` | either `6.62`, **or missing** (then derived as `totalTax − totalVat = 6.62`) |
-| `firstDetail.total_vat_tax_amount` | `0` ✅ (no VAT items) |
-
-### 2.5 Compare to 716 success (screenshot 3, order #000104)
-
-716 shows everything correctly (Service Charge ₹5, CGST/SGST 9% ₹9 each, CGST on SC/SGST on SC 9% ₹0.45 each, Grand Total ₹123.90). Same `OrderSuccess.jsx` renderer. The **only** difference is that 716 went through `buildMultiMenuPayload` → `/customer/order/autopaid-place-prepaid-order`, and that endpoint **does** persist and echo `total_service_tax_amount`, `service_gst_tax_amount`, per-item `service_charge`, per-item `gst_tax_amount`. The 478 normal `/customer/order/place` endpoint does not.
-
-This matches `SUMMARY.md §8` which states the backend persistence/echo fixes were "deployed during CR" — those fixes were validated on 716 (multi-menu) and not on the normal endpoint used by 478.
+`buildMultiMenuPayload` (`helpers.js:458-460`) emits root `total_gst_tax_amount`/`total_vat_tax_amount` and per-item GST/VAT/tax. Normal `placeOrder` (`orderService.ts:313-365`) does not. This is exactly the discovery-report risk **G3** and handover risk **R-runtime-1**, now confirmed as a real frontend payload gap.
 
 ---
 
-## 3. Frontend Mapping Check
+## 3. Frontend mapping check (innocent)
 
-### 3.1 `getOrderDetails` (`frontend/src/api/services/orderService.ts:180-208`) — relevant lines
-
-```ts
-const totalVat = parseFloat(firstDetail.total_vat_tax_amount)
-  || details.reduce((sum, d) => sum + (parseFloat(d.vat_tax_amount) || 0), 0);                  // = 0 ✓
-
-const serviceCharge = parseFloat(firstDetail.total_service_tax_amount)
-  || details.reduce((sum, d) => sum + (parseFloat(d.service_charge) || 0), 0);                  // = 0  ❌ should be 9
-
-const totalTax    = parseFloat(firstDetail.total_tax_amount) || 0;                              // = 6.62 ✓
-const totalGst    = parseFloat(firstDetail.payload_total_gst_tax_amount)
-  || parseFloat((totalTax - totalVat).toFixed(2));                                              // = 6.62
-
-const scGst = parseFloat(firstDetail.service_gst_tax_amount)
-  || parseFloat(((totalGst) - details.reduce(
-       (sum, d) => sum + (parseFloat(d.gst_tax_amount) || 0), 0)).toFixed(2));                   // = 6.62 (= 6.62 - 0)  ❌ should be 1.62
-
-const itemGst = parseFloat((totalGst - scGst).toFixed(2));                                       // = 0     ❌ should be 5.00
-const cgst   = parseFloat((itemGst / 2).toFixed(2));                                             // = 0
-const sgst   = parseFloat((itemGst / 2).toFixed(2));                                             // = 0
-const scCgst = parseFloat((scGst / 2).toFixed(2));                                               // = 3.31  ❌ should be 0.81
-const scSgst = parseFloat((scGst / 2).toFixed(2));                                               // = 3.31  ❌ should be 0.81
-```
-
-The mapping is **logically correct**. Each line reads the primary field with `parseFloat(...)` and falls back to a derivation when the primary field is missing/`0`/`NaN`. The derivation is mathematically sound *if* per-item `gst_tax_amount` and `service_charge` are populated; it collapses (mis-attributes all GST as SC-GST) when they are not.
-
-### 3.2 `OrderSuccess.jsx` bill summary render — relevant lines
-
-```jsx
-{billSummary.serviceCharge > 0 && (<div>Service Charge ... ₹{billSummary.serviceCharge}</div>)}   // hidden because = 0
-{billSummary.cgst > 0 && (<div>CGST ... ₹{billSummary.cgst}</div>)}                                // hidden because = 0
-{billSummary.sgst > 0 && (<div>SGST ... ₹{billSummary.sgst}</div>)}                                // hidden because = 0
-{billSummary.vat > 0  && (<div>VAT ... ₹{billSummary.vat}</div>)}                                  // hidden because = 0  (correct)
-{billSummary.scCgst > 0 && (<div>CGST on SC ... ₹{billSummary.scCgst}</div>)}                      // shown ₹3.31
-{billSummary.scSgst > 0 && (<div>SGST on SC ... ₹{billSummary.scSgst}</div>)}                      // shown ₹3.31
-```
-
-Each row uses the standard "hide-when-zero" gate. Given the values produced by §3.1, the rows hide/show exactly as the screenshot shows. The renderer is **doing exactly what the data tells it to do**.
+`getOrderDetails` (`orderService.ts:180-208`) and `OrderSuccess.jsx` bill-summary render are correct. The deterministic walk in §2.2 reproduces screenshot 2 exactly given the response in §2.2. No frontend mapping or display bug.
 
 ---
 
 ## 4. Conclusion
 
-**Backend response issue, not a frontend mapping/display issue.**
+### 4.1 Primary issue (causes the wrong UI on 478)
 
-What needs to happen on the backend for 478 (normal `/customer/order/place` + `/customer/order/update-customer-order` endpoints — the same endpoint family the entire 478 flow uses):
+**Backend** — normal `/customer/order/place` and (almost certainly) `/customer/order/update-customer-order` endpoints:
 
-1. Persist and echo **`total_service_tax_amount`** at root (e.g. `9` for this order).
-2. Persist and echo **`service_gst_tax_amount`** at root (e.g. `1.62` for this order).
-3. Persist and echo per-item **`service_charge`** on each detail (so the fallback path in `getOrderDetails` works even if the root fields are absent).
-4. Persist and echo per-item **`gst_tax_amount`** on each detail (so `totalGst − Σ gst_tax_amount` does not collapse to all-of-totalGst when SC GST root is missing).
-5. Optionally: provide **`payload_total_gst_tax_amount`** explicitly (the frontend already has a `totalTax − totalVat` fallback, but explicit avoids confusion when VAT is non-zero).
+1. Do NOT persist root `total_service_tax_amount` (always `"0.00"` in response).
+2. Do NOT persist root `service_gst_tax_amount` (always `"0.00"` in response).
+3. Do NOT persist per-item `service_charge` (always `"0.00"` in response).
+4. Never populate `payload_total_gst_tax_amount` (always `null`).
+5. Inconsistently persist per-item `gst_tax_amount` / `tax_amount` (depends on lifecycle).
+6. On payment settle, recompute `order_amount`, `order_sub_total_amount`, `tax_amount` **without** SC.
 
-Once the backend echoes these the same way it does for 716's autopaid endpoint, **no frontend changes are required**. The screenshot 1 → screenshot 2 discrepancy will resolve automatically because the same `getOrderDetails` mapping will read the primary fields directly instead of falling through to the lossy derivation.
+The 716 multi-menu endpoint (`/autopaid-place-prepaid-order`) does NOT have this gap. The same fields are correctly persisted and echoed there, which is why 716 renders correctly with the same frontend.
 
-This finding aligns with:
-- Discovery report risk **G3** (`total_gst_tax_amount`/`total_vat_tax_amount` not emitted on normal/update payloads — but more importantly, **echo gaps** on the normal endpoint).
-- Handover **R-runtime-1** (Backend field-name confirmation for non-716 `/place_order` endpoint).
-- Handover **R-runtime-2** (After first real SC order, capture `/order-details` response — this **is** that capture, validating the gap).
-- Summary **§9 Low-priority gap**: "`service_gst_tax_amount` is sent in our payload but inconsistently echoed in response (sometimes absent)".
+### 4.2 Secondary issue (contributing, not blocking the UI fix)
 
-Recommended next action: please share the actual `/air-bnb/get-order-details/<internal_order_id>` JSON for order `#002356` (capture from browser DevTools Network tab on the OrderSuccess page; the URL will contain the internal numeric id). With that JSON, the backend team can confirm exactly which of the 5 fields above are missing/zero and patch the persistence + response shape on the normal place/update endpoints. No frontend change required.
+**Frontend** — normal `placeOrder` payload is thinner than `buildMultiMenuPayload`:
+
+- Missing per-item `gst_tax_amount` / `vat_tax_amount` / `tax_amount`.
+- Missing root `total_gst_tax_amount` / `total_vat_tax_amount`.
+
+This forces the backend to derive GST/VAT buckets from `food_details.tax`, which is where the SC-GST vs item-GST roll-up confusion in `#002357` arises. Strictly optional once 4.1 is fixed.
+
+### 4.3 What is NOT broken
+
+- `OrderSuccess.jsx` bill-summary render
+- `getOrderDetails` SC mapping in `orderService.ts`
+- `ReviewOrder.jsx` SC math (screenshot 1 proves this)
+- `allocateServiceChargePerItem` (per-item `service_charge: 9` was emitted in payload)
+
+### 4.4 Required action
+
+Backend team must, on `/customer/order/place` and `/customer/order/update-customer-order`:
+
+1. Persist incoming root `total_service_tax_amount` (do not zero it out).
+2. Persist incoming root `service_gst_tax_amount` (do not zero it out).
+3. Persist incoming per-item `service_charge` on each detail (do not zero it out).
+4. Populate root `payload_total_gst_tax_amount` = `total_tax_amount − total_vat_tax_amount − service_gst_tax_amount` (the correctly-labelled item-only GST).
+5. When recomputing amounts on settle / payment update, INCLUDE SC in `order_amount`, `order_sub_total_amount`, and `tax_amount` (or stop recomputing them and trust frontend values).
+
+Once these land, the same frontend code that already renders 716 correctly will render 478 correctly with **zero frontend change**.
 
 ---
 
