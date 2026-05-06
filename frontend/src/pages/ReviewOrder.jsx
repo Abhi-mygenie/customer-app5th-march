@@ -626,7 +626,9 @@ const ReviewOrder = () => {
   const scAutoApply        = restaurant?.auto_service_charge === 'Yes';
   const scPct              = parseFloat(restaurant?.service_charge_percentage) || 0;
   const scGstRate          = parseFloat(restaurant?.service_charge_tax) || 0;
-  const applyServiceCharge = scAutoApply && scPct > 0;
+  // D-1 (DELIVERY_CHARGE_GATING CR): SC applies only to dine-in / room. Takeaway and delivery exempted.
+  // isDineInOrRoom returns true for 'dinein', 'room', and null/undefined (legacy QR codes — backward compat).
+  const applyServiceCharge = scAutoApply && scPct > 0 && isDineInOrRoom(scannedOrderType);
   const isGstEnabledForSc  = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
 
   // SC base = subtotalAfterDiscount (R2). GST-on-SC gated by gst_status & scGstRate (R3).
