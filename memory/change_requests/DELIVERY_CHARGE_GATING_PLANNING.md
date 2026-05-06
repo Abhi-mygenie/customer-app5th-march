@@ -379,22 +379,45 @@ After this CR closes, deferred phases (separate planning docs):
 
 ---
 
-## 12. Open questions for stakeholder (BEFORE D-1 planning)
+## 12. Open questions for stakeholder (BEFORE D-1 planning) — ✅ ANSWERED
 
-These should be answered before applying any code:
+These were answered by stakeholder on 2026-05-06:
 
-1. **Q1 (D4 verification):** Does the `/restaurant-info` API for restaurant 478 currently return a `delivery_charge_tax` (or similar) field? If yes, what's its current value? If no, do you want it added by backend in this cycle, or rely on D4 default-zero indefinitely?
+**Q1 — `delivery_charge_tax` field on `/restaurant-info` API**
+> "if yes we need to use this for gst on delivery charge just like how we are using gst on service charge"
 
-2. **Q2 (D1 room semantics):** `isDineInOrRoom(scannedOrderType)` returns `true` for `'room'`. Confirm that **room service orders should also have SC applied** (i.e., D1 treats room as dinein-equivalent, NOT as a third "no-SC" category). Sub-decision: if SC must NOT apply to room either, the gate becomes `scannedOrderType === 'dinein'` strict.
+**Resolution:** Defensive read pattern, mirror SC. Code:
+```js
+const deliveryGstRate = parseFloat(restaurant?.delivery_charge_tax) || 0;
+```
+- Works whether backend currently exposes the field or not (D4 default-zero behaviour preserved).
+- The day backend exposes a non-zero value, delivery-GST activates automatically without further frontend change.
+- Same shape as `service_charge_tax` consumption at `ReviewOrder.jsx:628`.
 
-3. **Q3 (D2 rounding):** When delivery is added, the grand total may not round to a whole rupee. Confirm rounding (`Math.ceil` if `total_round = 'Yes'`) applies to the **inclusive** grand total (item + SC + delivery + tax) rather than just (item + SC + tax).
+**Q2 — Room service treatment**
+> "room service orders are treated as dine in no change in it wrt service charge"
 
-4. **Q4 (D-5 backend acceptance):** Does the `/customer/order/update-customer-order` endpoint accept a non-zero `delivery_charge` in the form-data payload, or does it ignore it server-side? If it ignores it, D-5 is a frontend correctness fix only — actual edit-delivery-charge persistence needs backend cooperation.
+**Resolution:** Use existing `isDineInOrRoom(scannedOrderType)` helper as-is. Returns `true` for both `'dinein'` and `'room'`, so both get SC applied. No new helper needed; no strict-equality variant.
 
-5. **Q5 (D8 phase boundary):** Confirm that until OrderSuccess.jsx is updated (deferred), customers placing delivery orders will see the **correct grand total in ReviewOrder** but possibly an **incomplete bill summary on OrderSuccess** (Delivery Charge row not appearing on success screen). Acceptable interim state, or do we need to bundle Phase 2 into this CR after all?
+**Q3 — Rounding**
+> "yes only final total round off no interim round offs"
+
+**Resolution:** Confirmed. `Math.ceil` applies once to the **inclusive** `totalToPay = finalSubtotal + finalTotalTax`, where `finalSubtotal` includes item + SC + delivery and `finalTotalTax` includes item-GST + SC-GST + delivery-GST. No interim rounding on intermediate sub-quantities. Matches existing pattern at `ReviewOrder.jsx:660-664`.
+
+**Q4 — Edit-order delivery_charge persistence**
+> "need to check run time, but delivery orders cant be edited, but we will check this run time, even if edit is allowed it shd not break, in future"
+
+**Resolution:** D-5 remains in scope as a defensive future-proof fix. Today, delivery orders are not editable in the customer flow (no UI path), but the writer-level hardcode `'0'` is a latent bug. Unhardcoding it costs 1 line and removes a foot-gun. If backend rejects non-zero `delivery_charge` on update, that's a backend defect to file separately — not a reason to keep the hardcode.
+
+**Q5 — Deferred OrderSuccess UI work**
+> "only when backend ships all value, running runtime we validate missing value"
+
+**Resolution:** D8 confirmed. OrderSuccess.jsx stays untouched in this CR. Phase 2 (OrderSuccess delivery rows + `getOrderDetails` mapping) starts only after backend ships:
+- `delivery_charge_gst_amount` (or split `delivery_charge_cgst` / `delivery_charge_sgst`) on `/customer/order/order-details/<id>` response
+- `restaurant.delivery_charge_tax` in `/restaurant-info` response (if not already there)
+
+Until then, ReviewOrder will show correct totals and OrderSuccess will show whatever backend echoes (Subtotal/Grand Total correct; the SC-GST-style breakdown rows missing for delivery — acceptable interim per stakeholder).
 
 ---
 
-**Status:** Awaiting stakeholder answers to §12 (Q1–Q5), then approval to start D-1 planning.
-
-**Do not proceed with code changes until those questions are answered and D-1 specifically is approved.**
+**Status:** ✅ All blocking questions answered. **D-1 planning unblocked.**
