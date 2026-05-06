@@ -61,6 +61,9 @@ const DEFAULT_CONFIG = {
   // Branding - Text
   welcomeMessage: null,
   tagline: null,
+  // Order Success Page (admin-configurable; consumer falls back to defaults when null/empty)
+  successTitle: null,
+  successMessage: null,
   instagramUrl: null,
   facebookUrl: null,
   twitterUrl: null,
@@ -363,6 +366,9 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Branding - Text
     welcomeMessage: config.welcomeMessage,
     tagline: config.tagline,
+    // Order Success Page (admin-configurable; UI falls back to defaults when null/empty)
+    successTitle: config.successTitle,
+    successMessage: config.successMessage,
     instagramUrl: config.instagramUrl,
     facebookUrl: config.facebookUrl,
     twitterUrl: config.twitterUrl,

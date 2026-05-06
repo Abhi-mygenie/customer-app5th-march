@@ -127,7 +127,7 @@ const OrderSuccess = () => {
   const { restaurant } = useRestaurantDetails(restaurantId);
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
   const { stations } = useStations(numericRestaurantId);
-  const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showOrderStatusTracker, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill } = useRestaurantConfig();
+  const { logoUrl: configLogoUrl, phone: configPhone, fetchConfig, showFoodStatus, showOrderStatusTracker, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, successTitle: configSuccessTitle, successMessage: configSuccessMessage } = useRestaurantConfig();
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, clearScannedTable } = useScannedTable();
   const { startEditOrder, clearCart, clearEditMode } = useCart();
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
@@ -506,9 +506,11 @@ const OrderSuccess = () => {
             <IoCheckmarkCircle />
           </div>
           <div className="order-success-hero-text">
-            <h1 className="order-success-title-compact">Order Placed!</h1>
-            <p className="order-success-message-compact">
-              Your order is being processed
+            <h1 className="order-success-title-compact" data-testid="order-success-title">
+              {(configSuccessTitle && configSuccessTitle.trim()) || 'Order Placed!'}
+            </h1>
+            <p className="order-success-message-compact" data-testid="order-success-message">
+              {(configSuccessMessage && configSuccessMessage.trim()) || 'Your order is being processed'}
             </p>
           </div>
         </div>

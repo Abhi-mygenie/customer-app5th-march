@@ -165,6 +165,9 @@ class AppConfigUpdate(BaseModel):
     # Branding - Text
     welcomeMessage: Optional[str] = None
     tagline: Optional[str] = None
+    # Order Success Page (admin-configurable; UI falls back to defaults when None/empty)
+    successTitle: Optional[str] = None
+    successMessage: Optional[str] = None
     instagramUrl: Optional[str] = None
     facebookUrl: Optional[str] = None
     twitterUrl: Optional[str] = None

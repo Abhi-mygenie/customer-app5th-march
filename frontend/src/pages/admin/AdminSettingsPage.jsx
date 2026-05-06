@@ -132,6 +132,39 @@ const AdminSettingsPage = () => {
         </div>
       </div>
 
+      {/* Order Success Page Text Section */}
+      <div className="admin-section">
+        <h2 className="admin-section-title">Order Success Page Text</h2>
+
+        <div className="admin-form-grid">
+          <div className="admin-form-group">
+            <label className="admin-form-label">Order Success — Title</label>
+            <input
+              type="text"
+              className="admin-form-input"
+              placeholder="Order Placed!"
+              value={config.successTitle || ''}
+              onChange={(e) => updateField('successTitle', e.target.value)}
+              data-testid="input-successTitle"
+            />
+            <span className="admin-form-hint">Shown as the headline on the Order Success page. Leave blank to use default ("Order Placed!").</span>
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-form-label">Order Success — Message</label>
+            <input
+              type="text"
+              className="admin-form-input"
+              placeholder="Your order is being processed"
+              value={config.successMessage || ''}
+              onChange={(e) => updateField('successMessage', e.target.value)}
+              data-testid="input-successMessage"
+            />
+            <span className="admin-form-hint">Shown below the headline. Leave blank to use default ("Your order is being processed").</span>
+          </div>
+        </div>
+      </div>
+
       {/* Operating Shifts Section */}
       <div className="admin-section">
         <h2 className="admin-section-title">

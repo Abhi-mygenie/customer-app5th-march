@@ -69,6 +69,9 @@ const defaultConfig = {
   // Branding - Text
   welcomeMessage: 'Welcome!',
   tagline: '',
+  // Order Success Page (admin-configurable; consumer falls back to defaults when empty)
+  successTitle: '',
+  successMessage: '',
   instagramUrl: '',
   facebookUrl: '',
   twitterUrl: '',
