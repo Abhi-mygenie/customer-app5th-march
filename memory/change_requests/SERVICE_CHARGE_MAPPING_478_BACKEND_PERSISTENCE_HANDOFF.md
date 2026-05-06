@@ -274,3 +274,81 @@ When all five checks pass, this issue can be closed. No further frontend work is
 - `SERVICE_CHARGE_MAPPING_478_FRONTEND_PAYLOAD_HANDOVER.md` — the frontend work that closed the request-side gap
 - `SERVICE_CHARGE_MAPPING_478_RESPONSE_UI_CHECK.md` — earlier RCA confirming this is a backend issue
 - `SERVICE_CHARGE_MAPPING_478_EDIT_ORDER_VALIDATION_REPORT.md` — edit-order specific evidence
+
+---
+
+## Appendix A — Captured live `/order-details` response (post-claimed-fix attempt)
+
+Captured 2026-05-06 from `GET /customer/order/order-details/<id>` for order 825388 (restaurant 478, restaurant_order_id 002363, single item "My test" @ ₹100, SC 9%, GST 5% item / 18% SC-GST). The backend team reported a fix was deployed; this is the response after that claimed fix.
+
+### A.1 Per-item drop list (inside `details[0]`)
+
+```
+service_charge          = "0.00"     ← STILL DROPPED  (expected 9.00)
+gst_tax_amount          = "0.00"     ← STILL DROPPED  (expected 5.00)
+tax_amount              = 0          ← STILL DROPPED  (expected 5)
+item_gst                = "0.00"     ← STILL DROPPED  (alias of gst_tax_amount)
+gst                     = 0          ← STILL DROPPED  (rate or amount, ambiguous)
+item_vat                = "0.00"     ✓ correct (no VAT items)
+vat_tax_amount          = "0.00"     ✓ correct
+total_variation_price   = "0.00"     ✓ correct
+total_add_on_price      = 0          ✓ correct
+discount_on_food        = 0          ✓ correct
+```
+
+### A.2 Order-level drop list (also inside `details[0]` in this API shape)
+
+```
+total_service_tax_amount        = "0.00"     ← STILL DROPPED  (expected 9.00)
+service_gst_tax_amount          = "0.00"     ← STILL DROPPED  (expected 1.62)
+payload_total_gst_tax_amount    = null       ← STILL NULL    (expected 5.00 or 6.62)
+total_gst_tax_amount            = "6.62"     🟡 populated but ambiguous (combined item+SC)
+total_vat_tax_amount            = "0.00"     ✓ correct
+total_tax_amount                = 6.62       ✓ correct
+order_amount                    = 116        ✓ correct
+order_sub_total_amount          = 109        ✓ correct
+order_sub_total_without_tax     = 100        ✓ correct
+order_discount                  = 0          ✓ correct
+```
+
+### A.3 `restaurant` meta drop list
+
+```
+gst_tax_percent          = "5.00"     ✓ present  (drives "CGST X%" label)
+vat_percent              = 4          ✓ present
+gst_status               = true       ✓ present
+service_charge_tax       = MISSING    ← NEW GAP   (needed for "CGST on SC X%" label fallback)
+service_charge_percentage = MISSING   ← NEW GAP   (helpful for UI / debugging)
+auto_service_charge      = MISSING    ← NEW GAP   (helpful flag)
+```
+
+### A.4 Diagnostic narrowing
+
+These three values reconcile cleanly:
+- `order_sub_total_amount = 109` (= 100 item + 9 SC) — backend KNOWS the SC was 9
+- `total_tax_amount = 6.62` (= 5 item-GST + 1.62 SC-GST) — backend KNOWS the SC-GST was 1.62
+- `order_amount = 116` (= ceil(109 + 6.62)) — backend KNOWS the grand total
+
+Therefore the **calculation succeeded server-side**. Only the **breakdown is being lost** between calculation and persistence/serialization. Recommended diagnostic:
+
+```sql
+SELECT service_charge,
+       gst_tax_amount,
+       total_service_tax_amount,
+       service_gst_tax_amount,
+       payload_total_gst_tax_amount
+FROM <order_items_table>
+WHERE order_id = 825388;
+```
+
+- If those columns are zero/null in the DB → **persistence-write bug** (fix in the place-order INSERT handler)
+- If those columns are correct in the DB but zero in the response → **serializer bug** (fix in the order-details response builder)
+
+### A.5 Effect on the customer-facing UI
+
+The OrderSuccess Bill Summary continues to render exactly as in Section 2's "478 — broken" example. None of the seven rows changed compared to before the claimed fix. The single change between the two captures is `total_gst_tax_amount` going from `null` to `"6.62"`, which has zero effect on UI because the frontend was already deriving `6.62` via the `totalTax − totalVat` fallback.
+
+**Bottom line: the claimed fix did not change observable behaviour. The five critical drops listed in Section 4 of this document remain open.**
+
+---
+
