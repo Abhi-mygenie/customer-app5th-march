@@ -1018,6 +1018,8 @@ const ReviewOrder = () => {
               totalGstTaxAmount: finalCgst + finalSgst,
               totalVatTaxAmount: finalVat,
               gstEnabled: isGstEnabledForSc,
+              // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order writer (consumed by D-6)
+              deliveryCharge: effectiveDeliveryCharge,
             });
 
             // Clear edit mode after successful update
@@ -1053,6 +1055,8 @@ const ReviewOrder = () => {
             totalGstTaxAmount: finalCgst + finalSgst,
             totalVatTaxAmount: finalVat,
             gstEnabled: isGstEnabledForSc,
+            // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order writer (consumed by D-6)
+            deliveryCharge: effectiveDeliveryCharge,
           });
           clearEditMode();
           toast.success('Order updated successfully!');
@@ -1134,7 +1138,7 @@ const ReviewOrder = () => {
           paymentType: selectedPaymentType,
           // Delivery address (Phase 3)
           deliveryAddress: deliveryAddress || null,
-          deliveryCharge: deliveryCharge || 0,
+          deliveryCharge: effectiveDeliveryCharge,   // D-5 (DELIVERY_CHARGE_GATING CR): use D-2 gated value (0 on non-delivery)
           // SC fields (SERVICE_CHARGE_MAPPING CR)
           serviceCharge,
           gstOnServiceCharge,
@@ -1252,6 +1256,8 @@ const ReviewOrder = () => {
               totalGstTaxAmount: finalCgst + finalSgst,
               totalVatTaxAmount: finalVat,
               gstEnabled: isGstEnabledForSc,
+              // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order retry writer (consumed by D-6)
+              deliveryCharge: effectiveDeliveryCharge,
             });
 
             // Clear edit mode after successful update
@@ -1290,6 +1296,8 @@ const ReviewOrder = () => {
               totalGstTaxAmount: finalCgst + finalSgst,
               totalVatTaxAmount: finalVat,
               gstEnabled: isGstEnabledForSc,
+              // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to placeOrder retry
+              deliveryCharge: effectiveDeliveryCharge,
             });
           }
 
@@ -1655,6 +1663,18 @@ const ReviewOrder = () => {
                   <div className="price-row price-row-sub" data-testid="row-sc-sgst">
                     <span className="price-label-sub">SGST on SC{scGstRate ? ` ${(scGstRate / 2).toFixed(scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
                     <span className="price-value-sub">₹{scSgst.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+              {deliveryCgst > 0 && (
+                <>
+                  <div className="price-row price-row-sub" data-testid="row-delivery-cgst">
+                    <span className="price-label-sub">CGST on Delivery{deliveryGstRate ? ` ${(deliveryGstRate / 2).toFixed(deliveryGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="price-value-sub">₹{deliveryCgst.toFixed(2)}</span>
+                  </div>
+                  <div className="price-row price-row-sub" data-testid="row-delivery-sgst">
+                    <span className="price-label-sub">SGST on Delivery{deliveryGstRate ? ` ${(deliveryGstRate / 2).toFixed(deliveryGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="price-value-sub">₹{deliverySgst.toFixed(2)}</span>
                   </div>
                 </>
               )}

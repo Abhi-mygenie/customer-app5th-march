@@ -428,6 +428,8 @@ export const updateCustomerOrder = async ({
   totalGstTaxAmount = 0,
   totalVatTaxAmount = 0,
   gstEnabled = true,
+  // Delivery (DELIVERY_CHARGE_GATING CR D-6): 478 edit parity with placeOrder's delivery_charge handling
+  deliveryCharge = 0,
 }: any): Promise<ApiPlaceOrderResponse> => {
   try {
     const formData = new FormData();
@@ -448,7 +450,7 @@ export const updateCustomerOrder = async ({
       dial_code: dialCode,
       payment_id: '',
       payment_type: paymentType,
-      delivery_charge: '0',
+      delivery_charge: String(deliveryCharge || 0),
       fcm_token: '',
       otp: '',
       pincode: '',
