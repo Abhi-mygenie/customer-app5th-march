@@ -245,34 +245,49 @@ When backend later exposes `delivery_charge_tax: "5.00"`:
 
 ---
 
-## 6. Approval workflow (mirror of F1-F5)
+## 6. Approval workflow (mirror of F1-F5) — FINAL BUCKET PLAN (locked 2026-05-06)
+
+**Decision locked:** Option A — delivery-GST rolls into existing `total_gst_tax_amount` via `finalCgst`/`finalSgst`. No new payload field. Backend already aggregates all GST (item + SC + delivery) in `total_gst_tax_amount` on both request and response. One field, all GST.
 
 For each bucket below, the workflow is:
-1. **Plan** the bucket — show the exact diff to be applied (this document)
+1. **Plan** the bucket — show the exact diff to be applied
 2. **STOP** — wait for stakeholder approval
 3. **Apply** the diff via `search_replace` (single, surgical)
 4. **Validate** — `tsc --noEmit`, ESLint on touched file, dev-server compile, AST scan to confirm structure
 5. **Confirm** all constraints in Section 7 below pass
 6. **Move** to next bucket — back to step 1
 
-| Bucket | Type | Files | Lines | Risk | Status |
-|---|---|---|---|---|---|
-| D-1 | SC order-type gate | `ReviewOrder.jsx` | +2 | Very Low | ⏳ awaiting approval |
-| D-2 | Delivery charge in totals | `ReviewOrder.jsx` | +3 | Low | ⏳ awaiting approval |
-| D-3 | Delivery GST (config-gated) | `ReviewOrder.jsx` | +7 | Low | ⏳ awaiting approval |
-| D-4 | Wire `deliveryCharge` to 4 sites | `ReviewOrder.jsx` | +4 | Low | ⏳ awaiting approval |
-| D-5 | Fix `updateCustomerOrder` hardcode | `orderService.ts` | ~1 | Very Low | ⏳ awaiting approval |
-| D-6 | Validation & evidence | docs only | 0 | Zero | ⏳ awaiting approval |
+| # | Bucket | Scope | Files | Lines | Risk | Status |
+|---|---|---|---|---|---|---|
+| D-1 | SC order-type gate | Add `isDineInOrRoom(scannedOrderType)` to `applyServiceCharge` | `ReviewOrder.jsx` | +2 (replace 1) | Very Low | ✅ **APPLIED** |
+| D-2 | Delivery charge in totals | Add `effectiveDeliveryCharge` to `finalSubtotal` | `ReviewOrder.jsx` | +9 (replace 1) | Low | ✅ **APPLIED** |
+| D-3 | Delivery GST math (rolls into total_gst_tax_amount) | Add `deliveryCgst`/`deliverySgst` block + fold into `finalCgst`/`finalSgst` | `ReviewOrder.jsx` | +8 (replace 2) | Low | ⏳ awaiting approval |
+| D-4 | UX — delivery GST rows | Add "CGST on Delivery X%" / "SGST on Delivery X%" sub-rows in Bill Summary (mirror SC pattern, gated by `deliveryCgst > 0`) | `ReviewOrder.jsx` | +12 | Low | ⏳ awaiting approval (was UX-A) |
+| D-5 | Wire `deliveryCharge` to 4 missing call sites | Add `deliveryCharge: deliveryCharge \|\| 0,` to sites #1 (l.972), #2 (l.1007), #4 (l.1206), #5 (l.1241) | `ReviewOrder.jsx` | +4 | Low | ⏳ awaiting approval (was D-4) |
+| D-6 | Unhardcode `delivery_charge: '0'` in `updateCustomerOrder` writer | Replace hardcoded `'0'` with `String(orderData.deliveryCharge \|\| 0)` | `orderService.ts` | ~1 | Very Low | ⏳ awaiting approval (was D-5) |
+| D-7 | Validation & evidence pack | Capture before/after payloads for delivery/takeaway/dinein/room/legacy/716/edit-delivery; document | docs only | 0 | Zero | ⏳ awaiting approval (was D-6) |
 
-**Total proposed code change:** ~17 lines added in 2 files (`ReviewOrder.jsx`, `orderService.ts`).
+**Total remaining code change (D-3 through D-6):** ~25 lines added, 3 lines replaced, across 2 files.
 
-**Approval-gated checkpoints:**
-- After D-1: confirm SC=0 on takeaway/delivery via captured payload before proceeding to D-2
-- After D-2: confirm subtotal/grand-total includes delivery before proceeding to D-3
-- After D-3: confirm delivery-GST is 0 when config absent (per D4) before proceeding
-- After D-4: confirm all 5 sites pass `deliveryCharge` correctly via AST scan
-- After D-5: confirm edit-order delivery_charge is non-zero in update payload via captured request
-- After D-6: write CR closure summary
+### Sequencing constraints
+- D-4 (UX rows) depends on D-3's `deliveryCgst`/`deliverySgst` variables → apply D-3 first, OR bundle D-3+D-4 in a single approval cycle
+- D-5 does not depend on D-3/D-4 — can apply independently
+- D-6 does not depend on D-3/D-4/D-5 — can apply independently
+- D-7 runs after all code buckets complete
+
+### Recommended sequence going forward
+1. **Approve D-3** → apply → validate
+2. **Approve D-4** (UX rows, mirrors SC) → apply → validate
+3. **Approve D-5** (wire the 4 missing call sites) → apply → validate
+4. **Approve D-6** (unhardcode writer) → apply → validate
+5. **Approve D-7** (evidence capture) → run validation plan → close CR
+
+**Approval-gated checkpoints remain per F-series convention:**
+- After D-3: verify `applyDeliveryGst === false` when `deliveryGstRate === 0` (today's default) via code-walk
+- After D-4: verify rows hidden today (default-zero), visible only when backend exposes rate
+- After D-5: AST scan confirms all 5 call sites pass `deliveryCharge`
+- After D-6: capture edit-order update payload, confirm `delivery_charge` is non-zero
+- After D-7: final combined diff reviewed vs pre-CR baseline
 
 ---
 
