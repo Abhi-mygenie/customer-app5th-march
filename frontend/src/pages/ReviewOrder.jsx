@@ -990,6 +990,10 @@ const ReviewOrder = () => {
               gstOnServiceCharge,
               itemTotal,
               finalSubtotal,
+              // Multi-menu parity additions (478 contract alignment)
+              totalGstTaxAmount: finalCgst + finalSgst,
+              totalVatTaxAmount: finalVat,
+              gstEnabled: isGstEnabledForSc,
             });
 
             // Clear edit mode after successful update
@@ -1021,6 +1025,10 @@ const ReviewOrder = () => {
             gstOnServiceCharge,
             itemTotal,
             finalSubtotal,
+            // Multi-menu parity additions (478 contract alignment)
+            totalGstTaxAmount: finalCgst + finalSgst,
+            totalVatTaxAmount: finalVat,
+            gstEnabled: isGstEnabledForSc,
           });
           clearEditMode();
           toast.success('Order updated successfully!');
@@ -1108,6 +1116,9 @@ const ReviewOrder = () => {
           gstOnServiceCharge,
           itemTotal,
           finalSubtotal,
+          // Multi-menu parity additions (478 contract alignment)
+          totalGstTaxAmount: finalCgst + finalSgst,
+          totalVatTaxAmount: finalVat,
         });
       }
 
@@ -1213,6 +1224,10 @@ const ReviewOrder = () => {
               gstOnServiceCharge,
               itemTotal,
               finalSubtotal,
+              // Multi-menu parity additions (478 contract alignment)
+              totalGstTaxAmount: finalCgst + finalSgst,
+              totalVatTaxAmount: finalVat,
+              gstEnabled: isGstEnabledForSc,
             });
 
             // Clear edit mode after successful update
@@ -1247,6 +1262,10 @@ const ReviewOrder = () => {
               gstOnServiceCharge,
               itemTotal,
               finalSubtotal,
+              // Multi-menu parity additions (478 contract alignment)
+              totalGstTaxAmount: finalCgst + finalSgst,
+              totalVatTaxAmount: finalVat,
+              gstEnabled: isGstEnabledForSc,
             });
           }
 
