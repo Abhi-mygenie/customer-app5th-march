@@ -352,3 +352,70 @@ The OrderSuccess Bill Summary continues to render exactly as in Section 2's "478
 
 ---
 
+## Appendix B — VERIFIED FIX (2026-05-06, order 825397)
+
+The backend team deployed a second fix. Captured `GET /customer/order/order-details/825397` for restaurant 478 (restaurant_order_id 002366). **All five critical drops are now resolved.**
+
+### B.1 Resolution table
+
+| Field | Before any fix | After 1st attempt | **After 2nd fix (now)** | Status |
+|---|---|---|---|---|
+| per-item `gst_tax_amount` | `"0.00"` | `"0.00"` | **`"5.00"`** | ✅ FIXED |
+| per-item `service_charge` | `"0.00"` | `"0.00"` | **`"9.00"`** | ✅ FIXED |
+| root `total_service_tax_amount` | `"0.00"` | `"0.00"` | **`"9.00"`** | ✅ FIXED |
+| root `service_gst_tax_amount` | `"0.00"` | `"0.00"` | **`"1.62"`** | ✅ FIXED |
+| root `payload_total_gst_tax_amount` | `null` | `null` | **`"6.62"`** | ✅ FIXED |
+| root `total_gst_tax_amount` | `null` | `"6.62"` | `"6.62"` | ✅ |
+
+### B.2 Predicted UI rendering after fix (mapping trace)
+
+With `serviceCharge=9`, `totalGst=6.62`, `scGst=1.62` directly from response:
+
+```
+itemGst   = 6.62 − 1.62 = 5.00  →  cgst = 2.50, sgst = 2.50
+scCgst    = 1.62 / 2 = 0.81
+scSgst    = 1.62 / 2 = 0.81
+gstRate   = 5 (from food_details.tax)  → "CGST 2.5%" / "SGST 2.5%" labels
+scGstRate = (1.62/9) * 100 = 18        → "CGST on SC 9%" / "SGST on SC 9%" labels
+```
+
+OrderSuccess Bill Summary will now render identically to the 716 reference (Section 2):
+- Item Total ₹100.00, Service Charge ₹9.00, Subtotal ₹109.00
+- CGST 2.5% ₹2.50, SGST 2.5% ₹2.50, CGST on SC 9% ₹0.81, SGST on SC 9% ₹0.81
+- Grand Total ₹116.00
+
+### B.3 Remaining minor gaps (non-blocking)
+
+For full parity with 716 reference, the backend may optionally fix these later. They do not affect rendering for the current scope:
+
+- `details[i].tax_amount` still `0` (should be gst+vat aggregate)
+- `details[i].item_gst` still `"0.00"` (alias of `gst_tax_amount`)
+- `details[i].gst` still `0` (ambiguous semantics)
+- `restaurant.service_charge_tax` still missing from meta (rate derivation now works from amounts; edge case for zero-SC restaurants only)
+- `restaurant.service_charge_percentage`, `restaurant.auto_service_charge` still missing (informational)
+
+### B.4 End-to-end contract verification
+
+| Layer | Status |
+|---|---|
+| Frontend → Backend (place-order request payload) | ✅ Complete (F1+F2-B+F4): all 4 root + 6 per-item fields populated with correct values |
+| Backend → Frontend (`/order-details` response) | ✅ Complete: all 5 critical fields now persisted and echoed |
+| Frontend rendering (OrderSuccess Bill Summary) | ✅ Will render correctly — same 7-row layout as 716 reference |
+
+### B.5 Recommended manual verification
+
+1. Open OrderSuccess for order 825397 — confirm 7-row Bill Summary.
+2. Place a fresh 478 order, watch OrderSuccess: Screen 1 (local) and Screen 2 (API) should be visually identical (no flash).
+3. Edit order 825397, confirm post-update OrderSuccess also renders 7 rows correctly.
+4. Place a multi-item 478 order, verify per-item `service_charge` allocation sums to `total_service_tax_amount`.
+
+When all four pass, this CR can be formally closed.
+
+### B.6 STATUS
+
+🎉 **BACKEND PERSISTENCE BUG: RESOLVED** (pending visual UAT per B.5).
+🎉 **SERVICE_CHARGE_MAPPING_478 frontend payload contract alignment thread (F1–F4): COMPLETE.**
+No further frontend work required.
+
+---
+
