@@ -1,0 +1,172 @@
+[
+  {
+    "id": "feedback-demo-1",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-1",
+    "customer_name": "Meera Rao",
+    "customer_phone": "9884794313",
+    "rating": 4,
+    "comments": "Delicious food, highly recommended",
+    "created_at": "2026-01-12T06:08:00.615396"
+  },
+  {
+    "id": "feedback-demo-3",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-3",
+    "customer_name": "Anita Malhotra",
+    "customer_phone": "9838991485",
+    "rating": 5,
+    "comments": "Excellent ambiance, loved the experience",
+    "created_at": "2026-02-17T06:08:00.615401"
+  },
+  {
+    "id": "feedback-demo-5",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-5",
+    "customer_name": "Nisha Joshi",
+    "customer_phone": "9834254264",
+    "rating": 3,
+    "comments": "Amazing food quality, will visit again",
+    "created_at": "2026-02-03T06:08:00.615405"
+  },
+  {
+    "id": "feedback-demo-6",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-6",
+    "customer_name": "Rohan Chopra",
+    "customer_phone": "9853146299",
+    "rating": 5,
+    "comments": "Amazing food quality, will visit again",
+    "created_at": "2025-12-30T06:08:00.615407"
+  },
+  {
+    "id": "feedback-demo-7",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-7",
+    "customer_name": "Sanjay Desai",
+    "customer_phone": "9814604487",
+    "rating": 5,
+    "comments": "Good food but service could be faster",
+    "created_at": "2026-02-18T06:08:00.615410"
+  },
+  {
+    "id": "feedback-demo-9",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-9",
+    "customer_name": "Pooja Gupta",
+    "customer_phone": "9879208205",
+    "rating": 4,
+    "comments": "Delicious food, highly recommended",
+    "created_at": "2026-01-12T06:08:00.615413"
+  },
+  {
+    "id": "feedback-demo-10",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-10",
+    "customer_name": "Anita Shah",
+    "customer_phone": "9833169111",
+    "rating": 4,
+    "comments": "Amazing food quality, will visit again",
+    "created_at": "2026-01-14T06:08:00.615416"
+  },
+  {
+    "id": "feedback-demo-11",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-11",
+    "customer_name": "Pooja Agarwal",
+    "customer_phone": "9885122421",
+    "rating": 4,
+    "comments": "Excellent ambiance, loved the experience",
+    "created_at": "2026-01-25T06:08:00.615418"
+  },
+  {
+    "id": "feedback-demo-12",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-12",
+    "customer_name": "Anita Bhatia",
+    "customer_phone": "9869449324",
+    "rating": 5,
+    "comments": "Delicious food, highly recommended",
+    "created_at": "2026-02-13T06:08:00.615421"
+  },
+  {
+    "id": "feedback-demo-13",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-13",
+    "customer_name": "Siddharth Desai",
+    "customer_phone": "9871433516",
+    "rating": 5,
+    "comments": "Amazing food quality, will visit again",
+    "created_at": "2026-02-01T06:08:00.615423"
+  },
+  {
+    "id": "feedback-demo-14",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-14",
+    "customer_name": "Sanjay Saxena",
+    "customer_phone": "9817584421",
+    "rating": 5,
+    "comments": "Outstanding service and hospitality",
+    "created_at": "2026-02-17T06:08:00.615426"
+  },
+  {
+    "id": "feedback-demo-15",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-15",
+    "customer_name": "Simran Bhatia",
+    "customer_phone": "9886894416",
+    "rating": 4,
+    "comments": "Good food but service could be faster",
+    "created_at": "2026-01-26T06:08:00.615428"
+  },
+  {
+    "id": "feedback-demo-16",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-16",
+    "customer_name": "Amit Agarwal",
+    "customer_phone": "9899329435",
+    "rating": 5,
+    "comments": "Amazing food quality, will visit again",
+    "created_at": "2026-01-06T06:08:00.615431"
+  },
+  {
+    "id": "feedback-demo-20",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-20",
+    "customer_name": "Vikram Joshi",
+    "customer_phone": "9873448615",
+    "rating": 3,
+    "comments": "Nice place for family dining",
+    "created_at": "2026-02-09T06:08:00.615433"
+  },
+  {
+    "id": "feedback-demo-21",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-21",
+    "customer_name": "Isha Patel",
+    "customer_phone": "9862885537",
+    "rating": 5,
+    "comments": "Amazing food quality, will visit again",
+    "created_at": "2026-01-16T06:08:00.615436"
+  },
+  {
+    "id": "feedback-demo-23",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-23",
+    "customer_name": "Nikhil Nair",
+    "customer_phone": "9845364433",
+    "rating": 4,
+    "comments": "Great food and service!",
+    "created_at": "2026-01-06T06:08:00.615438"
+  },
+  {
+    "id": "feedback-demo-24",
+    "user_id": "demo-user-restaurant",
+    "customer_id": "customer-demo-24",
+    "customer_name": "Akash Pillai",
+    "customer_phone": "9843013374",
+    "rating": 3,
+    "comments": "Excellent ambiance, loved the experience",
+    "created_at": "2026-01-06T06:08:00.615441"
+  }
+]
