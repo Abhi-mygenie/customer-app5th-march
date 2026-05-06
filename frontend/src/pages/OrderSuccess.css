@@ -6,8 +6,6 @@
   max-width: 600px;
   margin: 0 auto;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
   background-color: var(--bg-secondary, #f7f8fa);
 }
 
