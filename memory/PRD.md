@@ -21,6 +21,16 @@
 - Upstream APIs reachable: `preprod.mygenie.online` (404 on root, expected), `manage.mygenie.online` (200), `crm.mygenie.online` (301 redirect).
 - `/app/DEPLOYMENT_HANDOVER.md` written with full deployment recipe, env var inventory, 13 action items, validation transcript, and `7-may` vs `6-may` delta.
 
+### Branch progression after deployment validation
+- Deployed and ran branch **`hyatt-fixes-7-may`** @ `735c07d` (last remote commit 2026-05-06 16:08:06 UTC) on the preview environment per user request. Backend + frontend booted clean; 5 smoke endpoints returned 200; Mongo-backed `/api/config/716` and `/api/loyalty-settings/716` confirmed live.
+
+### Bugfix — Order Success hardcoded message — ✅ Closed (2026-05-06)
+- Added 2 optional admin-configurable fields `successTitle` and `successMessage` to `AppConfigUpdate` Pydantic model.
+- New admin section *Admin Settings → Order Success Page Text* with 2 input controls + placeholders showing the defaults.
+- `OrderSuccess.jsx` hero block now uses `(configSuccessTitle && configSuccessTitle.trim()) || 'Order Placed!'` and equivalent for the message; fallbacks `Order Placed!` / `Your order is being processed` preserved.
+- 5 files changed, +50 / −3 LOC. Validated end-to-end (custom values render, fallback works, long text wraps on mobile 390×844 with no horizontal scroll). Lint clean. Backend hot-reload clean.
+- Closure doc: `/app/memory/BUGFIX-ORDER-SUCCESS-HARDCODED-MESSAGE.md` (renamed from `OPEN-ISSUE-...`).
+
 ## Delta `6-may` → `7-may` (functional)
 - Single CR: **D-5 DELIVERY_CHARGE_GATING** — `frontend/src/pages/ReviewOrder.jsx` (+18/-4) and `frontend/src/api/services/orderService.ts` (+2/-2). Wires gated `effectiveDeliveryCharge` into all order-write paths and adds `row-delivery-cgst` / `row-delivery-sgst` UI rows. No backend / API contract changes.
 - Repo cleanup: `backend_test.py`, ~30 internal `memory/*.md` docs, and old `test_reports/iteration_*.json` files removed.
@@ -39,6 +49,12 @@
 - [ ] P2: Auto-fix ruff F401 warnings (`ruff check --fix server.py`).
 - [ ] P2: Restrict prod `REACT_APP_GOOGLE_MAPS_API_KEY` to prod referrer.
 - [ ] P3: Manual smoke of Review-Order delivery CGST/SGST rows after deploy (D-5 CR verification).
+- [ ] P3: (Optional) Existing Jest test `__tests__/pages/OrderSuccess.test.js` asserts on the literal `Order Placed!` — still passes since that string is now the fallback. Re-confirm in CI when Jest is wired up.
+
+## Closed issues (2026-05-06)
+- ✅ `BUGFIX-COMPULSORY-POPUP.md` — popup auto-dismiss / compulsory variant.
+- ✅ `BUGFIX-ORDER-SUCCESS-SCROLL.md` — bottom-scroll trapped on long item lists.
+- ✅ `BUGFIX-ORDER-SUCCESS-HARDCODED-MESSAGE.md` — hero block now admin-configurable via `successTitle` + `successMessage` (this session).
 
 ## Files produced/updated
 - `/app/DEPLOYMENT_HANDOVER.md` (UPDATED for `7-may`).
