@@ -649,6 +649,18 @@ const ReviewOrder = () => {
                                 ? (parseFloat(deliveryCharge) || 0)
                                 : 0;
 
+  // ─── Delivery GST (DELIVERY_CHARGE_GATING CR D-3) ─────
+  // Per stakeholder decision (2026-05-06): backend response does NOT expose
+  // restaurant.delivery_charge_tax. Use existing restaurant.gst_tax_percent (verified
+  // present in /restaurant-info response, e.g., "5.00"). Same rate as item-GST.
+  // Gated by gst_status (R3), includeDelivery (D-2), rate > 0, delivery > 0.
+  // Folds into total_gst_tax_amount via finalCgst/finalSgst — no new payload field.
+  const deliveryGstRate     = parseFloat(restaurant?.gst_tax_percent) || 0;
+  const applyDeliveryGst    = includeDelivery && isGstEnabledForSc && deliveryGstRate > 0 && effectiveDeliveryCharge > 0;
+  const gstOnDeliveryCharge = applyDeliveryGst ? effectiveDeliveryCharge * deliveryGstRate / 100 : 0;
+  const deliveryCgst        = parseFloat((gstOnDeliveryCharge / 2).toFixed(2));
+  const deliverySgst        = parseFloat((gstOnDeliveryCharge / 2).toFixed(2));
+
   // Uniform tax rates across items (for compliance display). null if mixed.
   const gstItems = (cartItems || []).filter(i => (i?.item?.tax_type || '').toUpperCase() === 'GST');
   const vatItems = (cartItems || []).filter(i => (i?.item?.tax_type || '').toUpperCase() === 'VAT');
@@ -660,8 +672,9 @@ const ReviewOrder = () => {
   // Split aggregates (R4: SC-GST kept separate for display; VAT untouched)
   const itemCgst      = adjustedCgst;
   const itemSgst      = adjustedSgst;
-  const finalCgst     = parseFloat((adjustedCgst + scCgst).toFixed(2));
-  const finalSgst     = parseFloat((adjustedSgst + scSgst).toFixed(2));
+  // D-3 (DELIVERY_CHARGE_GATING CR): include delivery-CGST/SGST alongside item-CGST/SGST and SC-CGST/SGST.
+  const finalCgst     = parseFloat((adjustedCgst + scCgst + deliveryCgst).toFixed(2));
+  const finalSgst     = parseFloat((adjustedSgst + scSgst + deliverySgst).toFixed(2));
   const finalVat      = adjustedVat;
   const finalTotalTax = parseFloat((finalCgst + finalSgst + finalVat).toFixed(2));
   // D-2 (DELIVERY_CHARGE_GATING CR): include delivery charge in subtotal so it flows into totalToPay and order_amount.
