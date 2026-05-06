@@ -21,7 +21,119 @@
   
   <!-- Razorpay SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-  
+
+  <!--
+    Brand-theme anti-flash boot script (synchronous, runs before React mounts).
+    Reads the cached restaurant config (`restaurant_config_<rid>`) populated by
+    RestaurantConfigContext and applies the same CSS variables that the React
+    useEffect would apply later — so the very first paint after a hard refresh
+    already shows the restaurant's brand colors instead of the MyGenie defaults
+    declared in :root of index.css.
+
+    Mirrors RestaurantConfigContext.jsx lines 209-305 exactly.
+    All logic is wrapped in try/catch — on cache miss, malformed JSON, blocked
+    localStorage, or any other failure, this is a silent no-op and the existing
+    CSS :root defaults render unchanged (zero regression).
+  -->
+  <script>
+    (function () {
+      try {
+        var seg = window.location.pathname.split('/').filter(Boolean)[0];
+        if (!seg) return;
+        if (!window.localStorage) return;
+        var raw = localStorage.getItem('restaurant_config_' + seg);
+        if (!raw) return;
+        var c = JSON.parse(raw);
+        if (!c || typeof c !== 'object') return;
+        var root = document.documentElement;
+        var setVar = function (name, value) { if (value) root.style.setProperty(name, value); };
+
+        // Primary color + 9 aliases (only if cached value present)
+        if (c.primaryColor) {
+          var p = c.primaryColor;
+          setVar('--color-primary', p);
+          setVar('--text-link', p);
+          setVar('--border-primary', p);
+          setVar('--text-blue-hero', p);
+          setVar('--color-primary-darker', p);
+          setVar('--color-primary-darkest', p);
+          setVar('--text-blue-dark', p);
+          setVar('--text-blue-medium', p);
+          setVar('--text-blue-light', p);
+        }
+
+        // Secondary color + 2 aliases
+        if (c.secondaryColor) {
+          var s = c.secondaryColor;
+          setVar('--color-primary-dark', s);
+          setVar('--text-link-hover', s);
+        }
+
+        // Button text color
+        if (c.buttonTextColor) setVar('--button-text-color', c.buttonTextColor);
+
+        // Background color
+        if (c.backgroundColor) setVar('--bg-primary', c.backgroundColor);
+
+        // Text color (sets both aliases the runtime effect sets)
+        if (c.textColor) {
+          setVar('--text-color', c.textColor);
+          setVar('--text-primary', c.textColor);
+        }
+
+        // Text secondary color (sets both aliases the runtime effect sets)
+        if (c.textSecondaryColor) {
+          setVar('--text-secondary-color', c.textSecondaryColor);
+          setVar('--text-secondary', c.textSecondaryColor);
+        }
+
+        // Font heading
+        var headingMap = {
+          'Big Shoulders': "'Big Shoulders Display', sans-serif",
+          'Montserrat': "'Montserrat', sans-serif",
+          'Poppins': "'Poppins', sans-serif",
+          'Roboto': "'Roboto', sans-serif",
+          'Open Sans': "'Open Sans', sans-serif",
+          'Playfair Display': "'Playfair Display', serif",
+          'Lato': "'Lato', sans-serif"
+        };
+        if (c.fontHeading) setVar('--font-heading', headingMap[c.fontHeading] || c.fontHeading);
+
+        // Font body
+        var bodyMap = {
+          'Montserrat': "'Montserrat', sans-serif",
+          'Poppins': "'Poppins', sans-serif",
+          'Roboto': "'Roboto', sans-serif",
+          'Open Sans': "'Open Sans', sans-serif",
+          'Lato': "'Lato', sans-serif",
+          'Inter': "'Inter', sans-serif",
+          'Nunito': "'Nunito', sans-serif"
+        };
+        if (c.fontBody) setVar('--font-body', bodyMap[c.fontBody] || c.fontBody);
+
+        // Border radius
+        var radiusMap = {
+          'sharp':            { button: '0px',     badge: '0px',     sm: '0px',  md: '0px',  lg: '0px',  xl: '0px'  },
+          'slightly-rounded': { button: '4px',     badge: '6px',     sm: '2px',  md: '4px',  lg: '6px',  xl: '8px'  },
+          'rounded':          { button: '8px',     badge: '12px',    sm: '4px',  md: '8px',  lg: '12px', xl: '16px' },
+          'very-rounded':     { button: '12px',    badge: '16px',    sm: '6px',  md: '12px', lg: '16px', xl: '20px' },
+          'pill':             { button: '9999px',  badge: '9999px',  sm: '8px',  md: '14px', lg: '18px', xl: '24px' }
+        };
+        if (c.borderRadius) {
+          var r = radiusMap[c.borderRadius];
+          if (r) {
+            setVar('--radius-button', r.button);
+            setVar('--radius-badge', r.badge);
+            setVar('--radius-container-sm', r.sm);
+            setVar('--radius-container-md', r.md);
+            setVar('--radius-container-lg', r.lg);
+            setVar('--radius-container-xl', r.xl);
+          }
+        }
+      } catch (e) { /* silently fall through to CSS :root defaults */ }
+    })();
+  </script>
+
   <title>MyGenie</title>
 </head>
 

@@ -120,9 +120,31 @@ const DEFAULT_CONFIG = {
 };
 
 export const RestaurantConfigProvider = ({ children }) => {
-  const [config, setConfig] = useState(DEFAULT_CONFIG);
+  // Synchronously hydrate from localStorage cache (anti-flash on hard refresh).
+  // Mirrors the same `restaurant_config_<rid>` key used by loadConfigFromCache /
+  // saveConfigToCache below. On any failure (no rid in URL, no cache, malformed
+  // JSON, blocked storage), falls through to DEFAULT_CONFIG with no regression.
+  const getInitialConfigFromCache = () => {
+    try {
+      if (typeof window === 'undefined') return null;
+      const seg = window.location.pathname.split('/').filter(Boolean)[0];
+      if (!seg) return null;
+      const raw = window.localStorage && localStorage.getItem(`restaurant_config_${seg}`);
+      if (!raw) return null;
+      const cached = JSON.parse(raw);
+      if (!cached || typeof cached !== 'object') return null;
+      return { rid: seg, data: cached };
+    } catch (_e) {
+      return null;
+    }
+  };
+  const initialCache = getInitialConfigFromCache();
+
+  const [config, setConfig] = useState(
+    initialCache ? { ...DEFAULT_CONFIG, ...initialCache.data } : DEFAULT_CONFIG
+  );
   const [configLoading, setConfigLoading] = useState(false);
-  const [configRestaurantId, setConfigRestaurantId] = useState(null);
+  const [configRestaurantId, setConfigRestaurantId] = useState(initialCache ? initialCache.rid : null);
 
   // Helper to get cache key for restaurant config
   const getConfigCacheKey = (restaurantId) => `restaurant_config_${restaurantId}`;

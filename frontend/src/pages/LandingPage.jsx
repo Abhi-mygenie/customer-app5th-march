@@ -565,7 +565,7 @@ const LandingPage = () => {
           <button 
             className={`landing-login-btn ${hasBackgroundImage ? 'on-image' : ''}`}
             onClick={() => navigate('/login')}
-            style={{ backgroundColor: btnColor, color: btnTextColor }}
+            style={{ backgroundColor: 'var(--color-primary)', color: 'var(--button-text-color)' }}
             data-testid="landing-login-btn"
           >
             <IoPersonOutline />
@@ -697,7 +697,7 @@ const LandingPage = () => {
                 <button
                   className="landing-btn landing-btn-primary"
                   disabled
-                  style={{ backgroundColor: btnColor, color: btnTextColor, opacity: 0.7 }}
+                  style={{ backgroundColor: 'var(--color-primary)', color: 'var(--button-text-color)', opacity: 0.7 }}
                   data-testid="landing-btn-loading"
                 >
                   <span className="landing-btn-spinner"></span>
@@ -711,7 +711,7 @@ const LandingPage = () => {
                   className="landing-btn landing-btn-primary"
                   onClick={handleEditOrderClick}
                   disabled={isLoadingEditOrder}
-                  style={{ backgroundColor: btnColor, color: btnTextColor, opacity: isLoadingEditOrder ? 0.7 : 1 }}
+                  style={{ backgroundColor: 'var(--color-primary)', color: 'var(--button-text-color)', opacity: isLoadingEditOrder ? 0.7 : 1 }}
                   data-testid="landing-edit-order-btn"
                 >
                   {isLoadingEditOrder ? (
@@ -734,7 +734,7 @@ const LandingPage = () => {
                   className={`landing-btn landing-btn-primary ${isTakeawayDeliveryMode && !isTakeawayDeliveryReady ? 'landing-btn-disabled' : ''}`}
                   onClick={handleDiningMenuClick}
                   disabled={isCheckingCustomer || (isTakeawayDeliveryMode && !isTakeawayDeliveryReady)}
-                  style={{ backgroundColor: btnColor, color: btnTextColor, opacity: (isCheckingCustomer || (isTakeawayDeliveryMode && !isTakeawayDeliveryReady)) ? 0.5 : 1 }}
+                  style={{ backgroundColor: 'var(--color-primary)', color: 'var(--button-text-color)', opacity: (isCheckingCustomer || (isTakeawayDeliveryMode && !isTakeawayDeliveryReady)) ? 0.5 : 1 }}
                   data-testid="landing-browse-menu-btn"
                 >
                   {isCheckingCustomer ? (
