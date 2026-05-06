@@ -641,6 +641,14 @@ const ReviewOrder = () => {
   const scCgst             = parseFloat((gstOnServiceCharge / 2).toFixed(2));
   const scSgst             = parseFloat((gstOnServiceCharge / 2).toFixed(2));
 
+  // ─── Delivery Charge gating (DELIVERY_CHARGE_GATING CR D-2) ─────
+  // Delivery charge from CartContext is non-zero only when delivery address is selected,
+  // but we additionally gate on orderType === 'delivery' for explicit safety.
+  const includeDelivery        = scannedOrderType === 'delivery';
+  const effectiveDeliveryCharge = includeDelivery
+                                ? (parseFloat(deliveryCharge) || 0)
+                                : 0;
+
   // Uniform tax rates across items (for compliance display). null if mixed.
   const gstItems = (cartItems || []).filter(i => (i?.item?.tax_type || '').toUpperCase() === 'GST');
   const vatItems = (cartItems || []).filter(i => (i?.item?.tax_type || '').toUpperCase() === 'VAT');
@@ -656,7 +664,8 @@ const ReviewOrder = () => {
   const finalSgst     = parseFloat((adjustedSgst + scSgst).toFixed(2));
   const finalVat      = adjustedVat;
   const finalTotalTax = parseFloat((finalCgst + finalSgst + finalVat).toFixed(2));
-  const finalSubtotal = parseFloat((subtotalAfterDiscount + serviceCharge).toFixed(2));
+  // D-2 (DELIVERY_CHARGE_GATING CR): include delivery charge in subtotal so it flows into totalToPay and order_amount.
+  const finalSubtotal = parseFloat((subtotalAfterDiscount + serviceCharge + effectiveDeliveryCharge).toFixed(2));
 
   // Grand Total = finalSubtotal + finalTotalTax (R5: single round at the end)
   const totalToPay = parseFloat((finalSubtotal + finalTotalTax).toFixed(2));
