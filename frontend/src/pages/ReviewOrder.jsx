@@ -178,6 +178,11 @@ const ReviewOrder = () => {
   useEffect(() => {
     if (!numericRestaurantId || !roomOrTable) return;
     if (!tableNumber) return;
+    // 716 (Hyatt Centric): when the room came from manual selection (no scanner
+    // context), do NOT persist it. Otherwise useScannedTable would re-hydrate it
+    // on the next visit and auto-select a stale room. Scanner-provided rooms
+    // (scannedTableId truthy) still persist via useScannedTable's own write.
+    if (String(numericRestaurantId) === '716' && !scannedTableId) return;
     const pool = roomOrTable === 'room' ? rooms : tables;
     const entry = (pool || []).find((x) => String(x.id) === String(tableNumber));
     if (!entry) return;
@@ -195,7 +200,7 @@ const ReviewOrder = () => {
     } catch (e) {
       // ignore quota / privacy errors
     }
-  }, [numericRestaurantId, tableNumber, roomOrTable, rooms, tables]);
+  }, [numericRestaurantId, tableNumber, roomOrTable, rooms, tables, scannedTableId]);
 
   // Save customer info to sessionStorage whenever it changes
   useEffect(() => {
