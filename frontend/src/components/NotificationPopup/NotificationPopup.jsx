@@ -40,16 +40,26 @@ const NotificationPopup = ({ page }) => {
 
   // Modal variant
   if (type === 'modal') {
+    // Compulsory popup: when admin sets Auto-close = 0 ("manual close with OK button"),
+    // the OK button is the only allowed close path. Backdrop click and corner-X
+    // must not bypass the acknowledgement. (isAutoClose true → keeps current behavior.)
+    const isMandatory = !isAutoClose;
     return (
-      <div className="np-modal-overlay" onClick={dismiss} data-testid="notification-popup-modal-overlay">
+      <div
+        className="np-modal-overlay"
+        onClick={isMandatory ? undefined : dismiss}
+        data-testid="notification-popup-modal-overlay"
+      >
         <div
           className="np-modal-card"
           onClick={e => e.stopPropagation()}
           data-testid="notification-popup-modal"
         >
-          <button className="np-close-btn" onClick={dismiss} data-testid="notification-popup-close">
-            <X size={18} />
-          </button>
+          {!isMandatory && (
+            <button className="np-close-btn" onClick={dismiss} data-testid="notification-popup-close">
+              <X size={18} />
+            </button>
+          )}
           {imageUrl && (
             <img
               src={imageUrl}
