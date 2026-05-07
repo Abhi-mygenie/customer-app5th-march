@@ -369,12 +369,13 @@
 }
 
 /* ======================================================================== */
-/* No-Image Compact Layout                                                   */
-/* Card becomes a flex column. Top row (.menu-item-main-row) holds the      */
-/* veg/name/price block on the left and the ADD/Quantity action on the      */
-/* right — with `align-items: center` so ADD vertically aligns with the     */
-/* name+price block, NOT the full card height. Optional metadata renders     */
-/* in `.item-content-meta` below — does not affect ADD position.            */
+/* No-Image Compact Layout — Hybrid (Option C)                               */
+/*                                                                           */
+/* Card is a flex ROW: left column (header + meta stacked) and right column  */
+/* (ADD/Quantity action) that stretches to the full card height. ADD is      */
+/* vertically centered in the right column via `justify-content: center`,   */
+/* giving balanced visual weight regardless of meta length while staying    */
+/* connected to the item content.                                           */
 /*                                                                           */
 /* Specificity note: `.menu-item.menu-item--no-image` (specificity 020) is  */
 /* used so these rules win over the base `.menu-item` declared in           */
@@ -382,26 +383,15 @@
 /* ======================================================================== */
 
 .menu-item.menu-item--no-image {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
+  flex-direction: row;
+  align-items: stretch;       /* right column matches full card height */
+  gap: 12px;
   padding: 12px 15px;
 }
 
-/* Top row: header (left) + action (right) */
-.menu-item.menu-item--no-image .menu-item-main-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;       /* key: ADD centers with name+price block */
-  gap: 12px;
-  width: 100%;
-}
-
-/* Left side of main row — veg/name/price stacked.
+/* Left column — veg/name/price stacked, with optional meta row below.
    `min-width: 0` lets long names truncate inside the row.
-   Tight gap (4px) so name and price visually cluster together —
-   ADD aligns cleanly with the name+price block instead of floating
-   between veg-label and name. */
+   Tight gap (4px) so name and price visually cluster together. */
 .menu-item.menu-item--no-image .item-content-main {
   flex: 1;
   min-width: 0;
@@ -416,12 +406,26 @@
   margin-bottom: 2px;
 }
 
-/* Right side: ADD or QuantitySelector. */
-.menu-item.menu-item--no-image .item-action-area {
-  flex-shrink: 0;
+/* Meta block (kcal/portion/allergens/description) — sits below header,
+   inside the left column. Slight top margin so it doesn't touch price. */
+.menu-item.menu-item--no-image .item-content-meta {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  gap: var(--spacing-sm);
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* Right column: spans full card height; ADD/Quantity centered vertically.
+   `align-self: stretch` ensures the column fills card height even when the
+   left content is short. */
+.menu-item.menu-item--no-image .item-action-area {
+  flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;    /* key: ADD vertically centered in card */
+  align-items: center;
   gap: 6px;
   min-width: 100px;
 }
@@ -462,18 +466,11 @@
   margin: 0;
 }
 
-/* Meta row: full-width text below main row. */
-.menu-item.menu-item--no-image .item-content-meta {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  width: 100%;
-}
-
 /* Mobile adjustments for no-image compact card */
 @media (max-width: 768px) {
   .menu-item.menu-item--no-image {
     padding: 10px 12px;
+    gap: 10px;
   }
   .menu-item.menu-item--no-image .item-action-area {
     min-width: 92px;
@@ -486,13 +483,13 @@
 @media (max-width: 480px) {
   .menu-item.menu-item--no-image {
     padding: 9px 10px;
-    gap: 6px;
-  }
-  .menu-item.menu-item--no-image .menu-item-main-row {
     gap: 8px;
   }
   .menu-item.menu-item--no-image .item-content-main {
     gap: 3px;
+  }
+  .menu-item.menu-item--no-image .item-content-meta {
+    margin-top: 5px;
   }
   .menu-item.menu-item--no-image .item-action-area {
     min-width: 86px;
@@ -510,9 +507,6 @@
 @media (max-width: 375px) {
   .menu-item.menu-item--no-image {
     padding: 8px 10px;
-    gap: 5px;
-  }
-  .menu-item.menu-item--no-image .menu-item-main-row {
     gap: 6px;
   }
   .menu-item.menu-item--no-image .item-content-main {

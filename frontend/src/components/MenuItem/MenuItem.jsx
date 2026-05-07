@@ -224,18 +224,20 @@ const MenuItem = ({
         </>
       ) : (
         <>
-          {/* NO-IMAGE LAYOUT — main row (header + ADD) above metadata row */}
-          <div className="menu-item-main-row">
-            <div className="item-content-main">
-              {headerBlock}
-            </div>
-            {actionArea}
+          {/* NO-IMAGE LAYOUT — Hybrid (Option C):
+              Card is a top-level flex row.
+              Left: header (veg/name/price) + optional meta stacked.
+              Right: action column spans full card height with ADD vertically
+              centered against the entire left content. */}
+          <div className="item-content-main">
+            {headerBlock}
+            {hasMeta && (
+              <div className="item-content-meta">
+                {metaBlock}
+              </div>
+            )}
           </div>
-          {hasMeta && (
-            <div className="item-content-meta">
-              {metaBlock}
-            </div>
-          )}
+          {actionArea}
         </>
       )}
     </div>
