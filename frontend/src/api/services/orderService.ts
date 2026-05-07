@@ -189,14 +189,35 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
     // Total GST: prefer backend's correctly-labeled payload_total_gst_tax_amount; fallback to derivation
     const totalGst = parseFloat(firstDetail.payload_total_gst_tax_amount)
       || parseFloat((totalTax - totalVat).toFixed(2));
-    // SC-GST: prefer direct backend field; fallback to derivation
-    const scGst = parseFloat(firstDetail.service_gst_tax_amount)
-      || parseFloat(((totalGst) - details.reduce((sum, d: any) => sum + (parseFloat(d.gst_tax_amount) || 0), 0)).toFixed(2));
-    const itemGst = parseFloat((totalGst - scGst).toFixed(2));
+    // ─── DELIVERY_CHARGE_GST CR — extract delivery context ─────────────────
+    // delivery_charge sits at the response root (not inside firstDetail).
+    const orderTypeNorm = String(orderData.order_type || '').toLowerCase();
+    const isDeliveryOrder = orderTypeNorm === 'delivery';
+    const deliveryChargeAmt = isDeliveryOrder
+      ? (parseFloat((orderData as any).delivery_charge) || 0)
+      : 0;
+    // Sum item-level GST (single source of truth for items)
+    const itemGstSum = details.reduce((sum, d: any) => sum + (parseFloat(d.gst_tax_amount) || 0), 0);
+    // SC-GST: prefer direct backend field. CRITICAL: use Number.isFinite to allow
+    // an explicit 0 from backend (delivery / takeaway). Previous `parseFloat(...) || fallback`
+    // pattern wrongly fell through on "0.00", attributing delivery-GST residual to SC.
+    const rawScGst = parseFloat(firstDetail.service_gst_tax_amount);
+    const scGst = Number.isFinite(rawScGst)
+      ? rawScGst
+      : parseFloat((totalGst - itemGstSum).toFixed(2));
+    // Delivery-GST: residual after items and SC. Gated on order_type === 'delivery'
+    // and deliveryCharge > 0 to avoid attributing rounding noise to delivery on non-delivery orders.
+    const deliveryGst = (isDeliveryOrder && deliveryChargeAmt > 0)
+      ? Math.max(0, parseFloat((totalGst - itemGstSum - scGst).toFixed(2)))
+      : 0;
+    // itemGst is now the residual after both SC and Delivery GST are accounted for.
+    const itemGst = parseFloat((totalGst - scGst - deliveryGst).toFixed(2));
     const cgst   = parseFloat((itemGst / 2).toFixed(2));
     const sgst   = parseFloat((itemGst / 2).toFixed(2));
     const scCgst = parseFloat((scGst / 2).toFixed(2));
     const scSgst = parseFloat((scGst / 2).toFixed(2));
+    const deliveryCgst = parseFloat((deliveryGst / 2).toFixed(2));
+    const deliverySgst = parseFloat((deliveryGst / 2).toFixed(2));
     // Rates — uniform derivation from items (null if mixed)
     const gstRates = [...new Set(details.filter((d: any) => (d?.food_details?.tax_type || '').toUpperCase() === 'GST').map((d: any) => parseFloat(d?.food_details?.tax) || 0))];
     const vatRates = [...new Set(details.filter((d: any) => (d?.food_details?.tax_type || '').toUpperCase() === 'VAT').map((d: any) => parseFloat(d?.food_details?.tax) || 0))];
@@ -211,6 +232,21 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       ? configuredScGstRate
       : ((serviceCharge > 0 && scGst > 0)
           ? parseFloat(((scGst / serviceCharge) * 100).toFixed(2))
+          : null);
+    // Delivery-GST rate (DELIVERY_CHARGE_GST CR): prefer configured restaurant.deliver_charge_gst.
+    // Note: order-details API may return a slim restaurant block without this key — fall back
+    // to deriving from amounts. OrderSuccess.jsx may further override the LABEL using its own
+    // useRestaurantDetails() hook (full restaurant config) — same pattern as scGstRate.
+    const rawConfiguredDeliveryGstRate = restaurantMeta.deliver_charge_gst;
+    const configuredDeliveryGstRate = (rawConfiguredDeliveryGstRate === null
+      || rawConfiguredDeliveryGstRate === undefined
+      || rawConfiguredDeliveryGstRate === '')
+      ? NaN
+      : parseFloat(rawConfiguredDeliveryGstRate);
+    const deliveryGstRate = Number.isFinite(configuredDeliveryGstRate) && configuredDeliveryGstRate > 0
+      ? configuredDeliveryGstRate
+      : ((deliveryChargeAmt > 0 && deliveryGst > 0)
+          ? parseFloat(((deliveryGst / deliveryChargeAmt) * 100).toFixed(2))
           : null);
     const localTotal  = parseFloat((subtotal + totalTax).toFixed(2));
     const originalTotal = (grandTotal !== localTotal && localTotal > 0) ? localTotal : null;
@@ -249,6 +285,11 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
         totalTax,
         grandTotal,
         originalTotal,
+        // DELIVERY_CHARGE_GST CR
+        deliveryCharge: deliveryChargeAmt,
+        deliveryCgst,
+        deliverySgst,
+        deliveryGstRate,
       } as any
     };
   } catch (error) {

@@ -168,6 +168,19 @@ const OrderSuccess = () => {
       ? configuredScGstRate
       : (billSummary?.scGstRate || 0);
 
+  // ─── Delivery-GST LABEL SOURCE (DELIVERY_CHARGE_GST CR) ──────────────────
+  // Same pattern as displayScGstRate: prefer the configured rate from
+  // /web/restaurant-info (full restaurant config via useRestaurantDetails) so the
+  // label shows the integer-clean rate the user configured (e.g., 20% → 10% per side).
+  // Fall back to the rate derived from amounts (carried in billSummary.deliveryGstRate)
+  // for legacy/edge cases. Amounts (deliveryCgst / deliverySgst / grandTotal) are NOT
+  // touched; only the percentage shown next to the label is normalised.
+  const configuredDeliveryGstRate = parseFloat(restaurant?.deliver_charge_gst) || 0;
+  const displayDeliveryGstRate =
+    configuredDeliveryGstRate > 0
+      ? configuredDeliveryGstRate
+      : (billSummary?.deliveryGstRate || 0);
+
   // Use ONLY items from API (single source of truth)
   const allItems = liveOrderItems;
   const totalItemsCount = allItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
@@ -739,13 +752,13 @@ const OrderSuccess = () => {
                 {/* CGST/SGST on Delivery — compliance rows (DELIVERY_CHARGE_GST CR) */}
                 {billSummary.deliveryCgst > 0 && (
                   <div className="bill-row bill-row-tax" data-testid="bill-row-delivery-cgst">
-                    <span className="bill-label-sub">CGST on Delivery{billSummary.deliveryGstRate ? ` ${(billSummary.deliveryGstRate / 2).toFixed(billSummary.deliveryGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="bill-label-sub">CGST on Delivery{displayDeliveryGstRate ? ` ${(displayDeliveryGstRate / 2).toFixed(displayDeliveryGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
                     <span className="bill-value-sub">₹{billSummary.deliveryCgst.toFixed(2)}</span>
                   </div>
                 )}
                 {billSummary.deliverySgst > 0 && (
                   <div className="bill-row bill-row-tax" data-testid="bill-row-delivery-sgst">
-                    <span className="bill-label-sub">SGST on Delivery{billSummary.deliveryGstRate ? ` ${(billSummary.deliveryGstRate / 2).toFixed(billSummary.deliveryGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="bill-label-sub">SGST on Delivery{displayDeliveryGstRate ? ` ${(displayDeliveryGstRate / 2).toFixed(displayDeliveryGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
                     <span className="bill-value-sub">₹{billSummary.deliverySgst.toFixed(2)}</span>
                   </div>
                 )}
