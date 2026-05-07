@@ -49,7 +49,10 @@
   padding: var(--spacing-sm) var(--spacing-md);
   max-width: 800px;
   margin: 0 auto;
-  padding-bottom: 140px; /* For footer with payment selector */
+  /* Footer is position:fixed; its height grows on narrow viewports (≤400 px) where
+     payment options stack vertically. Buffer covers worst case (~194 px) plus
+     iOS safe-area-inset-bottom for notch / home-indicator devices. */
+  padding-bottom: calc(220px + env(safe-area-inset-bottom, 0px));
 }
 
 .review-order-section {
