@@ -370,124 +370,147 @@
 
 /* ======================================================================== */
 /* No-Image Compact Layout                                                   */
-/* Applied via `menu-item--no-image` modifier when `hasImage === false`.     */
-/* Image container is NOT rendered (see MenuItem.jsx) — these rules style    */
-/* the inline action area used in its place.                                 */
+/* Card becomes a flex column. Top row (.menu-item-main-row) holds the      */
+/* veg/name/price block on the left and the ADD/Quantity action on the      */
+/* right — with `align-items: center` so ADD vertically aligns with the     */
+/* name+price block, NOT the full card height. Optional metadata renders     */
+/* in `.item-content-meta` below — does not affect ADD position.            */
+/*                                                                           */
+/* Specificity note: `.menu-item.menu-item--no-image` (specificity 020) is  */
+/* used so these rules win over the base `.menu-item` declared in           */
+/* `pages/MenuItems.css` (specificity 010) which is loaded later in cascade.*/
 /* ======================================================================== */
 
-.menu-item--no-image {
-  align-items: flex-start;       /* top-align so ADD anchors next to name, never mid-card */
+.menu-item.menu-item--no-image {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   padding: 12px 15px;
 }
 
-.menu-item--no-image .item-content {
-  width: auto;
+/* Top row: header (left) + action (right) */
+.menu-item.menu-item--no-image .menu-item-main-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;       /* key: ADD centers with name+price block */
+  gap: 12px;
+  width: 100%;
 }
 
-/* Inline action area (sibling of .item-content when no image) */
-.item-action-area {
+/* Left side of main row — veg/name/price stacked.
+   `min-width: 0` lets long names truncate inside the row. */
+.menu-item.menu-item--no-image .item-content-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  overflow: hidden;
+}
+
+/* Right side: ADD or QuantitySelector. */
+.menu-item.menu-item--no-image .item-action-area {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
-  align-self: flex-start;        /* anchor to top of card */
-  margin-left: 8px;
-  padding-top: 2px;              /* visually align with name baseline */
-  min-width: 100px;              /* reserve width — ADD (~92px) and Quantity (~90px) stay aligned */
+  min-width: 100px;
 }
 
-/* Inline ADD button — overrides absolute positioning used in image mode.
-   Keeps the SAME visual prominence as the image-mode ADD (padding,
-   font-size, font-weight, border, shadow) so it remains a primary,
-   easy-to-tap target on no-image cards. */
-.add-btn.add-btn--inline {
+/* Inline ADD button — same prominence as image-mode ADD
+   (padding/font/border/shadow inherited from base .add-btn). */
+.menu-item.menu-item--no-image .add-btn.add-btn--inline {
   position: static;
   transform: none;
   bottom: auto;
   left: auto;
   right: auto;
-  align-self: center;            /* center within reserved 100px column */
-  padding: 8px 20px;             /* match image-mode .add-btn prominence */
+  align-self: center;
+  padding: 8px 20px;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
 
-/* Inline Customisable indicator */
-.customisable-indicator--inline {
+/* Inline Customisable pill — centered under ADD */
+.menu-item.menu-item--no-image .customisable-indicator--inline {
   margin-top: 0;
   width: 100%;
-  text-align: center;            /* match centered ADD button column */
+  text-align: center;
   font-size: 0.7rem;
   white-space: nowrap;
 }
 
-/* QuantitySelector inside no-image action area — fully reset its
-   image-box-overlay positioning (transform/left/bottom) so it sits
-   cleanly inside the static flex column. Without this reset, the
-   transform: translateX(-50%) from QuantitySelector.css would shift
-   the bubble left after ADD is clicked. */
-.menu-item--no-image .item-action-area .quantity-selector {
+/* QuantitySelector inside no-image action area:
+   reset its image-box-overlay positioning so it sits in static flow. */
+.menu-item.menu-item--no-image .item-action-area .quantity-selector {
   position: static;
   transform: none;
   left: auto;
   right: auto;
   bottom: auto;
-  align-self: center;            /* match ADD button placement — no horizontal jump */
+  align-self: center;
   margin: 0;
 }
 
-.menu-item--no-image .item-action-area > * {
-  position: static;
+/* Meta row: full-width text below main row. */
+.menu-item.menu-item--no-image .item-content-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
 }
 
 /* Mobile adjustments for no-image compact card */
 @media (max-width: 768px) {
-  .menu-item--no-image {
+  .menu-item.menu-item--no-image {
     padding: 10px 12px;
   }
-  .menu-item--no-image .item-action-area {
+  .menu-item.menu-item--no-image .item-action-area {
     min-width: 92px;
   }
-  .add-btn.add-btn--inline {
+  .menu-item.menu-item--no-image .add-btn.add-btn--inline {
     padding: 7px 18px;
   }
 }
 
 @media (max-width: 480px) {
-  .menu-item--no-image {
+  .menu-item.menu-item--no-image {
     padding: 9px 10px;
+    gap: 6px;
+  }
+  .menu-item.menu-item--no-image .menu-item-main-row {
     gap: 8px;
   }
-  .menu-item--no-image .item-action-area {
-    margin-left: 6px;
-    gap: 4px;
+  .menu-item.menu-item--no-image .item-action-area {
     min-width: 86px;
-    padding-top: 1px;
+    gap: 4px;
   }
-  .add-btn.add-btn--inline {
+  .menu-item.menu-item--no-image .add-btn.add-btn--inline {
     padding: 6px 16px;
     font-size: var(--font-size-xs);
   }
-  .customisable-indicator--inline {
+  .menu-item.menu-item--no-image .customisable-indicator--inline {
     font-size: 0.65rem;
   }
 }
 
 @media (max-width: 375px) {
-  .menu-item--no-image {
+  .menu-item.menu-item--no-image {
     padding: 8px 10px;
+    gap: 5px;
+  }
+  .menu-item.menu-item--no-image .menu-item-main-row {
     gap: 6px;
   }
-  .menu-item--no-image .item-action-area {
-    margin-left: 4px;
+  .menu-item.menu-item--no-image .item-action-area {
     min-width: 80px;
   }
-  .add-btn.add-btn--inline {
+  .menu-item.menu-item--no-image .add-btn.add-btn--inline {
     padding: 6px 14px;
   }
-  .customisable-indicator--inline {
+  .menu-item.menu-item--no-image .customisable-indicator--inline {
     font-size: 0.6rem;
   }
 }

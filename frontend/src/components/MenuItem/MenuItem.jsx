@@ -55,75 +55,66 @@ const MenuItem = ({
     }
   };
 
-  return (
-    <div className={`menu-item ${!hasImage ? 'menu-item--no-image' : ''}`}>
-      <div className="item-content">
-        {/* Veg/Non-Veg/Egg Indicator */}
-        <span className={`veg-label ${item.isEgg ? 'egg' : item.isVeg ? 'veg' : 'non-veg'}`}>
-          <span className="veg-dot"></span>
-        </span>
+  // ─── Reusable JSX blocks ──────────────────────────────────────────────────
+  // Veg/Name/Price header — used in BOTH image and no-image layouts.
+  const headerBlock = (
+    <>
+      <span className={`veg-label ${item.isEgg ? 'egg' : item.isVeg ? 'veg' : 'non-veg'}`}>
+        <span className="veg-dot"></span>
+      </span>
+      <h3 className="item-name">{item.name}</h3>
+      <div className="item-price">₹{item.price}</div>
+    </>
+  );
 
-        {/* Item Name */}
-        <h3 className="item-name">{item.name}</h3>
+  // Optional metadata (kcal / portion / allergens / description with Read More).
+  // Hidden when none has content. Rendered inside `.item-content` for image
+  // cards (matches existing layout) and inside `.item-content-meta` below the
+  // main row for no-image cards (so ADD aligns with name+price, not metadata).
+  const showsKcal      = item.kcal && parseFloat(item.kcal) > 0;
+  const showsPortion   = item.portion && parseFloat(item.portion) > 0;
+  const showsAllergens = item.allergens && item.allergens.length > 0;
+  const hasMeta = showsKcal || showsPortion || showsAllergens || !!displayDescription;
 
-        {/* Item Price */}
-        <div className="item-price">₹{item.price}</div>
+  const metaBlock = (
+    <>
+      {showsKcal && (
+        <div className="item-allergens">
+          <span className="allergen-icon-wrapper">
+            <IoFlameOutline className="item-info-icon" />
+          </span>
+          <span className="kcal-name">
+            {item.kcal} kcal
+          </span>
+        </div>
+      )}
 
-        {/* Allergen Icons */}
-        {/* {item.allergens && item.allergens.length > 0 && (
-          <div className="item-allergens">
-            {item.allergens.map((allergen, idx) => (
-              <span key={idx} className="allergen-icon-wrapper">
-                {getAllergenIcon(allergen)}
-              </span>
-            ))}
-          </div>
-        )} */}
+      {showsPortion && (
+        <div className="item-allergens">
+          <span className="allergen-icon-wrapper">
+            <IoNutritionOutline className="item-info-icon" />
+          </span>
+          <span className="portion-name">
+            {item.portion}
+          </span>
+        </div>
+      )}
 
+      {showsAllergens && (
+        <div className="item-allergens">
+          <span className="allergen-icon-wrapper">
+            <IoWarningOutline className="item-info-icon" />
+          </span>
+          <span className="allergen-name">
+            Contains: {item.allergens
+              .map((allergen) => allergen.charAt(0).toUpperCase() + allergen.slice(1).toLowerCase())
+              .join(', ')}
+          </span>
+        </div>
+      )}
 
-        {/*Calories */}
-        {item.kcal && parseFloat(item.kcal) > 0 && (
-          <div className="item-allergens">
-            <span className="allergen-icon-wrapper">
-              <IoFlameOutline className="item-info-icon" />
-            </span>
-            <span className="kcal-name">
-              {item.kcal} kcal
-            </span>
-          </div>
-        )}
-
-        {/*Portion */}
-        {item.portion && parseFloat(item.portion) > 0 && (
-          <div className="item-allergens">
-            <span className="allergen-icon-wrapper">
-              <IoNutritionOutline className="item-info-icon" />
-            </span>
-            <span className="portion-name">
-              {item.portion}
-            </span>
-          </div>
-        )}
-
-        {item.allergens && item.allergens.length > 0 && (
-          <div className="item-allergens">
-            <span className="allergen-icon-wrapper">
-              <IoWarningOutline className="item-info-icon" />
-            </span>
-            <span className="allergen-name">
-              Contains: {item.allergens
-                .map((allergen) => {
-                  // Capitalize first letter of each allergen
-                  return allergen.charAt(0).toUpperCase() + allergen.slice(1).toLowerCase();
-                })
-                .join(', ')}
-            </span>
-          </div>
-        )}
-
-        {/* Item Description with Read More */}
-        {displayDescription && (
-          <div className="item-allergens">
+      {displayDescription && (
+        <div className="item-allergens">
           <span className="allergen-icon-wrapper">
             <IoInformationCircleOutline className="item-info-icon" />
           </span>
@@ -141,87 +132,111 @@ const MenuItem = ({
             </p>
           </div>
         </div>
-        )}
-      </div>
+      )}
+    </>
+  );
 
-      {/* Image Box Container with Customisable Text — rendered ONLY when item has a real image */}
-      {hasImage && (
-        <div className="item-image-container">
-          {/* Image Box with ADD Button */}
-          <div className="item-image-box">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="item-image"
-              loading="lazy"
-              decoding="async"
-              onError={handleImageError}
-            />
-            {/* Hidden default placeholder for fallback (Bucket 7: image fails to load) */}
-            <div className="item-image-placeholder" style={{ display: 'none' }}>
-              <img
-                src={
-                  item.isEgg
-                    ? '/assets/images/E_Food_Img.svg'
-                    : item.isVeg
-                      ? '/assets/images/V_FOOD_IMG.svg'
-                      : '/assets/images/NV_FOOD_IMG.svg'
-                }
-                alt={
-                  item.isEgg
-                    ? 'Egg Food'
-                    : item.isVeg
-                      ? 'Veg Food'
-                      : 'Non-Veg Food'
-                }
-                className="default-food-icon"
-              />
-            </div>
-
-            {/* Show Quantity Selector if item is in cart, otherwise show ADD button (only if available and online order enabled) */}
-            {isInCart ? (
-              <QuantitySelector
-                quantity={quantity}
-                onIncrement={onIncrement}
-                onDecrement={onDecrement}
-              />
-            ) : isAvailable && isOnlineOrderEnabled ? (
-              <button className="add-btn" onClick={onAddToCart}>
-                ADD
-              </button>
-            ) : null}
-          </div>
-
-          {/* Customisable Indicator */}
-          {isCustomizable && (
-            <div className="customisable-indicator">
-              Customisable
-            </div>
-          )}
+  // Action area (ADD or QuantitySelector + Customisable pill) — used in
+  // no-image layout only. Image-mode keeps its inline absolute ADD inside
+  // the image-box (unchanged below).
+  const actionArea = (
+    <div className="item-action-area">
+      {isInCart ? (
+        <QuantitySelector
+          quantity={quantity}
+          onIncrement={onIncrement}
+          onDecrement={onDecrement}
+        />
+      ) : isAvailable && isOnlineOrderEnabled ? (
+        <button className="add-btn add-btn--inline" onClick={onAddToCart}>
+          ADD
+        </button>
+      ) : null}
+      {isCustomizable && (
+        <div className="customisable-indicator customisable-indicator--inline">
+          Customisable
         </div>
       )}
+    </div>
+  );
 
-      {/* Compact action area — rendered ONLY when no image is present.
-          Same handlers / same modal flow as image-mode; just laid out inline-right. */}
-      {!hasImage && (
-        <div className="item-action-area">
-          {isInCart ? (
-            <QuantitySelector
-              quantity={quantity}
-              onIncrement={onIncrement}
-              onDecrement={onDecrement}
-            />
-          ) : isAvailable && isOnlineOrderEnabled ? (
-            <button className="add-btn add-btn--inline" onClick={onAddToCart}>
-              ADD
-            </button>
-          ) : null}
-          {isCustomizable && (
-            <div className="customisable-indicator customisable-indicator--inline">
-              Customisable
+  return (
+    <div className={`menu-item ${!hasImage ? 'menu-item--no-image' : ''}`}>
+      {hasImage ? (
+        <>
+          {/* IMAGE-PRESENT LAYOUT — UNCHANGED from prior version */}
+          <div className="item-content">
+            {headerBlock}
+            {metaBlock}
+          </div>
+
+          {/* Image Box Container with Customisable Text */}
+          <div className="item-image-container">
+            <div className="item-image-box">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="item-image"
+                loading="lazy"
+                decoding="async"
+                onError={handleImageError}
+              />
+              {/* Hidden default placeholder for fallback (image fails to load) */}
+              <div className="item-image-placeholder" style={{ display: 'none' }}>
+                <img
+                  src={
+                    item.isEgg
+                      ? '/assets/images/E_Food_Img.svg'
+                      : item.isVeg
+                        ? '/assets/images/V_FOOD_IMG.svg'
+                        : '/assets/images/NV_FOOD_IMG.svg'
+                  }
+                  alt={
+                    item.isEgg
+                      ? 'Egg Food'
+                      : item.isVeg
+                        ? 'Veg Food'
+                        : 'Non-Veg Food'
+                  }
+                  className="default-food-icon"
+                />
+              </div>
+
+              {isInCart ? (
+                <QuantitySelector
+                  quantity={quantity}
+                  onIncrement={onIncrement}
+                  onDecrement={onDecrement}
+                />
+              ) : isAvailable && isOnlineOrderEnabled ? (
+                <button className="add-btn" onClick={onAddToCart}>
+                  ADD
+                </button>
+              ) : null}
+            </div>
+
+            {isCustomizable && (
+              <div className="customisable-indicator">
+                Customisable
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* NO-IMAGE LAYOUT — main row (header + ADD) above metadata row */}
+          <div className="menu-item-main-row">
+            <div className="item-content-main">
+              {headerBlock}
+            </div>
+            {actionArea}
+          </div>
+          {hasMeta && (
+            <div className="item-content-meta">
+              {metaBlock}
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
