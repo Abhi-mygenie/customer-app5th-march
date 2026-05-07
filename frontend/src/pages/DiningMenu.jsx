@@ -26,7 +26,18 @@ const DiningMenu = () => {
   
   // Fetch restaurant details FIRST to get numeric ID
   const { restaurant, loading: restaurantLoading, isFetching: restaurantFetching } = useRestaurantDetails(restaurantId);
-  const { logoUrl: configLogoUrl, phone: configPhone, menuOrder } = useRestaurantConfig();
+  const { logoUrl: configLogoUrl, phone: configPhone, menuOrder, fetchConfig } = useRestaurantConfig();
+  
+  // Ensure restaurant brand config is loaded for direct hard-refresh on
+  // /:restaurantId/stations. Without this, a first-time visitor lands on
+  // default MyGenie branding because no other code path triggers fetchConfig
+  // on this route. Mirrors the pattern in MenuItems / LandingPage /
+  // ReviewOrder / OrderSuccess / ContactPage / FeedbackPage.
+  useEffect(() => {
+    if (restaurantId) {
+      fetchConfig(restaurantId);
+    }
+  }, [restaurantId, fetchConfig]);
   
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
