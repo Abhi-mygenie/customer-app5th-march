@@ -1205,7 +1205,29 @@ const ReviewOrder = () => {
       // (network drop, timeout, server crash mid-request). The order MAY have been processed
       // server-side. We must NOT silently retry or show a generic "try again" message —
       // doing so risks placing a duplicate order.
-      if (!error.response && orderDispatchedRef.current) {
+      // SECURITY FIX 2 (refined): Only flag true network loss.
+      // Conditions, ALL must hold:
+      //   (a) we dispatched the request (`orderDispatchedRef`),
+      //   (b) we never received a response object back (`!response`),
+      //   (c) axios reports no HTTP response (`!error.response`),
+      //   (d) the error looks like a real transport-layer failure.
+      // This avoids misclassifying post-success JS exceptions (e.g.
+      // buildBillSummary / clearCart / navigate throwing AFTER placeOrder
+      // resolved with a real order_id) as "network loss", which previously
+      // showed the duplicate-order warning even though the order succeeded.
+      const isTransportError =
+        error?.isAxiosError === true ||
+        error?.code === 'ECONNABORTED' ||
+        error?.code === 'ERR_NETWORK' ||
+        error?.code === 'ETIMEDOUT' ||
+        error?.message === 'Network Error';
+      const isTrueNetworkLoss =
+        orderDispatchedRef.current &&
+        !response &&
+        !error?.response &&
+        isTransportError;
+
+      if (isTrueNetworkLoss) {
         toast.error(
           'Network error: your order request was sent but we lost the connection. ' +
           'Please check your order history before placing again to avoid duplicates.',
@@ -1349,11 +1371,32 @@ const ReviewOrder = () => {
           toast.error('Session expired. Please refresh the page and try again.');
         }
       } else {
-        // Other errors
+        // Generic-error branch (also catches post-success JS exceptions now).
+        // If `response.order_id` is already known, the server accepted the
+        // order — navigate the user to Order Success rather than leaving them
+        // on a stale Review Order screen with an unhelpful toast.
         const errorMessage = error.response?.data?.message ||
           error.response?.data?.errors?.message ||
           (isEditMode ? 'Failed to update order. Please try again.' : 'Failed to place order. Please try again.');
-        toast.error(errorMessage);
+
+        if (response?.order_id) {
+          logger.error('order', 'Post-place-order error (order_id received):', error, { orderId: response.order_id });
+          // Best-effort cart cleanup — guarded so it can't re-throw and re-enter catch.
+          try { clearCart(); } catch (_) { /* noop */ }
+          navigate(`/${restaurantId}/order-success`, {
+            state: {
+              orderData: {
+                orderId: response.order_id,
+                totalToPay: response.total_amount || roundedTotal.toFixed(2),
+                isEditedOrder: isEditMode,
+                items: buildOrderItems(cartItems),
+                previousItems: buildPreviousItems(previousOrderItems, isEditMode),
+              }
+            }
+          });
+        } else {
+          toast.error(errorMessage);
+        }
       }
     } finally {
       isPlacingOrderRef.current = false;

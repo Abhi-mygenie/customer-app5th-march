@@ -202,10 +202,16 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
     const vatRates = [...new Set(details.filter((d: any) => (d?.food_details?.tax_type || '').toUpperCase() === 'VAT').map((d: any) => parseFloat(d?.food_details?.tax) || 0))];
     const gstRate = gstRates.length === 1 ? gstRates[0] : null;
     const vatRate = vatRates.length === 1 ? vatRates[0] : (parseFloat(restaurantMeta.vat_percent) || null);
-    // SC-GST rate: derive from amounts if possible (scGst / serviceCharge * 100)
-    const scGstRate = (serviceCharge > 0 && scGst > 0)
-      ? parseFloat(((scGst / serviceCharge) * 100).toFixed(2))
-      : (parseFloat(restaurantMeta.service_charge_tax) || null);
+    // SC-GST rate: prefer the configured percentage from restaurant config —
+    // it's the integer-clean value the user expects to see on the bill (e.g. 18%).
+    // Fall back to deriving from rounded amounts only when the configured field
+    // is missing/zero (legacy orders or restaurants that don't expose it).
+    const configuredScGstRate = parseFloat(restaurantMeta.service_charge_tax);
+    const scGstRate = Number.isFinite(configuredScGstRate) && configuredScGstRate > 0
+      ? configuredScGstRate
+      : ((serviceCharge > 0 && scGst > 0)
+          ? parseFloat(((scGst / serviceCharge) * 100).toFixed(2))
+          : null);
     const localTotal  = parseFloat((subtotal + totalTax).toFixed(2));
     const originalTotal = (grandTotal !== localTotal && localTotal > 0) ? localTotal : null;
 
