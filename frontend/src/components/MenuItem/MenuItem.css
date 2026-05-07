@@ -376,12 +376,11 @@
 /* ======================================================================== */
 
 .menu-item--no-image {
-  align-items: center;          /* vertically center text vs ADD button */
-  padding: 12px 15px;           /* slightly tighter vertical padding */
+  align-items: flex-start;       /* top-align so ADD anchors next to name, never mid-card */
+  padding: 12px 15px;
 }
 
 .menu-item--no-image .item-content {
-  /* content already has flex: 1; this just makes intent explicit */
   width: auto;
 }
 
@@ -390,35 +389,55 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 6px;
-  align-self: center;
+  align-self: flex-start;        /* anchor to top of card */
   margin-left: 8px;
+  padding-top: 2px;              /* visually align with name baseline */
+  min-width: 100px;              /* reserve width — ADD (~92px) and Quantity (~90px) stay aligned */
 }
 
-/* Inline ADD button — overrides absolute positioning used in image mode */
+/* Inline ADD button — overrides absolute positioning used in image mode.
+   Keeps the SAME visual prominence as the image-mode ADD (padding,
+   font-size, font-weight, border, shadow) so it remains a primary,
+   easy-to-tap target on no-image cards. */
 .add-btn.add-btn--inline {
   position: static;
   transform: none;
   bottom: auto;
   left: auto;
-  padding: 6px 18px;
+  right: auto;
+  align-self: center;            /* center within reserved 100px column */
+  padding: 8px 20px;             /* match image-mode .add-btn prominence */
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
 
 /* Inline Customisable indicator */
 .customisable-indicator--inline {
   margin-top: 0;
-  width: auto;
-  text-align: right;
+  width: 100%;
+  text-align: center;            /* match centered ADD button column */
   font-size: 0.7rem;
   white-space: nowrap;
 }
 
-/* QuantitySelector inside inline action area renders in static flow.
-   The component renders its own root; it does not require absolute positioning
-   in the no-image layout. */
+/* QuantitySelector inside no-image action area — fully reset its
+   image-box-overlay positioning (transform/left/bottom) so it sits
+   cleanly inside the static flex column. Without this reset, the
+   transform: translateX(-50%) from QuantitySelector.css would shift
+   the bubble left after ADD is clicked. */
+.menu-item--no-image .item-action-area .quantity-selector {
+  position: static;
+  transform: none;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  align-self: center;            /* match ADD button placement — no horizontal jump */
+  margin: 0;
+}
+
 .menu-item--no-image .item-action-area > * {
   position: static;
 }
@@ -428,8 +447,11 @@
   .menu-item--no-image {
     padding: 10px 12px;
   }
+  .menu-item--no-image .item-action-area {
+    min-width: 92px;
+  }
   .add-btn.add-btn--inline {
-    padding: 6px 16px;
+    padding: 7px 18px;
   }
 }
 
@@ -438,12 +460,14 @@
     padding: 9px 10px;
     gap: 8px;
   }
-  .item-action-area {
+  .menu-item--no-image .item-action-area {
     margin-left: 6px;
     gap: 4px;
+    min-width: 86px;
+    padding-top: 1px;
   }
   .add-btn.add-btn--inline {
-    padding: 5px 14px;
+    padding: 6px 16px;
     font-size: var(--font-size-xs);
   }
   .customisable-indicator--inline {
@@ -456,11 +480,12 @@
     padding: 8px 10px;
     gap: 6px;
   }
-  .item-action-area {
+  .menu-item--no-image .item-action-area {
     margin-left: 4px;
+    min-width: 80px;
   }
   .add-btn.add-btn--inline {
-    padding: 5px 12px;
+    padding: 6px 14px;
   }
   .customisable-indicator--inline {
     font-size: 0.6rem;
