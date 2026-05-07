@@ -10,10 +10,10 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" /> -->
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicon.png" />
-  <!-- Or for .ico: <link rel="icon" type="image/x-icon" href="/favicon.ico" /> -->
-  <!-- Or for .svg: <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> -->
+  <!-- Favicon — points to a real default SVG (frontend/public/favicon.svg).
+       The boot script below + RestaurantConfigContext useEffect dynamically
+       swap this href to the restaurant's logoUrl when on a /<restaurantId>/* route. -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -129,6 +129,21 @@
             setVar('--radius-container-lg', r.lg);
             setVar('--radius-container-xl', r.xl);
           }
+        }
+
+        // Favicon — apply restaurant logo as <link rel="icon"> from cached logoUrl
+        // so returning visitors don't see the default favicon flash on hard refresh.
+        // Truthy-only; falls back to the default /favicon.svg when logoUrl is missing.
+        if (c.logoUrl && typeof c.logoUrl === 'string') {
+          var iconLink = document.querySelector("link[rel='icon']");
+          if (!iconLink) {
+            iconLink = document.createElement('link');
+            iconLink.rel = 'icon';
+            document.head.appendChild(iconLink);
+          }
+          // remove explicit type so browser sniffs PNG/JPG/SVG correctly
+          iconLink.removeAttribute('type');
+          iconLink.href = c.logoUrl;
         }
       } catch (e) { /* silently fall through to CSS :root defaults */ }
     })();

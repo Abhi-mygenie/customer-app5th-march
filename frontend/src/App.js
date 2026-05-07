@@ -20,6 +20,7 @@ import AdminSettings from './pages/AdminSettings';
 import PasswordSetup from './pages/PasswordSetup';
 import DeliveryAddress from './pages/DeliveryAddress';
 import ScrollToTop from './components/ScrollToTop/scrollToTop';
+import FaviconRouteReset from './components/FaviconRouteReset/FaviconRouteReset';
 
 // Admin Layout and Pages (Web optimized)
 import AdminLayout from './layouts/AdminLayout';
@@ -59,6 +60,7 @@ function App() {
         <RestaurantConfigProvider>
         <Router>
         <ScrollToTop />
+        <FaviconRouteReset />
           <CartWrapper>
             <Routes>
               {/* Auth Routes */}

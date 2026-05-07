@@ -326,6 +326,21 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Removing them caused brand colors to reset to blue defaults on page transitions
   }, [config.primaryColor, config.secondaryColor, config.buttonTextColor, config.backgroundColor, config.fontHeading, config.fontBody, config.borderRadius]);
 
+  // Favicon — update <link rel="icon"> when restaurant logoUrl is available.
+  // Idempotent; runs after first config fetch and on any subsequent logoUrl change.
+  // Falls back to the default /favicon.svg when logoUrl is missing/empty.
+  useEffect(() => {
+    if (!config.logoUrl || typeof config.logoUrl !== 'string') return;
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.removeAttribute('type'); // let browser sniff PNG/JPG/SVG
+    link.href = config.logoUrl;
+  }, [config.logoUrl]);
+
   // Helper: check boolean with default true
   const isOn = (key) => config[key] !== false;
 
