@@ -367,3 +367,102 @@
     font-size: 0.6rem;
   }
 }
+
+/* ======================================================================== */
+/* No-Image Compact Layout                                                   */
+/* Applied via `menu-item--no-image` modifier when `hasImage === false`.     */
+/* Image container is NOT rendered (see MenuItem.jsx) — these rules style    */
+/* the inline action area used in its place.                                 */
+/* ======================================================================== */
+
+.menu-item--no-image {
+  align-items: center;          /* vertically center text vs ADD button */
+  padding: 12px 15px;           /* slightly tighter vertical padding */
+}
+
+.menu-item--no-image .item-content {
+  /* content already has flex: 1; this just makes intent explicit */
+  width: auto;
+}
+
+/* Inline action area (sibling of .item-content when no image) */
+.item-action-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  align-self: center;
+  margin-left: 8px;
+}
+
+/* Inline ADD button — overrides absolute positioning used in image mode */
+.add-btn.add-btn--inline {
+  position: static;
+  transform: none;
+  bottom: auto;
+  left: auto;
+  padding: 6px 18px;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+/* Inline Customisable indicator */
+.customisable-indicator--inline {
+  margin-top: 0;
+  width: auto;
+  text-align: right;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+/* QuantitySelector inside inline action area renders in static flow.
+   The component renders its own root; it does not require absolute positioning
+   in the no-image layout. */
+.menu-item--no-image .item-action-area > * {
+  position: static;
+}
+
+/* Mobile adjustments for no-image compact card */
+@media (max-width: 768px) {
+  .menu-item--no-image {
+    padding: 10px 12px;
+  }
+  .add-btn.add-btn--inline {
+    padding: 6px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-item--no-image {
+    padding: 9px 10px;
+    gap: 8px;
+  }
+  .item-action-area {
+    margin-left: 6px;
+    gap: 4px;
+  }
+  .add-btn.add-btn--inline {
+    padding: 5px 14px;
+    font-size: var(--font-size-xs);
+  }
+  .customisable-indicator--inline {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .menu-item--no-image {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .item-action-area {
+    margin-left: 4px;
+  }
+  .add-btn.add-btn--inline {
+    padding: 5px 12px;
+  }
+  .customisable-indicator--inline {
+    font-size: 0.6rem;
+  }
+}

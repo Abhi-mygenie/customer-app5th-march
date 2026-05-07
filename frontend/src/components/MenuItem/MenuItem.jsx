@@ -26,8 +26,17 @@ const MenuItem = ({
     ? item.description
     : `${item.description.substring(0, descriptionLimit)}...`;
 
-  // Determine if we have a valid image
-  const hasImage = item.image && typeof item.image === 'string' && item.image.trim() !== '';
+  // Determine if we have a valid REAL image (not a POS-side default placeholder).
+  // The POS API returns a hard-coded default URL for items without real photos:
+  //   https://preprod.mygenie.online/public/assets/admin/img/.../food-default-image.png
+  // These should be treated as "no image" so we render the compact card.
+  const isPosDefaultImage = (url) =>
+    typeof url === 'string' &&
+    /\/admin\/img\/.*food-default-image/i.test(url);
+  const hasImage = item.image
+    && typeof item.image === 'string'
+    && item.image.trim() !== ''
+    && !isPosDefaultImage(item.image);
 
   // Check if item is customizable (has variations or add_ons)
   const isCustomizable = (item.variations && item.variations.length > 0) ||
@@ -47,7 +56,7 @@ const MenuItem = ({
   };
 
   return (
-    <div className="menu-item">
+    <div className={`menu-item ${!hasImage ? 'menu-item--no-image' : ''}`}>
       <div className="item-content">
         {/* Veg/Non-Veg/Egg Indicator */}
         <span className={`veg-label ${item.isEgg ? 'egg' : item.isVeg ? 'veg' : 'non-veg'}`}>
@@ -135,43 +144,21 @@ const MenuItem = ({
         )}
       </div>
 
-      {/* Image Box Container with Customisable Text */}
-      <div className="item-image-container">
-        {/* Image Box with ADD Button */}
-        <div className="item-image-box">
-          {/* Show actual image if it exists and is not empty */}
-          {hasImage ? (
-            <>
-              <img
-                src={item.image}
-                alt={item.name}
-                className="item-image"
-                onError={handleImageError}
-              />
-              {/* Hidden default placeholder for fallback */}
-              <div className="item-image-placeholder" style={{ display: 'none' }}>
-                <img
-                  src={
-                    item.isEgg
-                      ? '/assets/images/E_Food_Img.svg'
-                      : item.isVeg
-                        ? '/assets/images/V_FOOD_IMG.svg'
-                        : '/assets/images/NV_FOOD_IMG.svg'
-                  }
-                  alt={
-                    item.isEgg
-                      ? 'Egg Food'
-                      : item.isVeg
-                        ? 'Veg Food'
-                        : 'Non-Veg Food'
-                  }
-                  className="default-food-icon"
-                />
-              </div>
-            </>
-          ) : (
-            /* Default Image for when no food image */
-            <div className="item-image-placeholder">
+      {/* Image Box Container with Customisable Text — rendered ONLY when item has a real image */}
+      {hasImage && (
+        <div className="item-image-container">
+          {/* Image Box with ADD Button */}
+          <div className="item-image-box">
+            <img
+              src={item.image}
+              alt={item.name}
+              className="item-image"
+              loading="lazy"
+              decoding="async"
+              onError={handleImageError}
+            />
+            {/* Hidden default placeholder for fallback (Bucket 7: image fails to load) */}
+            <div className="item-image-placeholder" style={{ display: 'none' }}>
               <img
                 src={
                   item.isEgg
@@ -188,16 +175,36 @@ const MenuItem = ({
                       : 'Non-Veg Food'
                 }
                 className="default-food-icon"
-                onError={(e) => {
-                  // Fallback if default image also fails to load
-                  logger.error('menu', 'Default image failed to load:', e.target.src);
-                  e.target.style.display = 'none';
-                }}
               />
             </div>
-          )}
 
-          {/* Show Quantity Selector if item is in cart, otherwise show ADD button (only if available and online order enabled) */}
+            {/* Show Quantity Selector if item is in cart, otherwise show ADD button (only if available and online order enabled) */}
+            {isInCart ? (
+              <QuantitySelector
+                quantity={quantity}
+                onIncrement={onIncrement}
+                onDecrement={onDecrement}
+              />
+            ) : isAvailable && isOnlineOrderEnabled ? (
+              <button className="add-btn" onClick={onAddToCart}>
+                ADD
+              </button>
+            ) : null}
+          </div>
+
+          {/* Customisable Indicator */}
+          {isCustomizable && (
+            <div className="customisable-indicator">
+              Customisable
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Compact action area — rendered ONLY when no image is present.
+          Same handlers / same modal flow as image-mode; just laid out inline-right. */}
+      {!hasImage && (
+        <div className="item-action-area">
           {isInCart ? (
             <QuantitySelector
               quantity={quantity}
@@ -205,19 +212,17 @@ const MenuItem = ({
               onDecrement={onDecrement}
             />
           ) : isAvailable && isOnlineOrderEnabled ? (
-            <button className="add-btn" onClick={onAddToCart}>
+            <button className="add-btn add-btn--inline" onClick={onAddToCart}>
               ADD
             </button>
           ) : null}
+          {isCustomizable && (
+            <div className="customisable-indicator customisable-indicator--inline">
+              Customisable
+            </div>
+          )}
         </div>
-
-        {/* Customisable Indicator */}
-        {isCustomizable && (
-          <div className="customisable-indicator">
-            Customisable
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
