@@ -485,11 +485,13 @@ const OrderSuccess = () => {
   // Edit Order vs Browse Menu — based on whether a table was scanned and order status
   // Phase 1: hasTable is true only when a specific table/room was scanned (not walk-in)
   // Phase 2: paid orders (payment_status === 'paid') are non-editable — show Browse Menu.
+  // Phase 3 (Fix-1, approved): "Yet to confirm" is driven by f_order_status === 7 alone,
+  // not by hasTable. Browse Menu is hidden while f_order_status === 7 regardless of scan.
   const hasTable = hasAssignedTable(scannedTableId) && isScanned && scannedTableNo;
   const isPaid = paymentStatus === 'paid';
-  const showYetToBeConfirmed = hasTable && fOrderStatus === 7;
+  const showYetToBeConfirmed = fOrderStatus === 7;
   const showEditOrder = hasTable && fOrderStatus !== 7 && fOrderStatus !== null && !isPaid;
-  const showBrowseMenu = !hasTable || (hasTable && isPaid && fOrderStatus !== 7);
+  const showBrowseMenu = fOrderStatus !== 7 && (!hasTable || (hasTable && isPaid));
 
   return (
     <div className="order-success-page" data-testid="order-success-page">
