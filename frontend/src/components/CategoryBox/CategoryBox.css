@@ -150,3 +150,39 @@
     padding: var(--spacing-sm) var(--spacing-sm);
   }
 }
+
+/* ─── No-image fallback: first-letter initial tile ─────────────────────── */
+/* Replaces the POS default placeholder PNG (food-default-image.png) with a
+   clean initial glyph, so each category in the rail is distinguishable
+   instead of all showing the same grey icon. */
+.category-box-initial {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: var(--color-primary-pale, #FADBD8);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* Selected state: invert — solid brand background, white letter. */
+.category-box.selected .category-box-initial {
+  color: var(--text-white, #ffffff);
+  background-color: var(--color-primary);
+}
+
+/* Tablet / desktop sizing */
+@media (min-width: 768px) {
+  .category-box-initial { font-size: 1.8rem; }
+}
+
+/* Tiny mobile sizing */
+@media (max-width: 375px) {
+  .category-box-initial { font-size: 1.4rem; }
+}

@@ -2,11 +2,27 @@ import React from 'react';
 import './CategoryBox.css';
 
 const CategoryBox = ({ section, isSelected, onClick }) => {
+  // POS returns a default placeholder PNG (food-default-image) when no real
+  // category image was uploaded. Treat those as "no image" so we can render
+  // a cleaner initial-tile fallback instead of an identical grey icon.
+  const isPosDefaultImage = (url) =>
+    typeof url === 'string' &&
+    /\/admin\/img\/.*food-default-image/i.test(url);
+
+  const hasRealImage =
+    section.sectionImage &&
+    typeof section.sectionImage === 'string' &&
+    section.sectionImage.trim() !== '' &&
+    !isPosDefaultImage(section.sectionImage);
+
+  // First letter of category name for the initial-tile fallback.
+  const initial = (section.sectionName || '?').trim().charAt(0).toUpperCase();
+
   const handleImageError = (e) => {
+    // If a real image URL fails at runtime, hide it and reveal the initial.
     e.target.style.display = 'none';
-    if (e.target.nextElementSibling) {
-      e.target.nextElementSibling.style.display = 'block';
-    }
+    const fallback = e.target.parentElement?.querySelector('.category-box-initial');
+    if (fallback) fallback.style.display = 'flex';
   };
 
   return (
@@ -14,25 +30,24 @@ const CategoryBox = ({ section, isSelected, onClick }) => {
       <div
         role="button"
         tabIndex={0}
-        className={`category-box ${isSelected ? 'selected' : ''}`}
+        className={`category-box ${isSelected ? 'selected' : ''} ${!hasRealImage ? 'category-box--no-image' : ''}`}
         onClick={onClick}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
       >
-        {section.sectionImage ? (
-          <img
-            src={section.sectionImage}
-            alt={section.sectionName}
-            onError={handleImageError}
-          />
-        ) : 
-        <svg
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          style={{ display: section.image ? 'none' : 'block' }}
-        >
-          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
-        </svg>
-        }
+        {hasRealImage ? (
+          <>
+            <img
+              src={section.sectionImage}
+              alt={section.sectionName}
+              loading="lazy"
+              decoding="async"
+              onError={handleImageError}
+            />
+            <span className="category-box-initial" style={{ display: 'none' }}>{initial}</span>
+          </>
+        ) : (
+          <span className="category-box-initial">{initial}</span>
+        )}
       </div>
       <span className="category-name">{section.sectionName}</span>
     </div>
