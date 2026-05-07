@@ -537,23 +537,28 @@ body.cart-bar-visible .menu-fab {
   font-family: var(--font-body, 'Montserrat', sans-serif);
 }
 
-/* Category Info Header */
+/* Category Info Header — section-divider style.
+   Brand-color left accent bar + subtle bottom hairline so the header
+   reads as a section break, not as another item card. Background stays
+   transparent. */
 .category-info-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 15px;
-  margin: 2px 0;
-  /* background-color: #f9f9f9; */
+  padding: 10px 15px 10px 19px;                 /* +4px left for accent bar */
+  margin: 18px 0 0 0;                           /* breathing room above */
+  border-left: 3px solid var(--color-primary);  /* brand accent bar */
+  border-bottom: 1px solid var(--border-light); /* subtle divider */
+  background-color: transparent;
 }
 
 .category-info-name {
   font-family: var(--font-body, 'Montserrat', sans-serif);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-color, #333333);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
   text-transform: capitalize !important;
   white-space: nowrap;
   overflow: hidden;
@@ -564,7 +569,7 @@ body.cart-bar-visible .menu-fab {
 
 .category-info-count {
   font-family: var(--font-body, 'Montserrat', sans-serif);
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-tertiary);
   flex-shrink: 0;
@@ -895,16 +900,16 @@ body.cart-bar-visible .menu-fab {
   }
 
   .category-info-header {
-    padding: 8px 40px;
-    margin: 4px 0;
+    padding: 12px 40px 12px 44px;
+    margin: 22px 0 0 0;
   }
 
   .category-info-name {
-    font-size: 0.9rem;
+    font-size: 1.1rem;
   }
 
   .category-info-count {
-    font-size: 1.05rem;
+    font-size: 0.9rem;
   }
 }
 
@@ -928,16 +933,16 @@ body.cart-bar-visible .menu-fab {
   }
 
   .category-info-header {
-    padding: 6px 20px;
+    padding: 12px 20px 12px 24px;
   }
 
   .category-info-name {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
     max-width: 65%;
   }
 
   .category-info-count {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
 
   .menu-footer {
@@ -1036,16 +1041,16 @@ body.cart-bar-visible .menu-fab {
   }
 
   .category-info-header {
-    padding: 6px 15px;
+    padding: 10px 15px 10px 19px;
   }
 
   .category-info-name {
-    font-size: 0.9rem;
+    font-size: 1rem;
     max-width: 60%;
   }
 
   .category-info-count {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .menu-footer {
@@ -1201,16 +1206,16 @@ body.cart-bar-visible .menu-fab {
   }
 
   .category-info-header {
-    padding: 6px 15px;
+    padding: 9px 12px 9px 16px;
   }
 
   .category-info-name {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     max-width: 60%;
   }
 
   .category-info-count {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .menu-footer {
@@ -1351,16 +1356,16 @@ body.cart-bar-visible .menu-fab {
   }
 
   .category-info-header {
-    padding: 5px 12px;
+    padding: 8px 10px 8px 14px;
   }
 
   .category-info-name {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     max-width: 55%;
   }
 
   .category-info-count {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .menu-footer {
