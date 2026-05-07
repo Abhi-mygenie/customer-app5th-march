@@ -205,11 +205,22 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
     const scGst = Number.isFinite(rawScGst)
       ? rawScGst
       : parseFloat((totalGst - itemGstSum).toFixed(2));
-    // Delivery-GST: residual after items and SC. Gated on order_type === 'delivery'
-    // and deliveryCharge > 0 to avoid attributing rounding noise to delivery on non-delivery orders.
-    const deliveryGst = (isDeliveryOrder && deliveryChargeAmt > 0)
+    // Delivery-GST (DELIVERY_CHARGE_GST CR — locked contract).
+    // Prefer backend's explicit echo (segregation field, mirrors service_gst_tax_amount).
+    // Backend may echo at firstDetail level (sibling of service_gst_tax_amount) or at
+    // response root (sibling of delivery_charge). Use Number.isFinite to honour explicit 0.
+    // Fall back to residual derivation for legacy orders placed before backend started echoing.
+    const rawDeliveryGstFromDetail = parseFloat((firstDetail as any).delivery_charge_gst);
+    const rawDeliveryGstFromRoot = parseFloat((orderData as any).delivery_charge_gst);
+    const echoedDeliveryGst = Number.isFinite(rawDeliveryGstFromDetail)
+      ? rawDeliveryGstFromDetail
+      : (Number.isFinite(rawDeliveryGstFromRoot) ? rawDeliveryGstFromRoot : NaN);
+    const residualDeliveryGst = (isDeliveryOrder && deliveryChargeAmt > 0)
       ? Math.max(0, parseFloat((totalGst - itemGstSum - scGst).toFixed(2)))
       : 0;
+    const deliveryGst = Number.isFinite(echoedDeliveryGst)
+      ? (isDeliveryOrder ? Math.max(0, echoedDeliveryGst) : 0)
+      : residualDeliveryGst;
     // itemGst is now the residual after both SC and Delivery GST are accounted for.
     const itemGst = parseFloat((totalGst - scGst - deliveryGst).toFixed(2));
     const cgst   = parseFloat((itemGst / 2).toFixed(2));
@@ -398,6 +409,11 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       // SC fields (SERVICE_CHARGE_MAPPING CR)
       total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
       service_gst_tax_amount: parseFloat((parseFloat(orderData.gstOnServiceCharge || 0)).toFixed(2)),
+      // Delivery-GST segregation field (DELIVERY_CHARGE_GST CR — locked contract).
+      // Mirrors service_gst_tax_amount: number, INR amount (NOT percentage).
+      // tax_amount and total_gst_tax_amount continue to INCLUDE this value (segregation only).
+      // ReviewOrder gates gstOnDeliveryCharge → 0 for non-delivery / charge=0 / GST disabled.
+      delivery_charge_gst: parseFloat((parseFloat(orderData.gstOnDeliveryCharge || 0) || 0).toFixed(2)),
       // Multi-menu parity additions (478 normal contract alignment with 716)
       total_gst_tax_amount: parseFloat(totalGstTaxAmount.toFixed(2)),
       total_vat_tax_amount: parseFloat(totalVatTaxAmount.toFixed(2)),
@@ -477,6 +493,8 @@ export const updateCustomerOrder = async ({
   gstEnabled = true,
   // Delivery (DELIVERY_CHARGE_GATING CR D-6): 478 edit parity with placeOrder's delivery_charge handling
   deliveryCharge = 0,
+  // DELIVERY_CHARGE_GST CR — locked contract: edit parity with placeOrder
+  gstOnDeliveryCharge = 0,
 }: any): Promise<ApiPlaceOrderResponse> => {
   try {
     const formData = new FormData();
@@ -530,6 +548,10 @@ export const updateCustomerOrder = async ({
       // SC fields (SERVICE_CHARGE_MAPPING CR)
       total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
       service_gst_tax_amount: parseFloat((parseFloat(gstOnServiceCharge as any) || 0).toFixed(2)),
+      // Delivery-GST segregation field (DELIVERY_CHARGE_GST CR — locked contract).
+      // Mirrors service_gst_tax_amount: number, INR amount (NOT percentage).
+      // tax_amount and total_gst_tax_amount continue to INCLUDE this value (segregation only).
+      delivery_charge_gst: parseFloat((parseFloat(gstOnDeliveryCharge as any) || 0).toFixed(2)),
       // Multi-menu parity additions (478 edit contract alignment with 716)
       total_gst_tax_amount: parseFloat((parseFloat(totalGstTaxAmount as any) || 0).toFixed(2)),
       total_vat_tax_amount: parseFloat((parseFloat(totalVatTaxAmount as any) || 0).toFixed(2)),

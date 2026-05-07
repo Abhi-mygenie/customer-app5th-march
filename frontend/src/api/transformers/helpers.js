@@ -408,6 +408,8 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
     // SC fields (SERVICE_CHARGE_MAPPING CR)
     serviceCharge = 0,
     gstOnServiceCharge = 0,
+    // Delivery-GST (DELIVERY_CHARGE_GST CR — locked contract): segregation field for backend
+    gstOnDeliveryCharge = 0,
     itemTotal = 0,
     finalSubtotal,
   } = orderData;
@@ -426,7 +428,11 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
     cart.reduce((sum, item) => sum + (item.vat_tax_amount || 0), 0).toFixed(2)
   );
   const gstOnSc = parseFloat((gstOnServiceCharge || 0).toFixed(2));
-  const totalGstTaxAmount = parseFloat((itemGstTaxAmount + gstOnSc).toFixed(2));
+  // Delivery-GST (DELIVERY_CHARGE_GST CR — locked rule §2): MUST be included in aggregate
+  // total_gst_tax_amount and tax_amount alongside item-GST and SC-GST. Segregation-only.
+  // Value is gated to 0 by ReviewOrder for non-delivery flows, so this is a no-op there.
+  const gstOnDel = parseFloat((gstOnDeliveryCharge || 0).toFixed(2));
+  const totalGstTaxAmount = parseFloat((itemGstTaxAmount + gstOnSc + gstOnDel).toFixed(2));
   const totalVatTaxAmount = itemVatTaxAmount;
   const rootTaxAmount = parseFloat((totalGstTaxAmount + totalVatTaxAmount).toFixed(2));
 
@@ -485,6 +491,10 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       total_vat_tax_amount: totalVatTaxAmount,
       total_service_tax_amount: parseFloat((serviceCharge || 0).toFixed(2)),
       service_gst_tax_amount: parseFloat((gstOnServiceCharge || 0).toFixed(2)),
+      // Delivery-GST segregation field (DELIVERY_CHARGE_GST CR — locked contract).
+      // Mirrors service_gst_tax_amount semantics: number, INR amount, NOT percentage.
+      // Already included inside total_gst_tax_amount and tax_amount above (per locked §2/§3).
+      delivery_charge_gst: gstOnDel,
       round_up: 0,
       tip_tax_amount: 0
     }

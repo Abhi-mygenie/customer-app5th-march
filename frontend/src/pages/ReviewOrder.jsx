@@ -1037,6 +1037,8 @@ const ReviewOrder = () => {
               gstEnabled: isGstEnabledForSc,
               // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order writer (consumed by D-6)
               deliveryCharge: effectiveDeliveryCharge,
+              // DELIVERY_CHARGE_GST CR (locked): segregation amount for backend
+              gstOnDeliveryCharge,
             });
 
             // Clear edit mode after successful update
@@ -1074,6 +1076,8 @@ const ReviewOrder = () => {
             gstEnabled: isGstEnabledForSc,
             // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order writer (consumed by D-6)
             deliveryCharge: effectiveDeliveryCharge,
+            // DELIVERY_CHARGE_GST CR (locked): segregation amount for backend
+            gstOnDeliveryCharge,
           });
           clearEditMode();
           toast.success('Order updated successfully!');
@@ -1156,6 +1160,8 @@ const ReviewOrder = () => {
           // Delivery address (Phase 3)
           deliveryAddress: deliveryAddress || null,
           deliveryCharge: effectiveDeliveryCharge,   // D-5 (DELIVERY_CHARGE_GATING CR): use D-2 gated value (0 on non-delivery)
+          // DELIVERY_CHARGE_GST CR (locked): segregation amount for backend
+          gstOnDeliveryCharge,
           // SC fields (SERVICE_CHARGE_MAPPING CR)
           serviceCharge,
           gstOnServiceCharge,
@@ -1297,6 +1303,8 @@ const ReviewOrder = () => {
               gstEnabled: isGstEnabledForSc,
               // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order retry writer (consumed by D-6)
               deliveryCharge: effectiveDeliveryCharge,
+              // DELIVERY_CHARGE_GST CR (locked): segregation amount for backend
+              gstOnDeliveryCharge,
             });
 
             // Clear edit mode after successful update
@@ -1337,6 +1345,8 @@ const ReviewOrder = () => {
               gstEnabled: isGstEnabledForSc,
               // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to placeOrder retry
               deliveryCharge: effectiveDeliveryCharge,
+              // DELIVERY_CHARGE_GST CR (locked): segregation amount for backend
+              gstOnDeliveryCharge,
             });
           }
 
