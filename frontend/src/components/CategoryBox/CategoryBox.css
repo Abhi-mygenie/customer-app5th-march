@@ -169,10 +169,8 @@
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--color-primary);
-  /* Fallback for browsers without color-mix support */
-  background-color: var(--bg-secondary, #f5f5f5);
-  /* Modern browsers: 12% brand color mixed with white — theme-aware tint */
-  background-color: color-mix(in srgb, var(--color-primary) 12%, white);
+  /* Theme-aware tint via --color-primary-pale (color-mix at the token level) */
+  background-color: var(--color-primary-pale);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   user-select: none;
