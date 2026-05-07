@@ -398,14 +398,22 @@
 }
 
 /* Left side of main row — veg/name/price stacked.
-   `min-width: 0` lets long names truncate inside the row. */
+   `min-width: 0` lets long names truncate inside the row.
+   Tight gap (4px) so name and price visually cluster together —
+   ADD aligns cleanly with the name+price block instead of floating
+   between veg-label and name. */
 .menu-item.menu-item--no-image .item-content-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 4px;
   overflow: hidden;
+}
+
+/* Hairline separation below veg-label so it doesn't look glued to name */
+.menu-item.menu-item--no-image .item-content-main > .veg-label {
+  margin-bottom: 2px;
 }
 
 /* Right side: ADD or QuantitySelector. */
@@ -483,6 +491,9 @@
   .menu-item.menu-item--no-image .menu-item-main-row {
     gap: 8px;
   }
+  .menu-item.menu-item--no-image .item-content-main {
+    gap: 3px;
+  }
   .menu-item.menu-item--no-image .item-action-area {
     min-width: 86px;
     gap: 4px;
@@ -503,6 +514,9 @@
   }
   .menu-item.menu-item--no-image .menu-item-main-row {
     gap: 6px;
+  }
+  .menu-item.menu-item--no-image .item-content-main {
+    gap: 2px;
   }
   .menu-item.menu-item--no-image .item-action-area {
     min-width: 80px;
