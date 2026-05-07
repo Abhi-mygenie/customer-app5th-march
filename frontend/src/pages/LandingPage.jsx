@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { useRestaurantDetails, useStations } from '../hooks/useMenuData';
+import { useRestaurantDetails, useStations, buildMenuSectionsQueryOptions } from '../hooks/useMenuData';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useAuth } from '../context/AuthContext';
@@ -32,11 +33,12 @@ const LandingPage = () => {
   const { startEditOrder, clearCart } = useCart();
   const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl } = useRestaurantConfig();
 
-  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, updateOrderType } = useScannedTable();
+  const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, foodFor: scannedFoodFor, updateOrderType } = useScannedTable();
 
   const { restaurant, loading, error } = useRestaurantDetails(restaurantId);
   const actualRestaurantId = restaurant?.id?.toString() || restaurantId;
   const { stations } = useStations(actualRestaurantId);
+  const queryClient = useQueryClient();
 
   // State for customer capture flow
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -154,6 +156,31 @@ const LandingPage = () => {
       lastLookedUpPhone.current = '';
     }
   }, [restaurantId, fetchConfig, setRestaurantScope]);
+
+  // PERF: Idle prefetch of default menu for SINGLE-MENU restaurants only.
+  // Multi-menu restaurants (e.g., Hyatt 716) are skipped because the user
+  // must pick a station on /<rid>/stations next — we cannot know which.
+  // Multi-menu prefetch is handled on the Stations page (hover/touch/focus).
+  //
+  // Uses the same query key/fn as `useMenuSections`, so MenuItems.jsx will
+  // hit the cache (or join the in-flight request) instead of refetching.
+  useEffect(() => {
+    if (!restaurant || !restaurantId) return;
+    if (isMultipleMenu(restaurant)) return; // skip multi-menu
+
+    const rid = restaurant.id?.toString() || restaurantId;
+    // Match exactly what MenuItems.jsx will use:
+    //   effectiveStationId = stationId (URL, undefined here) || foodFor
+    const stationId = scannedFoodFor || undefined;
+
+    const ric = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
+    const cic = window.cancelIdleCallback || clearTimeout;
+    const handle = ric(() => {
+      queryClient.prefetchQuery(buildMenuSectionsQueryOptions(rid, stationId));
+    }, { timeout: 2000 });
+
+    return () => cic(handle);
+  }, [restaurant, restaurantId, scannedFoodFor, queryClient]);
 
   // Reset table status check on component mount to ensure fresh check every time
   // This fixes the stale cache bug where paid orders still appeared active

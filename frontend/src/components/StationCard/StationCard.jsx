@@ -2,7 +2,7 @@ import React from 'react';
 import { IoTimeOutline, IoRestaurantOutline } from 'react-icons/io5';
 import './StationCard.css';
 
-const StationCard = ({ station, isAvailable, onClick }) => {
+const StationCard = ({ station, isAvailable, onClick, onPrefetch }) => {
   const hasImage = station.image && station.image !== '';
   const hasTiming = station.timing && station.timing !== '';
 
@@ -10,6 +10,9 @@ const StationCard = ({ station, isAvailable, onClick }) => {
     <div
       className={`station-card ${!isAvailable ? 'disabled' : ''}`}
       onClick={onClick}
+      onMouseEnter={onPrefetch}
+      onFocus={onPrefetch}
+      onTouchStart={onPrefetch}
       data-testid={`station-card-${station.id}`}
     >
       {/* Full-bleed image or placeholder background */}

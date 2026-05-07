@@ -13,6 +13,128 @@ import { getTableConfig } from '../api/services/tableRoomService';
 import { getErrorMessage } from '../api/utils/errorHandler';
 
 /**
+ * Shared menu-sections fetch + transform.
+ * Used by both `useMenuSections` (the hook) AND external prefetch callers
+ * (e.g., LandingPage idle prefetch, DiningMenu hover prefetch) so that
+ * everyone hits the SAME React Query cache slot — no key drift, no
+ * duplicate fetches.
+ *
+ * Behavior is byte-identical to the prior inline queryFn.
+ */
+const fetchMenuSections = async (finalRestaurantId, stationId) => {
+  if (!finalRestaurantId) {
+    logger.menu('No restaurantId provided, cannot fetch menu sections');
+    return [];
+  }
+
+  try {
+    // Call the new restaurant products API
+    const data = await getRestaurantProducts(finalRestaurantId, "0", stationId);
+
+    // Transform API response to match expected format
+    // Handle both direct products array and nested structure
+    const products = data?.products || (Array.isArray(data) ? data : []);
+
+    if (products && Array.isArray(products) && products.length > 0) {
+      const transformedSections = products.map((product) => {
+        // Transform items to match expected format
+        const transformedItems = (product.items || []).map((item) => {
+          // Map veg field: 1 = veg, 0 = non-veg
+          // Map egg field: 1 = egg, 0 = not egg
+          const isVeg = item.veg === 1;
+          const isEgg = item.veg === 2;
+
+          // Build image URL if image exists
+          let imageUrl = null;
+          if (item.image && item.image.trim() !== '') {
+            // If image is already a full URL, use it; otherwise construct it
+            if (item.image.startsWith('http://') || item.image.startsWith('https://')) {
+              imageUrl = item.image;
+            } else {
+              // DFA-001 fix: No fallback — fail visibly if env var missing
+              const imageBaseUrl = process.env.REACT_APP_IMAGE_BASE_URL;
+              if (!imageBaseUrl) {
+                logger.error('menu', 'REACT_APP_IMAGE_BASE_URL is not set. Images will not load.');
+              }
+              imageUrl = `${imageBaseUrl}/storage/${item.image}`;
+            }
+          }
+
+          return {
+            id: String(item.id),
+            name: item.name || '',
+            description: item.description || '',
+            price: item.price || 0,
+            image: imageUrl,
+            isVeg: isVeg,
+            isEgg: isEgg,
+            allergens: item.allergens || [],
+            variations: item.variations || [],
+            add_ons: item.add_ons || [],
+            kcal: item.kcal || '',
+            portion: item.portion_size || '',
+            station: item.station_name || '',
+            live_web: item.live_web || null,
+            web_available_time_starts: item.web_available_time_starts || null,
+            web_available_time_ends: item.web_available_time_ends || null,
+            tax: item.tax || 0,
+            tax_type: item.tax_type || 'GST',
+          };
+        });
+
+        return {
+          categoryId: String(product.category_id || ''),
+          sectionName: product.category_name || '',
+          sectionImage: product.category_image || '',
+          items: transformedItems,
+        };
+      });
+
+      return transformedSections;
+    } else {
+      logger.menu('API response structure unexpected:', data);
+      return [];
+    }
+  } catch (err) {
+    // Fallback to local JSON if API fails (for development)
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const menuItemsData = require('../data/menuItems.json');
+        return menuItemsData[stationId] || [];
+      } catch (fallbackError) {
+        logger.error('menu', 'Fallback also failed:', fallbackError);
+        throw err;
+      }
+    }
+    throw err;
+  }
+};
+
+/**
+ * Shared React Query options factory for menu sections.
+ * Use from any component to prefetch with the EXACT same cache slot
+ * that `useMenuSections` consumes — guarantees no duplicate fetch and
+ * no key drift.
+ *
+ * Query key: ['menuSections', restaurantId, stationId]
+ *
+ * @param {string} restaurantId - Restaurant ID
+ * @param {string|undefined} stationId - Station ID (or undefined for default menu)
+ * @returns {Object} React Query options
+ */
+export const buildMenuSectionsQueryOptions = (restaurantId, stationId) => {
+  const finalRestaurantId = restaurantId || process.env.REACT_APP_RESTAURANT_ID;
+  return {
+    queryKey: ['menuSections', finalRestaurantId, stationId],
+    queryFn: () => fetchMenuSections(finalRestaurantId, stationId),
+    enabled: !!finalRestaurantId,
+    staleTime: 5 * 60 * 1000, // 5 minutes (unchanged)
+    gcTime: 15 * 60 * 1000,   // 15 minutes (unchanged)
+    retry: 3,
+  };
+};
+
+/**
  * Hook to fetch menu sections for a specific station
  * Uses React Query for automatic caching and deduplication
  * @param {string} stationId - Station ID
@@ -20,129 +142,12 @@ import { getErrorMessage } from '../api/utils/errorHandler';
  * @returns {Object} { menuSections, loading, error, errorMessage, refetch }
  */
 export const useMenuSections = (stationId, restaurantId) => {
-  // Use provided restaurantId or fallback
-  const finalRestaurantId = restaurantId || process.env.REACT_APP_RESTAURANT_ID;
-
   const {
     data: menuSections,
     isLoading: loading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['menuSections', finalRestaurantId, stationId],
-    queryFn: async () => {
-      // Debug: Log the parameters
-      // console.log('fetchMenuSections called with:', { stationId, finalRestaurantId });
-
-      if (!finalRestaurantId) {
-        logger.menu('No restaurantId provided, cannot fetch menu sections');
-        return [];
-      }
-
-      try {
-        // Call the new restaurant products API
-        const data = await getRestaurantProducts(finalRestaurantId, "0" , stationId);
-        
-        // Debug: Log the API response
-        // console.log('API Response:', data);
-        // console.log('Data structure:', {
-        //   hasData: !!data,
-        //   hasProducts: !!(data && data.products),
-        //   productsIsArray: !!(data && data.products && Array.isArray(data.products)),
-        //   productsLength: data?.products?.length,
-        //   dataKeys: data ? Object.keys(data) : [],
-        // });
-        
-        // Transform API response to match expected format
-        // Handle both direct products array and nested structure
-        const products = data?.products || (Array.isArray(data) ? data : []);
-        
-        if (products && Array.isArray(products) && products.length > 0) {
-          const transformedSections = products.map((product) => {
-            // Transform items to match expected format
-            const transformedItems = (product.items || []).map((item) => {
-              // Map veg field: 1 = veg, 0 = non-veg
-              // Map egg field: 1 = egg, 0 = not egg
-              const isVeg = item.veg === 1;
-              const isEgg = item.veg === 2;
-              
-              // Build image URL if image exists
-              let imageUrl = null;
-              if (item.image && item.image.trim() !== '') {
-                // console.log('item.image:', item.image);
-                // If image is already a full URL, use it; otherwise construct it
-                if (item.image.startsWith('http://') || item.image.startsWith('https://')) {
-                  imageUrl = item.image;
-                } else {
-                  // Construct image URL (adjust base URL as needed)
-                  // DFA-001 fix: No fallback — fail visibly if env var missing
-                  const imageBaseUrl = process.env.REACT_APP_IMAGE_BASE_URL;
-                  if (!imageBaseUrl) {
-                    logger.error('menu', 'REACT_APP_IMAGE_BASE_URL is not set. Images will not load.');
-                  }
-                  imageUrl = `${imageBaseUrl}/storage/${item.image}`;
-                }
-              }
-              
-              return {
-                id: String(item.id),
-                name: item.name || '',
-                description: item.description || '',
-                price: item.price || 0,
-                image: imageUrl,
-                isVeg: isVeg, // true = veg, false = non-veg
-                isEgg: isEgg, // true = egg, false = not egg
-                allergens: item.allergens || [], // Empty array for now, can be populated from attributes if needed
-                variations: item.variations || [], // Include variations array
-                add_ons: item.add_ons || [], // Include add_ons array
-                kcal: item.kcal || '', // Add kcal field
-                portion: item.portion_size || '', // Add portion field
-                station: item.station_name || '', // Add station field
-                live_web: item.live_web || null, // "Y" or "N" or null
-                web_available_time_starts: item.web_available_time_starts || null, // "HH:MM:SS" or null
-                web_available_time_ends: item.web_available_time_ends || null, // "HH:MM:SS" or null
-                tax: item.tax || 0,                    
-                tax_type: item.tax_type || 'GST', // "GST" | "VAT"
-              };
-            });
-
-            return {
-              categoryId: String(product.category_id || ''),
-              sectionName: product.category_name || '',
-              sectionImage: product.category_image || '',
-              items: transformedItems,
-            };
-          });
-
-          // Debug: Log transformed sections
-          // console.log('Transformed Sections:', transformedSections);
-          // console.log('Sections count:', transformedSections.length);
-          // console.log('Total items:', transformedSections.reduce((sum, section) => sum + (section.items?.length || 0), 0));
-
-          return transformedSections;
-        } else {
-          logger.menu('API response structure unexpected:', data);
-          return [];
-        }
-      } catch (err) {
-        // Fallback to local JSON if API fails (for development)
-        if (process.env.NODE_ENV === 'development') {
-          try {
-            const menuItemsData = require('../data/menuItems.json');
-            return menuItemsData[stationId] || [];
-          } catch (fallbackError) {
-            logger.error('menu', 'Fallback also failed:', fallbackError);
-            throw err; // Re-throw original error if fallback fails
-          }
-        }
-        throw err;
-      }
-    },
-    enabled: !!finalRestaurantId, // Only fetch if restaurantId exists
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes (menu items change more frequently)
-    gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
-    retry: 3,
-  });
+  } = useQuery(buildMenuSectionsQueryOptions(restaurantId, stationId));
 
   return {
     menuSections: menuSections || [],

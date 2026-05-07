@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import StationCard from '../components/StationCard/StationCard';
 import { StationCardSkeleton, HeaderSkeleton } from '../components/SkeletonLoaders';
-import { useStations, useRestaurantDetails } from '../hooks/useMenuData';
+import { useStations, useRestaurantDetails, buildMenuSectionsQueryOptions } from '../hooks/useMenuData';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import './DiningMenu.css';
@@ -41,6 +42,18 @@ const DiningMenu = () => {
   
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
+  const queryClient = useQueryClient();
+
+  // PERF: Prefetch a station's menu when user shows intent
+  // (hover/focus/touch). Uses the SAME query key as `useMenuSections`,
+  // so clicking the station hits the cache (or joins the in-flight
+  // request — React Query dedupes by key).
+  const prefetchStation = useCallback((stationId) => {
+    if (!numericRestaurantId || !stationId) return;
+    queryClient.prefetchQuery(
+      buildMenuSectionsQueryOptions(numericRestaurantId, stationId)
+    );
+  }, [numericRestaurantId, queryClient]);
   
   // Fetch stations from API (uses numeric ID)
   const { stations: rawStations, loading, error, errorMessage } = useStations(numericRestaurantId);
@@ -161,6 +174,7 @@ const DiningMenu = () => {
                   station={station}
                   isAvailable={isAvailable}
                   onClick={() => handleStationClick(station.id, station)}
+                  onPrefetch={isAvailable ? () => prefetchStation(station.id) : undefined}
                 />
               );
             })}
