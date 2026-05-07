@@ -154,7 +154,11 @@
 /* ─── No-image fallback: first-letter initial tile ─────────────────────── */
 /* Replaces the POS default placeholder PNG (food-default-image.png) with a
    clean initial glyph, so each category in the rail is distinguishable
-   instead of all showing the same grey icon. */
+   instead of all showing the same grey icon.
+
+   Background uses `color-mix(srgb, --color-primary 12%, white)` so the
+   tile auto-tints to whatever the active theme's brand color is (orange,
+   blue, green, etc.). Older browsers fall through to a neutral grey. */
 .category-box-initial {
   width: 100%;
   height: 100%;
@@ -165,7 +169,10 @@
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--color-primary);
-  background-color: var(--color-primary-pale, #FADBD8);
+  /* Fallback for browsers without color-mix support */
+  background-color: var(--bg-secondary, #f5f5f5);
+  /* Modern browsers: 12% brand color mixed with white — theme-aware tint */
+  background-color: color-mix(in srgb, var(--color-primary) 12%, white);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   user-select: none;
