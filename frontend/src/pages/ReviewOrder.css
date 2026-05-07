@@ -707,6 +707,8 @@
 @media (max-width: 480px) {
   .review-order-content {
     padding: var(--spacing-md);
+    /* Re-apply footer-clearance bottom padding (the shorthand above resets it). */
+    padding-bottom: calc(220px + env(safe-area-inset-bottom, 0px));
   }
 
   .review-order-header {
