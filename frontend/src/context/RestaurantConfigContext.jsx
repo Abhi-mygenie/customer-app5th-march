@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { DEFAULT_THEME } from '../constants/theme';
 import logger from '../utils/logger';
 
@@ -118,6 +118,14 @@ const DEFAULT_CONFIG = {
   // Notification Popups (FEAT-003)
   notificationPopups: [],
 };
+
+// Fix 10 — stale cache after admin save.
+// After the first fetch, `fetchConfig` short-circuits on the same restaurantId,
+// so an already-open customer tab never re-fetches. The listeners installed by
+// the provider call `softRefreshConfig` on visibility/focus (throttled) and on
+// `storage` events (same-browser cross-tab). This constant limits how often we
+// hit GET /api/config/<rid> per tab.
+const CONFIG_SOFT_REFRESH_THROTTLE_MS = 30 * 1000;
 
 export const RestaurantConfigProvider = ({ children }) => {
   // Synchronously hydrate from localStorage cache (anti-flash on hard refresh).
