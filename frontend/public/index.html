@@ -145,6 +145,16 @@
           iconLink.removeAttribute('type');
           iconLink.href = c.logoUrl;
         }
+
+        // Document title — set restaurant name from cached `restaurant_name_<rid>`
+        // so returning visitors see the brand name in the tab on hard refresh
+        // (the customer_app_config cache `c` doesn't include the name, since the
+        // POS-side /web/restaurant-info returns it separately. DocumentTitleManager
+        // populates this key after the first successful fetch.)
+        var cachedName = localStorage.getItem('restaurant_name_' + seg);
+        if (cachedName && typeof cachedName === 'string' && cachedName.length) {
+          document.title = cachedName;
+        }
       } catch (e) { /* silently fall through to CSS :root defaults */ }
     })();
   </script>
