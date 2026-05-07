@@ -33,7 +33,7 @@ import './ReviewOrder.css';
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
 
-const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay }) => ({
+const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay, effectiveDeliveryCharge = 0, deliveryCgst = 0, deliverySgst = 0, deliveryGstRate = 0 }) => ({
   itemTotal,
   pointsDiscount,
   pointsRedeemed: pointsToRedeem,
@@ -52,6 +52,11 @@ const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalA
   // Kept for any legacy consumer expecting combined values
   finalCgst,
   finalSgst,
+  // DELIVERY_CHARGE_GST CR: delivery values for OrderSuccess bill display
+  deliveryCharge: effectiveDeliveryCharge,
+  deliveryCgst,
+  deliverySgst,
+  deliveryGstRate,
   grandTotal: roundedTotal,
   originalTotal: hasRoundingDiff ? totalToPay : null
 });
@@ -654,13 +659,20 @@ const ReviewOrder = () => {
                                 ? (parseFloat(deliveryCharge) || 0)
                                 : 0;
 
-  // ─── Delivery GST (DELIVERY_CHARGE_GATING CR D-3) ─────
-  // Per stakeholder decision (2026-05-06): backend response does NOT expose
-  // restaurant.delivery_charge_tax. Use existing restaurant.gst_tax_percent (verified
-  // present in /restaurant-info response, e.g., "5.00"). Same rate as item-GST.
+  // ─── Delivery GST (DELIVERY_CHARGE_GST CR) ─────
+  // Backend now exposes restaurant.deliver_charge_gst (delivery-specific GST rate,
+  // sibling of service_charge_tax / gst_tax_percent on /web/restaurant-info response).
+  // Prefer it; fall back to legacy restaurant.gst_tax_percent only when the new field
+  // is missing/null/empty (backward-compat for restaurants not yet upgraded).
   // Gated by gst_status (R3), includeDelivery (D-2), rate > 0, delivery > 0.
   // Folds into total_gst_tax_amount via finalCgst/finalSgst — no new payload field.
-  const deliveryGstRate     = parseFloat(restaurant?.gst_tax_percent) || 0;
+  const rawDeliverChargeGst = restaurant?.deliver_charge_gst;
+  const parsedDeliverChargeGst = (rawDeliverChargeGst === null || rawDeliverChargeGst === undefined || rawDeliverChargeGst === '')
+    ? NaN
+    : parseFloat(rawDeliverChargeGst);
+  const deliveryGstRate     = Number.isFinite(parsedDeliverChargeGst)
+                                ? parsedDeliverChargeGst
+                                : (parseFloat(restaurant?.gst_tax_percent) || 0);
   const applyDeliveryGst    = includeDelivery && isGstEnabledForSc && deliveryGstRate > 0 && effectiveDeliveryCharge > 0;
   const gstOnDeliveryCharge = applyDeliveryGst ? effectiveDeliveryCharge * deliveryGstRate / 100 : 0;
   const deliveryCgst        = parseFloat((gstOnDeliveryCharge / 2).toFixed(2));
@@ -888,7 +900,7 @@ const ReviewOrder = () => {
         throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
       }
 
-      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay });
+      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay, effectiveDeliveryCharge, deliveryCgst, deliverySgst, deliveryGstRate });
 
       const options = {
         key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
@@ -1192,7 +1204,7 @@ const ReviewOrder = () => {
             isEditedOrder: isEditMode,
             items: buildOrderItems(cartItems),
             previousItems: buildPreviousItems(previousOrderItems, isEditMode),
-            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay })
+            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay, effectiveDeliveryCharge, deliveryCgst, deliverySgst, deliveryGstRate })
           }
         }
       });
@@ -1361,7 +1373,7 @@ const ReviewOrder = () => {
                 isEditedOrder: isEditMode,
                 items: buildOrderItems(cartItems),
                 previousItems: buildPreviousItems(previousOrderItems, isEditMode),
-                billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay })
+                billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay, effectiveDeliveryCharge, deliveryCgst, deliverySgst, deliveryGstRate })
               }
             }
           });

@@ -694,6 +694,13 @@ const OrderSuccess = () => {
                     <span className="bill-value">₹{billSummary.serviceCharge.toFixed(2)}</span>
                   </div>
                 )}
+                {/* Delivery Charge (DELIVERY_CHARGE_GST CR) */}
+                {billSummary.deliveryCharge > 0 && (
+                  <div className="bill-row" data-testid="bill-row-delivery-charge">
+                    <span className="bill-label">Delivery Charge</span>
+                    <span className="bill-value">₹{billSummary.deliveryCharge.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="bill-row bill-row-subtotal">
                   <span className="bill-label">Subtotal</span>
                   <span className="bill-value">₹{billSummary.subtotal.toFixed(2)}</span>
@@ -727,6 +734,19 @@ const OrderSuccess = () => {
                   <div className="bill-row bill-row-tax" data-testid="bill-row-sc-sgst">
                     <span className="bill-label-sub">SGST on SC{displayScGstRate ? ` ${(displayScGstRate / 2).toFixed(displayScGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
                     <span className="bill-value-sub">₹{billSummary.scSgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {/* CGST/SGST on Delivery — compliance rows (DELIVERY_CHARGE_GST CR) */}
+                {billSummary.deliveryCgst > 0 && (
+                  <div className="bill-row bill-row-tax" data-testid="bill-row-delivery-cgst">
+                    <span className="bill-label-sub">CGST on Delivery{billSummary.deliveryGstRate ? ` ${(billSummary.deliveryGstRate / 2).toFixed(billSummary.deliveryGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="bill-value-sub">₹{billSummary.deliveryCgst.toFixed(2)}</span>
+                  </div>
+                )}
+                {billSummary.deliverySgst > 0 && (
+                  <div className="bill-row bill-row-tax" data-testid="bill-row-delivery-sgst">
+                    <span className="bill-label-sub">SGST on Delivery{billSummary.deliveryGstRate ? ` ${(billSummary.deliveryGstRate / 2).toFixed(billSummary.deliveryGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="bill-value-sub">₹{billSummary.deliverySgst.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="bill-row bill-row-total">
