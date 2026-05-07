@@ -151,7 +151,23 @@ const OrderSuccess = () => {
   
   // Use billSummary from location.state (passed from ReviewOrder) as primary source
   const passedBillSummary = orderData?.billSummary || null;
-  
+
+  // ─── SC-GST LABEL SOURCE FIX ─────────────────────────────────────────────
+  // billSummary.scGstRate (returned by getOrderDetails transform) can be
+  // derived from rounded amounts when the order details API response does not
+  // carry restaurant.service_charge_tax — that derivation can produce an
+  // off-by-rounding value (e.g. 17.97 → "8.99%" on label) even though the
+  // configured rate is 18. Use the configured rate from /web/restaurant-info
+  // (already cached by React Query via useRestaurantDetails above) — this is
+  // the SAME source ReviewOrder uses. Amounts (scCgst / scSgst /
+  // serviceCharge / grandTotal) are NOT touched; only the percentage shown
+  // next to the label is corrected.
+  const configuredScGstRate = parseFloat(restaurant?.service_charge_tax) || 0;
+  const displayScGstRate =
+    configuredScGstRate > 0
+      ? configuredScGstRate
+      : (billSummary?.scGstRate || 0);
+
   // Use ONLY items from API (single source of truth)
   const allItems = liveOrderItems;
   const totalItemsCount = allItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
@@ -703,13 +719,13 @@ const OrderSuccess = () => {
                 {/* CGST/SGST on Service Charge — compliance rows (SERVICE_CHARGE_MAPPING CR) */}
                 {billSummary.scCgst > 0 && (
                   <div className="bill-row bill-row-tax" data-testid="bill-row-sc-cgst">
-                    <span className="bill-label-sub">CGST on SC{billSummary.scGstRate ? ` ${(billSummary.scGstRate / 2).toFixed(billSummary.scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="bill-label-sub">CGST on SC{displayScGstRate ? ` ${(displayScGstRate / 2).toFixed(displayScGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
                     <span className="bill-value-sub">₹{billSummary.scCgst.toFixed(2)}</span>
                   </div>
                 )}
                 {billSummary.scSgst > 0 && (
                   <div className="bill-row bill-row-tax" data-testid="bill-row-sc-sgst">
-                    <span className="bill-label-sub">SGST on SC{billSummary.scGstRate ? ` ${(billSummary.scGstRate / 2).toFixed(billSummary.scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
+                    <span className="bill-label-sub">SGST on SC{displayScGstRate ? ` ${(displayScGstRate / 2).toFixed(displayScGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
                     <span className="bill-value-sub">₹{billSummary.scSgst.toFixed(2)}</span>
                   </div>
                 )}
