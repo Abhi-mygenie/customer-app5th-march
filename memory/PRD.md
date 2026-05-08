@@ -1,48 +1,83 @@
-# PRD — Customer App Deployment Validation Run
+# MyGenie Customer App PRD
 
-**Date:** 2026-05-08
-**Owner:** E1 Agent (validation only, no deploy)
-**Repo:** https://github.com/Abhi-mygenie/customer-app5th-march.git @ branch `main`
+Last updated: 2026-04-20
 
-## Original Problem Statement
-Pull the latest code, validate frontend/backend build and compile readiness, check required environment variables, and create a deployment handover document for the next deployment agent. Before deploying tell last remote date and time.
+## Original problem statement
+1. Pull code from `Abhi-mygenie/customer-app5th-march.git` main branch
+2. Ensure all documents are pulled from memory folder
+3. Build and run the app as it is
+4. Don't run test agent
 
-## Scope of THIS Run (per user choice)
-"Just deploy run and compile" — i.e. install deps, start services, verify they compile and respond. No production deploy, no testing-agent run.
+## Product summary
+MyGenie Customer App is a restaurant-scoped React + FastAPI + MongoDB application for scan-and-order, menu browsing, customer login flows, delivery address handling, and admin configuration.
 
-## What Was Done (2026-05-08)
-- Pulled `main` @ `b89587dc933776542e659b8fdb4d6a9d18106a63` (commit dated **2026-05-07 10:16:21 UTC**) into `/app`, replacing scaffold while preserving `.git` and `.emergent`.
-- Wrote `/app/backend/.env` (5 keys) and `/app/frontend/.env` (9 keys) per user-supplied values; de-duplicated `MONGO_URL=MONGO_URL=` typo.
-- Installed backend deps (`pip install -r requirements.txt` — 124 packages, OK).
-- Installed frontend deps (`yarn install` — OK with peer-dep warnings only).
-- Restarted supervisor; backend RUNNING (pid 587), frontend RUNNING.
-- Smoke-tested:
-  - `GET /api/` → 200 `{"message":"Customer App API"}`
-  - `GET :3000/` → 200 (7.4 KB SPA shell)
-  - MongoDB connection to `52.66.232.149:27017/mygenie` → OK, 23 collections, server v7.0.30
-  - Webpack: "compiled with 1 warning, No issues found"
-- Authored `/app/DEPLOYMENT_VALIDATION_HANDOVER.md` with full audit, env gap analysis, and checklist for next agent.
+## Architecture
+- Frontend: React app in `/app/frontend`
+- Backend: FastAPI app in `/app/backend`
+- Database: MongoDB via backend envs
+- External integrations:
+  - CRM API for customer auth/profile/address flows
+  - Google Maps for delivery address map + geocoding
+  - POS / restaurant APIs for menu and ordering
 
-## Key Findings
-- Backend is fail-fast on `MONGO_URL`, `DB_NAME`, `JWT_SECRET`, `MYGENIE_API_URL`. All set ✅
-- `JWT_SECRET` is a placeholder — must be rotated for prod.
-- **Frontend env gaps (BLOCKERS for prod):**
-  - `REACT_APP_BACKEND_URL` not supplied — 14 source files need it (Auth, Login, AdminSettings, AdminQR, RestaurantConfig, useMenuData, ReviewOrder, FeedbackPage, dietaryTags, …).
-  - `REACT_APP_CRM_API_KEY` not supplied — required by `crmService.js` (no fallback).
-  - `REACT_APP_RESTAURANT_ID` optional, has fallback.
-- Architecture: app uses **two backends** — preprod MyGenie POS API (`REACT_APP_API_BASE_URL`) AND a local FastAPI in `/app/backend` (`REACT_APP_BACKEND_URL`). Both must be deployed.
+## Current implementation status
+### Completed previously
+- Phase 1 CRM v2 migration for Auth + Address flows
+- `skip-otp` UX wiring in `PasswordSetup.jsx`
+- CRM API-key restaurant header mapping in `crmService.js`
+- Memory docs refreshed with `_v2` references
 
-## P0 / Backlog for Next Deployment Agent
-- [P0] Resolve missing `REACT_APP_BACKEND_URL`, `REACT_APP_CRM_API_KEY` before deploy.
-- [P0] Run `yarn build` for production bundle and verify exit code 0.
-- [P0] Rotate `JWT_SECRET` to a 64-char secure random.
-- [P1] Tighten `CORS_ORIGINS` from `*` to deployed frontend origin.
-- [P1] Plan persistent storage for `/app/backend/uploads/` (volume or S3).
-- [P2] Clean up `react-hooks/exhaustive-deps` warnings (non-blocking).
-- [P2] Reconcile TipTap version mismatch (`3.20.0` vs runtime `3.22.5`).
+### Completed in this session
+- Fixed MAPS-01 in `frontend/src/pages/DeliveryAddress.jsx`
+- Added guard helpers so Google geocoding and distance checks do not run with empty address data or invalid coordinates
+- Added focused frontend regression test: `frontend/src/__tests__/pages/DeliveryAddress.test.js`
+- Updated notification modal behavior so manual popups show an `OK` button instead of countdown text while preserving auto-close behavior
+- Added popup regression test coverage: `frontend/src/__tests__/components/NotificationPopup.test.js`
 
-## Files of Interest
-- `/app/DEPLOYMENT_VALIDATION_HANDOVER.md` — full handover (this run)
-- `/app/DEPLOYMENT_HANDOVER.md` — previous handover (kept intact)
-- `/app/backend/server.py` — 1614 lines, 47 routes
-- `/app/backend/.env`, `/app/frontend/.env` — env files written this run
+## MAPS-01 fix details
+Problem:
+- Delivery Address could trigger Google Maps Geocoding API with missing `address` or invalid `latlng`, leading to `INVALID_REQUEST`
+
+Resolution:
+- Added `isValidCoordinate`, `hasValidLatLng`, and `buildGeocodeQuery`
+- Guarded:
+  - reverse geocoding
+  - saved-address geocoding
+  - delivery distance checks
+- Empty/incomplete saved addresses now short-circuit instead of calling Maps with bad params
+
+## Testing status
+### Verified
+- ESLint passed for:
+  - `frontend/src/pages/DeliveryAddress.jsx`
+  - `frontend/src/__tests__/pages/DeliveryAddress.test.js`
+  - `frontend/src/components/NotificationPopup/NotificationPopup.jsx`
+  - `frontend/src/pages/admin/AdminSettingsPage.jsx`
+  - `frontend/src/__tests__/components/NotificationPopup.test.js`
+- Focused frontend test passed:
+  - `CI=true yarn test --watchAll=false --runTestsByPath src/__tests__/pages/DeliveryAddress.test.js`
+  - `CI=true yarn test --watchAll=false --runTestsByPath src/__tests__/components/NotificationPopup.test.js`
+- Frontend testing agent verified MAPS-01 fix and reported zero Google Maps `INVALID_REQUEST` errors for the guarded flow
+- Frontend testing agent verified the new manual popup `OK` button behavior and reported no regressions
+
+### Known unrelated issue still present
+- Interactive browser path into Delivery Address is still partially blocked by a pre-existing CRM/auth issue: `/api/scan/auth/skip-otp` returns 404 in the UI flow
+
+## Prioritized backlog
+### P0
+- Resume UI validation of Address CRUD after the maps blocker is cleared in normal browser flow
+
+### P1
+- Phase 2 CRM migration for remaining Profile, Loyalty, Orders, and Coupons actions
+- PROD-01: switch CRM URL back to production once CRM team deploys required endpoint
+
+### P2
+- Handle missing `REACT_APP_RESTAURANT_ID` safely
+- Move exposed CRM API-key logic behind backend proxy before production launch
+- Forgot/Reset Password flow remains blocked until CRM v2 adds support
+
+## Next action items
+1. Validate Address CRUD end-to-end once the skip-otp/auth path is restored
+2. Investigate the pre-existing `/api/scan/auth/skip-otp` 404 in the browser flow
+3. Continue remaining CRM v2 migration items from Phase 2
+4. If needed later, extend the popup close-behavior UX to banner/toast variants too
