@@ -23,7 +23,7 @@
   padding: 12px 14px;
   border: 1.5px solid var(--color-primary, #E86F2C);
   border-radius: var(--radius-button, 8px);
-  font-size: 15px;
+  font-size: 16px; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
   font-family: var(--font-body, 'Poppins', sans-serif);
   background: #fff;
   color: #222;
@@ -86,7 +86,7 @@
   padding: 12px 10px;
   border: none;
   border-radius: 0;
-  font-size: 15px;
+  font-size: 16px; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
   font-family: var(--font-body, 'Poppins', sans-serif);
   background: transparent;
   color: #222;

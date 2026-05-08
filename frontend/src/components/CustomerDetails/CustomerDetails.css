@@ -48,7 +48,7 @@
   border-radius: 0;
   padding: var(--spacing-xs) 0;
   font-family: var(--font-body);
-  font-size: var(--font-size-sm);
+  font-size: 16px; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
   color: var(--text-primary);
   outline: none;
   transition: border-color var(--transition-fast);
@@ -101,7 +101,7 @@
   background: transparent;
   border: none;
   font-family: var(--font-body);
-  font-size: var(--font-size-sm);
+  font-size: 16px; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
   color: var(--text-primary);
   outline: none;
   cursor: pointer;
@@ -126,7 +126,7 @@
   border-radius: 0;
   padding: var(--spacing-xs) 0;
   font-family: var(--font-body);
-  font-size: var(--font-size-sm);
+  font-size: 16px; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
   color: var(--text-primary);
   outline: none;
   transition: border-color var(--transition-fast);
@@ -169,15 +169,15 @@
   }
 
   .customer-details-input {
-    font-size: var(--font-size-sm);
+    font-size: 16px; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
   }
 
   .customer-details-phone-input .PhoneInputInput {
-    font-size: var(--font-size-sm);
+    font-size: 16px; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
   }
 
   .customer-details-phone-input .PhoneInputCountrySelect {
-    font-size: var(--font-size-xs);
+    font-size: 16px; /* Minimum 16px to prevent iOS Safari auto-zoom on focus */
   }
 
   .customer-details-phone-input .PhoneInputCountryIcon {
