@@ -1,8 +1,15 @@
 # Status Log — A-1: Channel Filter (dinein / takeaway / delivery)
 
-**Last updated:** 2026-05-09
+**Last updated:** 2026-05-09 (post-QA owner sign-off)
 **Owner-approved scope:** A-1 only — channel-availability filter for menu visibility + add-to-cart, with prompt-and-confirm channel-switch UX. Room flow falls back to `dinein`.
-**Status:** Implemented · lint-clean · webpack green · simulation-validated for 4 channels × 6 item variants
+**Current state:** **QA passed / pending manual validation**
+
+**State transitions:**
+- 2026-05-09 (early): Implemented · lint-clean · webpack green · simulation-validated for 4 channels × 6 item variants (main agent).
+- 2026-05-09 (mid): Automated QA via testing-agent — verdict **PASS** · 8/8 cases · 36/36 unit assertions · 5/5 mocked-API render scenarios · all out-of-scope files confirmed untouched. Report: `/app/test_reports/iteration_1.json`. Test artifact: `/app/frontend/src/utils/__tests__/channelEligibility.test.cjs`.
+- 2026-05-09 (late): Owner accepted A-1 closure from automated-QA side. **Manual real-device validation per-channel scan URLs on real iPhone/Android with a real restaurant remains the FINAL PRODUCTION GATE before full closure.**
+
+**Hold:** A-2 / A-3 / A-4 / A-5 / A-6 / A-7 must NOT start until explicit owner approval. G3 (silent-`'0'` toast) and G2 (sessionStorage→localStorage) remain on hold per prior owner decisions.
 
 ---
 
@@ -173,9 +180,21 @@ No stop-condition triggered. Implementation completed cleanly within strict scop
 - [x] Code applied (5 files; +142 / −11 lines)
 - [x] Lint clean
 - [x] Webpack compiles
-- [x] Simulation 100% pass
+- [x] Simulation 100% pass (main agent)
 - [x] Out-of-scope files untouched
-- [ ] Owner real-device validation per §5.5 — **pending**
-- [ ] Testing-agent end-to-end run — pending owner go-ahead (allowed per scope point 8 of approval message)
+- [x] Testing-agent automated QA — **PASS** (8/8 cases, 36/36 unit assertions, report `/app/test_reports/iteration_1.json`)
+- [x] Owner accepted A-1 closure from automated-QA side
+- [ ] **Manual real-device validation on real iPhone/Android with a real restaurant — FINAL PRODUCTION GATE — pending owner**
 
-Standing by for real-device validation results and / or go-ahead for next CR (A-2: `is_disable` + `status` kill-switch — gated on backend semantic confirmation per audit §11).
+## 9. Hold list (do NOT start without explicit owner approval)
+
+- A-2 — `is_disable` + `status` kill-switch (next on roadmap; needs backend semantic confirmation per audit §11)
+- A-3 — `egg` correction + Jain filter
+- A-4 — `food_stock` kill-switch
+- A-5 — `food_order` sort
+- A-6 — Defensive add-to-cart (cumulative)
+- A-7 — Per-item `tax_calc` / `discount` / charges / complementary mechanic
+- G2 — `sessionStorage → localStorage` migration (deferred — owner's stale-context concern)
+- G3 — Silent `'0'` toast at `ReviewOrder.jsx:949` (kept warm if any future "WC" report appears)
+
+Standing by for real-device validation results. Will only proceed to A-2 (or any other CR) on explicit owner approval.
