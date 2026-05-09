@@ -11,6 +11,7 @@ import { useScannedTable } from '../hooks/useScannedTable';
 import { isMultipleMenu } from '../api/utils/restaurantIdConfig';
 import { checkTableStatus, getOrderDetails } from '../api/services/orderService';
 import { isDineInOrRoom, showsDineInActions, hasAssignedTable, isTakeawayOrDelivery } from '../utils/orderTypeHelpers';
+import { isItemAllowedForChannel, getChannelLabel } from '../utils/channelEligibility';
 import { getAuthToken } from '../utils/authToken';
 import logger from '../utils/logger';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
@@ -30,7 +31,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, setRestaurantScope } = useAuth();
-  const { startEditOrder, clearCart } = useCart();
+  const { startEditOrder, clearCart, cartItems, removeFromCart } = useCart();
   const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, foodFor: scannedFoodFor, updateOrderType } = useScannedTable();
@@ -128,7 +129,39 @@ const LandingPage = () => {
   const [selectedMode, setSelectedMode] = useState(scannedOrderType === 'delivery' ? 'delivery' : 'takeaway');
 
   // Handle mode switch (takeaway ↔ delivery)
+  // CR A-1: prompt-and-confirm UX before removing channel-disallowed cart items.
+  // If switching to a new channel would invalidate any item already in the cart,
+  // ask the user to confirm. On confirm, remove disallowed items + apply switch.
+  // On cancel, revert (no state change).
   const handleModeChange = (newMode) => {
+    // Identify items in cart that would be disallowed by the new channel.
+    const disallowed = (cartItems || []).filter(
+      (ci) => !isItemAllowedForChannel(ci?.item, newMode)
+    );
+
+    if (disallowed.length > 0) {
+      const names = disallowed
+        .map((ci) => ci?.item?.name)
+        .filter(Boolean)
+        .slice(0, 5);
+      const namesStr = names.length === disallowed.length
+        ? names.join(', ')
+        : `${names.join(', ')} and ${disallowed.length - names.length} more`;
+      const channelLabel = getChannelLabel(newMode);
+      const confirmed = window.confirm(
+        `Switching to ${channelLabel} will remove ${disallowed.length} item(s) not available for ${channelLabel}:\n\n${namesStr}\n\nContinue?`
+      );
+      if (!confirmed) {
+        // User cancelled — do nothing, keep current mode.
+        return;
+      }
+      // User confirmed — remove disallowed items.
+      disallowed.forEach((ci) => {
+        if (ci?.cartId) removeFromCart(ci.cartId);
+      });
+      toast.success(`Removed ${disallowed.length} item(s) not available for ${channelLabel}.`);
+    }
+
     setSelectedMode(newMode);
     if (updateOrderType) {
       updateOrderType(newMode);

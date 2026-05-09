@@ -20,6 +20,7 @@ import { useCart } from '../context/CartContext';
 import { getAllergenIcon } from '../utils/allergenIcons';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { isRestaurantOpen } from '../utils/itemAvailability';
+import { isItemAllowedForChannel } from '../utils/channelEligibility';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import './MenuItems.css';
 
@@ -51,7 +52,7 @@ const MenuItems = () => {
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
 
-  const { foodFor } = useScannedTable();
+  const { foodFor, orderType: scannedOrderType } = useScannedTable();
 
   // Fetch menu sections from API (wait for numeric ID)
   // stationId (from route) takes priority, foodFor (from URL/sessionStorage) as fallback
@@ -331,6 +332,17 @@ const MenuItems = () => {
   const filterItems = (items) => {
     let filtered = items;
 
+    // ─────────────────────────────────────────────────────────────────────
+    // CR A-1: Channel-availability filter (PRODUCT_API_FIELD_MAPPING audit).
+    // Hides items whose dinein/takeaway/delivery flag is "No" for the active
+    // order type. Room QRs send orderType='dinein' so room shares the dinein
+    // gate (no separate room flag exists yet — owner decision).
+    // Applied FIRST so all downstream filters (search/veg/dietary) operate on
+    // an already-channel-allowed set; this also makes search-empty-states and
+    // empty-category collapse work correctly.
+    // ─────────────────────────────────────────────────────────────────────
+    filtered = filtered.filter(item => isItemAllowedForChannel(item, scannedOrderType));
+
     if (searchQuery) {
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -411,9 +423,10 @@ const MenuItems = () => {
       setCustomizeModalOpen(true);
     } else {
       // No variations/add-ons, add directly to cart
-      addToCart(item, [], []);
+      // CR A-1: pass active orderType for defensive eligibility re-check inside CartContext
+      addToCart(item, [], [], scannedOrderType);
     }
-  }, [addToCart]);
+  }, [addToCart, scannedOrderType]);
 
   /**
    * Handle close customization modal
@@ -427,8 +440,9 @@ const MenuItems = () => {
    * Handle add to cart from customization modal
    */
   const handleAddToCartFromModal = useCallback((item, variations, add_ons) => {
-    addToCart(item, variations, add_ons);
-  }, [addToCart]);
+    // CR A-1: pass active orderType for defensive eligibility re-check inside CartContext
+    addToCart(item, variations, add_ons, scannedOrderType);
+  }, [addToCart, scannedOrderType]);
 
   /**
    * Handle close repeat modal
@@ -483,10 +497,11 @@ const MenuItems = () => {
         updateQuantity(cartItem.cartId, cartItem.quantity + 1);
       } else {
         // Not in cart, add it
-        addToCart(item, [], []);
+        // CR A-1: pass active orderType for defensive eligibility re-check
+        addToCart(item, [], [], scannedOrderType);
       }
     }
-  }, [cartItems, updateQuantity, addToCart]);
+  }, [cartItems, updateQuantity, addToCart, scannedOrderType]);
 
   /**
    * Handle quantity decrement
@@ -764,6 +779,7 @@ const MenuItems = () => {
                                     isOnlineOrderEnabled={isOnlineOrderEnabled}
                                     categoryTiming={categoryTimings?.[categoryId]}
                                     itemTiming={itemTimings?.[String(item.id)]}
+                                    orderType={scannedOrderType}
                                   />
                                 );
                               })}

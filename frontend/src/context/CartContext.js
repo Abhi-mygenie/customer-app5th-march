@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'react-hot-toast';
 import { calculateCartItemPrice } from '../api/transformers/helpers';
+import { isItemAllowedForChannel, getChannelLabel } from '../utils/channelEligibility';
 import logger from '../utils/logger';
 
 const CartContext = createContext();
@@ -200,9 +202,28 @@ export const CartProvider = ({ children, restaurantId }) => {
   }, [editOrder, restaurantId]);
 
   /**
-   * Add item to cart
+   * Add item to cart.
+   *
+   * CR A-1: Defensive channel-eligibility re-check.
+   * The 4th parameter `activeOrderType` is optional. When provided and the item
+   * is not allowed for that channel (per item.dinein/takeaway/delivery), the
+   * add is silently rejected with a toast. Render-time gates in MenuItem.jsx
+   * already hide the ADD button for disallowed items; this is defense-in-depth
+   * for any caller that bypasses the render gate (search edge cases, deep
+   * links, programmatic flows, future tests).
+   *
+   * Permissive defaults:
+   *   - activeOrderType omitted/null  -> no channel check (legacy callers OK)
+   *   - item missing channel flags    -> D-1 default 'Yes' applies; allowed
    */
-  const addToCart = useCallback((item, variations = [], add_ons = []) => {
+  const addToCart = useCallback((item, variations = [], add_ons = [], activeOrderType = null) => {
+    // CR A-1: defensive channel guard
+    if (activeOrderType && !isItemAllowedForChannel(item, activeOrderType)) {
+      const channelLabel = getChannelLabel(activeOrderType);
+      toast.error(`"${item?.name || 'This item'}" is not available for ${channelLabel} orders.`);
+      logger.cart('addToCart blocked by channel rule', { itemId: item?.id, name: item?.name, activeOrderType });
+      return;
+    }
     setCart((prevCart) => {
       const cartId = generateCartId(item.id, variations, add_ons);
       

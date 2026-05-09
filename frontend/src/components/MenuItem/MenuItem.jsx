@@ -2,6 +2,7 @@ import React from 'react';
 import { IoFlameOutline, IoNutritionOutline, IoWarningOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import QuantitySelector from '../QuantitySelector/QuantitySelector';
 import { isItemAvailable } from '../../utils/itemAvailability';
+import { isItemAllowedForChannel } from '../../utils/channelEligibility';
 import './MenuItem.css';
 import logger from '../../utils/logger';
 
@@ -20,6 +21,7 @@ const MenuItem = ({
   isOnlineOrderEnabled = true,
   categoryTiming = null,
   itemTiming = null,
+  orderType = null,
 }) => {
   const shouldTruncate = item.description && item.description.length > descriptionLimit;
   const displayDescription = isExpanded || !shouldTruncate
@@ -44,6 +46,11 @@ const MenuItem = ({
 
   // Check if item is available based on live_web, admin timings, and POS time range
   const isAvailable = isItemAvailable(item, currentTimeInSeconds, { categoryTiming, itemTiming });
+
+  // CR A-1: Channel eligibility — defense-in-depth in addition to MenuItems.jsx
+  // page-level filter. Items disallowed for the active orderType have ADD hidden.
+  // Permissive default: when orderType is null/unknown, item is allowed.
+  const isChannelAllowed = isItemAllowedForChannel(item, orderType);
 
   const handleImageError = (e) => {
     // Hide the failed image
@@ -208,7 +215,7 @@ const MenuItem = ({
                   onIncrement={onIncrement}
                   onDecrement={onDecrement}
                 />
-              ) : isAvailable && isOnlineOrderEnabled ? (
+              ) : isAvailable && isOnlineOrderEnabled && isChannelAllowed ? (
                 <button className="add-btn" onClick={onAddToCart}>
                   ADD
                 </button>
