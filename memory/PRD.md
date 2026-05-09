@@ -1,6 +1,38 @@
 # MyGenie Customer App PRD
 
-Last updated: 2026-04-20
+Last updated: 2026-05-09
+
+## Session log — 2026-05-08 → 2026-05-09 (E1 Agent)
+
+### Session purpose
+- 2026-05-08: pull `main` of `customer-app5th-march`, validate build/compile, deploy hand-over.
+- 2026-05-08 follow-up: replace `/app/memory/` with `6-may` branch contents (53 files, 2.0 MB) per owner direction; backup at `/app/memory_main_backup/`.
+- 2026-05-08 / 09: investigation-driven CRs and surgical fixes per owner approval gates.
+
+### Code changes applied this session (all CSS/UX-only, no business logic)
+1. **iPhone input-focus zoom fix** (Option A surgical) — bumped 9 CSS `font-size` declarations to 16 px across `CustomerDetails.css`, `ReviewOrder.css`, `LandingCustomerCapture.css`. Validated on iPhone/Android/Desktop emulation.
+2. **Room-scanner intermittent-WC fix** (Option G1) — gated `clearScannedTable()` calls in `OrderSuccess.jsx` (status 3/6 + 404 branches) behind `if (String(restaurantId) === '716')`. Cart/edit-mode/navigation/toast logic untouched. Lint clean; webpack green; simulation-validated for 478 (preserves) and 716 (still wipes intentionally) across all 3 trigger conditions. **Pending real-scanner field validation** — see `/app/memory/change_requests/ROOM_SCANNER_INTERMITTENT_WC_STATUS_2026-05-09.md`.
+
+### Investigation CRs authored this session (no code change in these)
+- `IPHONE_INPUT_ZOOM_BUG_INVESTIGATION_2026-05-08.md` — implemented (#1 above)
+- `ITEM_CHANNEL_AVAILABILITY_BUG_INVESTIGATION_2026-05-08.md` — pending owner Step-0 + decision on Options A/B/C
+- `PRODUCT_API_FIELD_MAPPING_INVESTIGATION_2026-05-08.md` — pending owner decision on Options I/II/III/IV/V/VI
+- `ROOM_SCANNER_ORDER_AS_WALKIN_INVESTIGATION_2026-05-08.md` — superseded by intermittent-WC CR
+- `ROOM_SCANNER_INTERMITTENT_WC_INVESTIGATION_2026-05-08.md` — Option G1 implemented; G2/G3 deferred per owner
+
+### Deferred / kept-warm follow-ups
+- **G2** (move scan storage `sessionStorage → localStorage`) — deferred by owner due to stale-context risk.
+- **G3** (defensive toast at `ReviewOrder.jsx:949` when `roomOrTable='room'` but `finalTableId='0'`) — kept warm; revisit if any future "WC" report appears after G1 ships.
+- Channel-availability filter (CR Options A/B/C) — pending owner Step-0 probe of `/web/restaurant-product`.
+- Field-mapping fixes (`status` kill-switch, `egg`/`jain` correction, per-item `tax_calc`/`discount`) — pending owner decision and POS contract confirmations.
+
+### Build / env state
+- `/app/backend/.env` and `/app/frontend/.env` written per owner-supplied values; `JWT_SECRET` is a placeholder (must rotate for prod).
+- Backend RUNNING (47 routes, MongoDB 7.0.30, 23 collections). Frontend RUNNING (HTTP 200, hot-reload OK).
+- Latest remote commit pulled: `b89587dc933776542e659b8fdb4d6a9d18106a63` (`main`, 2026-05-07 10:16:21 UTC).
+- See `/app/DEPLOYMENT_VALIDATION_HANDOVER.md` for the full env-var audit + handover.
+
+---
 
 ## Original problem statement
 1. Pull code from `Abhi-mygenie/customer-app5th-march.git` main branch
