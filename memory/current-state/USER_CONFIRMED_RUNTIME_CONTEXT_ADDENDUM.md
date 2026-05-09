@@ -9,7 +9,7 @@ This addendum records user-confirmed runtime context received after the static a
 ### 1.1 Backend/app proxy URL intent
 - User-confirmed understanding:
   - `REACT_APP_BACKEND_URL` is the app/backend proxy URL.
-  - Reported/remembered runtime value from previous agent: `https://genie-react-preview.preview.emergentagent.com/`
+  - Reported/remembered runtime value from previous agent: `https://iphone-zoom-patch.preview.emergentagent.com/`
 - Audit interpretation:
   - Own backend calls should be understood as routed through this app/backend proxy base.
 

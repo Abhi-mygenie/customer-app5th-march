@@ -8,7 +8,7 @@ import requests
 import os
 
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://delivery-maps-fix.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://iphone-zoom-patch.preview.emergentagent.com').rstrip('/')
 
 
 # All config fields that should be present in API response

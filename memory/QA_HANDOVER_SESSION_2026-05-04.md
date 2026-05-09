@@ -7,7 +7,7 @@
 **Testing agent**: NOT used (per user instruction — manual verification only)
 **Project Health**: ✅ Frontend compiles cleanly (only pre-existing eslint warnings on unrelated lines), app loads, both services running.
 
-**Preview URL**: `https://customer-app-preview-5.preview.emergentagent.com`
+**Preview URL**: `https://iphone-zoom-patch.preview.emergentagent.com`
 
 ---
 
@@ -220,7 +220,7 @@ QA should provide:
 
 | Key | Value |
 |---|---|
-| Preview URL | `https://customer-app-preview-5.preview.emergentagent.com` |
+| Preview URL | `https://iphone-zoom-patch.preview.emergentagent.com` |
 | Test login phone (from `.env`) | `+919579504871` |
 | Test password (from `.env`) | `Qplazm@10` |
 | Backend POS API base | `https://preprod.mygenie.online/api/v1` |

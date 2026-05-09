@@ -242,24 +242,24 @@ Unexpected non-whitespace character after JSON at position 4 (line 1 column 5)
 
 **Root Cause:**
 - Frontend `.env` had wrong backend URL
-- `REACT_APP_BACKEND_URL=https://delivery-maps-fix.preview.emergentagent.com` (WRONG)
-- Should be `https://delivery-maps-fix.preview.emergentagent.com` (CORRECT)
+- `REACT_APP_BACKEND_URL=https://iphone-zoom-patch.preview.emergentagent.com` (WRONG)
+- Should be `https://iphone-zoom-patch.preview.emergentagent.com` (CORRECT)
 - API calls went to non-existent server → returned 404 HTML page
 
 **Fix Applied:**
 ```bash
 # Updated /app/frontend/.env
-REACT_APP_BACKEND_URL=https://delivery-maps-fix.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://iphone-zoom-patch.preview.emergentagent.com
 ```
 
 **Verification:**
 ```bash
 # Before fix (wrong URL)
-curl -s https://delivery-maps-fix.preview.emergentagent.com/api/auth/login
+curl -s https://iphone-zoom-patch.preview.emergentagent.com/api/auth/login
 → "404 page not found"
 
 # After fix (correct URL)
-curl -s https://delivery-maps-fix.preview.emergentagent.com/api/auth/login
+curl -s https://iphone-zoom-patch.preview.emergentagent.com/api/auth/login
 → {"detail":"Account not found..."} (valid JSON)
 ```
 
