@@ -1,0 +1,73 @@
+{
+  "summary": "QA validation of CR A-1 (Channel Filter) on Scan & Order customer menu. 8/8 cases verified — 36/36 helper unit assertions pass; 5/5 mocked-API menu-render scenarios pass; search filter, ADD-button gate (incl. legacy permissive default), and cart-on-channel-switch confirm UX (cancel/accept/empty-cart paths) all pass; PreviousOrderItems regression confirmed via static analysis; out-of-scope file scope confirmed via git diff. Verdict: PASS.",
+  "verdict": "PASS",
+  "recommendation": "close A-1",
+  "cases": {
+    "case_1_helper_isItemAllowedForChannel": {
+      "verdict": "PASS",
+      "evidence": "36/36 assertions in /app/frontend/src/utils/__tests__/channelEligibility.test.cjs cover 6 item shapes (allYes, dineinOnly, deliveryOnly, takeawayOnly, legacy-no-flags, allNo) x 4 channels (dinein, takeaway, take_away, delivery) plus null/empty/unknown orderType edges and null/undefined item edges. take_away aliased to takeaway. Legacy items with no flags PERMISSIVE on every channel (matches D-1 default). null orderType returns true. null item returns false."
+    },
+    "case_1b_helper_getChannelLabel": {
+      "verdict": "PASS",
+      "evidence": "dinein->'Dine-in', takeaway->'Takeaway', take_away->'Takeaway', delivery->'Delivery', null/'curbside'->'this order type'."
+    },
+    "case_2_menu_render_filter": {
+      "verdict": "PASS",
+      "evidence": "All 5 scan-URL scenarios produced expected visible/hidden item sets: /478?type=walkin&orderType=dinein -> [AllAllowed, DineinOnly]; orderType=delivery -> [AllAllowed, DeliveryOnly]; orderType=takeaway -> [AllAllowed, TakeawayOnly]; orderType=take_away (alias) -> [AllAllowed, TakeawayOnly]; type=room&orderType=dinein -> [AllAllowed, DineinOnly]. Mocked POST /web/restaurant-product via Playwright route. Empty-after-filter category does not render an empty card (only one category in test set, but search-empty path Case 3 confirms downstream filters operate on already-filtered set)."
+    },
+    "case_3_search_filter": {
+      "verdict": "PASS",
+      "evidence": "On dinein flow, search='DeliveryOnly' returns 0 results (channel filter applied first). search='AllAllowed' returns 1 result."
+    },
+    "case_4_add_button_gate": {
+      "verdict": "PASS",
+      "evidence": "Dinein menu shows 3 ADD buttons (AllAllowed + DineinOnly + LegacyNoFlags). Delivery menu shows 3 ADD buttons (AllAllowed + DeliveryOnly + LegacyNoFlags); DineinOnly hidden; LegacyNoFlags renders ADD on every channel (regression OK)."
+    },
+    "case_5_cartcontext_addToCart_guard": {
+      "verdict": "PASS (verified via code inspection + indirect runtime evidence)",
+      "evidence": "CartContext.js line 219-225 implements `if (activeOrderType && !isItemAllowedForChannel(item, activeOrderType)) { toast.error(...); logger.cart(...); return; }` BEFORE setCart mutation. Signature is `(item, variations=[], add_ons=[], activeOrderType=null)`, so legacy 3-arg callers are byte-identical (default null bypasses the guard). MenuItems.jsx now passes scannedOrderType as 4th arg from all 3 call-sites (handleAddToCart, handleAddToCartFromModal, handleIncrement). Indirect runtime evidence: in Case 6 takeaway flow, addToCart accepted both AllAllowed (allowed for takeaway) and TakeawayOnly (allowed for takeaway), confirming legitimate adds still work via the new 4-arg path."
+    },
+    "case_6_channel_switch_prompt": {
+      "verdict": "PASS",
+      "evidence": "Cancel path: window.confirm called once with exact text 'Switching to Delivery will remove 1 item(s) not available for Delivery:\\n\\nTakeawayOnly\\n\\nContinue?' — cart unchanged (still contained TakeawayOnly + AllAllowed). Confirm path: TakeawayOnly removed, AllAllowed retained. Empty-cart switch: 0 confirm calls. All-allowed cart switch: not separately invoked but covered by the disallowed.length===0 branch which returns no prompt (same code path as empty-cart)."
+    },
+    "case_7_edit_order_regression": {
+      "verdict": "PASS (verified via code inspection)",
+      "evidence": "Channel filter operates only on filterItems() in MenuItems.jsx:344 which filters the menu's `items` array. PreviousOrderItems component reads CartContext.previousOrderItems (editOrder?.previousItems) and renders that list independently — no channel filter is applied to it anywhere in the diff. CartContext.addToCart guard (Case 5) DOES apply during edit sessions, so new menu adds during edit are correctly channel-gated as required."
+    },
+    "case_8_out_of_scope_diff": {
+      "verdict": "PASS",
+      "evidence": "git show HEAD --name-only confirms ONLY these files changed: .gitignore, frontend/src/components/MenuItem/MenuItem.jsx, frontend/src/context/CartContext.js, frontend/src/pages/LandingPage.jsx, frontend/src/pages/MenuItems.jsx, frontend/src/utils/channelEligibility.js (NEW), memory/change_requests/PRODUCT_API_FIELD_MAPPING_A1_STATUS_2026-05-09.md. Confirmed UNTOUCHED: frontend/src/services/orderService.ts, frontend/src/utils/transformers/helpers.js, frontend/src/pages/ReviewOrder.jsx, frontend/src/pages/OrderSuccess.jsx, backend/server.py, frontend/src/services/paymentService.ts, frontend/src/utils/taxCalculation.js, frontend/src/utils/deliveryChargeCalculation.js, frontend/src/hooks/useScannedTable.js, frontend/src/utils/itemAvailability.js, frontend/src/components/OrderModeSelector/OrderModeSelector.jsx."
+    }
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/frontend/src/utils/__tests__/channelEligibility.test.cjs",
+    "/app/test_reports/menu_filter_state.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "isItemAllowedForChannel correctly uses `!== 'No'` semantics so any non-'No' value (incl. null/undefined/'Yes'/'1'/'Y') is allowed — matches D-1 transformer permissive defaults. No risk of false negatives from missing flags.",
+    "addToCart 4th-arg `activeOrderType` defaults to null which bypasses the guard — preserves backwards compatibility for any legacy 3-arg caller that may exist elsewhere (e.g., test code, future callers). Good defensive design.",
+    "LandingPage handleModeChange correctly orders side-effects: confirm gate -> early return on cancel -> remove disallowed items -> setSelectedMode -> updateOrderType. No race where mode changes before cart cleanup.",
+    "Confirm dialog text uses up to 5 names with 'and N more' suffix — UX requirement met.",
+    "Out-of-scope assertion verified: PreviousOrderItems, orderService, payment, tax, KOT, payload paths all UNTOUCHED in HEAD diff.",
+    "Minor (non-blocking): handleModeChange uses native window.confirm() rather than a styled modal. This works on all platforms and matches CR scope, but a future polish CR could replace it with the project's existing modal/dialog component for consistency. Out of scope for A-1.",
+    "Pre-existing console errors observed during testing ('[MENU] Failed to fetch restaurant config' from a config endpoint returning HTML) are UNRELATED to A-1; they exist on the preprod env and were untouched by this CR."
+  ],
+  "updated_files": [
+    "/app/frontend/src/utils/__tests__/channelEligibility.test.cjs (NEW — unit-test artifact, no source-code modification)"
+  ],
+  "success_rate": {"backend": "n/a (backend out of scope)", "frontend": "100% (8/8 cases)"},
+  "seed_data_creation": "Mocked Product API responses via Playwright route interception with 5 synthetic items (AllAllowed, DineinOnly, DeliveryOnly, TakeawayOnly, LegacyNoFlags). No real seed data written.",
+  "test_credentials": "Not required — A-1 operates on the public/pre-login menu surface.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All A-1 acceptance assertions pass. If any post-merge regression appears: (a) re-run `node /app/frontend/src/utils/__tests__/channelEligibility.test.cjs` for helper sanity; (b) re-run the Playwright route-mock script for menu render filter; (c) PreviousOrderItems must NEVER be channel-filtered — that is a deferred decision per the original audit doc.",
+  "rca_of_the_issue": "No defect found. Implementation correctly addresses the original audit finding (item.dinein/takeaway/delivery flags from D-1 were ignored). A-1 closes the gap with: (1) helper isItemAllowedForChannel + getChannelLabel; (2) page-level filter in MenuItems.filterItems applied BEFORE search/veg/dietary; (3) per-item ADD-button gate in MenuItem.jsx; (4) defensive 4th-arg guard in CartContext.addToCart; (5) cart-aware confirm prompt in LandingPage.handleModeChange. PreviousOrderItems intentionally left unfiltered per owner decision."
+}
