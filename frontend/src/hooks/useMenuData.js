@@ -79,6 +79,51 @@ const fetchMenuSections = async (finalRestaurantId, stationId) => {
             web_available_time_ends: item.web_available_time_ends || null,
             tax: item.tax || 0,
             tax_type: item.tax_type || 'GST',
+
+            // ─────────────────────────────────────────────────────────────────
+            // PRODUCT_API_FIELD_MAPPING_AND_BUSINESS_LOGIC_AUDIT_2026-05-08 — D-1
+            // PURE FIELD-COVERAGE EXTENSION (Step 1 only).
+            // These keys carry raw Product API fields verbatim under stable names.
+            // No consumer reads them yet — behavior is byte-identical to pre-D-1.
+            // Each downstream business-logic gate (channel filter, kill-switch,
+            // stock, sort, complementary, per-item charges, tax_calc, discount)
+            // ships under its own follow-up CR with backend-semantics confirmation.
+            // Defaults below are intentionally PERMISSIVE so legacy items with
+            // missing fields default to "fully allowed" / "no-op" — guaranteeing
+            // backwards-compat the moment downstream gates light up.
+            // ─────────────────────────────────────────────────────────────────
+            // Channel availability (downstream CR A-1 will gate filter + add-to-cart).
+            // Room flow falls back to `dinein` flag (per owner decision).
+            dinein:   item.dinein   || 'Yes',
+            takeaway: item.takeaway || 'Yes',
+            delivery: item.delivery || 'Yes',
+            // Kill-switches in addition to live_web (downstream CR A-2).
+            status:     (item.status === 0 || item.status === '0') ? 0 : (item.status ?? 1),
+            is_disable: item.is_disable || 'N',
+            // Dietary — egg as a dedicated raw field (downstream CR A-3 will fix isEgg).
+            egg_raw: typeof item.egg === 'number' ? item.egg : (item.egg ? 1 : 0),
+            jain:    typeof item.jain === 'number' ? item.jain : (item.jain ? 1 : 0),
+            // Inventory (downstream CR A-4). Sentinel null = "not enforced".
+            food_stock: (item.food_stock === undefined || item.food_stock === null) ? null : Number(item.food_stock),
+            // Sort order (downstream CR A-5). 0 = unset/tie.
+            food_order: Number(item.food_order || 0),
+            // Item identity (no current consumer; useful for support traceability).
+            item_code: item.item_code || '',
+            // Per-item pricing fields (downstream CR A-7 — math-affecting, deferred).
+            tax_calc:      item.tax_calc      || 'Exclusive',
+            discount:      Number(item.discount || 0),
+            discount_type: item.discount_type || 'percent',
+            give_discount: item.give_discount || 'Yes',
+            takeaway_charge:     item.takeaway_charge     || '0.00',
+            item_delivery_charge: item.delivery_charge    || '0.00',  // renamed to avoid collision with cart-payload-level delivery_charge
+            // Complementary mechanic (downstream CR A-7 — deferred, awaits product spec).
+            complementary:       item.complementary       || 'No',
+            complementary_price: item.complementary_price || '0',
+            // Prep / serve time (downstream — UX ETA chip).
+            prepration_time_min: Number(item.prepration_time_min || 0),
+            serve_time_in_min:   Number(item.serve_time_in_min   || 0),
+            // Stringified JSON metadata; intent unknown (BACKEND CONFIRMATION NEEDED).
+            attributes: item.attributes || '[]',
           };
         });
 
