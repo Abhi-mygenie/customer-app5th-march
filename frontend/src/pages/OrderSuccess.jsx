@@ -311,7 +311,15 @@ const OrderSuccess = () => {
           if (orderDetails.fOrderStatus === 3 || orderDetails.fOrderStatus === 6) {
             clearCart();
             clearEditMode();
-            clearScannedTable();
+            // Restaurant 716 (Hyatt Centric — room-only hotel) intentionally requires a fresh
+            // room re-pick on every new order, so we wipe the scanned-table sessionStorage on
+            // status 3/6. For all other restaurants the room/table context is a property of the
+            // physical scanner (not of the order) and MUST persist so the customer's next order
+            // keeps the correct table_id. Without this guard, table_id falls back to '0' at
+            // ReviewOrder.jsx:949-951 and POS misclassifies the next order as walk-in / WC.
+            if (String(restaurantId) === '716') {
+              clearScannedTable();
+            }
             // TEMP: customer-facing toasts disabled pending UX/product review.
             // Previously fired: status 3 → "Your order has been cancelled." (icon ❌)
             //                   status 6 → "Payment received. Thank you!" (toast.success)
@@ -346,7 +354,12 @@ const OrderSuccess = () => {
       if (error?.response?.status === 404 || error?.response?.data?.errors) {
         clearCart();
         clearEditMode();
-        clearScannedTable();
+        // 716-only sessionStorage wipe (see ROOM_SCANNER_INTERMITTENT_WC fix above).
+        // Other restaurants preserve scan context across 404s — a status-poll blip should not
+        // make the next order walk-in.
+        if (String(restaurantId) === '716') {
+          clearScannedTable();
+        }
         toast('Order not found. It may have been deleted.', { icon: '❌', duration: 4000 });
         navigate(`/${restaurantId}`, { replace: true });
         return;
