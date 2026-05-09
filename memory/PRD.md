@@ -112,4 +112,8 @@ Resolution:
 1. Validate Address CRUD end-to-end once the skip-otp/auth path is restored
 2. Investigate the pre-existing `/api/scan/auth/skip-otp` 404 in the browser flow
 3. Continue remaining CRM v2 migration items from Phase 2
+
+## Recent changes
+- 2026-02 — Investigation report: `/app/memory/change_requests/DELIVERY_PHONE_AND_ADDRESS_FLOW_INVESTIGATION_2026-02-XX.md` (phone +91 editability, selected-vs-current address clarity, saved-address edit API audit).
+- 2026-02 — Phone +91 display fix (CSS-only) on `CustomerDetails.css`: removed visible-select override + hid `.PhoneInputCountrySelectArrow`. Mirrors `LandingCustomerCapture` safe pattern. No payload, OTP, or order-placement contract change. Pending owner real-device validation on Review Order screen.
 4. If needed later, extend the popup close-behavior UX to banner/toast variants too
