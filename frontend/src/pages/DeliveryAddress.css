@@ -229,6 +229,42 @@
   margin-bottom: 0.5rem;
 }
 
+/* Main empty-state Use Current Location button.
+   Visible action so the user doesn't have to open "Add New Address"
+   first to trigger GPS. Mirrors the in-form button but is rendered
+   inline-block so it sits centered under "No saved addresses". */
+.da-empty-use-location-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--color-primary, #E8531E);
+  border-radius: 8px;
+  background: #fff7f2;
+  color: var(--color-primary, #E8531E);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.da-empty-use-location-btn:hover {
+  background: #ffece1;
+}
+
+.da-empty-use-location-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.da-empty-use-location-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
 /* Address card */
 .da-address-card {
   display: flex;

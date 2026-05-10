@@ -726,6 +726,22 @@ const DeliveryAddress = () => {
           <div className="da-empty" data-testid="no-addresses">
             <IoLocationOutline className="da-empty-icon" />
             <p>No saved addresses</p>
+            {/* Main empty-state Use Current Location action.
+                Visible only when there is no active address (no saved card
+                selected and no reverse-geocoded address yet) so the user
+                can trigger GPS without first opening the New Address form. */}
+            {!hasActiveAddress && (
+              <button
+                type="button"
+                className="da-empty-use-location-btn"
+                onClick={handleUseCurrentLocation}
+                disabled={geoLoading}
+                data-testid="empty-state-use-current-location-btn"
+              >
+                <MdMyLocation className="da-empty-use-location-icon" />
+                <span>{geoLoading ? 'Detecting your current location...' : 'Use Current Location'}</span>
+              </button>
+            )}
           </div>
         ) : (
           addresses.map((addr) => {

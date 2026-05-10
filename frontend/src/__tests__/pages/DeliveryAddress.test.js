@@ -631,3 +631,203 @@ describe('DeliveryAddress — in-form Use Current Location button', () => {
   });
 });
 
+// ============================================================
+// Main empty-state "Use Current Location" button
+// (Follow-up fix: visible on the empty state without opening
+//  the New Address form. Reuses applyCurrentLocation with
+//  populateForm=false, so no payload/saved-address mutation.)
+// ============================================================
+describe('DeliveryAddress — empty-state Use Current Location button', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({ addresses: [] });
+    delete window.google;
+  });
+
+  test('renders on no-saved-address / no-active-address empty state (GPS denied)', async () => {
+    global.fetch = jest.fn();
+    installGeolocation(gpsDenied());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+
+    // Initial auto-GPS resolves (denied) → button visible without opening form.
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-use-current-location-btn')).toBeInTheDocument();
+    });
+
+    // Add New Address button still present.
+    expect(screen.getByTestId('add-address-btn')).toBeInTheDocument();
+
+    // Form is NOT open.
+    expect(screen.queryByTestId('add-address-form')).not.toBeInTheDocument();
+
+    // Confirm button still disabled (no active address).
+    expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
+
+    // Header still shows the no-address state.
+    expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
+  });
+
+  test('clicking it with GPS allowed updates header + runs distance check', async () => {
+    process.env.REACT_APP_GOOGLE_MAPS_API_KEY = 'test-key';
+    const distanceCall = jest.fn();
+    global.fetch = jest.fn((url) => {
+      if (typeof url === 'string' && url.includes('maps.googleapis.com/maps/api/geocode')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({
+            results: [{ formatted_address: '500 Park Street, Kolkata, WB 700016' }],
+          }),
+        });
+      }
+      // distance-api-new
+      distanceCall(url);
+      return Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
+      });
+    });
+
+    // First geolocation call (auto on mount) is denied so we land on empty
+    // state with the button visible; subsequent click invokes success.
+    let firstCall = true;
+    installGeolocation((successCb, errorCb) => {
+      if (firstCall) {
+        firstCall = false;
+        errorCb({ code: 1, message: 'User denied' });
+      } else {
+        successCb({ coords: { latitude: 22.5726, longitude: 88.3639 } }); // Kolkata
+      }
+    });
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-use-current-location-btn')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('empty-state-use-current-location-btn'));
+
+    // Header updates with reverse-geocoded address.
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent(/Kolkata/);
+    });
+
+    // Distance check ran (non-geocode fetch happened).
+    await waitFor(() => {
+      expect(distanceCall).toHaveBeenCalled();
+    });
+
+    // Form is NOT open (button should not have opened the form).
+    expect(screen.queryByTestId('add-address-form')).not.toBeInTheDocument();
+  });
+
+  test('clicking it with GPS denied keeps page in safe no-location state', async () => {
+    global.fetch = jest.fn();
+    installGeolocation(gpsDenied());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-use-current-location-btn')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('empty-state-use-current-location-btn'));
+
+    // Header still says no address selected.
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
+    });
+    // No marker rendered (no active address source).
+    expect(screen.queryByTestId('mock-google-marker')).not.toBeInTheDocument();
+    // Confirm button remains disabled.
+    expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
+    // Form did NOT open.
+    expect(screen.queryByTestId('add-address-form')).not.toBeInTheDocument();
+  });
+
+  test('does NOT render when saved addresses exist', async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
+      })
+    );
+    installGeolocation(gpsDenied());
+    mockCrmGetAddresses.mockResolvedValue({
+      addresses: [
+        {
+          id: 'addr-x',
+          address_type: 'Home',
+          address: '1 Existing Road',
+          house: 'A',
+          city: 'Shimla',
+          latitude: '31.04',
+          longitude: '77.12',
+          contact_person_name: 'X',
+          is_default: false,
+        },
+      ],
+    });
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('address-card-addr-x')).toBeInTheDocument();
+    });
+    // Saved address present → empty-state action must NOT render.
+    expect(screen.queryByTestId('empty-state-use-current-location-btn')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('no-addresses')).not.toBeInTheDocument();
+  });
+
+  test('Add New Address still opens form; in-form button still present and works', async () => {
+    global.fetch = jest.fn();
+    installGeolocation(gpsDenied());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-use-current-location-btn')).toBeInTheDocument();
+    });
+
+    // Opening the form still works.
+    fireEvent.click(screen.getByTestId('add-address-btn'));
+    await waitFor(() => {
+      expect(screen.getByTestId('add-address-form')).toBeInTheDocument();
+    });
+
+    // In-form Use Current Location button still rendered.
+    expect(screen.getByTestId('form-use-current-location-btn')).toBeInTheDocument();
+  });
+
+  test('shows loading label while geoLoading is true', async () => {
+    global.fetch = jest.fn();
+    // First call denied (settles initial geoLoading), second never resolves
+    // so the manual click leaves geoLoading=true and shows the loading label.
+    let firstCall = true;
+    installGeolocation((successCb, errorCb) => {
+      if (firstCall) {
+        firstCall = false;
+        errorCb({ code: 1, message: 'User denied' });
+      }
+      // second call: never resolves → pending
+    });
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-use-current-location-btn')).toHaveTextContent(
+        'Use Current Location'
+      );
+    });
+
+    fireEvent.click(screen.getByTestId('empty-state-use-current-location-btn'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-use-current-location-btn')).toHaveTextContent(
+        'Detecting your current location...'
+      );
+    });
+    expect(screen.getByTestId('empty-state-use-current-location-btn')).toBeDisabled();
+  });
+});
+
