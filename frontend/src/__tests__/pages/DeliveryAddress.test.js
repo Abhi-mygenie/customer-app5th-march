@@ -91,6 +91,33 @@ const gpsNeverResolves = () => () => {
   // never invokes callbacks → simulates pending state
 };
 
+// Permissions API helpers. jsdom does not provide navigator.permissions
+// by default, so the component's permission check is a no-op unless we
+// install one. The component listens to status.onchange too, so we
+// support dispatching state updates via setState() helper.
+const installPermissions = (initialState) => {
+  const status = {
+    state: initialState,
+    onchange: null,
+    setState(next) {
+      this.state = next;
+      if (typeof this.onchange === 'function') this.onchange();
+    },
+  };
+  Object.defineProperty(global.navigator, 'permissions', {
+    value: { query: jest.fn(() => Promise.resolve(status)) },
+    configurable: true,
+  });
+  return status;
+};
+
+const removePermissions = () => {
+  Object.defineProperty(global.navigator, 'permissions', {
+    value: undefined,
+    configurable: true,
+  });
+};
+
 describe('DeliveryAddress — map guards (legacy regression)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -956,6 +983,124 @@ describe('DeliveryAddress — empty-hero (no map) state', () => {
     expect(screen.queryByTestId('empty-state-hero')).not.toBeInTheDocument();
     // In-form Use Current Location button is present.
     expect(screen.getByTestId('form-use-current-location-btn')).toBeInTheDocument();
+  });
+});
+
+// ============================================================
+// Permission-blocked inline help (geoBlocked)
+// ============================================================
+describe('DeliveryAddress — geo-blocked inline help on hero', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({ addresses: [] });
+    global.fetch = jest.fn();
+    delete window.google;
+    removePermissions();
+  });
+
+  afterEach(() => {
+    removePermissions();
+  });
+
+  test('shows inline help when GPS click is denied with PERMISSION_DENIED (code=1)', async () => {
+    installGeolocation(gpsDenied());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-hero')).toBeInTheDocument();
+    });
+
+    // The auto-detect on mount itself fires error code 1 → help should appear.
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-geo-blocked-help')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('empty-state-geo-blocked-help')).toHaveTextContent(
+      /Location is blocked/i
+    );
+
+    // Primary button is still clickable so the user can retry.
+    expect(screen.getByTestId('empty-state-use-current-location-btn')).not.toBeDisabled();
+    // Add New Address fallback is also still visible.
+    expect(screen.getByTestId('add-address-btn')).toBeInTheDocument();
+  });
+
+  test('does NOT show inline help for non-permission errors (code=2 / code=3)', async () => {
+    // POSITION_UNAVAILABLE
+    installGeolocation((_s, errorCb) => errorCb({ code: 2, message: 'No signal' }));
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-hero')).toBeInTheDocument();
+    });
+    // Help block must not appear for non-permission errors.
+    expect(screen.queryByTestId('empty-state-geo-blocked-help')).not.toBeInTheDocument();
+  });
+
+  test('shows inline help proactively on mount when Permissions API reports denied', async () => {
+    installPermissions('denied');
+    // Block GPS forever — no callback fires; help should still appear
+    // because Permissions API short-circuits the wait.
+    installGeolocation(gpsNeverResolves());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-geo-blocked-help')).toBeInTheDocument();
+    });
+  });
+
+  test('does NOT show inline help when Permissions API reports granted', async () => {
+    installPermissions('granted');
+    installGeolocation(gpsNeverResolves());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-hero')).toBeInTheDocument();
+    });
+    // Allow microtasks to drain so the permissions promise resolves.
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.queryByTestId('empty-state-geo-blocked-help')).not.toBeInTheDocument();
+  });
+
+  test('clears inline help when GPS later succeeds', async () => {
+    process.env.REACT_APP_GOOGLE_MAPS_API_KEY = 'test-key';
+    global.fetch = jest.fn((url) => {
+      if (typeof url === 'string' && url.includes('maps.googleapis.com/maps/api/geocode')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({
+            results: [{ formatted_address: '12 MG Road, Pune, MH 411001' }],
+          }),
+        });
+      }
+      return Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
+      });
+    });
+
+    // First call denied (code=1) → help appears. Second call succeeds.
+    let firstCall = true;
+    installGeolocation((successCb, errorCb) => {
+      if (firstCall) {
+        firstCall = false;
+        errorCb({ code: 1, message: 'User denied' });
+      } else {
+        successCb({ coords: { latitude: 18.5204, longitude: 73.8567 } }); // Pune
+      }
+    });
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-geo-blocked-help')).toBeInTheDocument();
+    });
+
+    // Click retry — second GPS call succeeds → header updates → help clears.
+    fireEvent.click(screen.getByTestId('empty-state-use-current-location-btn'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent(/Pune/);
+    });
+    expect(screen.queryByTestId('empty-state-geo-blocked-help')).not.toBeInTheDocument();
   });
 });
 

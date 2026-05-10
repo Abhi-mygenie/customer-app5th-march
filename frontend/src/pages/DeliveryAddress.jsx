@@ -68,6 +68,11 @@ const DeliveryAddress = () => {
   const [markerPos, setMarkerPos] = useState(DEFAULT_CENTER);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [geoLoading, setGeoLoading] = useState(false);
+  // Tracks whether the browser permission for geolocation is currently
+  // 'denied' (set proactively on mount via Permissions API, and also set
+  // when getCurrentPosition fires the error callback). Drives the inline
+  // help block on the empty-hero. Cleared when GPS later succeeds.
+  const [geoBlocked, setGeoBlocked] = useState(false);
   const mapRef = useRef(null);
 
   // Distance API state
@@ -120,6 +125,35 @@ const DeliveryAddress = () => {
     }
     fetchAddresses();
   }, [crmToken, isCustomer]);
+
+  // ============================================
+  // Proactive permission detection
+  // If the browser has the site's location permission set to 'denied',
+  // surface the inline help block immediately so the user doesn't have
+  // to click and watch a silent fail. Permissions API isn't universal,
+  // so we silently no-op on browsers that lack it (the click path still
+  // catches the error and flips geoBlocked).
+  // ============================================
+  useEffect(() => {
+    if (!navigator.permissions || !navigator.permissions.query) return;
+    let cancelled = false;
+    let permStatus = null;
+    navigator.permissions
+      .query({ name: 'geolocation' })
+      .then((status) => {
+        if (cancelled) return;
+        permStatus = status;
+        setGeoBlocked(status.state === 'denied');
+        status.onchange = () => {
+          setGeoBlocked(status.state === 'denied');
+        };
+      })
+      .catch(() => { /* Permissions API failed — ignore, click path still works */ });
+    return () => {
+      cancelled = true;
+      if (permStatus) permStatus.onchange = null;
+    };
+  }, []);
 
   // ============================================
   // Fetch saved addresses from CRM
@@ -180,6 +214,7 @@ const DeliveryAddress = () => {
         setMarkerPos(pos);
         setMapCenter(pos);
         setGeoLoading(false);
+        setGeoBlocked(false); // GPS works — clear any stale 'blocked' state
         checkDistance(pos.lat, pos.lng);
         if (populateForm && GOOGLE_MAPS_API_KEY) {
           // Rich reverse-geocode to auto-fill form fields (city/state/pincode).
@@ -220,8 +255,15 @@ const DeliveryAddress = () => {
           reverseGeocode(pos.lat, pos.lng);
         }
       },
-      () => {
+      (err) => {
         setGeoLoading(false);
+        // err.code === 1 → PERMISSION_DENIED. Surface the inline help block
+        // so the user knows the click didn't fail silently. Other error
+        // codes (POSITION_UNAVAILABLE=2, TIMEOUT=3) don't mean permission
+        // is blocked, so we don't set geoBlocked for those.
+        if (err && err.code === 1) {
+          setGeoBlocked(true);
+        }
         // No fallback selection — header reads "No delivery address selected"
         // and Confirm & Proceed stays disabled. User can still search, drag
         // pin, add an address, or pick a saved card.
@@ -661,6 +703,25 @@ const DeliveryAddress = () => {
             <MdMyLocation className="da-empty-hero-primary-icon" />
             <span>{geoLoading ? 'Detecting your current location...' : 'Use Current Location'}</span>
           </button>
+          {/* Inline help when the browser has Location permission blocked.
+              Visible only when geoBlocked is true. The primary button stays
+              clickable above so the user can retry after fixing permission
+              in another tab. */}
+          {geoBlocked && (
+            <p
+              className="da-empty-hero-blocked"
+              data-testid="empty-state-geo-blocked-help"
+              role="alert"
+            >
+              <span className="da-empty-hero-blocked-icon" aria-hidden="true">⚠</span>
+              <span>
+                <strong>Location is blocked.</strong> Tap the lock icon
+                {' '}(<span aria-hidden="true">🔒</span>) in your address bar →
+                {' '}Location → <strong>Allow</strong>, or use{' '}
+                <strong>Add New Address</strong> below.
+              </span>
+            </p>
+          )}
           <button
             type="button"
             className="da-empty-hero-secondary"
