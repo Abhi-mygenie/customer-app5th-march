@@ -353,7 +353,7 @@ const LandingPage = () => {
       !tableStatusCheck.isLoading &&
       (tableStatusCheck.isAvailable === true || !!tableStatusCheck.error)
     ) {
-      toast.error('This room is not checked in. Please contact staff.');
+      toast.error('This room is currently checked out, so ordering is disabled. Please contact staff.');
       return;
     }
 
@@ -631,11 +631,15 @@ const LandingPage = () => {
     !tableStatusCheck.isLoading &&
     (tableStatusCheck.isAvailable === true || !!tableStatusCheck.error);
   const roomBlocked = roomContextLost || roomNotCheckedIn;
-  const roomBlockedMessage = roomContextLost
-    ? 'Room context lost. Please rescan the QR code.'
-    : (tableStatusCheck.error
-        ? 'Unable to verify room status. Please try again or contact staff.'
-        : 'This room is not checked in. Ordering is disabled. Please contact staff.');
+  let roomBlockedTitle = 'Room Checked Out';
+  let roomBlockedMessage = 'This room is currently checked out, so ordering is disabled. Please contact staff.';
+  if (roomContextLost) {
+    roomBlockedTitle = 'Room context lost';
+    roomBlockedMessage = 'Please rescan the QR code.';
+  } else if (tableStatusCheck.error) {
+    roomBlockedTitle = 'Unable to verify room';
+    roomBlockedMessage = 'Please try again or contact staff.';
+  }
 
   // Admin config overrides for welcome message
   const displayWelcomeMessage = configWelcomeMessage || `Welcome to ${restaurantName}!`;
@@ -833,13 +837,16 @@ const LandingPage = () => {
                 aria-hidden
               />
               <p
-                style={{ margin: '8px 0 4px', fontWeight: 600 }}
+                style={{ margin: '8px 0 4px', fontWeight: 700, fontSize: 18 }}
+                data-testid="landing-room-blocked-title"
+              >
+                {roomBlockedTitle}
+              </p>
+              <p
+                style={{ margin: 0, fontSize: 14, opacity: 0.85 }}
                 data-testid="landing-room-blocked-message"
               >
                 {roomBlockedMessage}
-              </p>
-              <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>
-                Ordering is disabled until the room is checked in.
               </p>
             </div>
           ) : (
