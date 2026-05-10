@@ -49,7 +49,7 @@ Notes:
 All of these are read via `process.env.REACT_APP_*` and most have hard `console.error` / fail-fast checks:
 
 ```env
-REACT_APP_BACKEND_URL=https://iphone-zoom-patch.preview.emergentagent.com   # MUST match the preview URL so CORS/ingress work
+REACT_APP_BACKEND_URL=https://room-scan-validation.preview.emergentagent.com   # MUST match the preview URL so CORS/ingress work
 WDS_SOCKET_PORT=443
 ENABLE_HEALTH_CHECK=false
 REACT_APP_IMAGE_BASE_URL=https://manage.mygenie.online

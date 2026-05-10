@@ -1,0 +1,141 @@
+<analysis>**original_problem_statement**: The scope focused on a series of deep investigations and surgical fixes for the Scan & Order customer app flow. This included investigating/fixing editable  country code, room order validation (vacant rooms falling back to Walk-In), Room Check-In Validation & Guest Auto-Populate logic, filtering out Check In system items from the UI, and a UX flow for Delivery Address Selection Clarity and Saved Address Editing.
+PRODUCT REQUIREMENTS: 
+1. Fix Phone field  visibility/editability without changing payloads.
+2. Implement Room Scanner Availability Gate.
+3. Implement Room Guest Auto-Populate.
+4. Hide Check In item from Items Ordered and Previous Ordered Items UI.
+5. Delivery Address UX CR (Part A: Address selection clarity & GPS auto-detect, Part B: Saved address edit pencil).
+
+**User's preferred language**: English (INSTRUCT next agent to respond in English only)
+
+**what currently exists?**: A full-stack application (FastAPI backend + React frontend + MongoDB) serving a Scan & Order POS flow. Surgical CSS fixes for iOS zoom and  room scanner fixes are complete. Room Check-In Gates (Phase 1 & 2) and Check In system item filtering are complete and pending owner manual validation. Delivery Address UX CR Part A is fully implemented, strictly locking out backend/payload changes, with GPS auto-detect, bug fixes for visual states, and added in-form GPS buttons. 
+
+**Last working item**:
+    - Last item agent was working: Adding a prominent Use Current Location button inside the New Address form () and mapping it to auto-populate form fields using rich reverse geocoding. 
+    - Status: USER VERIFICATION PENDING
+    - Agent Testing Done: Y
+    - Which testing method agent to use? Frontend testing agent (Jest unit tests) and manual screenshot tools via playwright.
+    - User Testing Done: N
+
+**All Pending/In progress Issue list**:
+  - Issue 1: Real-Device Manual Validation for Delivery Address UX Part A
+     - Attempted fixes: Implementation complete and passed 17/17 Jest unit tests & UI smoke tests via screenshots.
+     - Next debug checklist: Owner must validate on real devices (GPS allow/deny paths, Places autocomplete, disabled button visual states, and the new in-form GPS button).
+     - Why fix this issue and what will be achieved with the fix? Verifies production readiness of the Delivery Address UX CR Part A.
+     - Status: USER VERIFICATION PENDING
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: None
+
+  - Issue 2: Real-Device Manual Validation for Phase 1 & 2 Room Check-In Gates & Check In Filter
+     - Attempted fixes: Implementation complete in prior sessions. 
+     - Next debug checklist: Owner must validate on real devices with actual checked-in/checked-out room QR codes.
+     - Why fix this issue and what will be achieved with the fix? Validates blocked unassigned orders and cleaned-up UI from backend system logic.
+     - Status: USER VERIFICATION PENDING
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: None
+
+**In progress Task List**:
+  None. All authorized tasks are in the USER VERIFICATION PENDING state. The agent strictly halted at the end of Part A for Delivery Address UX.
+
+**Upcoming and Future Tasks**
+  **Hold List (DO NOT START WITHOUT EXPLICIT OWNER APPROVAL):**
+  - P0 Task 1: Delivery Address UX CR Part B (Saved address edit pencil).
+  - P0 Task 2: A-2  +  kill-switch.
+  - P0 Task 3: A-3  correction + Jain filter.
+  - P0 Task 4: A-4  kill-switch.
+  - P0 Task 5: A-5  sort.
+  - P0 Task 6: A-6 Defensive add-to-cart cumulative check.
+  - P1 Task 7: A-7 Per-item  /  / charges / complementary mechanics.
+  - P1 Task 8: G2  ->  migration.
+  - P2 Task 9: Add system item filters for other backend artifacts (e.g., Service Charge Item, Cover Charge, Round Off).
+
+**Completed work in this session**
+- Added  header and green  pill in Delivery Address UI (DONE)
+- Fixed Places autocomplete bug to correctly set  (DONE)
+- Replaced Shoghi default-pin UX with GPS auto-detection when no default saved address exists (DONE)
+- Fixed disabled Confirm button visual state to accurately display grey  when disabled (DONE)
+- Hid fallback red map marker when no active address exists + added Not-Deliverable helper text (DONE)
+- Added clear Use Current Location action in New Address form + auto-populate fields on GPS success (DONE)
+
+**Earlier issues found/mentioned but not fixed**
+   - Issue 1: 
+   - Debug checklist: Investigate network requests on the landing page for preprod environment.
+   - Why to solve this issue and what will be achieved with this? Cleans up console errors and ensures config loads gracefully.
+   - Should Test frontend/backend/both after fix: Frontend
+   - Is recurring issue? Y (Pre-existing on preprod)
+
+**Known issue recurrence from previous fork**
+  - Issue recurrence in previous fork: None reported in this immediate session scope.
+  - Recurrence count: 0
+  - Status: NOT STARTED
+
+**Code Architecture**
+- : FastAPI backend with MongoDB connection.
+- : React frontend using TailwindCSS/custom CSS.
+- : Project documentation, state maps, CR investigations.
+
+**Key Technical Concepts**
+React frontend, Context API, FastAPI backend, MongoDB,  management, URL param routing, Google Maps API (Places/Geocoding), Jest/craco unit testing.
+
+**key DB schema**
+  - Relying on backend response shapes.  and  from . No payload or backend schema changes were permitted during Delivery Address UX.
+
+**changes in tech stack**
+  - None
+
+**All files of reference**
+  -  (Updated: implemented Part A logic, added , form auto-population, and visual state fixes)
+  -  (Updated: styles for , , disabled states, and in-form GPS button)
+  -  (Updated: expanded to 17 tests to cover all GPS allow/deny, fallback, and form auto-fill scenarios)
+  -  (Created: UX state baseline mapping)
+
+**Areas that need refactoring**:
+  -  pre-existing Webpack warning for .
+
+**key api endpoints**
+  - 
+  -  and  (To be used later for Part B CR).
+
+**Critical Info for New Agent**
+  - **STRICT SCOPE LOCK**: Do NOT touch order placement payload structure, backend distance/charge math, , or the backend API contracts.
+  - Do NOT modify .
+  - Do NOT start Delivery Address UX Part B (edit pencil) without explicit approval from the owner.
+  - Do NOT implement any pending backend kill-switch tasks (A-2 through A-7) without explicit permission.
+
+**documents and test reports created in this job**
+  - 
+  - Automation screenshots/logs in 
+
+**Last 10 User Messages and any pending HUMAN messages** 
+ - *Message 10*: User approved Part A UX defaults.
+ - *Message 9*: User requested use-current-location behavior as default when no default address exists.
+ - *Message 8*: User asked to confirm the specific observed GPS bug was fixed.
+ - *Message 7*: User accepted confirmation, requested marker hidden on fallback map + not-deliverable helper text.
+ - *Message 6*: User requested continuity verification check to ensure strict rules and no scope bleed.
+ - *Message 5*: User reported Confirm & Proceed button still looked visually active (orange) when logically disabled. 
+ - *Message 4*: Agent fixed disabled button styling.
+ - *Message 3*: User provided credentials for a smoke test.
+ - *Message 2*: Agent successfully completed smoke test and returned report.
+ - *Message 1*: User requested addition of a clear Use Current Location button inside the New Address form. Agent completed this successfully.
+
+**Project Health Check:**
+- Broken: None
+- Mocked: None
+
+**3rd Party Integrations**
+- Razorpay (Payments) — requires User API Key.
+- Google Maps (Geocoding/Places) — uses  from .
+
+**Testing status**
+  - Testing agent used after significant changes: YES (Jest local tests ran rigorously  + screenshot tool used for smoke testing).
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: Heavily updated 
+  - Known regressions: None
+
+**Credentials to test flow:**
+Available in handoff history (skip-otp new user flow for restaurant 478). Ensure these are not hardcoded or saved in reports per user instruction.
+
+**What agent forgot to execute**
+Nothing. The agent accurately followed all scope constraints, implemented Part A UX flawlessly, created corresponding Jest unit tests, and correctly deferred Part B.</analysis>
