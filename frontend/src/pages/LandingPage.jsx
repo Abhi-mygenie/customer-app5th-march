@@ -116,6 +116,9 @@ const LandingPage = () => {
   // CR Phase-1 (Room Scanner Availability Gate): we additionally store `isAvailable`
   // so we can distinguish 'Available' (vacant for room flow) from
   // 'Not Available + no orderId' (checked-in, no active order yet).
+  // CR Phase-2 (Room Guest Auto-Populate + Lock): we also store `tableType`,
+  // `guestLocked`, `guestIncomplete`, `guestName`, `guestPhone` so the UI can
+  // auto-fill + lock the customer fields when a checked-in room is detected.
   const [tableStatusCheck, setTableStatusCheck] = useState({
     isLoading: false,
     isOccupied: false,
@@ -123,6 +126,11 @@ const LandingPage = () => {
     existingOrderId: null,
     isChecked: false,
     error: null,
+    tableType: null,
+    guestLocked: false,
+    guestIncomplete: false,
+    guestName: '',
+    guestPhone: '',
   });
 
   // State for edit order loading
@@ -229,6 +237,11 @@ const LandingPage = () => {
       existingOrderId: null,
       isChecked: false,
       error: null,
+      tableType: null,
+      guestLocked: false,
+      guestIncomplete: false,
+      guestName: '',
+      guestPhone: '',
     });
   }, []); // Empty deps = runs on mount only
 
@@ -273,6 +286,11 @@ const LandingPage = () => {
             existingOrderId: null,
             isChecked: true,
             error: 'Invalid table',
+            tableType: null,
+            guestLocked: false,
+            guestIncomplete: false,
+            guestName: '',
+            guestPhone: '',
           });
           return;
         }
@@ -308,6 +326,41 @@ const LandingPage = () => {
           }
         }
 
+        // CR Phase-2 — Room guest auto-populate + lock.
+        // For room scans where the room is checked-in and the API returned
+        // complete guest details, seed name/phone fields and persist a
+        // `locked` flag so ReviewOrder also renders them read-only.
+        // We compute eligibility here so it's a single source of truth.
+        const isCheckedInRoom =
+          scannedRoomOrTable === 'room' &&
+          (result.tableType === 'RM') &&
+          result.tableStatus === 'Not Available';
+        const guest = result.guest || null;
+        const guestNameJoined = guest
+          ? `${guest.firstName} ${guest.lastName}`.trim().replace(/\s+/g, ' ')
+          : '';
+        const guestPhoneDigits = guest ? String(guest.phone || '').replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '').slice(-10) : '';
+        const guestPhoneE164 = guestPhoneDigits.length === 10 ? `+91${guestPhoneDigits}` : '';
+        const isGuestComplete = !!guestNameJoined && !!guestPhoneE164;
+        const isCheckedInWithGuest = isCheckedInRoom && isGuestComplete;
+        // RM + Not Available BUT incomplete guest = treat as blocked (per S1 owner decision)
+        const isCheckedInIncomplete = isCheckedInRoom && !isGuestComplete;
+
+        if (isCheckedInWithGuest) {
+          // Seed local state and persist lock for ReviewOrder.
+          setCapturedName(guestNameJoined);
+          setCapturedPhone(guestPhoneE164);
+          try {
+            localStorage.setItem('guestCustomer', JSON.stringify({
+              name: guestNameJoined,
+              phone: guestPhoneE164,
+              restaurantId: String(numericRestaurantId),
+              locked: true,
+              source: 'checked-in-room',
+            }));
+          } catch (_e) { /* localStorage may be full / disabled — non-fatal */ }
+        }
+
         setTableStatusCheck({
           isLoading: false,
           isOccupied: result.isOccupied,
@@ -315,6 +368,12 @@ const LandingPage = () => {
           existingOrderId: result.orderId || null,
           isChecked: true,
           error: result.error || null,
+          // CR Phase-2 fields
+          tableType: result.tableType || null,
+          guestLocked: isCheckedInWithGuest,
+          guestIncomplete: isCheckedInIncomplete,
+          guestName: isCheckedInWithGuest ? guestNameJoined : '',
+          guestPhone: isCheckedInWithGuest ? guestPhoneE164 : '',
         });
       } catch (err) {
         logger.error('table', 'Table status check failed:', err);
@@ -326,12 +385,17 @@ const LandingPage = () => {
           existingOrderId: null,
           isChecked: true,
           error: err.message,
+          tableType: null,
+          guestLocked: false,
+          guestIncomplete: false,
+          guestName: '',
+          guestPhone: '',
         });
       }
     };
 
     checkTable();
-  }, [isScanned, scannedTableId, scannedOrderType, restaurantId, restaurant, tableStatusCheck.isChecked, navigate, clearCart]);
+  }, [isScanned, scannedTableId, scannedOrderType, scannedRoomOrTable, restaurantId, restaurant, tableStatusCheck.isChecked, navigate, clearCart]);
 
   // Theme colors now controlled by local admin config only (not POS)
 
@@ -351,7 +415,11 @@ const LandingPage = () => {
       scannedRoomOrTable === 'room' &&
       tableStatusCheck.isChecked &&
       !tableStatusCheck.isLoading &&
-      (tableStatusCheck.isAvailable === true || !!tableStatusCheck.error)
+      (
+        tableStatusCheck.isAvailable === true ||
+        !!tableStatusCheck.error ||
+        tableStatusCheck.guestIncomplete === true
+      )
     ) {
       toast.error('This room is currently checked out, so ordering is disabled. Please contact staff.');
       return;
@@ -629,7 +697,14 @@ const LandingPage = () => {
     isRoomScanner &&
     tableStatusCheck.isChecked &&
     !tableStatusCheck.isLoading &&
-    (tableStatusCheck.isAvailable === true || !!tableStatusCheck.error);
+    (
+      // Phase 1: room reported Available (vacant) or API errored — block.
+      tableStatusCheck.isAvailable === true ||
+      !!tableStatusCheck.error ||
+      // Phase 2 (S1): RM + Not Available BUT guest details missing/incomplete
+      // -> reuse the same "Room Checked Out" blocked card (per owner decision).
+      tableStatusCheck.guestIncomplete === true
+    );
   const roomBlocked = roomContextLost || roomNotCheckedIn;
   let roomBlockedTitle = 'Room Checked Out';
   let roomBlockedMessage = 'This room is currently checked out, so ordering is disabled. Please contact staff.';
@@ -652,9 +727,12 @@ const LandingPage = () => {
   // Phase 2: Customer capture logic
   // For takeaway/delivery: ALWAYS show and ALWAYS mandatory (unless logged in)
   // For dine-in/walk-in: show from config
+  // CR Phase-2 (Room Guest Auto-Populate): force-show + lock when a checked-in
+  // room returned full guest details, so the user can see the auto-populated
+  // (read-only) name/phone before tapping Browse Menu.
   const showCustomerCapture = isTakeawayDeliveryMode
     ? !isAuthenticated  // Always show for takeaway/delivery (mandatory)
-    : (configShowLandingCustomerCapture && !isAuthenticated);
+    : (tableStatusCheck.guestLocked || (configShowLandingCustomerCapture && !isAuthenticated));
 
   // Phase 2: For takeaway/delivery, name+phone are always mandatory
   const effectiveMandatoryName = isTakeawayDeliveryMode ? true : mandatoryCustomerName;
@@ -796,6 +874,8 @@ const LandingPage = () => {
             setPhoneError={setPhoneError}
             mandatoryName={effectiveMandatoryName}
             mandatoryPhone={effectiveMandatoryPhone}
+            readOnly={tableStatusCheck.guestLocked === true}
+            lockHelperText="Fetched from checked-in room"
           />
         )}
 

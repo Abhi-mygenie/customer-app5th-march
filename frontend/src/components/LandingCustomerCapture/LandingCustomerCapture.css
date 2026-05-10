@@ -120,3 +120,36 @@
   margin-top: 3px;
   padding-left: 4px;
 }
+
+
+/* CR Phase-2 — Read-only / locked state for auto-populated guest details */
+.capture-input-locked,
+.capture-phone-locked .PhoneInputInput {
+  background: #f4f4f4 !important;
+  color: #555 !important;
+  cursor: not-allowed;
+  border-color: #d4d4d4 !important;
+}
+
+.capture-phone-locked {
+  background: #f4f4f4 !important;
+  border-color: #d4d4d4 !important;
+}
+
+.capture-phone-locked .PhoneInputCountry {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.capture-lock-helper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #666;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+  width: fit-content;
+}

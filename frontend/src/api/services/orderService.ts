@@ -78,7 +78,14 @@ export const checkTableStatus = async (
   tableId: string | number,
   restaurantId: string | number,
   authToken: string
-): Promise<TableStatus & { tableStatus: string; error?: string }> => {
+): Promise<TableStatus & {
+  tableStatus: string;
+  error?: string;
+  /** CR Phase-2 — table type from API (`'RM'` for room, `'TB'` for table, etc.) */
+  tableType: string | null;
+  /** CR Phase-2 — checked-in guest details when room is occupied */
+  guest: { firstName: string; lastName: string; phone: string } | null;
+}> => {
   try {
     const response = await apiClient.get(
       ENDPOINTS.CHECK_TABLE_STATUS(tableId, restaurantId),
@@ -94,13 +101,28 @@ export const checkTableStatus = async (
     const status = response.data?.status || {};
     const tableStatus = status.table_status || 'Available';
     const orderId = status.order_id || '';
-    
+
+    // CR Phase-2 — preserve table type and guest data from API.
+    // Live API uses key `"table type"` (with space). We also read `table_type`
+    // (underscore) defensively in case backend normalises later.
+    const tableType: string | null = status['table_type'] || status['table type'] || null;
+    const ui = status.userinfo;
+    const guest = ui
+      ? {
+          firstName: String(ui.f_name || '').trim(),
+          lastName:  String(ui.l_name  || '').trim(),
+          phone:     String(ui.phone   || '').replace(/\D/g, ''),
+        }
+      : null;
+
     return {
       tableStatus,
       orderId: orderId ? parseInt(orderId, 10) : null,
       isOccupied: tableStatus === 'Not Available' && !!orderId,
       isAvailable: tableStatus === 'Available',
       isInvalid: tableStatus === 'Invalid Table ID or QR code',
+      tableType,
+      guest,
     };
   } catch (error: any) {
     logger.error('table', 'Failed to check table status:', error);
@@ -110,6 +132,8 @@ export const checkTableStatus = async (
       isOccupied: false,
       isAvailable: true,
       isInvalid: false,
+      tableType: null,
+      guest: null,
       error: error.message,
     };
   }

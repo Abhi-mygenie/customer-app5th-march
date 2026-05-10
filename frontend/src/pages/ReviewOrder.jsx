@@ -160,6 +160,10 @@ const ReviewOrder = () => {
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  // CR Phase-2 — when customer was auto-populated from a checked-in room,
+  // the corresponding `guestCustomer.locked` flag in localStorage is `true`.
+  // This makes Review Order render the fields read-only with a lock helper.
+  const [isCustomerDetailsLocked, setIsCustomerDetailsLocked] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
   const [roomOrTable, setRoomOrTable] = useState(null); // 'room' | 'table' | null
   const [specialInstructions, setSpecialInstructions] = useState('');
@@ -283,21 +287,24 @@ const ReviewOrder = () => {
       try {
         const savedGuest = localStorage.getItem('guestCustomer');
         if (savedGuest) {
-          const { name, phone, restaurantId: savedRestaurantId } = JSON.parse(savedGuest);
-          
+          const { name, phone, restaurantId: savedRestaurantId, locked } = JSON.parse(savedGuest);
+
           // Only pre-fill if restaurant matches (or no restaurantId stored - legacy data)
           if (savedRestaurantId && savedRestaurantId !== numericRestaurantId) {
             // Different restaurant - clear the stale data
             localStorage.removeItem('guestCustomer');
             return;
           }
-          
+
           if (name && !customerName) setCustomerName(name);
           if (phone && !customerPhone) {
             // Store E.164 format (+91...) so PhoneInput shows India flag correctly
             const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
             setCustomerPhone(formattedPhone);
           }
+          // CR Phase-2 — if the guest was auto-populated from a checked-in room,
+          // honour the lock flag so the fields render read-only.
+          if (locked === true) setIsCustomerDetailsLocked(true);
         }
       } catch (e) {
         // Ignore parse errors
@@ -337,6 +344,7 @@ const ReviewOrder = () => {
       // Clear customer details
       setCustomerName('');
       setCustomerPhone('');
+      setIsCustomerDetailsLocked(false);
       setLookedUpCustomer(null);
       
       // Clear table/room selection
@@ -1527,6 +1535,8 @@ const ReviewOrder = () => {
               showName={showCustomerName}
               showPhone={showCustomerPhone}
               showTitle={false}
+              readOnly={isCustomerDetailsLocked}
+              lockHelperText={isCustomerDetailsLocked ? 'Fetched from checked-in room' : ''}
             />
           </div>
             <div className="review-order-divider"></div>

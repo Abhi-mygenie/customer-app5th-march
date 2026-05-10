@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaLock } from 'react-icons/fa';
 // import { IoPersonSharp } from "react-icons/io5";
 import PhoneInput from 'react-phone-number-input';
 import { isValidPhoneNumber } from 'react-phone-number-input';
@@ -15,6 +16,8 @@ const CustomerDetails = ({
   showPhoneError = false,
   showName = true,
   showPhone = true,
+  readOnly = false,
+  lockHelperText = '',
 }) => {
   const [phoneError, setPhoneError] = useState('');
   const [phoneValue, setPhoneValue] = useState(phone || '');
@@ -50,12 +53,13 @@ const CustomerDetails = ({
 
   // Handle phone change
   const handlePhoneChange = (value) => {
+    if (readOnly) return;
     setPhoneValue(value || '');
-    
+
     // Validate
     const validation = validatePhone(value);
     setPhoneError(validation.error);
-    
+
     // Notify parent
     onPhoneChange?.(value || '');
   };
@@ -71,7 +75,7 @@ const CustomerDetails = ({
   }, [showPhoneError, phoneValue]);
 
   return (
-    <div className={`customer-details ${className}`}>
+    <div className={`customer-details ${className} ${readOnly ? 'customer-details-locked' : ''}`}>
       {showTitle && (
         <h2 className="customer-details-title">Customer Details</h2>
       )}
@@ -84,7 +88,8 @@ const CustomerDetails = ({
             value={phoneValue}
             onChange={handlePhoneChange}
             placeholder="Enter phone number"
-            className={`customer-details-phone-input ${phoneError ? 'customer-details-phone-input-error' : ''}`}
+            disabled={readOnly}
+            className={`customer-details-phone-input ${phoneError ? 'customer-details-phone-input-error' : ''} ${readOnly ? 'customer-details-phone-locked' : ''}`}
           />
           {phoneError && (
             <div className="customer-details-error">{phoneError}</div>
@@ -96,12 +101,19 @@ const CustomerDetails = ({
           {/* <label className="customer-details-label">Name</label> */}
           <input
             type="text"
-            className="customer-details-input"
+            className={`customer-details-input ${readOnly ? 'customer-details-input-locked' : ''}`}
             value={name}
-            onChange={(e) => onNameChange?.(e.target.value)}
+            onChange={(e) => { if (!readOnly) onNameChange?.(e.target.value); }}
             placeholder="Enter your name"
+            readOnly={readOnly}
+            disabled={readOnly}
           />
         </div>
+        )}
+        {readOnly && lockHelperText && (
+          <div className="customer-details-lock-helper" data-testid="customer-details-lock-helper">
+            <FaLock size={11} aria-hidden /> {lockHelperText}
+          </div>
         )}
       </div>
     </div>

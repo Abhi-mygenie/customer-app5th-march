@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { FaLock } from 'react-icons/fa';
 import PhoneInput from 'react-phone-number-input';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -13,6 +14,8 @@ const LandingCustomerCapture = ({
   setPhoneError,
   mandatoryName = false,
   mandatoryPhone = false,
+  readOnly = false,
+  lockHelperText = '',
 }) => {
   // Load saved guest data on mount
   useEffect(() => {
@@ -29,6 +32,7 @@ const LandingCustomerCapture = ({
   }, []);
 
   const handlePhoneChange = (value) => {
+    if (readOnly) return;
     setPhone(value || '');
     setPhoneError('');
   };
@@ -42,25 +46,33 @@ const LandingCustomerCapture = ({
             value={phone}
             onChange={handlePhoneChange}
             placeholder="Phone Number"
-            className={`capture-phone-input ${phoneError ? 'capture-phone-error' : ''}`}
+            disabled={readOnly}
+            className={`capture-phone-input ${phoneError ? 'capture-phone-error' : ''} ${readOnly ? 'capture-phone-locked' : ''}`}
             data-testid="capture-phone-input"
           />
           {phoneError && (
             <span className="capture-error-text">{phoneError}</span>
           )}
-          {mandatoryPhone && !phoneError && <span className="capture-mandatory-hint">* Required</span>}
+          {!readOnly && mandatoryPhone && !phoneError && <span className="capture-mandatory-hint">* Required</span>}
         </div>
         <div className="capture-input-group">
           <input
             type="text"
-            className="capture-input"
+            className={`capture-input ${readOnly ? 'capture-input-locked' : ''}`}
             placeholder="Your Name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => { if (!readOnly) setName(e.target.value); }}
+            readOnly={readOnly}
+            disabled={readOnly}
             data-testid="capture-name-input"
           />
-          {mandatoryName && <span className="capture-mandatory-hint">* Required</span>}
+          {!readOnly && mandatoryName && <span className="capture-mandatory-hint">* Required</span>}
         </div>
+        {readOnly && lockHelperText && (
+          <div className="capture-lock-helper" data-testid="capture-lock-helper">
+            <FaLock size={11} aria-hidden /> {lockHelperText}
+          </div>
+        )}
       </div>
     </div>
   );
