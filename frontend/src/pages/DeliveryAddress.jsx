@@ -119,7 +119,6 @@ const DeliveryAddress = () => {
       return;
     }
     fetchAddresses();
-    requestCurrentLocation();
   }, [crmToken, isCustomer]);
 
   // ============================================
@@ -127,35 +126,50 @@ const DeliveryAddress = () => {
   // ============================================
   const fetchAddresses = async () => {
     setLoading(true);
+    let needsGpsAutoDetect = false;
     try {
       const data = await crmGetAddresses(crmToken);
       const addrs = data.addresses || [];
       setAddresses(addrs);
-      // Pre-select default address
+      // Pre-select ONLY the explicit default address. If no default exists,
+      // we no longer auto-pick the first saved address — instead we trigger
+      // GPS auto-detection below so the user isn't shown a misleading
+      // fallback map center as if it were a chosen delivery address.
       const defaultAddr = addrs.find(a => a.is_default);
-      const initial = defaultAddr || (addrs.length > 0 ? addrs[0] : null);
-      if (initial) {
-        setSelectedId(initial.id);
-        if (initial.latitude && initial.longitude) {
-          const pos = { lat: parseFloat(initial.latitude), lng: parseFloat(initial.longitude) };
+      if (defaultAddr) {
+        setSelectedId(defaultAddr.id);
+        if (defaultAddr.latitude && defaultAddr.longitude) {
+          const pos = { lat: parseFloat(defaultAddr.latitude), lng: parseFloat(defaultAddr.longitude) };
           setMapCenter(pos);
           setMarkerPos(pos);
           checkDistance(pos.lat, pos.lng);
         }
+      } else {
+        needsGpsAutoDetect = true;
       }
     } catch (err) {
       toast.error('Failed to load addresses');
     } finally {
       setLoading(false);
     }
+    // Trigger GPS auto-detection AFTER the loading skeleton clears so the
+    // user sees "Detecting your current location..." in the header, not the
+    // address-fetch spinner.
+    if (needsGpsAutoDetect) {
+      applyCurrentLocation();
+    }
   };
 
   // ============================================
-  // Browser geolocation
+  // Browser geolocation — request + apply in one shot
+  // Shared by:
+  //   - initial auto-detection when no default saved address exists
+  //   - manual "Use Current Location" button
   // ============================================
-  const requestCurrentLocation = () => {
+  const applyCurrentLocation = () => {
     if (!navigator.geolocation) return;
     setGeoLoading(true);
+    setSelectedId(null); // GPS overrides any saved-card selection
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const pos = {
@@ -163,27 +177,23 @@ const DeliveryAddress = () => {
           lng: position.coords.longitude,
         };
         setCurrentLocation(pos);
+        setMarkerPos(pos);
+        setMapCenter(pos);
         setGeoLoading(false);
+        reverseGeocode(pos.lat, pos.lng);
+        checkDistance(pos.lat, pos.lng);
       },
       () => {
         setGeoLoading(false);
+        // No fallback selection — header reads "No delivery address selected"
+        // and Confirm & Proceed stays disabled. User can still search, drag
+        // pin, add an address, or pick a saved card.
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
-  const handleUseCurrentLocation = () => {
-    if (currentLocation) {
-      setMarkerPos(currentLocation);
-      setMapCenter(currentLocation);
-      setSelectedId(null); // Deselect saved address
-      reverseGeocode(currentLocation.lat, currentLocation.lng);
-      checkDistance(currentLocation.lat, currentLocation.lng);
-    } else {
-      requestCurrentLocation();
-      toast('Requesting location access...', { icon: '📍' });
-    }
-  };
+  const handleUseCurrentLocation = () => applyCurrentLocation();
 
   // ============================================
   // Reverse geocode (lat/lng → address text)
@@ -551,10 +561,10 @@ const DeliveryAddress = () => {
   const displayAddress = selectedAddress
     ? [selectedAddress.house, selectedAddress.address, selectedAddress.city].filter(Boolean).join(', ')
     : reverseAddress || '';
-  const headerText = displayAddress
-    || (addresses.length === 0
-      ? 'Please add or select a delivery address'
-      : 'Please select an address');
+  const headerText = geoLoading
+    ? 'Detecting your current location...'
+    : (displayAddress || 'No delivery address selected');
+  const showHeaderHint = !geoLoading && !displayAddress;
 
   // ============================================
   // Render
@@ -622,6 +632,11 @@ const DeliveryAddress = () => {
         <span className="da-delivering-text" data-testid="delivering-to-text">
           {headerText}
         </span>
+        {showHeaderHint && (
+          <span className="da-delivering-hint" data-testid="delivering-to-hint">
+            Search, use current location, or add a new address to continue.
+          </span>
+        )}
       </div>
 
       {/* Distance result bar */}

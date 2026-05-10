@@ -128,6 +128,13 @@
   word-break: break-word;
 }
 
+.da-delivering-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.35;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+}
+
 /* Distance bar */
 .da-distance-bar {
   padding: 0.5rem 1rem;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 const mockNavigate = jest.fn();
@@ -61,7 +61,37 @@ jest.mock('@react-google-maps/api', () => ({
 
 import DeliveryAddress from '../../pages/DeliveryAddress';
 
-describe('DeliveryAddress map guards', () => {
+// ============================================================
+// Geolocation helpers
+// ============================================================
+const installGeolocation = (impl) => {
+  // jsdom does not provide navigator.geolocation by default.
+  Object.defineProperty(global.navigator, 'geolocation', {
+    value: { getCurrentPosition: impl },
+    configurable: true,
+  });
+};
+
+const removeGeolocation = () => {
+  Object.defineProperty(global.navigator, 'geolocation', {
+    value: undefined,
+    configurable: true,
+  });
+};
+
+const gpsSuccess = (lat, lng) => (successCb) => {
+  successCb({ coords: { latitude: lat, longitude: lng } });
+};
+
+const gpsDenied = () => (_successCb, errorCb) => {
+  errorCb({ code: 1, message: 'User denied' });
+};
+
+const gpsNeverResolves = () => () => {
+  // never invokes callbacks → simulates pending state
+};
+
+describe('DeliveryAddress — map guards (legacy regression)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCrmGetAddresses.mockResolvedValue({
@@ -83,20 +113,17 @@ describe('DeliveryAddress map guards', () => {
         },
       ],
     });
-
     global.fetch = jest.fn();
+    removeGeolocation();
     delete window.google;
   });
 
   test('does not call geocode API when a saved address has no queryable fields', async () => {
     render(<DeliveryAddress />);
-
     await waitFor(() => {
       expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
     });
-
-    const addressCard = screen.getByTestId('address-card-addr-empty');
-    fireEvent.click(addressCard);
+    fireEvent.click(screen.getByTestId('address-card-addr-empty'));
 
     expect(mockSetRestaurantScope).toHaveBeenCalledWith('716');
     expect(mockCrmGetAddresses).toHaveBeenCalledWith('crm-token-716');
@@ -105,39 +132,44 @@ describe('DeliveryAddress map guards', () => {
 });
 
 // ============================================================
-// Part A — DELIVERING TO header + SELECTED pill UX (Cases 1-3)
+// Case 1 — first-time / no saved addresses, GPS denied
 // ============================================================
-describe('DeliveryAddress — Case 1: no saved addresses', () => {
+describe('DeliveryAddress — Case 1: no saved addresses + GPS denied', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCrmGetAddresses.mockResolvedValue({ addresses: [] });
     global.fetch = jest.fn();
+    installGeolocation(gpsDenied());
     delete window.google;
   });
 
-  test('renders DELIVERING TO label with "Please add or select" message', async () => {
+  test('renders DELIVERING TO with "No delivery address selected" + hint after GPS denial', async () => {
     render(<DeliveryAddress />);
     await waitFor(() => {
       expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
     });
 
-    const header = screen.getByTestId('delivering-to-header');
-    expect(header).toBeInTheDocument();
-    expect(header).toHaveTextContent('DELIVERING TO:');
-
-    const text = screen.getByTestId('delivering-to-text');
-    expect(text).toHaveTextContent('Please add or select a delivery address');
+    // Wait until GPS denial settles (geoLoading clears synchronously here)
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
+    });
+    expect(screen.getByTestId('delivering-to-hint')).toHaveTextContent(
+      'Search, use current location, or add a new address to continue.'
+    );
   });
 
-  test('Confirm & Proceed is disabled when no address source set', async () => {
+  test('Confirm & Proceed remains disabled after GPS denial', async () => {
     render(<DeliveryAddress />);
     await waitFor(() => {
       expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
     });
     expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
   });
 
-  test('no SELECTED pill is rendered when no address is selected', async () => {
+  test('no SELECTED pill rendered', async () => {
     render(<DeliveryAddress />);
     await waitFor(() => {
       expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
@@ -146,7 +178,82 @@ describe('DeliveryAddress — Case 1: no saved addresses', () => {
   });
 });
 
-describe('DeliveryAddress — Case 2: saved addresses, no default (auto-select first)', () => {
+// ============================================================
+// Case 1b — first-time / no saved addresses, GPS pending
+// ============================================================
+describe('DeliveryAddress — Case 1b: GPS still detecting (pending)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({ addresses: [] });
+    global.fetch = jest.fn();
+    installGeolocation(gpsNeverResolves());
+    delete window.google;
+  });
+
+  test('header shows "Detecting your current location..." while GPS is pending', async () => {
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('Detecting your current location...');
+    });
+    // No hint while detecting
+    expect(screen.queryByTestId('delivering-to-hint')).not.toBeInTheDocument();
+    // Button still disabled while detecting
+    expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
+  });
+});
+
+// ============================================================
+// Case 1c — first-time / no saved addresses, GPS success
+// ============================================================
+describe('DeliveryAddress — Case 1c: GPS success applies as initial address', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({ addresses: [] });
+    // Reverse geocode (Google Maps) + distance API both go through global.fetch
+    global.fetch = jest.fn((url) => {
+      if (typeof url === 'string' && url.includes('maps.googleapis.com/maps/api/geocode')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({
+            results: [{ formatted_address: '101 Taj Road, Agra, UP 282001' }],
+          }),
+        });
+      }
+      // distance-api-new
+      return Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '25 min', distance: '3 km',
+        }),
+      });
+    });
+    installGeolocation(gpsSuccess(27.1751, 78.0421)); // Agra
+    // Required because reverseGeocode short-circuits when API key missing
+    process.env.REACT_APP_GOOGLE_MAPS_API_KEY = 'test-key';
+    delete window.google;
+  });
+
+  test('GPS success populates header with reverse-geocoded address', async () => {
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent(/Agra/);
+    });
+    // No hint when address is set
+    expect(screen.queryByTestId('delivering-to-hint')).not.toBeInTheDocument();
+    // No saved card SELECTED
+    expect(screen.queryByTestId(/^selected-pill-/)).not.toBeInTheDocument();
+  });
+});
+
+// ============================================================
+// Case 2 — saved addresses exist but no default
+// (NEW behaviour: do NOT auto-select first card; let GPS try)
+// ============================================================
+describe('DeliveryAddress — Case 2: saved addresses + no default + GPS denied', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCrmGetAddresses.mockResolvedValue({
@@ -177,34 +284,34 @@ describe('DeliveryAddress — Case 2: saved addresses, no default (auto-select f
     });
     global.fetch = jest.fn(() =>
       Promise.resolve({
-        json: () => Promise.resolve({ shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km' }),
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
       })
     );
+    installGeolocation(gpsDenied());
     delete window.google;
   });
 
-  test('first saved address is auto-selected; SELECTED pill renders on it', async () => {
+  test('no card is auto-selected when no default exists (GPS denied)', async () => {
     render(<DeliveryAddress />);
     await waitFor(() => {
       expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
     });
-
-    expect(screen.getByTestId('selected-pill-addr-1')).toBeInTheDocument();
-    expect(screen.queryByTestId('selected-pill-addr-2')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
+    });
+    expect(screen.queryByTestId(/^selected-pill-/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
   });
 
-  test('header shows the first card address text', async () => {
+  test('tapping a saved card selects it and shows SELECTED pill', async () => {
     render(<DeliveryAddress />);
     await waitFor(() => {
       expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('12 First Saved Lane');
-  });
-
-  test('tapping a different card moves the SELECTED pill', async () => {
-    render(<DeliveryAddress />);
     await waitFor(() => {
-      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
     });
 
     fireEvent.click(screen.getByTestId('address-card-addr-2'));
@@ -213,9 +320,13 @@ describe('DeliveryAddress — Case 2: saved addresses, no default (auto-select f
       expect(screen.getByTestId('selected-pill-addr-2')).toBeInTheDocument();
     });
     expect(screen.queryByTestId('selected-pill-addr-1')).not.toBeInTheDocument();
+    expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('99 Other Road');
   });
 });
 
+// ============================================================
+// Case 3 — default address exists (unchanged behaviour)
+// ============================================================
 describe('DeliveryAddress — Case 3: default address exists', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -247,13 +358,18 @@ describe('DeliveryAddress — Case 3: default address exists', () => {
     });
     global.fetch = jest.fn(() =>
       Promise.resolve({
-        json: () => Promise.resolve({ shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km' }),
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
       })
     );
+    // GPS should NOT be invoked when default exists. If it were, denial would
+    // produce the wrong header. We install denial as a safety check.
+    installGeolocation(gpsDenied());
     delete window.google;
   });
 
-  test('default address is auto-selected; both Default + SELECTED pills show on it', async () => {
+  test('default auto-selected; both Default + SELECTED pills appear on it', async () => {
     render(<DeliveryAddress />);
     await waitFor(() => {
       expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
@@ -265,12 +381,15 @@ describe('DeliveryAddress — Case 3: default address exists', () => {
     expect(screen.queryByTestId('selected-pill-addr-non-default')).not.toBeInTheDocument();
   });
 
-  test('header shows default address text', async () => {
+  test('header shows default address text (not "No delivery address selected")', async () => {
     render(<DeliveryAddress />);
     await waitFor(() => {
       expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('5 Cart Road');
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('5 Cart Road');
+    });
+    expect(screen.queryByTestId('delivering-to-hint')).not.toBeInTheDocument();
   });
 
   test('selecting non-default moves SELECTED; Default pill stays on default card', async () => {
