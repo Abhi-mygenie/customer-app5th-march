@@ -799,6 +799,27 @@ const ReviewOrder = () => {
 
   // Handle place order
   const handlePlaceOrder = async () => {
+    // ─────────────────────────────────────────────────────────────────────────
+    // CR Phase-1 — Room Scanner Safety Guard (pre-submit)
+    // ─────────────────────────────────────────────────────────────────────────
+    // For QR flows where URL says `type=room`, prevent the silent
+    // table_id='0' fallback at line ~949 from leaking a room order to WC.
+    //
+    // 716 NATURAL EXCLUSION: 716 uses manual room selection (no QR scan).
+    // For 716, scannedRoomOrTable is null when entered via direct URL, so
+    // this guard does NOT fire. For 716 with an actual room QR scan,
+    // scannedTableId is valid and the guard passes through. Either way,
+    // 716's existing dedicated block immediately below remains the source
+    // of truth for 716.
+    if (
+      String(restaurantId) !== '716' &&
+      scannedRoomOrTable === 'room' &&
+      !hasAssignedTable(scannedTableId)
+    ) {
+      toast.error('Room context lost. Please rescan the QR code.');
+      return;
+    }
+
     // Restaurant 716 (Hyatt Centric): room selection is mandatory for every new order, no fallback.
     if (String(restaurantId) === '716') {
       if (!String(tableNumber || '').trim() || !hasAssignedTable(tableNumber)) {

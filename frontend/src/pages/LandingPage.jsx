@@ -113,9 +113,13 @@ const LandingPage = () => {
   }, [capturedPhone, isAuthenticated, restaurantId, capturedName]);
 
   // State for table status check (edit order detection)
+  // CR Phase-1 (Room Scanner Availability Gate): we additionally store `isAvailable`
+  // so we can distinguish 'Available' (vacant for room flow) from
+  // 'Not Available + no orderId' (checked-in, no active order yet).
   const [tableStatusCheck, setTableStatusCheck] = useState({
     isLoading: false,
     isOccupied: false,
+    isAvailable: false,
     existingOrderId: null,
     isChecked: false,
     error: null,
@@ -221,6 +225,7 @@ const LandingPage = () => {
     setTableStatusCheck({
       isLoading: false,
       isOccupied: false,
+      isAvailable: false,
       existingOrderId: null,
       isChecked: false,
       error: null,
@@ -235,6 +240,10 @@ const LandingPage = () => {
       if (!isScanned || !scannedTableId || !restaurantId) return;
       // Phase 1: Table status check only when a specific table/room was scanned (not walk-in)
       if (!hasAssignedTable(scannedTableId)) return;
+      // CR Phase-1 Room Scanner Gate: must wait for restaurant data to load before deciding
+      // multi-menu skip — otherwise we race against the data fetch and 716 gets a transient
+      // status check that incorrectly classifies it (716 is multi-menu and must be skipped).
+      if (!restaurant) return;
       if (isMultipleMenu(restaurant)) return;
       if (tableStatusCheck.isChecked) return;
 
@@ -260,6 +269,7 @@ const LandingPage = () => {
           setTableStatusCheck({
             isLoading: false,
             isOccupied: false,
+            isAvailable: false,
             existingOrderId: null,
             isChecked: true,
             error: 'Invalid table',
@@ -301,6 +311,7 @@ const LandingPage = () => {
         setTableStatusCheck({
           isLoading: false,
           isOccupied: result.isOccupied,
+          isAvailable: result.isAvailable === true,
           existingOrderId: result.orderId || null,
           isChecked: true,
           error: result.error || null,
@@ -311,6 +322,7 @@ const LandingPage = () => {
         setTableStatusCheck({
           isLoading: false,
           isOccupied: false,
+          isAvailable: false,
           existingOrderId: null,
           isChecked: true,
           error: err.message,
@@ -326,7 +338,25 @@ const LandingPage = () => {
   const handleDiningMenuClick = async () => {
     const actualRestaurantId = restaurant?.id || restaurantId;
     console.log('[Landing] Browse Menu clicked', { isAuthenticated, isTakeawayDeliveryMode, capturedPhone, capturedName, selectedMode });
-    
+
+    // CR Phase-1 — Room Scanner Availability Gate (defensive guard)
+    // Block Browse Menu when room scanner says room is vacant / context lost / status unknown.
+    // The button itself is hidden via `roomBlocked` below, but this guard catches
+    // any programmatic / accessibility / stale-state path that bypasses the UI.
+    if (scannedRoomOrTable === 'room' && !hasAssignedTable(scannedTableId)) {
+      toast.error('Room context lost. Please rescan the QR code.');
+      return;
+    }
+    if (
+      scannedRoomOrTable === 'room' &&
+      tableStatusCheck.isChecked &&
+      !tableStatusCheck.isLoading &&
+      (tableStatusCheck.isAvailable === true || !!tableStatusCheck.error)
+    ) {
+      toast.error('This room is not checked in. Please contact staff.');
+      return;
+    }
+
     // Phase 2: Validate mandatory fields for takeaway/delivery
     if (isTakeawayDeliveryMode && !isAuthenticated) {
       if (!capturedPhone || !isPhoneValid(capturedPhone)) {
@@ -575,6 +605,38 @@ const LandingPage = () => {
   const showPayBill = configShowLandingPayBill && isDineInContext;
   const showPoweredBy = configShowPoweredBy;
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // CR Phase-1 — Room Scanner Availability Gate
+  // ───────────────────────────────────────────────────────────────────────────
+  // For QR flows where URL says `type=room`, we use the existing
+  // /customer/check-table-status response to determine whether the room is
+  // vacant/checked-out (block) vs checked-in (allow).
+  //
+  //   table_status === 'Available'   → isAvailable=true  → ROOM VACANT  → BLOCK
+  //   table_status === 'Not Available' + no orderId → isOccupied=false, isAvailable=false → CHECKED-IN, NO ORDER → ALLOW
+  //   table_status === 'Not Available' + orderId    → isOccupied=true  → ACTIVE ORDER → existing Edit Order flow handles it
+  //   API failure / network error → safe-default block for room flow
+  //
+  // 716 NATURAL EXCLUSION (evidence): the /customer/check-table-status API
+  // call is already skipped for multi-menu restaurants at line ~238
+  // (`if (isMultipleMenu(restaurant)) return;`). 716 IS multi-menu, so
+  // tableStatusCheck.isChecked stays false for 716 — this gate never fires.
+  // 716's existing manual room-pick flow at ReviewOrder.jsx:545-554, 802-807
+  // remains untouched.
+  const isRoomScanner = scannedRoomOrTable === 'room';
+  const roomContextLost = isRoomScanner && !hasAssignedTable(scannedTableId);
+  const roomNotCheckedIn =
+    isRoomScanner &&
+    tableStatusCheck.isChecked &&
+    !tableStatusCheck.isLoading &&
+    (tableStatusCheck.isAvailable === true || !!tableStatusCheck.error);
+  const roomBlocked = roomContextLost || roomNotCheckedIn;
+  const roomBlockedMessage = roomContextLost
+    ? 'Room context lost. Please rescan the QR code.'
+    : (tableStatusCheck.error
+        ? 'Unable to verify room status. Please try again or contact staff.'
+        : 'This room is not checked in. Ordering is disabled. Please contact staff.');
+
   // Admin config overrides for welcome message
   const displayWelcomeMessage = configWelcomeMessage || `Welcome to ${restaurantName}!`;
   const displayTagline = configTagline;
@@ -750,7 +812,37 @@ const LandingPage = () => {
         {/* 5. Action Buttons */}
         <div className="landing-actions" data-testid="landing-actions">
           {/* Dynamic Button: Edit Order OR Browse Menu */}
-          {showBrowseMenu && (
+          {showBrowseMenu && (roomBlocked ? (
+            /* CR Phase-1: Room scanner blocked — vacant room or context lost */
+            <div
+              className="landing-room-blocked"
+              data-testid="landing-room-blocked"
+              role="alert"
+              style={{
+                background: 'var(--color-surface, #fff8f0)',
+                border: '1px solid var(--color-warning, #f59e0b)',
+                borderRadius: 12,
+                padding: '20px 16px',
+                textAlign: 'center',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <FaDoorOpen
+                size={32}
+                style={{ color: 'var(--color-warning, #f59e0b)', marginBottom: 8 }}
+                aria-hidden
+              />
+              <p
+                style={{ margin: '8px 0 4px', fontWeight: 600 }}
+                data-testid="landing-room-blocked-message"
+              >
+                {roomBlockedMessage}
+              </p>
+              <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>
+                Ordering is disabled until the room is checked in.
+              </p>
+            </div>
+          ) : (
             <>
               {/* Loading state while checking table status */}
               {tableStatusCheck.isLoading && (
@@ -811,7 +903,7 @@ const LandingPage = () => {
                 </button>
               )}
             </>
-          )}
+          ))}
 
           {/* Call Waiter & Pay Bill - Secondary Row */}
           {(showCallWaiter || showPayBill) && (
