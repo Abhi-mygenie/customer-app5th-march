@@ -166,12 +166,12 @@ const DeliveryAddress = () => {
   //   - initial auto-detection when no default saved address exists
   //   - manual "Use Current Location" button
   // ============================================
-  const applyCurrentLocation = () => {
+  const applyCurrentLocation = (populateForm = false) => {
     if (!navigator.geolocation) return;
     setGeoLoading(true);
     setSelectedId(null); // GPS overrides any saved-card selection
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const pos = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -180,8 +180,45 @@ const DeliveryAddress = () => {
         setMarkerPos(pos);
         setMapCenter(pos);
         setGeoLoading(false);
-        reverseGeocode(pos.lat, pos.lng);
         checkDistance(pos.lat, pos.lng);
+        if (populateForm && GOOGLE_MAPS_API_KEY) {
+          // Rich reverse-geocode to auto-fill form fields (city/state/pincode).
+          // Mirrors the addressComponents extraction used by handleSelectPrediction
+          // so the Places-pick and Use-Current-Location paths feel consistent.
+          try {
+            const res = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.lat},${pos.lng}&key=${GOOGLE_MAPS_API_KEY}`
+            );
+            const data = await res.json();
+            const result = data?.results?.[0];
+            if (result) {
+              setReverseAddress(result.formatted_address || '');
+              const comps = result.address_components || [];
+              const getComp = (type) => {
+                const c = comps.find((x) => x.types.includes(type));
+                return c ? c.long_name : '';
+              };
+              const city = getComp('locality')
+                || getComp('administrative_area_level_2')
+                || getComp('sublocality_level_1');
+              const state = getComp('administrative_area_level_1');
+              const pincode = getComp('postal_code');
+              setForm((prev) => ({
+                ...prev,
+                address: result.formatted_address || prev.address,
+                city: city || prev.city,
+                state: state || prev.state,
+                pincode: pincode || prev.pincode,
+                latitude: String(pos.lat),
+                longitude: String(pos.lng),
+              }));
+            }
+          } catch {
+            // Silent fail — map/header/distance are already updated.
+          }
+        } else {
+          reverseGeocode(pos.lat, pos.lng);
+        }
       },
       () => {
         setGeoLoading(false);
@@ -194,6 +231,7 @@ const DeliveryAddress = () => {
   };
 
   const handleUseCurrentLocation = () => applyCurrentLocation();
+  const handleFormUseCurrentLocation = () => applyCurrentLocation(true);
 
   // ============================================
   // Reverse geocode (lat/lng → address text)
@@ -823,6 +861,18 @@ const DeliveryAddress = () => {
               <div className="da-search-loading" data-testid="places-search-loading">Searching...</div>
             )}
           </div>
+
+          {/* Use Current Location — clear, visible action in the form */}
+          <button
+            type="button"
+            className="da-form-use-location-btn"
+            onClick={handleFormUseCurrentLocation}
+            disabled={geoLoading}
+            data-testid="form-use-current-location-btn"
+          >
+            <MdMyLocation className="da-form-use-location-icon" />
+            <span>{geoLoading ? 'Detecting your current location...' : 'Use Current Location'}</span>
+          </button>
 
           {/* Auto-populated address (editable) */}
           <input className="da-input" placeholder="Full address *" value={form.address}

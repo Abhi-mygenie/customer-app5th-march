@@ -403,6 +403,39 @@
   margin: 0 0 0.75rem;
 }
 
+.da-form-use-location-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  margin: 0.5rem 0 0.75rem;
+  border: 1px dashed var(--color-primary, #E8531E);
+  border-radius: 8px;
+  background: #fff7f2;
+  color: var(--color-primary, #E8531E);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.da-form-use-location-btn:hover {
+  background: #ffece1;
+}
+
+.da-form-use-location-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.da-form-use-location-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
 .da-type-toggle {
   display: flex;
   gap: 0.5rem;

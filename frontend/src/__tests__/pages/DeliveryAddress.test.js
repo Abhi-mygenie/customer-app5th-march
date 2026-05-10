@@ -529,3 +529,105 @@ describe('DeliveryAddress — not-deliverable helper text', () => {
   });
 });
 
+
+// ============================================================
+// New Address form — "Use Current Location" button
+// ============================================================
+describe('DeliveryAddress — in-form Use Current Location button', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({ addresses: [] });
+    delete window.google;
+  });
+
+  test('button renders inside the New Address form and is disabled while detecting', async () => {
+    installGeolocation(gpsNeverResolves());
+    global.fetch = jest.fn();
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('add-address-btn'));
+    await waitFor(() => {
+      expect(screen.getByTestId('add-address-form')).toBeInTheDocument();
+    });
+
+    const btn = screen.getByTestId('form-use-current-location-btn');
+    expect(btn).toBeInTheDocument();
+    expect(btn).toHaveTextContent(/Detecting your current location\.\.\.|Use Current Location/);
+    // initial GPS auto-detect for no-default users is in-flight (pending),
+    // so geoLoading=true → button disabled
+    expect(btn).toBeDisabled();
+  });
+
+  test('tapping the button when GPS denied keeps page in safe no-location state', async () => {
+    installGeolocation(gpsDenied());
+    global.fetch = jest.fn();
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('add-address-btn'));
+    await waitFor(() => {
+      expect(screen.getByTestId('add-address-form')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('form-use-current-location-btn'));
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
+    });
+    expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
+  });
+
+  test('tapping the button when GPS succeeds populates form fields from rich geocode', async () => {
+    installGeolocation(gpsSuccess(27.1751, 78.0421)); // Agra
+    process.env.REACT_APP_GOOGLE_MAPS_API_KEY = 'test-key';
+    global.fetch = jest.fn((url) => {
+      if (typeof url === 'string' && url.includes('maps.googleapis.com/maps/api/geocode')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({
+            results: [{
+              formatted_address: '101 Taj Road, Agra, UP 282001',
+              address_components: [
+                { types: ['locality'], long_name: 'Agra' },
+                { types: ['administrative_area_level_1'], long_name: 'Uttar Pradesh' },
+                { types: ['postal_code'], long_name: '282001' },
+              ],
+            }],
+          }),
+        });
+      }
+      return Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
+      });
+    });
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('add-address-btn'));
+    await waitFor(() => {
+      expect(screen.getByTestId('add-address-form')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('form-use-current-location-btn'));
+
+    // Header updates with reverse address
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent(/Agra/);
+    });
+    // Form fields are auto-filled
+    await waitFor(() => {
+      expect(screen.getByTestId('input-address')).toHaveValue('101 Taj Road, Agra, UP 282001');
+    });
+    expect(screen.getByTestId('input-city')).toHaveValue('Agra');
+    expect(screen.getByTestId('input-pincode')).toHaveValue('282001');
+  });
+});
+
