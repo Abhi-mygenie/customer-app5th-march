@@ -166,7 +166,12 @@ describe('DeliveryAddress — Case 1: no saved addresses + GPS denied', () => {
     await waitFor(() => {
       expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
     });
-    expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
+    const btn = screen.getByTestId('continue-to-menu-btn');
+    expect(btn).toBeDisabled();
+    // Visual disabled state: inline style must be grey, NOT primary orange.
+    expect(btn.style.backgroundColor).toBe('rgb(204, 204, 204)'); // #ccc
+    expect(btn.style.color).toBe('rgb(102, 102, 102)'); // #666
+    expect(btn.style.cursor).toBe('not-allowed');
   });
 
   test('no SELECTED pill rendered', async () => {

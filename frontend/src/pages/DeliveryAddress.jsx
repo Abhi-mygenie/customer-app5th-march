@@ -866,18 +866,29 @@ const DeliveryAddress = () => {
 
       {/* Continue Button */}
       <div className="da-continue-wrapper">
-        <button
-          className="da-continue-btn"
-          onClick={handleContinue}
-          disabled={distanceLoading || isNotDeliverable || (!selectedId && !reverseAddress)}
-          style={{
-            backgroundColor: (distanceLoading || isNotDeliverable) ? '#ccc' : primaryColor,
-            color: (distanceLoading || isNotDeliverable) ? '#666' : buttonTextColor,
-          }}
-          data-testid="continue-to-menu-btn"
-        >
-          {distanceLoading ? 'Checking...' : isNotDeliverable ? 'Not Deliverable' : 'Confirm & Proceed to Menu'}
-        </button>
+        {(() => {
+          const isContinueDisabled =
+            distanceLoading || isNotDeliverable || (!selectedId && !reverseAddress);
+          return (
+            <button
+              className="da-continue-btn"
+              onClick={handleContinue}
+              disabled={isContinueDisabled}
+              style={{
+                backgroundColor: isContinueDisabled ? '#ccc' : primaryColor,
+                color: isContinueDisabled ? '#666' : buttonTextColor,
+                cursor: isContinueDisabled ? 'not-allowed' : 'pointer',
+              }}
+              data-testid="continue-to-menu-btn"
+            >
+              {distanceLoading
+                ? 'Checking...'
+                : isNotDeliverable
+                  ? 'Not Deliverable'
+                  : 'Confirm & Proceed to Menu'}
+            </button>
+          );
+        })()}
       </div>
     </div>
   );
