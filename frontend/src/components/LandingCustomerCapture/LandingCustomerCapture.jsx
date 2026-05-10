@@ -38,7 +38,6 @@ const LandingCustomerCapture = ({
       <div className="capture-form">
         <div className="capture-input-group">
           <PhoneInput
-            international
             defaultCountry="IN"
             value={phone}
             onChange={handlePhoneChange}

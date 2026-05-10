@@ -115,5 +115,6 @@ Resolution:
 
 ## Recent changes
 - 2026-02 — Investigation report: `/app/memory/change_requests/DELIVERY_PHONE_AND_ADDRESS_FLOW_INVESTIGATION_2026-02-XX.md` (phone +91 editability, selected-vs-current address clarity, saved-address edit API audit).
-- 2026-02 — Phone +91 display fix (CSS-only) on `CustomerDetails.css`: removed visible-select override + hid `.PhoneInputCountrySelectArrow`. Mirrors `LandingCustomerCapture` safe pattern. No payload, OTP, or order-placement contract change. Pending owner real-device validation on Review Order screen.
+- 2026-02 — Phone +91 display fix #1 (CSS-only) on `CustomerDetails.css`: removed visible-select override + hid `.PhoneInputCountrySelectArrow`. Mirrors `LandingCustomerCapture` safe pattern. No payload, OTP, or order-placement contract change. Pending owner real-device validation on Review Order screen.
+- 2026-02 — Phone +91 display fix #2 (JSX-only) on `LandingCustomerCapture.jsx`: removed the `international` prop from `<PhoneInput>`. Input now renders national-format only (e.g. "98765 43210"); user cannot backspace into `+91`; flag dropdown still opens country picker (verified switching IN→US works). Internal state still E.164 (`+919876543210` confirmed in localStorage). `extractPhoneNumber` / `getDialCode` / `stripPhonePrefix` outputs unchanged. Browse Menu navigation regression-tested.
 4. If needed later, extend the popup close-behavior UX to banner/toast variants too
