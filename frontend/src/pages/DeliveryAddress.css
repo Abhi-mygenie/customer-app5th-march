@@ -100,28 +100,32 @@
   color: #999;
 }
 
-/* Selected address display */
-.da-selected-display {
+/* Delivering To header (replaces old selected-display block) */
+.da-delivering-header {
   display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 4px;
   padding: 0.75rem 1rem;
   background: #fff;
   border-bottom: 1px solid #f0f0f0;
 }
 
-.da-selected-icon {
-  font-size: 1.25rem;
-  color: var(--color-primary, #E8531E);
-  flex-shrink: 0;
-  margin-top: 0.1rem;
+.da-delivering-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
 }
 
-.da-selected-text {
-  font-size: 0.85rem;
-  color: #333;
-  line-height: 1.4;
+.da-delivering-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.35;
   font-family: var(--font-body, 'Montserrat', sans-serif);
+  word-break: break-word;
 }
 
 /* Distance bar */
@@ -267,6 +271,21 @@
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   font-weight: 600;
+}
+
+.da-card-selected-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
 }
 
 .da-card-address {

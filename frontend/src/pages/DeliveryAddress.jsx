@@ -514,6 +514,11 @@ const DeliveryAddress = () => {
       const pos = { lat, lng };
       setMarkerPos(pos);
       setMapCenter(pos);
+      // Populate reverseAddress so Confirm & Proceed enables for first-time users
+      // who pick a Places suggestion without opening "Add New Address".
+      setReverseAddress(place.formattedAddress || pred.text?.text || '');
+      // A Places pick is an explicit override of any saved card selection
+      setSelectedId(null);
       checkDistance(lat, lng);
 
       // Reset session token after place selection (billing best practice)
@@ -546,6 +551,10 @@ const DeliveryAddress = () => {
   const displayAddress = selectedAddress
     ? [selectedAddress.house, selectedAddress.address, selectedAddress.city].filter(Boolean).join(', ')
     : reverseAddress || '';
+  const headerText = displayAddress
+    || (addresses.length === 0
+      ? 'Please add or select a delivery address'
+      : 'Please select an address');
 
   // ============================================
   // Render
@@ -607,12 +616,12 @@ const DeliveryAddress = () => {
         </button>
       </div>
 
-      {/* Selected address display */}
-      <div className="da-selected-display" data-testid="selected-address-display">
-        <IoLocationOutline className="da-selected-icon" />
-        <div className="da-selected-text">
-          {displayAddress || 'Drag pin or select an address below'}
-        </div>
+      {/* Selected address display — DELIVERING TO header */}
+      <div className="da-delivering-header" data-testid="delivering-to-header">
+        <span className="da-delivering-label">DELIVERING TO:</span>
+        <span className="da-delivering-text" data-testid="delivering-to-text">
+          {headerText}
+        </span>
       </div>
 
       {/* Distance result bar */}
@@ -674,6 +683,14 @@ const DeliveryAddress = () => {
                   <div className="da-card-type-row">
                     <span className="da-card-type-label">{addr.address_type || 'Address'}</span>
                     {addr.is_default && <span className="da-card-default">Default</span>}
+                    {isSelected && (
+                      <span
+                        className="da-card-selected-pill"
+                        data-testid={`selected-pill-${addr.id}`}
+                      >
+                        ● SELECTED
+                      </span>
+                    )}
                   </div>
                   <p className="da-card-address">
                     {[addr.house, addr.address, addr.city].filter(Boolean).join(', ')}
