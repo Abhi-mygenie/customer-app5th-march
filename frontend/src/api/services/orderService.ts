@@ -17,6 +17,9 @@ import {
   calculateAddonsTotal,
 } from '../transformers';
 
+// CR Fix — Single-source-of-truth filter for POS "Check In" system item.
+import { filterSystemItems } from '../transformers/systemItemFilter';
+
 // Import SEND transformers (App → API) - from centralized helpers
 import {
   transformVariationsForApi,
@@ -160,8 +163,17 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
     });
 
     const orderData: ApiOrderDetailsResponse = response.data;
-    const details = orderData.details || [];
-    const firstDetail: any = details[0] || {};
+    // CR Fix — filter POS "Check In" system item from the live path that
+    // feeds OrderSuccess "Items Ordered" and ReviewOrder "Previously Ordered".
+    // Backend totals (order_amount, order_sub_total_amount, *_tax_amount, etc.)
+    // are denormalised onto every detail row by the API, so we capture
+    // `firstDetail` from the ORIGINAL (unfiltered) array to guarantee monetary
+    // calculations are unchanged even in the degenerate case where Check In
+    // was the only row. `details` (filtered) is used for items mapping +
+    // per-row reductions — Check In has zero tax/VAT/SC so reductions match.
+    const rawDetails = orderData.details || [];
+    const details = filterSystemItems(rawDetails);
+    const firstDetail: any = rawDetails[0] || {};
 
     // Transform previous items using centralized transformer (needed for UI rendering)
     const previousItems = details.map(detail => {

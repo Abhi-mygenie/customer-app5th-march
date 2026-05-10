@@ -164,31 +164,15 @@ export const transformPreviousOrderItem = (api: ApiOrderDetailItem): PreviousOrd
 // ============================================
 // CR Fix — Hide POS "Check In" system item from customer UI
 // ============================================
-// Backend already excludes "Check In" from order_amount and
-// order_sub_total_amount, so this filter only addresses the visual leak in:
-//  - OrderSuccess "Items Ordered (n)"
-//  - ReviewOrder "Previously Ordered" via PreviousOrderItems
-//  - CartBar previousItemsCount badge
-//  - billSummary.itemTotal (auto-corrects since itemTotal sums previousItems)
-// Name-based detection is the only frontend-available signal — no
-// food_id / category_id / system flag is exposed by the API schema today.
-// Matches case/whitespace/hyphen/underscore tolerant variants:
-// "Check In", "check in", "CheckIn", "check-in", "check_in", "  Check  In  ".
-// All separators are stripped, so the canonical comparison is against "checkin".
-// Substrings like "Check Inside" stay safe because the comparison is exact.
-const isCheckInSystemItem = (api: ApiOrderDetailItem): boolean => {
-  const name = String(api.food_details?.name || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[\s\-_]+/g, '');
-  return name === 'checkin';
-};
+// Filter logic lives in ./systemItemFilter for single source of truth across
+// orderTransformer (defensive) and orderService.getOrderDetails (live path).
+import { filterSystemItems } from './systemItemFilter';
 
 // ============================================
 // Order Details Transformer
 // ============================================
 export const transformOrderDetails = (api: ApiOrderDetailsResponse): OrderDetails => {
-  const visibleDetails = (api.details || []).filter(d => !isCheckInSystemItem(d));
+  const visibleDetails = filterSystemItems(api.details);
   const items = visibleDetails.map(transformOrderItem);
   const previousItems = visibleDetails.map(transformPreviousOrderItem);
   
