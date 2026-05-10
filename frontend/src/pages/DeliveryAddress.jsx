@@ -608,6 +608,11 @@ const DeliveryAddress = () => {
   // mis-read as a chosen delivery location.
   const hasActiveAddress = Boolean(selectedId) || Boolean(reverseAddress);
 
+  // Empty-hero state: no saved addresses, no active selection/reverse address,
+  // and the form isn't open. In this state we hide the map (Shoghi fallback
+  // was confusing) and show a centred primary CTA instead.
+  const showEmptyHero = !hasActiveAddress && addresses.length === 0 && !showForm;
+
   // ============================================
   // Render
   // ============================================
@@ -638,37 +643,65 @@ const DeliveryAddress = () => {
         </h1>
       </div>
 
-      {/* Map Section */}
-      <div className="da-map-container" data-testid="map-container">
-        {isLoaded ? (
-          <GoogleMap
-            mapContainerStyle={MAP_CONTAINER_STYLE}
-            center={mapCenter}
-            zoom={15}
-            options={MAP_OPTIONS}
-            onLoad={onMapLoad}
+      {/* Map Section — hidden in empty-hero state so the fallback map does
+          not push primary CTAs below the fold. */}
+      {showEmptyHero ? (
+        <div className="da-empty-hero" data-testid="empty-state-hero">
+          <div className="da-empty-hero-icon" aria-hidden="true">
+            <MdMyLocation />
+          </div>
+          <h2 className="da-empty-hero-title">Where should we deliver?</h2>
+          <button
+            type="button"
+            className="da-empty-hero-primary"
+            onClick={handleUseCurrentLocation}
+            disabled={geoLoading}
+            data-testid="empty-state-use-current-location-btn"
           >
-            {hasActiveAddress && (
-              <Marker
-                position={markerPos}
-                draggable
-                onDragEnd={handleMarkerDragEnd}
-              />
-            )}
-          </GoogleMap>
-        ) : (
-          <div className="da-map-placeholder">Loading map...</div>
-        )}
-        {/* Use Current Location button on map */}
-        <button
-          className="da-current-location-btn"
-          onClick={handleUseCurrentLocation}
-          disabled={geoLoading}
-          data-testid="use-current-location-btn"
-        >
-          <MdMyLocation />
-        </button>
-      </div>
+            <MdMyLocation className="da-empty-hero-primary-icon" />
+            <span>{geoLoading ? 'Detecting your current location...' : 'Use Current Location'}</span>
+          </button>
+          <button
+            type="button"
+            className="da-empty-hero-secondary"
+            onClick={() => { resetForm(); setShowForm(true); }}
+            data-testid="add-address-btn"
+          >
+            <IoAddCircleOutline /> Add New Address
+          </button>
+        </div>
+      ) : (
+        <div className="da-map-container" data-testid="map-container">
+          {isLoaded ? (
+            <GoogleMap
+              mapContainerStyle={MAP_CONTAINER_STYLE}
+              center={mapCenter}
+              zoom={15}
+              options={MAP_OPTIONS}
+              onLoad={onMapLoad}
+            >
+              {hasActiveAddress && (
+                <Marker
+                  position={markerPos}
+                  draggable
+                  onDragEnd={handleMarkerDragEnd}
+                />
+              )}
+            </GoogleMap>
+          ) : (
+            <div className="da-map-placeholder">Loading map...</div>
+          )}
+          {/* Use Current Location button on map */}
+          <button
+            className="da-current-location-btn"
+            onClick={handleUseCurrentLocation}
+            disabled={geoLoading}
+            data-testid="use-current-location-btn"
+          >
+            <MdMyLocation />
+          </button>
+        </div>
+      )}
 
       {/* Selected address display — DELIVERING TO header */}
       <div className="da-delivering-header" data-testid="delivering-to-header">
@@ -719,31 +752,19 @@ const DeliveryAddress = () => {
         )}
       </div>
 
-      {/* Saved Addresses */}
-      <div className="da-section-label">Saved Addresses</div>
-      <div className="da-addresses-scroll" data-testid="delivery-addresses-list">
-        {addresses.length === 0 && !showForm ? (
-          <div className="da-empty" data-testid="no-addresses">
-            <IoLocationOutline className="da-empty-icon" />
-            <p>No saved addresses</p>
-            {/* Main empty-state Use Current Location action.
-                Visible only when there is no active address (no saved card
-                selected and no reverse-geocoded address yet) so the user
-                can trigger GPS without first opening the New Address form. */}
-            {!hasActiveAddress && (
-              <button
-                type="button"
-                className="da-empty-use-location-btn"
-                onClick={handleUseCurrentLocation}
-                disabled={geoLoading}
-                data-testid="empty-state-use-current-location-btn"
-              >
-                <MdMyLocation className="da-empty-use-location-icon" />
-                <span>{geoLoading ? 'Detecting your current location...' : 'Use Current Location'}</span>
-              </button>
-            )}
-          </div>
-        ) : (
+      {/* Saved Addresses — hidden in empty-hero state (hero already provides
+          the primary actions, so the redundant "No saved addresses" block
+          and duplicate Add New Address button are suppressed). */}
+      {!showEmptyHero && (
+        <>
+          <div className="da-section-label">Saved Addresses</div>
+          <div className="da-addresses-scroll" data-testid="delivery-addresses-list">
+            {addresses.length === 0 && !showForm ? (
+              <div className="da-empty" data-testid="no-addresses">
+                <IoLocationOutline className="da-empty-icon" />
+                <p>No saved addresses</p>
+              </div>
+            ) : (
           addresses.map((addr) => {
             const TypeIcon = ADDRESS_TYPE_ICONS[addr.address_type] || MdOutlineLocationOn;
             const isSelected = selectedId === addr.id;
@@ -816,6 +837,8 @@ const DeliveryAddress = () => {
           </button>
         )}
       </div>
+        </>
+      )}
 
       {/* Add Address Form */}
       {showForm && (

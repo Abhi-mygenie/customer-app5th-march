@@ -831,3 +831,131 @@ describe('DeliveryAddress — empty-state Use Current Location button', () => {
   });
 });
 
+// ============================================================
+// Empty-hero state (no map): replaces the fallback Shoghi map with
+// a centred CTA when there are no saved addresses and no active
+// address. When an address becomes active, the map appears again.
+// ============================================================
+describe('DeliveryAddress — empty-hero (no map) state', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({ addresses: [] });
+    delete window.google;
+  });
+
+  test('renders hero and HIDES the map container in empty state (GPS denied)', async () => {
+    global.fetch = jest.fn();
+    installGeolocation(gpsDenied());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-hero')).toBeInTheDocument();
+    });
+
+    // Map container must NOT be in the DOM.
+    expect(screen.queryByTestId('map-container')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mock-google-map')).not.toBeInTheDocument();
+
+    // "No saved addresses" placeholder & redundant section are suppressed.
+    expect(screen.queryByTestId('no-addresses')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('delivery-addresses-list')).not.toBeInTheDocument();
+
+    // Hero exposes both primary and secondary actions.
+    expect(screen.getByTestId('empty-state-use-current-location-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('add-address-btn')).toBeInTheDocument();
+
+    // Confirm stays disabled.
+    expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
+  });
+
+  test('GPS success: hero disappears, map appears with marker', async () => {
+    process.env.REACT_APP_GOOGLE_MAPS_API_KEY = 'test-key';
+    global.fetch = jest.fn((url) => {
+      if (typeof url === 'string' && url.includes('maps.googleapis.com/maps/api/geocode')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({
+            results: [{ formatted_address: '88 MG Road, Bengaluru, KA 560001' }],
+          }),
+        });
+      }
+      return Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
+      });
+    });
+    installGeolocation(gpsSuccess(12.9716, 77.5946)); // Bengaluru
+
+    render(<DeliveryAddress />);
+
+    // Header eventually shows the reverse-geocoded address → hasActiveAddress=true.
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent(/Bengaluru/);
+    });
+
+    // Hero is gone; map is back with a marker.
+    expect(screen.queryByTestId('empty-state-hero')).not.toBeInTheDocument();
+    expect(screen.getByTestId('map-container')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-google-marker')).toBeInTheDocument();
+  });
+
+  test('saved address path is unaffected: map renders normally with default address', async () => {
+    mockCrmGetAddresses.mockResolvedValue({
+      addresses: [
+        {
+          id: 'addr-default',
+          address_type: 'Home',
+          address: '5 Cart Road',
+          house: 'A1',
+          city: 'Shimla',
+          latitude: '31.04',
+          longitude: '77.12',
+          contact_person_name: 'Alice',
+          is_default: true,
+        },
+      ],
+    });
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
+      })
+    );
+    installGeolocation(gpsDenied());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('selected-pill-addr-default')).toBeInTheDocument();
+    });
+    // Map visible; hero not rendered.
+    expect(screen.getByTestId('map-container')).toBeInTheDocument();
+    expect(screen.queryByTestId('empty-state-hero')).not.toBeInTheDocument();
+    // Saved addresses section still visible.
+    expect(screen.getByTestId('delivery-addresses-list')).toBeInTheDocument();
+  });
+
+  test('clicking hero "Add New Address" opens the form (hero hides while form is open)', async () => {
+    global.fetch = jest.fn();
+    installGeolocation(gpsDenied());
+
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('empty-state-hero')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTestId('add-address-btn'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('add-address-form')).toBeInTheDocument();
+    });
+    // Hero is replaced by the form view; map container is also not rendered
+    // because the empty-hero gate uses !showForm to suppress the map only
+    // in the empty state. With showForm=true the saved-addresses section
+    // (and form) renders.
+    expect(screen.queryByTestId('empty-state-hero')).not.toBeInTheDocument();
+    // In-form Use Current Location button is present.
+    expect(screen.getByTestId('form-use-current-location-btn')).toBeInTheDocument();
+  });
+});
+
