@@ -407,3 +407,120 @@ describe('DeliveryAddress — Case 3: default address exists', () => {
     expect(screen.getByTestId('address-card-addr-default')).toHaveTextContent('Default');
   });
 });
+
+// ============================================================
+// Marker visibility — hide on fallback/default map center
+// ============================================================
+describe('DeliveryAddress — marker hidden when no active address', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({ addresses: [] });
+    global.fetch = jest.fn();
+    installGeolocation(gpsDenied());
+    delete window.google;
+  });
+
+  test('no Marker rendered when GPS denied and no address source', async () => {
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('delivering-to-text')).toHaveTextContent('No delivery address selected');
+    });
+    expect(screen.queryByTestId('mock-google-marker')).not.toBeInTheDocument();
+  });
+});
+
+describe('DeliveryAddress — marker shown when default address is selected', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({
+      addresses: [
+        {
+          id: 'addr-default',
+          address_type: 'Home',
+          address: '5 Cart Road',
+          house: 'A1',
+          city: 'Shimla',
+          latitude: '31.04',
+          longitude: '77.12',
+          contact_person_name: 'Alice',
+          is_default: true,
+        },
+      ],
+    });
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'Yes', shipping_charge: 0, shipping_time: '20 min', distance: '2 km',
+        }),
+      })
+    );
+    installGeolocation(gpsDenied());
+    delete window.google;
+  });
+
+  test('Marker is rendered when a default saved address is auto-selected', async () => {
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('selected-pill-addr-default')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('mock-google-marker')).toBeInTheDocument();
+  });
+});
+
+// ============================================================
+// Not-deliverable helper text
+// ============================================================
+describe('DeliveryAddress — not-deliverable helper text', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCrmGetAddresses.mockResolvedValue({
+      addresses: [
+        {
+          id: 'addr-far',
+          address_type: 'Home',
+          address: 'Far Away Lane',
+          house: 'A1',
+          city: 'Agra',
+          latitude: '27.17',
+          longitude: '78.04',
+          contact_person_name: 'Alice',
+          is_default: true,
+        },
+      ],
+    });
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({
+          shipping_status: 'No', shipping_charge: 0, shipping_time: '', distance: '429.17 km',
+        }),
+      })
+    );
+    installGeolocation(gpsDenied());
+    delete window.google;
+  });
+
+  test('renders helper text under "Delivery not available" message', async () => {
+    render(<DeliveryAddress />);
+    await waitFor(() => {
+      expect(screen.getByTestId('delivery-address-page')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('distance-not-available')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('distance-not-available')).toHaveTextContent(
+      /Delivery not available to this location \(429\.17 km\)/
+    );
+    expect(screen.getByTestId('distance-not-available-hint')).toHaveTextContent(
+      'Please choose another address closer to the restaurant.'
+    );
+    expect(screen.getByTestId('continue-to-menu-btn')).toBeDisabled();
+  });
+});
+

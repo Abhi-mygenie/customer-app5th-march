@@ -565,6 +565,10 @@ const DeliveryAddress = () => {
     ? 'Detecting your current location...'
     : (displayAddress || 'No delivery address selected');
   const showHeaderHint = !geoLoading && !displayAddress;
+  // Hide the map marker until the user has a real address source. This
+  // prevents the fallback/default map center (e.g. Shoghi) from being
+  // mis-read as a chosen delivery location.
+  const hasActiveAddress = Boolean(selectedId) || Boolean(reverseAddress);
 
   // ============================================
   // Render
@@ -606,11 +610,13 @@ const DeliveryAddress = () => {
             options={MAP_OPTIONS}
             onLoad={onMapLoad}
           >
-            <Marker
-              position={markerPos}
-              draggable
-              onDragEnd={handleMarkerDragEnd}
-            />
+            {hasActiveAddress && (
+              <Marker
+                position={markerPos}
+                draggable
+                onDragEnd={handleMarkerDragEnd}
+              />
+            )}
           </GoogleMap>
         ) : (
           <div className="da-map-placeholder">Loading map...</div>
@@ -662,7 +668,10 @@ const DeliveryAddress = () => {
         )}
         {isNotDeliverable && !distanceLoading && (
           <div className="da-distance-no" data-testid="distance-not-available">
-            Delivery not available to this location ({distanceResult.distance})
+            <div>Delivery not available to this location ({distanceResult.distance})</div>
+            <div className="da-distance-no-hint" data-testid="distance-not-available-hint">
+              Please choose another address closer to the restaurant.
+            </div>
           </div>
         )}
         {isDistanceError && !distanceLoading && (

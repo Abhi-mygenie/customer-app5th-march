@@ -187,6 +187,14 @@
   padding: 0.25rem 0;
 }
 
+.da-distance-no-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 400;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
 .da-distance-error {
   font-size: 0.85rem;
   color: #e65100;
