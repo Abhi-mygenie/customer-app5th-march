@@ -1,64 +1,85 @@
 /**
  * Custom Hook: useRestaurantId
- * Extracts restaurant ID from URL (path, query, or subdomain)
- * For subdomain mode, resolves to numeric ID via restaurant-info API
+ * Extracts restaurant ID from URL (path, query, or hostname)
+ * For hostname mode, resolves to numeric ID via restaurant-info API.
  *
  * Supports:
  * - /478 (path parameter)
  * - /?id=478 (query parameter)
- * - hyatt.mygenie.online (subdomain → resolves to numeric ID)
+ * - hyatt.mygenie.online (tenant subdomain → resolved via backend)
+ * - sattivikdelights.com (white-label custom domain → resolved via backend)
+ * - www.sattivikdelights.com (normalised to sattivikdelights.com before resolution)
  */
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { getRestaurantDetails } from '../api/services/restaurantService';
 
-// Module-level cache: subdomain string → numeric restaurant ID
+// Module-level cache: hostname string → numeric restaurant ID
 // Persists across component re-mounts and navigations
 const subdomainIdCache = {};
 
 /**
- * Get subdomain from current hostname
- * @returns {string|null} - Full subdomain hostname or null
+ * Get the hostname key to send to the backend resolver, or null when no
+ * hostname-based resolution should be attempted (localhost / preview / system).
+ *
+ * Returns:
+ *   - localhost / 127.0.0.1                       → null (use dev fallback)
+ *   - *.preview.emergentagent.com                 → null (Emergent preview host)
+ *   - mygenie.online (bare base)                  → null
+ *   - <system>.mygenie.online (admin/api/cdn/app) → null
+ *   - hyatt.mygenie.online                        → "hyatt.mygenie.online"
+ *   - sattivikdelights.com                        → "sattivikdelights.com"
+ *   - www.sattivikdelights.com                    → "sattivikdelights.com" (www stripped)
+ *
+ * @returns {string|null}
  */
 export const getSubdomain = () => {
-  const hostname = window.location.hostname;
+  const rawHostname = (window.location.hostname || '').toLowerCase();
 
-  // Development - localhost
-  if (hostname === 'localhost' || hostname.startsWith('127.0.0.1')) {
-    if (hostname.includes('.localhost')) {
-      return hostname.split('.')[0];
-    }
+  // Development — localhost / loopback / *.localhost
+  if (
+    rawHostname === 'localhost' ||
+    rawHostname.startsWith('127.0.0.1') ||
+    rawHostname.endsWith('.localhost')
+  ) {
     return null;
   }
 
-  // Production - Extract subdomain from mygenie.online
+  // Emergent preview platform hosts — not customer-facing tenant domains
+  if (rawHostname.endsWith('.preview.emergentagent.com')) {
+    return null;
+  }
+
+  // Normalise: strip a single leading "www." prefix so custom domains and their
+  // www. equivalents share one resolver key.
+  const hostname = rawHostname.replace(/^www\./, '');
+
+  // Bare base domain (the platform's own marketing site, not a tenant)
+  if (hostname === 'mygenie.online') {
+    return null;
+  }
+
   const parts = hostname.split('.');
 
-  // Just mygenie.online (2 parts) → no subdomain
-  if (parts.length === 2) {
+  // Bare / single-label hostnames are not resolvable
+  if (parts.length < 2) {
     return null;
   }
 
-  // hyatt.mygenie.online (3 parts)
-  if (parts.length === 3) {
-    const subdomain = parts[0];
-
-    // Exclude system subdomains
-    const systemSubdomains = ['www', 'admin', 'api', 'cdn', 'app'];
-    if (systemSubdomains.includes(subdomain)) {
+  // *.mygenie.online tenant subdomains — keep existing behaviour
+  if (hostname.endsWith('.mygenie.online')) {
+    // System subdomains are not tenants
+    const firstLabel = parts[0];
+    const systemSubdomains = ['admin', 'api', 'cdn', 'app'];
+    if (systemSubdomains.includes(firstLabel)) {
       return null;
     }
-
-    // If hostname ends with .mygenie.online, return full hostname
-    if (hostname.endsWith('.mygenie.online')) {
-      return hostname; // "hyatt.mygenie.online"
-    }
-
-    return subdomain;
+    return hostname; // e.g. "hyatt.mygenie.online"
   }
 
-  return null;
+  // White-label custom domain — send full hostname (post www-strip) as resolver key
+  return hostname;
 };
 
 /**
