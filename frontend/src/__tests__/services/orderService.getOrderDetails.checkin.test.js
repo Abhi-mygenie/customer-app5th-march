@@ -140,4 +140,40 @@ describe('getOrderDetails (live path) — Check In system item filter', () => {
     const r = await getOrderDetails(999);
     expect(r.previousItems.map((i) => i.name)).toEqual(['Check Inside', 'Soup']);
   });
+
+  test('subtotal contract — non-degenerate echo: order_sub_total_amount=Item Total, order_sub_total_without_tax=Pre-tax Subtotal', async () => {
+    // Backend-confirmed contract:
+    //   order_sub_total_amount      → billSummary.itemTotal  (pure food = 100)
+    //   order_sub_total_without_tax → billSummary.subtotal   (pre-tax billable = 109, incl. SC)
+    // Sample case: item ₹100 + service charge ₹9 → pre-tax ₹109 → tax ₹6.62 → grand ₹116.
+    const detail = {
+      ...realDetail(1, 'Veg Biryani', '100.00'),
+      order_amount: '116.00',
+      order_sub_total_amount: '100.00',
+      order_sub_total_without_tax: '109.00',
+      total_tax_amount: '6.62',
+      total_service_tax_amount: '9.00',
+      service_gst_tax_amount: '1.62',
+    };
+    apiClient.get.mockResolvedValueOnce({
+      data: {
+        id: 999,
+        order_amount: '116.00',
+        order_sub_total_amount: '100.00',
+        order_sub_total_without_tax: '109.00',
+        table_no: 'Room 102',
+        order_status: 'pending',
+        order_type: 'dinein',
+        fOrderStatus: 1,
+        details: [detail],
+      },
+    });
+    const r = await getOrderDetails(999);
+    expect(r.billSummary.itemTotal).toBe(100);
+    expect(r.billSummary.subtotal).toBe(109);
+    expect(r.billSummary.grandTotal).toBe(116);
+    expect(r.subtotalWithoutTax).toBe(100);
+    expect(r.subtotal).toBe(109);
+    expect(r.orderAmount).toBe(116);
+  });
 });

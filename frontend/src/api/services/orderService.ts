@@ -217,8 +217,11 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       || details.reduce((sum, d: any) => sum + (parseFloat(d.vat_tax_amount) || 0), 0);
     const serviceCharge = parseFloat(firstDetail.total_service_tax_amount)
       || details.reduce((sum, d: any) => sum + (parseFloat(d.service_charge) || 0), 0);
-    const itemTotal   = parseFloat(firstDetail.order_sub_total_without_tax) || 0;
-    const subtotal    = parseFloat(firstDetail.order_sub_total_amount) || 0;
+    // Backend-confirmed contract:
+    //   order_sub_total_amount      → Item Total only
+    //   order_sub_total_without_tax → Pre-tax billable subtotal
+    const itemTotal   = parseFloat(firstDetail.order_sub_total_amount) || 0;
+    const subtotal    = parseFloat(firstDetail.order_sub_total_without_tax) || 0;
     const totalTax    = parseFloat(firstDetail.total_tax_amount) || 0;
     const grandTotal  = parseFloat(firstDetail.order_amount) || 0;
     const orderDiscount = parseFloat(firstDetail.order_discount) || 0;
@@ -388,8 +391,11 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       contact_person_number: orderData.deliveryAddress?.contact_person_number || '',
       discount_amount: orderData.pointsDiscount || 0,
       tax_amount: parseFloat((orderData.totalTax || 0).toFixed(2)),
-      order_sub_total_amount: parseFloat(finalSubtotal.toFixed(2)),
-      order_sub_total_without_tax: parseFloat(((itemTotal > 0) ? itemTotal : (orderData.subtotal || 0)).toFixed(2)),
+      // Backend-confirmed contract:
+      //   order_sub_total_amount      = Item Total only (pure food/cart amount)
+      //   order_sub_total_without_tax = Pre-tax billable subtotal (item total - discount + SC + delivery)
+      order_sub_total_amount: parseFloat(((itemTotal > 0) ? itemTotal : (orderData.subtotal || 0)).toFixed(2)),
+      order_sub_total_without_tax: parseFloat(finalSubtotal.toFixed(2)),
       // SC fields (SERVICE_CHARGE_MAPPING CR)
       total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
       service_gst_tax_amount: parseFloat((parseFloat(orderData.gstOnServiceCharge || 0)).toFixed(2)),
@@ -520,8 +526,11 @@ export const updateCustomerOrder = async ({
       contact_person_number: '',
       discount_amount: pointsDiscount,
       tax_amount: parseFloat(totalTax.toFixed(2)),
-      order_sub_total_amount: parseFloat(effectiveSubtotal.toFixed(2)),
-      order_sub_total_without_tax: parseFloat(effectiveItemTotal.toFixed(2)),
+      // Backend-confirmed contract:
+      //   order_sub_total_amount      = Item Total only (pure food/cart amount)
+      //   order_sub_total_without_tax = Pre-tax billable subtotal (item total - discount + SC + delivery)
+      order_sub_total_amount: parseFloat(effectiveItemTotal.toFixed(2)),
+      order_sub_total_without_tax: parseFloat(effectiveSubtotal.toFixed(2)),
       // SC fields (SERVICE_CHARGE_MAPPING CR)
       total_service_tax_amount: parseFloat(serviceCharge.toFixed(2)),
       service_gst_tax_amount: parseFloat((parseFloat(gstOnServiceCharge as any) || 0).toFixed(2)),

@@ -451,8 +451,11 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       schedule_at: null,
       discount_amount: pointsDiscount,
       tax_amount: rootTaxAmount,
-      order_sub_total_amount: parseFloat(((finalSubtotal !== undefined ? finalSubtotal : subtotal) || 0).toFixed(2)),
-      order_sub_total_without_tax: parseFloat(((itemTotal && itemTotal > 0) ? itemTotal : (subtotal || 0)).toFixed(2)),
+      // Backend-confirmed contract:
+      //   order_sub_total_amount      = Item Total only (pure food/cart amount)
+      //   order_sub_total_without_tax = Pre-tax billable subtotal (item total - discount + SC + delivery)
+      order_sub_total_amount: parseFloat(((itemTotal && itemTotal > 0) ? itemTotal : (subtotal || 0)).toFixed(2)),
+      order_sub_total_without_tax: parseFloat(((finalSubtotal !== undefined ? finalSubtotal : subtotal) || 0).toFixed(2)),
       address: deliveryAddress?.address || '',
       latitude: deliveryAddress?.latitude || '',
       longitude: deliveryAddress?.longitude || '',

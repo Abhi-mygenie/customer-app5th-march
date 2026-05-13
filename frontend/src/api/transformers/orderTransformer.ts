@@ -183,8 +183,11 @@ export const transformOrderDetails = (api: ApiOrderDetailsResponse): OrderDetail
   );
   
   const orderAmount = parseFloat(api.order_amount) || 0;
-  const subtotal = parseFloat(api.order_sub_total_amount || '') || itemTotal;
-  const subtotalWithoutTax = parseFloat(api.order_sub_total_without_tax || '') || subtotal;
+  // Backend-confirmed contract:
+  //   order_sub_total_amount      → Item Total only (mapped to subtotalWithoutTax)
+  //   order_sub_total_without_tax → Pre-tax billable subtotal (mapped to subtotal)
+  const subtotal = parseFloat(api.order_sub_total_without_tax || '') || itemTotal;
+  const subtotalWithoutTax = parseFloat(api.order_sub_total_amount || '') || subtotal;
 
   // Determine fOrderStatus from first item or default
   // API returns food_status (snake_case), not foodStatus (camelCase)

@@ -126,6 +126,12 @@ export const transformPlaceOrderToApi = (data: PlaceOrderData): ApiPlaceOrderReq
     order_amount: Math.ceil(data.totalToPay),
     order_sub_total_amount: parseFloat(data.subtotal.toFixed(2)),
     order_sub_total_without_tax: parseFloat(data.subtotal.toFixed(2)),
+    // NOTE (subtotal contract): this legacy helper is currently dead (not imported
+    // by any live page; only re-exported through transformers/index.{ts,js}). It
+    // sends the same value to both fields, which is only safe in degenerate cases
+    // (no SC / no delivery / no discount). If this helper is ever re-wired, update
+    // it to follow the backend-confirmed contract: order_sub_total_amount = item
+    // total only; order_sub_total_without_tax = pre-tax billable subtotal.
     tax_amount: parseFloat(data.totalTax.toFixed(2)),
     discount_amount: data.pointsDiscount || 0,
     order_note: data.orderNote || '',
