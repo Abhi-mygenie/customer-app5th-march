@@ -21,7 +21,7 @@
 | BUG-040 | 401 retry skips Razorpay checkout | 🟡 P1 | ✅ Fixed | Apr 11 | Apr 11 | Retry now opens Razorpay modal for online payments |
 | BUG-039 | Edit order missing orderDispatchedRef | 🟡 P1 | ✅ Fixed | Apr 11 | Apr 11 | Set ref before updateCustomerOrder API call |
 | BUG-038 | Razorpay success missing billSummary (points only) | 🟢 P2 | ⏳ To Validate | Apr 11 | - | pointsDiscount/pointsRedeemed lost, rest from API |
-| BUG-037 | OG/Meta shows "Hyatt Centric" hardcoded | 🟢 P2 | ⏳ Pending | Apr 11 | - | index.html meta description hardcoded, should be dynamic per restaurant |
+| BUG-037 | OG/Meta shows "Hyatt Centric" hardcoded | 🟢 P2 | ✅ Fixed (Phase 1 — Ready for staging validation) | Apr 11 | May 13 | Phase 1: hardcoded Hyatt removed from `frontend/public/index.html`; replaced with neutral MyGenie defaults (`description`, `og:title/description/type/site_name`, `twitter:card/title/description`). `og:image`/`twitter:image` deferred. Phase 2 (admin-configurable per-restaurant metadata + optional SSR/edge injection) pending. Commit: `38d0f39`. |
 | BUG-036 | Login JSON parse error | 🔴 P0 | ✅ Fixed | Apr 10 | Apr 10 | Wrong backend URL in .env |
 | BUG-035 | f_order_status not set for Razorpay | 🔴 P0 | ⚠️ Partial | Mar 31 | Apr 10 | payment_type fixed, f_order_status TBD |
 | BUG-034 | Incorrect payment_type for Razorpay | 🔴 P0 | ✅ Fixed | Mar 31 | Mar 31 | Session 9 |
