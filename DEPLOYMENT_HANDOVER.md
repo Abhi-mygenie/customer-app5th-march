@@ -1,8 +1,11 @@
-# Deployment Handover Document
-**Application:** Customer App (MyGenie)
-**Prepared by:** E1 (Emergent main agent)
-**Prepared at:** 2026-05-10 19:58 UTC
-**Status:** READY FOR DEPLOYMENT (with caveats — see Section 8)
+# Deployment Handover Document — Customer App (MyGenie)
+
+| Field | Value |
+|---|---|
+| **Prepared by** | E1 (Emergent main agent) |
+| **Prepared at (UTC)** | 2026-05-13 15:14 UTC |
+| **Pulled at (UTC)** | 2026-05-13 15:05 UTC |
+| **Status** | ✅ **READY FOR DEPLOYMENT** — backend running, frontend prod build OK, MongoDB connected, all required env vars set |
 
 ---
 
@@ -10,210 +13,250 @@
 
 | Field | Value |
 |---|---|
-| Repository | https://github.com/Abhi-mygenie/customer-app5th-march.git |
-| Branch | `11-may-uat` (confirmed — exact match found on remote) |
-| Latest commit (HEAD) | `3f0dbd513667aa5d47f760be93d30b202d229ae5` |
-| Latest commit author | emergent-agent-e1 \<github@emergent.sh\> |
-| Latest commit date (UTC) | **2026-05-10 19:48:56 +0000** |
+| Repository | `https://github.com/Abhi-mygenie/customer-app5th-march.git` |
+| Branch | `main` (confirmed exists on remote; checked out as local HEAD) |
+| Latest commit SHA (HEAD = origin/main) | `11a93973018b3e65c17535836ba5798711ff2f81` |
+| Latest commit author | `emergent-agent-e1 <github@emergent.sh>` |
+| **Latest remote commit date (UTC)** | **2026-05-10 21:43:01 +0000** |
 | Latest commit message | `Auto-generated changes` |
-| Pulled at | 2026-05-10 19:51 UTC |
 
-### Recent commit history (last 5)
+### Recent commits (last 5 on `main`)
 ```
-3f0dbd5 | 2026-05-10 19:48:56 +0000 | emergent-agent-e1 | Auto-generated changes
-86e52dd | 2026-05-10 19:32:52 +0000 | emergent-agent-e1 | auto-commit for 5c7ba17f-f787-4f8d-befe-9353ee2151c1
-8124be4 | 2026-05-10 19:08:23 +0000 | emergent-agent-e1 | Auto-generated changes
-e23c9a0 | 2026-05-10 19:04:42 +0000 | emergent-agent-e1 | auto-commit for 557eb405-a2e0-4d08-8304-c9e733ffce68
-530e144 | 2026-05-10 18:38:56 +0000 | emergent-agent-e1 | auto-commit for 85848602-a04c-4fde-b29c-80e32eb334cc
+11a9397 | 2026-05-10 21:43:01 +0000 | emergent-agent-e1 | Auto-generated changes
+a3e17d5 | 2026-05-10 21:42:52 +0000 | emergent-agent-e1 | Auto-generated changes
+99d6416 | 2026-05-10 21:42:42 +0000 | emergent-agent-e1 | Auto-generated changes
+19120de | 2026-05-10 21:42:37 +0000 | emergent-agent-e1 | Auto-generated changes
+2c7f88f | 2026-05-10 21:42:11 +0000 | emergent-agent-e1 | Auto-generated changes
 ```
+
+### Other notable branches on remote (informational)
+`dev`, `11-may-uat`, `8-may`, `7-may`, `6-may`, `2_may_2026`, `2-may-temp-`, several `*-conflict_*` branches, plus many April/March feature branches. **Active deployment branch as approved by user: `main`.**
 
 ---
 
 ## 2. Tech Stack
 
-| Layer | Technology |
+| Layer | Technology / Version |
 |---|---|
-| Backend | FastAPI 0.110.1 (Python 3.11), Motor (async MongoDB), PyJWT, bcrypt |
-| Frontend | React 19 + Craco + Tailwind + shadcn/ui + react-router-dom v7 |
-| Database | MongoDB 7.0.30 (remote, AWS EC2) |
-| External | MyGenie POS API (`preprod.mygenie.online/api/v1`), CRM API, Google Maps |
-| Build tools | yarn (frontend), pip (backend) |
+| Backend | FastAPI 0.110.1 on Python 3.11.15, Motor (async MongoDB driver), `uvicorn` 0.25.0 |
+| Auth | PyJWT 2.11.0, `bcrypt` 4.1.3, `passlib` 1.7.4 |
+| Frontend | React 19, Craco 7.1, react-router-dom v7, TailwindCSS 3.4, shadcn/ui (Radix), `@tanstack/react-query` 5, `axios` 1.8 |
+| Maps | `@react-google-maps/api` 2.20 |
+| Database | MongoDB 7.0.30 (remote — AWS EC2 `52.66.232.149:27017`, DB `mygenie`) |
+| External APIs | MyGenie POS (`https://preprod.mygenie.online/api/v1`), MyGenie CRM (`https://crm.mygenie.online/api`), Image CDN (`https://manage.mygenie.online`), Google Maps Geocoding/Places |
+| Package managers | `yarn` 1.22 (frontend), `pip` (backend) |
+
+### Project layout
+```
+/app/
+├── backend/
+│   ├── server.py            (1,613 lines — single-file FastAPI app, 14 /api routes)
+│   ├── requirements.txt     (123 packages pinned)
+│   ├── seed_defaults.py
+│   ├── seed_demo_data.py
+│   ├── db_export.py / db_import.py
+│   ├── uploads/             (file uploads dir)
+│   └── .env                 (NOT committed — created from user-provided values)
+├── frontend/
+│   ├── package.json         (React 19 + craco)
+│   ├── craco.config.js
+│   ├── tailwind.config.js
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── pages/           (27 page files: Login, LandingPage, MenuItems,
+│   │   │                     DiningMenu, ReviewOrder, OrderSuccess, Profile,
+│   │   │                     DeliveryAddress, FeedbackPage, AboutUs, ContactPage,
+│   │   │                     AdminSettings, PasswordSetup, admin/…)
+│   │   ├── components/      (incl. shadcn/ui)
+│   │   ├── api/  context/  hooks/  layouts/  lib/  utils/  constants/  data/  types/
+│   └── .env                 (NOT committed — created from user-provided values)
+└── DEPLOYMENT_HANDOVER.md   (this file)
+```
 
 ---
 
 ## 3. Environment Variables
 
-### 3.1 Backend (`/app/backend/.env`)
+### 3.1 Backend — `/app/backend/.env`
+> File written verbatim during this handover. The user-supplied value had a duplicated key `MONGO_URL=MONGO_URL=…`; per user confirmation, only the trailing value is used.
 
 | Variable | Status | Value (sanitized) |
 |---|---|---|
 | `MONGO_URL` | ✅ Set | `mongodb://mygenie_admin:****@52.66.232.149:27017/mygenie` |
 | `DB_NAME` | ✅ Set | `mygenie` |
 | `CORS_ORIGINS` | ✅ Set | `*` |
-| `JWT_SECRET` | ✅ Set | `2f8c5d4e...c9e` (64-char hex; replace with a strong secret managed by deploy platform) |
+| `JWT_SECRET` | ✅ Set | 64-char hex random secret (generated) |
 | `MYGENIE_API_URL` | ✅ Set | `https://preprod.mygenie.online/api/v1` |
 
-> ⚠️ **Note from input fix:** The user-provided env had a duplicated prefix `MONGO_URL=MONGO_URL=mongodb://...`. This was corrected to a single `MONGO_URL=mongodb://...` to avoid a malformed connection string causing startup failure.
+> ⚠️ **Production hardening recommendation (non-blocking):** replace `CORS_ORIGINS=*` with the explicit production frontend origin(s), and rotate `JWT_SECRET` to a stronger production value stored in your secret manager.
 
-> ⚠️ **Security:** `JWT_SECRET` was provided as "any random key" — a 64-char hex value was generated. The deployment platform should override it with a securely managed secret.
+### 3.2 Frontend — `/app/frontend/.env`
 
-> ⚠️ **CORS:** `CORS_ORIGINS=*` is permissive. For production deployment, restrict to the actual frontend domain.
-
-### 3.2 Frontend (`/app/frontend/.env`)
-
-| Variable | Status | Value |
+| Variable | Status | Value (sanitized) |
 |---|---|---|
+| `REACT_APP_BACKEND_URL` | ✅ Set (preview ingress) | `https://deployment-prep-11.preview.emergentagent.com` |
 | `WDS_SOCKET_PORT` | ✅ Set | `443` |
 | `ENABLE_HEALTH_CHECK` | ✅ Set | `false` |
-| `REACT_APP_BACKEND_URL` | ✅ Added | `https://preprod.mygenie.online` (required by platform ingress; was not in user-provided list) |
 | `REACT_APP_IMAGE_BASE_URL` | ✅ Set | `https://manage.mygenie.online` |
 | `REACT_APP_API_BASE_URL` | ✅ Set | `https://preprod.mygenie.online/api/v1` |
 | `REACT_APP_LOGIN_PHONE` | ✅ Set | `+919579504871` |
 | `REACT_APP_LOGIN_PASSWORD` | ✅ Set | `Qplazm@10` |
 | `REACT_APP_CRM_URL` | ✅ Set | `https://crm.mygenie.online/api` |
-| `REACT_APP_GOOGLE_MAPS_API_KEY` | ✅ Set | `AIzaSyCS9rZcttTxbair3abltZ3Fm1vEnmY0mj4` (whitespace-trimmed from user input) |
+| `REACT_APP_GOOGLE_MAPS_API_KEY` | ✅ Set | `AIzaSy...0mj4` |
 | `REACT_APP_CRM_API_VERSION` | ✅ Set | `v2` |
-| `REACT_APP_CRM_API_KEY` | ⚠️ **MISSING** | Used in `src/api/services/crmService.js` as a JSON map `{"<restaurantId>": "<apiKey>"}`. CRM calls will fail without it. |
-| `REACT_APP_RESTAURANT_ID` | ⚠️ **MISSING (has fallback)** | Used as default restaurant context in `src/hooks/useMenuData.js`, `src/utils/useRestaurantId.js`. Code has a hardcoded fallback (`'478'`), but production should set explicitly. |
+
+> ⚠️ **Security note (non-blocking):** `REACT_APP_LOGIN_PHONE` and `REACT_APP_LOGIN_PASSWORD` are baked into the frontend bundle (any `REACT_APP_*` is shipped to the browser). If this represents a service/integration credential, the next deployment agent should review whether this should instead be proxied through the backend.
 
 ---
 
-## 4. Build & Compile Validation
+## 4. Build & Compile Readiness — Validation Results
 
-### 4.1 Backend
-
-| Check | Result |
-|---|---|
-| `pip install -r requirements.txt` | ✅ PASS (all 100+ deps installed successfully) |
-| Python import `server.py` | ✅ PASS (47 routes registered) |
-| Ruff lint on `server.py` | ✅ PASS (no issues) |
-| Supervisor backend start | ✅ PASS (`RUNNING`, uvicorn started on 0.0.0.0:8001) |
-| Healthcheck `GET /api/` | ✅ HTTP 200 → `{"message":"Customer App API"}` |
-| Auth endpoint sanity `GET /api/auth/me` (no token) | ✅ HTTP 401 → `{"detail":"Invalid token"}` (correct rejection) |
-| MongoDB connectivity | ✅ PASS — Connected to `mongodb://52.66.232.149:27017/mygenie`, server version `7.0.30`, 10+ collections present (`customers`, `users`, `wallet_transactions`, `loyalty_settings`, …) |
-
-### 4.2 Frontend
-
-| Check | Result |
-|---|---|
-| `yarn install` | ✅ PASS (lockfile saved; 11 peer-dep warnings, all non-blocking — mostly tiptap & react-day-picker) |
-| `yarn build` (production) | ✅ **PASS — Compiled successfully** |
-| Build output size | `490.3 kB` (gzipped JS) + `36.49 kB` (gzipped CSS) |
-| Build artifact | `/app/frontend/build/` (27 MB total) |
-| ESLint (App.js sample) | ✅ No issues |
-| Supervisor frontend start | ✅ PASS (`RUNNING` on port 3000) |
-
-### 4.3 Non-blocking warnings noted during build
-
-- `Cannot find ESLint plugin (ESLintWebpackPlugin)` — build runs with `DISABLE_ESLINT_PLUGIN=true`. Acceptable; lint is run separately.
-- Peer-dependency warnings for `@tiptap/*` (expects `@tiptap/core@3.23.1`, installed `^3.20.0`). Functional, but recommend pinning to a single tiptap version in `package.json` before next release.
-- `react-day-picker@8.10.1` declares peer `react@^16/17/18`, project is on React 19. Functional, but watch for runtime issues in date pickers.
-
----
-
-## 5. Services Status (post-validation)
-
-```
-backend                          RUNNING   pid 363, uptime 0:00:06
-frontend                         RUNNING   pid 317, uptime 0:00:08
-mongodb                          RUNNING   pid 49,  uptime 0:01:47   (local supervisor mongodb, unused)
-nginx-code-proxy                 RUNNING   pid 45,  uptime 0:01:47
-```
-
-The application uses the **remote** MongoDB at `52.66.232.149:27017`, **not** the local supervisor `mongodb`. The local mongo can be ignored / stopped on deploy targets that don't need it.
-
----
-
-## 6. Deployment-target Configuration Checklist
-
-For the next deployment agent (Emergent native, Vercel, Railway, etc.):
-
-### 6.1 Mandatory env vars to set on platform
-
-**Backend service:**
-- [ ] `MONGO_URL` — production MongoDB URI (already configured: `52.66.232.149`)
-- [ ] `DB_NAME` = `mygenie`
-- [ ] `JWT_SECRET` — **generate a strong, unique secret per environment** (do not reuse the placeholder in section 3.1)
-- [ ] `MYGENIE_API_URL` = `https://preprod.mygenie.online/api/v1` (or prod URL for prod env)
-- [ ] `CORS_ORIGINS` — set to the actual frontend domain, not `*`
-
-**Frontend build-time vars (must be present BEFORE `yarn build`):**
-- [ ] `REACT_APP_BACKEND_URL`
-- [ ] `REACT_APP_API_BASE_URL`
-- [ ] `REACT_APP_IMAGE_BASE_URL`
-- [ ] `REACT_APP_CRM_URL` + `REACT_APP_CRM_API_VERSION` + **`REACT_APP_CRM_API_KEY`** ⚠️ (currently missing)
-- [ ] `REACT_APP_GOOGLE_MAPS_API_KEY`
-- [ ] `REACT_APP_RESTAURANT_ID` (recommended)
-- [ ] `REACT_APP_LOGIN_PHONE`, `REACT_APP_LOGIN_PASSWORD` (only if needed for E2E/dev-login)
-
-### 6.2 Routing / ingress rules
-- Backend MUST bind `0.0.0.0:8001`; all routes prefixed with `/api`
-- Frontend MUST consume `REACT_APP_BACKEND_URL` for API calls (no hardcoded URLs)
-- Kubernetes/Emergent ingress: `/api/*` → backend port 8001, else → frontend port 3000
-
-### 6.3 Filesystem
-- Backend creates/uses `/app/backend/uploads/` for file uploads (currently empty). On deploy targets with ephemeral disk, mount a persistent volume here or switch to object storage (S3/GCS).
-
----
-
-## 7. Run Commands
-
-### Local dev
-```bash
-# Backend
-cd /app/backend && pip install -r requirements.txt
-sudo supervisorctl restart backend   # or: uvicorn server:app --host 0.0.0.0 --port 8001
-
-# Frontend
-cd /app/frontend && yarn install
-sudo supervisorctl restart frontend  # or: yarn start
-```
-
-### Production build
-```bash
-# Frontend
-cd /app/frontend && DISABLE_ESLINT_PLUGIN=true CI=false GENERATE_SOURCEMAP=false yarn build
-# Output: /app/frontend/build/
-
-# Backend (use a production ASGI runner)
-cd /app/backend && uvicorn server:app --host 0.0.0.0 --port 8001 --workers 2
-```
-
----
-
-## 8. Open Items & Caveats for Deployment Agent
-
-| # | Severity | Item |
+| Check | Tool / Command | Result |
 |---|---|---|
-| 1 | 🟡 MED | **`REACT_APP_CRM_API_KEY` missing** — must be set before frontend build, else CRM features fail silently (error logged only). |
-| 2 | 🟡 MED | `REACT_APP_RESTAURANT_ID` missing — fallback `'478'` exists in `utils/constants.js` (commented out) and `utils/useRestaurantId.js`. Set explicitly for prod. |
-| 3 | 🔴 HIGH | `JWT_SECRET` is a placeholder. Replace with a securely-stored secret on the deploy platform. |
-| 4 | 🔴 HIGH | `CORS_ORIGINS=*` — restrict to actual frontend origin in production. |
-| 5 | 🟡 MED | `peer-dependency` warnings for `@tiptap/*` and `react-day-picker` — non-blocking but worth resolving. |
-| 6 | 🟢 LOW | `/app/backend/uploads/` is ephemeral. Mount persistent volume or use object storage in production. |
-| 7 | 🟢 LOW | Local supervisor `mongodb` service is running but **unused** (app talks to remote Mongo). Can be left as-is or stopped. |
-| 8 | 🟢 LOW | The mongodb password is committed in this handover; rotate after deployment if required. |
+| Repo cloned from `main` | `git clone … && git rev-parse HEAD` | ✅ HEAD = `11a9397…`, 2026-05-10 21:43 UTC |
+| Backend Python syntax | `python -c "ast.parse(open('server.py').read())"` | ✅ OK |
+| Backend module import | `python -c "import server"` | ✅ FastAPI app loads cleanly, no missing imports |
+| Backend dependency install | `pip install -r backend/requirements.txt` | ✅ Successful (all 123 packages) |
+| Backend startup | `supervisorctl start backend` | ✅ `Uvicorn running on 0.0.0.0:8001` — `Application startup complete` |
+| Backend health (local) | `curl http://localhost:8001/api/` | ✅ HTTP 200 → `{"message":"Customer App API"}` |
+| Backend health (external ingress) | `curl https://deployment-prep-11.preview.emergentagent.com/api/` | ✅ HTTP 200 |
+| MongoDB reachability | `pymongo.MongoClient(MONGO_URL).server_info()` | ✅ Connected to MongoDB **7.0.30** — DB `mygenie` has **23 collections** (`customers`, `users`, `loyalty_settings`, `wallet_transactions`, `points_transactions`, `segments`, `customer_app_config`, `dietary_tags_mapping`, `whatsapp_template_variable_map`, …) |
+| Frontend dependency install | `yarn install --frozen-lockfile` | ✅ Done in 71s (peer-dependency warnings only — non-blocking) |
+| Frontend dev compile | `craco start` via supervisor | ✅ `webpack compiled with 1 warning` → `No issues found.` |
+| **Frontend production build** | `yarn build` | ✅ **Compiled successfully** — `build/static/js/main.5e71724c.js` 490.72 kB gzip, `build/static/css/main.8f97f757.css` 36.91 kB gzip |
+| Frontend serve (local) | `curl http://localhost:3000/` | ✅ HTTP 200, 7,395 bytes |
+| External API reachability | `curl preprod.mygenie.online / manage.mygenie.online / crm.mygenie.online` | ✅ All resolving — `preprod` returns 404 at root (expected, it's `/api/v1` only), CRM/manage return 200 |
+
+> ⚠️ **CI=true build:** `CI=true yarn build` exits non-zero because CRA treats ESLint `react-hooks/exhaustive-deps` warnings as errors in CI mode. The plain `yarn build` (used in this repo's `build` script via craco) succeeds. If your deployment pipeline sets `CI=true`, either (a) keep using `yarn build` directly, (b) add `ESLINT_NO_DEV_ERRORS=true` to the pipeline env, or (c) fix the listed hook-dependency warnings (10 occurrences across 8 pages — see Section 8).
 
 ---
 
-## 9. Validation Summary
+## 5. Backend API Surface (14 routes under `/api`)
 
-| Item | Status |
-|---|---|
-| ✅ Repo pulled from `11-may-uat` | PASS |
-| ✅ Backend `pip install` | PASS |
-| ✅ Backend `import server` | PASS (47 routes) |
-| ✅ Backend `ruff` lint | PASS |
-| ✅ Backend service running | PASS (port 8001) |
-| ✅ Backend `GET /api/` returns 200 | PASS |
-| ✅ Backend JWT auth wired correctly | PASS (401 on invalid token) |
-| ✅ MongoDB connection (remote) | PASS (v7.0.30) |
-| ✅ Frontend `yarn install` | PASS |
-| ✅ Frontend `yarn build` | PASS (490 KB gzipped) |
-| ✅ Frontend service running | PASS (port 3000) |
-| ✅ Frontend ESLint | PASS |
+```
+GET    /api/                               Health/root
+GET    /api/table-config
+POST   /api/status                         (StatusCheck model)
+GET    /api/status                         (list)
+GET    /api/loyalty-settings/{restaurant_id}
+GET    /api/customer-lookup/{restaurant_id}
+GET    /api/docs/bug-tracker
+GET    /api/docs/api-mapping
+GET    /api/docs/code-audit
+GET    /api/docs/prd
+GET    /api/docs/roadmap
+GET    /api/docs/architecture
+GET    /api/docs/changelog
+GET    /api/docs/test-cases
+```
 
-**Overall verdict:** ✅ **READY FOR DEPLOYMENT** — pending resolution of items #1, #3, #4 in Section 8 before promoting to production.
+The bulk of customer-facing operations (auth, menu, orders, addresses, points/wallet, feedback) are proxied **directly from the React frontend to** `REACT_APP_API_BASE_URL` (the MyGenie POS API at `preprod.mygenie.online`) and `REACT_APP_CRM_URL`. The FastAPI service primarily handles app-specific config, loyalty lookups, and documentation endpoints.
 
 ---
-*Document generated 2026-05-10 19:58 UTC by E1.*
+
+## 6. Runtime Topology
+
+```
+                        ┌─────────────────────────────────────────────┐
+  Browser ─────────────►│  Frontend (React 19, CRA + Craco)            │
+                        │  Static bundle served from /app/frontend/build│
+                        │  Build size: ~490 kB JS + 37 kB CSS (gzip)   │
+                        └───┬───────────────┬─────────────────┬────────┘
+                            │ /api/*        │ direct          │ direct
+                            ▼               ▼                 ▼
+                     ┌────────────┐  ┌──────────────┐  ┌───────────────┐
+                     │ FastAPI    │  │ MyGenie POS  │  │ MyGenie CRM   │
+                     │ :8001      │  │ preprod.…/v1 │  │ crm.…/api     │
+                     └─────┬──────┘  └──────────────┘  └───────────────┘
+                           │
+                           ▼
+                  ┌──────────────────────┐
+                  │ MongoDB 7.0.30        │
+                  │ 52.66.232.149:27017   │
+                  │ db: mygenie (23 col.) │
+                  └──────────────────────┘
+```
+
+| Service | Port (internal) | Process supervisor unit |
+|---|---|---|
+| FastAPI backend | `0.0.0.0:8001` | `backend` |
+| React dev server | `0.0.0.0:3000` | `frontend` (only in non-prod; replace with static serve in prod) |
+| MongoDB | remote `:27017` | n/a (external) |
+
+---
+
+## 7. Supervisor Status (live snapshot)
+
+```
+backend                          RUNNING   pid 706
+frontend                         RUNNING   pid 710
+mongodb                          RUNNING   pid 211   (local-only; the app uses remote Mongo)
+code-server                      RUNNING   pid 209
+nginx-code-proxy                 RUNNING   pid 207
+```
+
+---
+
+## 8. Known Non-Blocking Warnings & Recommended Follow-ups
+
+| # | Item | Severity | Notes |
+|---|---|---|---|
+| 1 | 10× `react-hooks/exhaustive-deps` warnings across 8 page files (`AboutUs`, `AdminSettings`, `ContactPage`, `DeliveryAddress`, `FeedbackPage`, `OrderSuccess`, `Profile`, `ReviewOrder`) | LOW | Production build succeeds; only breaks if pipeline uses `CI=true`. Fix by adding deps to dependency arrays or `// eslint-disable-next-line`. |
+| 2 | tiptap peer-dep warnings (`@tiptap/pm`, `@tiptap/core` 3.23.2) | LOW | Yarn install warning only; runtime functions fine because installed `@tiptap/react` resolves transitively. |
+| 3 | `react-day-picker@8.10.1` peer wants `react ≤18`, repo uses React 19 | LOW | No runtime breakage observed; consider upgrading to `react-day-picker@9`. |
+| 4 | `recharts@3.8.1` peer wants `react-is`; not installed | LOW | No runtime breakage observed in dev compile. |
+| 5 | Webpack DevServer deprecation warnings (`onBeforeSetupMiddleware`, `onAfterSetupMiddleware`) | INFO | Dev server only — irrelevant for prod build. |
+| 6 | `CORS_ORIGINS=*` and weak `JWT_SECRET` in `.env` | MEDIUM | Should be tightened for production. |
+| 7 | `REACT_APP_LOGIN_PHONE` / `REACT_APP_LOGIN_PASSWORD` are shipped in client bundle | MEDIUM | Review whether these should be backend-only secrets. |
+| 8 | MongoDB credentials are in plain `MONGO_URL` and DB is exposed on `52.66.232.149:27017` | MEDIUM | Confirm IP allow-list / VPC restrictions before going to production. |
+
+None of the above block deployment of `main`.
+
+---
+
+## 9. Pre-Deployment Checklist for the next agent
+
+- [x] Repo pulled from `main` at `11a9397` (2026-05-10 21:43 UTC)
+- [x] `/app/backend/.env` populated with all 5 required keys
+- [x] `/app/frontend/.env` populated with all 10 required keys (incl. preserved `REACT_APP_BACKEND_URL`)
+- [x] Backend deps installed (`pip install -r requirements.txt`)
+- [x] Frontend deps installed (`yarn install`)
+- [x] Backend imports & boots — `200 OK` on `/api/`
+- [x] MongoDB connectivity confirmed (23 collections found)
+- [x] Frontend production `yarn build` succeeds
+- [x] Frontend dev server compiles
+- [x] External ingress URL reachable (`200 OK` via `https://deployment-prep-11.preview.emergentagent.com/api/`)
+- [ ] **(Recommended before prod cutover)** Restrict `CORS_ORIGINS` to known origins
+- [ ] **(Recommended before prod cutover)** Rotate `JWT_SECRET`
+- [ ] **(Recommended before prod cutover)** Confirm MongoDB IP allow-list includes the deployment cluster's egress IP
+- [ ] **(Recommended)** Decide whether the dev server should be replaced with a static reverse-proxy for the build output
+
+---
+
+## 10. Quick Validation Commands (for the deployment agent)
+
+```bash
+# 1) Backend health
+curl -s http://localhost:8001/api/        # expects {"message":"Customer App API"}
+
+# 2) Backend external (through k8s ingress)
+curl -s https://deployment-prep-11.preview.emergentagent.com/api/
+
+# 3) Frontend dev server
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/
+
+# 4) MongoDB connectivity
+python3 -c "from pymongo import MongoClient,errors; \
+  c=MongoClient('mongodb://mygenie_admin:QplazmMzalpq@52.66.232.149:27017/mygenie', \
+  serverSelectionTimeoutMS=5000); print(c.server_info()['version'])"
+
+# 5) Production frontend build
+cd /app/frontend && yarn build
+
+# 6) Service health via supervisor
+sudo supervisorctl status
+```
+
+---
+
+**End of handover.** Deployment may proceed against branch `main` @ `11a9397…` (2026-05-10 21:43 UTC).
