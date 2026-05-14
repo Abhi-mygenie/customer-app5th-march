@@ -6,7 +6,7 @@
 | Prepared at (UTC) | 2026-05-14 17:50 UTC |
 | Source pulled at (UTC) | 2026-05-14 17:50 UTC |
 | Preview ingress URL | https://52f26ce3-b2cb-44e8-aeb2-60863bc96b52.preview.emergentagent.com |
-| **Status** | **READY FOR DEPLOYMENT** — backend running, frontend dev server running, frontend production build OK, MongoDB connected, all required env vars set. |
+| **Status** | **READY FOR DEPLOYMENT — PASS** — backend running, frontend dev server running, frontend production build OK, MongoDB connected, all required env vars set, deployment-agent scan returns **PASS** (no blockers). |
 
 > The user approved branch `main` explicitly. No fallback branch was used.
 
@@ -363,10 +363,22 @@ cd /app/backend && python -c "from dotenv import load_dotenv; load_dotenv('.env'
 |---|---|
 | `/app/backend/.env` | **created** — 5 keys per user values; `JWT_SECRET` generated (64-char hex) |
 | `/app/frontend/.env` | **created** — 10 keys per user values (`REACT_APP_BACKEND_URL` = preview ingress) |
+| `/app/.gitignore` | **fixed** — removed 9 duplicated blocks that were ignoring `.env`, `.env.*`, `*.env` (was a deployment blocker; Emergent native deployment needs `.env` files in the repo so it can auto-update values during deploy) |
 | `/app/DEPLOYMENT_HANDOVER.md` | **written** — this document |
 | All other repo files | restored from `origin/main @ 3d5197c` |
 
-No source code was modified.
+No application source code was modified.
+
+---
+
+## 12. Deployment Agent Verdict
+
+Two passes through the deployment readiness agent:
+
+| Run | Verdict | Notes |
+|---|---|---|
+| 1 (initial) | FAIL | `.gitignore` lines 86–165 contained 9 duplicated blocks ignoring `.env` / `.env.*` / `*.env`. Emergent native deployment requires `.env` files to be in the repository so it can auto-update environment-specific values during the deploy. |
+| 2 (after fix) | **PASS** | All checks green. Supervisor valid, all URLs externalized to env, no hardcoded secrets, CORS configured, MongoDB-only DB, no ML/blockchain deps, queries use proper projections/limits, no `load_dotenv(override=True)` issues, no ignore-file conflicts. |
 
 ---
 
