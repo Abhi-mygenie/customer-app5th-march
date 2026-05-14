@@ -410,6 +410,8 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
     gstOnServiceCharge = 0,
     itemTotal = 0,
     finalSubtotal,
+    // ROUND_UP_PAYLOAD_GAP fix — restaurant round-off amount (roundedTotal - totalToPay); 0 when disabled
+    roundUpAmount = 0,
   } = orderData;
 
   const cart = transformCartItemsForMultiMenu(cartItems, gstEnabled);
@@ -488,7 +490,7 @@ export const buildMultiMenuPayload = (orderData, gstEnabled = true) => {
       total_vat_tax_amount: totalVatTaxAmount,
       total_service_tax_amount: parseFloat((serviceCharge || 0).toFixed(2)),
       service_gst_tax_amount: parseFloat((gstOnServiceCharge || 0).toFixed(2)),
-      round_up: 0,
+      round_up: parseFloat(((roundUpAmount) || 0).toFixed(2)),
       tip_tax_amount: 0
     }
   };

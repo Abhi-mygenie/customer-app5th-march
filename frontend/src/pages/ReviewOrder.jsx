@@ -700,6 +700,11 @@ const ReviewOrder = () => {
   const isRoundingEnabled = restaurant?.total_round === 'Yes';
   const roundedTotal = isRoundingEnabled ? Math.ceil(totalToPay) : totalToPay;
   const hasRoundingDiff = isRoundingEnabled && roundedTotal !== totalToPay;
+  // ROUND_UP_PAYLOAD_GAP fix — positive round-off amount (roundedTotal - totalToPay),
+  // 0 when round-off is disabled. Threaded into place/update order payloads as `round_up`.
+  const roundUpAmount = isRoundingEnabled
+    ? Math.max(0, parseFloat((roundedTotal - totalToPay).toFixed(2)))
+    : 0;
 
   // console.log('totalTax', totalTax);
   // console.log('totalGst', totalGst);
@@ -1054,6 +1059,8 @@ const ReviewOrder = () => {
               gstEnabled: isGstEnabledForSc,
               // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order writer (consumed by D-6)
               deliveryCharge: effectiveDeliveryCharge,
+              // ROUND_UP_PAYLOAD_GAP fix — propagate computed round-off diff
+              roundUpAmount,
             });
 
             // Clear edit mode after successful update
@@ -1091,6 +1098,8 @@ const ReviewOrder = () => {
             gstEnabled: isGstEnabledForSc,
             // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order writer (consumed by D-6)
             deliveryCharge: effectiveDeliveryCharge,
+            // ROUND_UP_PAYLOAD_GAP fix — propagate computed round-off diff
+            roundUpAmount,
           });
           clearEditMode();
           toast.success('Order updated successfully!');
@@ -1181,6 +1190,8 @@ const ReviewOrder = () => {
           // Multi-menu parity additions (478 contract alignment)
           totalGstTaxAmount: finalCgst + finalSgst,
           totalVatTaxAmount: finalVat,
+          // ROUND_UP_PAYLOAD_GAP fix — propagate computed round-off diff
+          roundUpAmount,
         });
       }
 
@@ -1314,6 +1325,8 @@ const ReviewOrder = () => {
               gstEnabled: isGstEnabledForSc,
               // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to edit-order retry writer (consumed by D-6)
               deliveryCharge: effectiveDeliveryCharge,
+              // ROUND_UP_PAYLOAD_GAP fix — propagate computed round-off diff
+              roundUpAmount,
             });
 
             // Clear edit mode after successful update
@@ -1354,6 +1367,8 @@ const ReviewOrder = () => {
               gstEnabled: isGstEnabledForSc,
               // D-5 (DELIVERY_CHARGE_GATING CR): wire gated delivery charge to placeOrder retry
               deliveryCharge: effectiveDeliveryCharge,
+              // ROUND_UP_PAYLOAD_GAP fix — propagate computed round-off diff
+              roundUpAmount,
             });
           }
 

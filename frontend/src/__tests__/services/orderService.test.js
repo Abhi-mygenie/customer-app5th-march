@@ -265,6 +265,64 @@ describe('placeOrder - Restaurant 716 (autopaid)', () => {
   });
 });
 
+// ─── Round-up payload (ROUND_UP_PAYLOAD_GAP fix) ─────────────────
+
+describe('placeOrder - round_up payload', () => {
+  // FormData-aware extractor (mirrors the helper used by the SC-mapping suite below).
+  const extractFromForm = (formDataArg) => {
+    const json = formDataArg && typeof formDataArg.get === 'function' ? formDataArg.get('data') : null;
+    return json ? JSON.parse(json) : null;
+  };
+
+  test('defaults round_up to 0 when roundUpAmount is not passed (normal flow)', async () => {
+    await placeOrder(makeOrderData({ isMultipleMenuType: false }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractFromForm(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload).toHaveProperty('round_up', 0);
+  });
+
+  test('defaults round_up to 0 when roundUpAmount is not passed (multi-menu flow)', async () => {
+    await placeOrder(makeOrderData({ isMultipleMenuType: true }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractFromForm(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload).toHaveProperty('round_up', 0);
+  });
+
+  test('forwards positive roundUpAmount in normal flow', async () => {
+    await placeOrder(makeOrderData({ isMultipleMenuType: false, roundUpAmount: 0.32 }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractFromForm(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload.round_up).toBe(0.32);
+  });
+
+  test('forwards positive roundUpAmount in multi-menu flow', async () => {
+    await placeOrder(makeOrderData({ isMultipleMenuType: true, roundUpAmount: 0.32 }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractFromForm(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload.round_up).toBe(0.32);
+  });
+
+  test('normalises floating-point drift to 2 decimals (normal flow)', async () => {
+    await placeOrder(makeOrderData({ isMultipleMenuType: false, roundUpAmount: 0.319999999 }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractFromForm(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload.round_up).toBe(0.32);
+  });
+
+  test('normalises floating-point drift to 2 decimals (multi-menu flow)', async () => {
+    await placeOrder(makeOrderData({ isMultipleMenuType: true, roundUpAmount: 0.319999999 }));
+    const [, formArg] = apiClient.post.mock.calls[0];
+    const payload = extractFromForm(formArg);
+    expect(payload).not.toBeNull();
+    expect(payload.round_up).toBe(0.32);
+  });
+});
+
 // ─── Variations transformation ───────────────────────────────────
 
 describe('placeOrder - Variations transformation', () => {

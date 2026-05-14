@@ -402,7 +402,7 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       // Multi-menu parity additions (478 normal contract alignment with 716)
       total_gst_tax_amount: parseFloat(totalGstTaxAmount.toFixed(2)),
       total_vat_tax_amount: parseFloat(totalVatTaxAmount.toFixed(2)),
-      round_up: 0,
+      round_up: parseFloat(((orderData.roundUpAmount) || 0).toFixed(2)),
       tip_tax_amount: 0,
       road: orderData.deliveryAddress?.road || '',
       house: orderData.deliveryAddress?.house || '',
@@ -478,6 +478,8 @@ export const updateCustomerOrder = async ({
   gstEnabled = true,
   // Delivery (DELIVERY_CHARGE_GATING CR D-6): 478 edit parity with placeOrder's delivery_charge handling
   deliveryCharge = 0,
+  // ROUND_UP_PAYLOAD_GAP fix — restaurant round-off amount (roundedTotal - totalToPay); 0 when disabled
+  roundUpAmount = 0,
 }: any): Promise<ApiPlaceOrderResponse> => {
   try {
     const formData = new FormData();
@@ -537,7 +539,7 @@ export const updateCustomerOrder = async ({
       // Multi-menu parity additions (478 edit contract alignment with 716)
       total_gst_tax_amount: parseFloat((parseFloat(totalGstTaxAmount as any) || 0).toFixed(2)),
       total_vat_tax_amount: parseFloat((parseFloat(totalVatTaxAmount as any) || 0).toFixed(2)),
-      round_up: 0,
+      round_up: parseFloat(((roundUpAmount as any) || 0).toFixed(2)),
       tip_tax_amount: 0,
       road: '',
       house: '',
