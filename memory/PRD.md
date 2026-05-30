@@ -50,6 +50,17 @@
 - Restaurant 716: included in Item 1 (honours the flag like any other restaurant)
 - Items 2/3 carve-outs in OrderSuccess.jsx/ReviewOrder.jsx UNTOUCHED — no regression risk
 
+### 2026-05-30 — CR-2026-05-30-002 IMPLEMENTED + tested (Non-QR Order Block)
+- New admin flag `allowNonQrOrders` (default `true` → zero Day-1 behaviour change for every restaurant).
+- 3 frontend guards: C1 Landing → Browse Menu (`LandingPage.jsx`), C2 first add-to-cart (`MenuItems.jsx`), C3 Place/Update Order (`ReviewOrder.jsx`). All call a single `shouldBlockNonQrOrder()` in `/app/frontend/src/utils/orderAccessPolicy.js`.
+- Hard bypasses honoured: 716 (HC1), edit-mode (HC5), takeaway/delivery via scannedOrderType (HC6), walk-in QR (HC7).
+- New non-dismissable `NonQrBlockModal` (single "OK, Rescan" CTA, no backdrop/Escape dismissal, body scroll locked).
+- Telemetry: `POST /api/diagnostics/non-qr-block` (returns 204, fire-and-forget). Backed by MongoDB collection `non_qr_blocks` with index `(restaurant_id, ts DESC)` and **per-restaurant 200-doc rolling cap** (verified: 250 POSTs → exactly 200 retained).
+- Admin UI: new "Order Access Policy" section in `Admin → Visibility` with one ToggleSwitch.
+- Backend Pydantic `AppConfigUpdate` extended with `allowNonQrOrders` + the 6 `skipOtp*` fields (latter discovered missing during CR-002 testing — admin saves for Item 1 were silently dropping those fields before; now persist correctly).
+- 4 testing iterations: iter_2 found Pydantic gap + missing C1 call site; iter_3 found `selectedMode` default-takeaway tripping HC6 bypass; iter_4 ALL scenarios PASS, `retest_needed:false`.
+- Files: `utils/orderAccessPolicy.js` (new), `components/NonQrBlockModal.{jsx,css}` (new), `api/services/diagnosticsService.js` (new); edits to `AdminConfigContext.jsx`, `RestaurantConfigContext.jsx`, `AdminVisibilityPage.jsx`, `LandingPage.jsx`, `MenuItems.jsx`, `ReviewOrder.jsx`, `backend/server.py`.
+
 ## Backlog / Next Actions
 - **🅿 PARKED — Item 2** (table → WC fallback prod-only): Investigation complete (~10% rate root-caused to `ReviewOrder.jsx:982-985` ignoring `CartContext.editOrder.tableId` + sessionStorage loss on mobile ~10-25%). Owner parked because effort/risk too high relative to current tolerance. Recommended MVP F1+F3 (~31 LOC) drops rate to <0.5%. Resume materials in `ITEM2_PARKED.md` + `ITEM2_FIX_INVESTIGATION.md`.
 - **🅿 PARKED — Item 3** (room → walk-in): Same root cause family as Item 2; shares parking.
