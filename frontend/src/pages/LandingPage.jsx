@@ -610,8 +610,15 @@ const LandingPage = () => {
         // If the matching skipOtp* flag is explicitly `true`, skip the
         // /password-setup screen and silently call crmSkipOtp to attach
         // CRM identity, then go straight to menu.
+        //
+        // selectedMode default is 'takeaway' (L148 useState init), which is a
+        // UI-only state for the OrderModeSelector (only shown when the QR
+        // carries orderType=takeaway|delivery i.e. isTakeawayDeliveryMode).
+        // For a no-QR / dine-in landing we MUST NOT thread that UI default
+        // into pickOtpFlag — doing so causes the gate to evaluate
+        // `skipOtpTakeaway` instead of `skipOtpDineIn`, breaking Item 1.
         const otpFlagName = pickOtpFlag({
-          selectedMode,
+          selectedMode: isTakeawayDeliveryMode ? selectedMode : undefined,
           scannedOrderType,
           scannedRoomOrTable,
           scannedTableId,
