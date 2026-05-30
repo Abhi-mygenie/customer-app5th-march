@@ -115,6 +115,20 @@ const AdminVisibilityPage = () => {
           <ToggleSwitch field="skipOtpRoomOrders" label="Skip OTP for Room Orders" />
         </div>
       </div>
+
+      {/* Order Access Policy — CR-2026-05-30-002 */}
+      <div className="admin-section" data-testid="admin-section-order-access">
+        <h2 className="admin-section-title">Order Access Policy</h2>
+        <p className="admin-section-description">
+          When OFF, customers must arrive via a valid QR scan (table / room / walk-in).
+          Customers without a scan will be prompted to rescan at landing, when adding
+          their first item to cart, and at place-order. Default ON (no enforcement).
+          Restaurant 716 is unaffected by this setting.
+        </p>
+        <div className="admin-toggle-grid">
+          <ToggleSwitch field="allowNonQrOrders" label="Allow Non-QR Orders" />
+        </div>
+      </div>
     </div>
   );
 };

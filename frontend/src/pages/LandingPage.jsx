@@ -16,6 +16,9 @@ import { getAuthToken } from '../utils/authToken';
 import { pickOtpFlag, shouldShowOtpPage } from '../utils/otpPolicy';
 import { crmSkipOtpWithRetry } from '../api/services/crmSkipOtpRetry';
 import { buildUserId } from '../api/services/crmService';
+import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAccessPolicy';
+import { postNonQrBlock } from '../api/services/diagnosticsService';
+import NonQrBlockModal from '../components/NonQrBlockModal';
 import logger from '../utils/logger';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
@@ -34,8 +37,8 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, setRestaurantScope, setCrmAuth } = useAuth();
-  const { startEditOrder, clearCart, cartItems, removeFromCart } = useCart();
-  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl, skipOtpDineIn, skipOtpTakeaway, skipOtpDineInWithTable, skipOtpWalkIn, skipOtpRoomOrders, skipOtpDelivery } = useRestaurantConfig();
+  const { startEditOrder, clearCart, cartItems, removeFromCart, isEditMode } = useCart();
+  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl, skipOtpDineIn, skipOtpTakeaway, skipOtpDineInWithTable, skipOtpWalkIn, skipOtpRoomOrders, skipOtpDelivery, allowNonQrOrders } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, foodFor: scannedFoodFor, updateOrderType } = useScannedTable();
 
@@ -138,6 +141,7 @@ const LandingPage = () => {
 
   // State for edit order loading
   const [isLoadingEditOrder, setIsLoadingEditOrder] = useState(false);
+  const [showNonQrBlockModal, setShowNonQrBlockModal] = useState(false);
 
   // Phase 2: Takeaway/Delivery mode state
   const isTakeawayDeliveryMode = isTakeawayOrDelivery(scannedOrderType);
@@ -1201,6 +1205,13 @@ const LandingPage = () => {
         </footer>
       )}
       <NotificationPopup page="landing" />
+      <NonQrBlockModal
+        open={showNonQrBlockModal}
+        onRescan={() => {
+          setShowNonQrBlockModal(false);
+          navigate(`/${restaurant?.id || restaurantId}`);
+        }}
+      />
     </div>
   );
 };

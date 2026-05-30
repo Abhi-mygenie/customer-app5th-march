@@ -22,13 +22,16 @@ import { useCurrentTime } from '../hooks/useCurrentTime';
 import { isRestaurantOpen } from '../utils/itemAvailability';
 import { isItemAllowedForChannel } from '../utils/channelEligibility';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
+import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAccessPolicy';
+import { postNonQrBlock } from '../api/services/diagnosticsService';
+import NonQrBlockModal from '../components/NonQrBlockModal';
 import './MenuItems.css';
 
 const MenuItems = () => {
   const { stationId } = useParams();
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
-  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantShifts, restaurantOpen, menuOrder, categoryTimings, itemTimings } = useRestaurantConfig();
+  const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantShifts, restaurantOpen, menuOrder, categoryTimings, itemTimings, allowNonQrOrders } = useRestaurantConfig();
   const [stationName, setStationName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -42,6 +45,7 @@ const MenuItems = () => {
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
   const [selectedItemForCustomization, setSelectedItemForCustomization] = useState(null);
   const [repeatModalOpen, setRepeatModalOpen] = useState(false);
+  const [showNonQrBlockModal, setShowNonQrBlockModal] = useState(false);
   const [selectedItemForRepeat, setSelectedItemForRepeat] = useState(null);
   const categoryHeaderRef = useRef(null);
 
@@ -52,7 +56,7 @@ const MenuItems = () => {
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
 
-  const { foodFor, orderType: scannedOrderType } = useScannedTable();
+  const { foodFor, orderType: scannedOrderType, isScanned, tableId: scannedTableId, roomOrTable: scannedRoomOrTable } = useScannedTable();
 
   // Fetch menu sections from API (wait for numeric ID)
   // stationId (from route) takes priority, foodFor (from URL/sessionStorage) as fallback
@@ -411,9 +415,44 @@ const MenuItems = () => {
     return [...cleanedItemsInCart, ...itemsNotInCart];
   }, [cartItems]);
   /**
+   * CR-2026-05-30-002 — Guard C2.
+   * Returns true when the add-to-cart attempt should be blocked.
+   * Only fires on the FIRST add (cart currently empty) — subsequent adds
+   * within the same session are not re-checked (locked semantics CR §4 C2).
+   */
+  const isBlockedNonQrAdd = useCallback(() => {
+    if (cartItems && cartItems.length > 0) return false;
+    const policy = shouldBlockNonQrOrder(
+      {
+        restaurantId,
+        isScanned,
+        scannedTableId,
+        scannedRoomOrTable,
+        scannedOrderType,
+        isEditMode,
+      },
+      { allowNonQrOrders }
+    );
+    if (!policy.block) return false;
+    clearCart();
+    postNonQrBlock(
+      buildNonQrBlockPayload(
+        { restaurantId, scannedRoomOrTable, scannedTableId, isEditMode },
+        'add_to_cart'
+      )
+    );
+    setShowNonQrBlockModal(true);
+    return true;
+  }, [
+    cartItems, restaurantId, isScanned, scannedTableId, scannedRoomOrTable,
+    scannedOrderType, isEditMode, allowNonQrOrders, clearCart,
+  ]);
+
+  /**
    * Handle add to cart button click
    */
   const handleAddToCart = useCallback((item) => {
+    if (isBlockedNonQrAdd()) return;
     const hasVariations = item.variations && item.variations.length > 0;
     const hasAddOns = item.add_ons && item.add_ons.length > 0;
 
@@ -426,7 +465,7 @@ const MenuItems = () => {
       // CR A-1: pass active orderType for defensive eligibility re-check inside CartContext
       addToCart(item, [], [], scannedOrderType);
     }
-  }, [addToCart, scannedOrderType]);
+  }, [addToCart, scannedOrderType, isBlockedNonQrAdd]);
 
   /**
    * Handle close customization modal
@@ -440,9 +479,10 @@ const MenuItems = () => {
    * Handle add to cart from customization modal
    */
   const handleAddToCartFromModal = useCallback((item, variations, add_ons) => {
+    if (isBlockedNonQrAdd()) return;
     // CR A-1: pass active orderType for defensive eligibility re-check inside CartContext
     addToCart(item, variations, add_ons, scannedOrderType);
-  }, [addToCart, scannedOrderType]);
+  }, [addToCart, scannedOrderType, isBlockedNonQrAdd]);
 
   /**
    * Handle close repeat modal
@@ -483,6 +523,7 @@ const MenuItems = () => {
    * Handle quantity increment
    */
   const handleIncrement = useCallback((item) => {
+    if (isBlockedNonQrAdd()) return;
     const hasVariations = item.variations && item.variations.length > 0;
     const hasAddOns = item.add_ons && item.add_ons.length > 0;
 
@@ -501,7 +542,7 @@ const MenuItems = () => {
         addToCart(item, [], [], scannedOrderType);
       }
     }
-  }, [cartItems, updateQuantity, addToCart, scannedOrderType]);
+  }, [cartItems, updateQuantity, addToCart, scannedOrderType, isBlockedNonQrAdd]);
 
   /**
    * Handle quantity decrement
@@ -830,6 +871,13 @@ const MenuItems = () => {
           </button>
         )}
       <NotificationPopup page="menu" />
+      <NonQrBlockModal
+        open={showNonQrBlockModal}
+        onRescan={() => {
+          setShowNonQrBlockModal(false);
+          navigate(`/${restaurantId}`);
+        }}
+      />
     </div>
   );
 };

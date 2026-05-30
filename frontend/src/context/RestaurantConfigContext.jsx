@@ -107,6 +107,9 @@ const DEFAULT_CONFIG = {
   skipOtpWalkIn: false,
   skipOtpRoomOrders: false,
   skipOtpDelivery: false,
+  // Non-QR order access policy — CR-2026-05-30-002.
+  // Default true → no enforcement, no block, no telemetry (current behaviour).
+  allowNonQrOrders: true,
   // Restaurant Operating Shifts
   restaurantShifts: [{ start: '06:00', end: '03:00' }],
   // Restaurant Open master toggle (default open)
@@ -465,6 +468,10 @@ export const RestaurantConfigProvider = ({ children }) => {
     skipOtpWalkIn: config.skipOtpWalkIn === true,
     skipOtpRoomOrders: config.skipOtpRoomOrders === true,
     skipOtpDelivery: config.skipOtpDelivery === true,
+    // Non-QR order access policy (CR-2026-05-30-002). Default true (enforced
+    // only when admin explicitly sets false). `!== false` so missing / null /
+    // undefined resolves to "allowed", preserving Day-1 behaviour.
+    allowNonQrOrders: config.allowNonQrOrders !== false,
     // Restaurant Operating Shifts
     restaurantShifts: config.restaurantShifts || [{ start: '06:00', end: '03:00' }],
     // Restaurant Open master toggle

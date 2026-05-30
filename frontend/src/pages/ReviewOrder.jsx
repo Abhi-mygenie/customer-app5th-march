@@ -29,6 +29,9 @@ import { calculateTaxBreakdown } from '../utils/taxCalculation';
 import { isDineInOrRoom, hasAssignedTable } from '../utils/orderTypeHelpers';
 import logger from '../utils/logger';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
+import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAccessPolicy';
+import { postNonQrBlock } from '../api/services/diagnosticsService';
+import NonQrBlockModal from '../components/NonQrBlockModal';
 import './ReviewOrder.css';
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
@@ -79,7 +82,7 @@ const ReviewOrder = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, user, isCustomer, setRestaurantScope } = useAuth();
-  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig, codEnabled, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery, payOnlineLabel, payAtCounterLabel } = useRestaurantConfig();
+  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig, codEnabled, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery, payOnlineLabel, payAtCounterLabel, allowNonQrOrders } = useRestaurantConfig();
   // console.log('restaurantId', restaurantId);
 
   // Inside ReviewOrder component, add:
@@ -222,6 +225,7 @@ const ReviewOrder = () => {
 
   // Points redemption state
   const [isUsingPoints, setIsUsingPoints] = useState(false);
+  const [showNonQrBlockModal, setShowNonQrBlockModal] = useState(false);
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [pointsDiscount, setPointsDiscount] = useState(0);
 
@@ -812,6 +816,35 @@ const ReviewOrder = () => {
 
   // Handle place order
   const handlePlaceOrder = async () => {
+    // CR-2026-05-30-002 — Guard C3 (Place/Update Order).
+    // Final defence: even if C1/C2 were bypassed (e.g. customer arrived from a
+    // deep link to /review-order, or admin flipped the flag mid-session),
+    // refuse to submit a non-QR order.
+    {
+      const policy = shouldBlockNonQrOrder(
+        {
+          restaurantId,
+          isScanned,
+          scannedTableId,
+          scannedRoomOrTable,
+          scannedOrderType,
+          isEditMode,
+        },
+        { allowNonQrOrders }
+      );
+      if (policy.block) {
+        clearCart();
+        postNonQrBlock(
+          buildNonQrBlockPayload(
+            { restaurantId, scannedRoomOrTable, scannedTableId, isEditMode, isAuthenticated },
+            'place_order'
+          )
+        );
+        setShowNonQrBlockModal(true);
+        return;
+      }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // CR Phase-1 — Room Scanner Safety Guard (pre-submit)
     // ─────────────────────────────────────────────────────────────────────────
@@ -1834,6 +1867,13 @@ const ReviewOrder = () => {
         </div>
       </div>
       <NotificationPopup page="review" />
+      <NonQrBlockModal
+        open={showNonQrBlockModal}
+        onRescan={() => {
+          setShowNonQrBlockModal(false);
+          navigate(`/${restaurantId}`);
+        }}
+      />
     </div>
   );
 };

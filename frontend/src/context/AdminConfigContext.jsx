@@ -132,6 +132,10 @@ const defaultConfig = {
   skipOtpDineInWithTable: false,
   skipOtpWalkIn: false,
   skipOtpRoomOrders: false,
+  // Non-QR order access policy — CR-2026-05-30-002.
+  // Default true = allowed (current behaviour preserved for every restaurant).
+  // Admin flips to false to enforce QR-required mode (rescan prompts at 3 checkpoints).
+  allowNonQrOrders: true,
 };
 
 export const AdminConfigProvider = ({ children }) => {

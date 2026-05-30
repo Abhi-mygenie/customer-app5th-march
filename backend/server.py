@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, PlainTextResponse
 from dotenv import load_dotenv
@@ -52,6 +52,7 @@ customer_router = APIRouter(prefix="/customer", tags=["Customer"])
 config_router = APIRouter(prefix="/config", tags=["Configuration"])
 upload_router = APIRouter(prefix="/upload", tags=["Upload"])
 dietary_router = APIRouter(prefix="/dietary-tags", tags=["Dietary Tags"])
+diagnostics_router = APIRouter(prefix="/diagnostics", tags=["Diagnostics"])
 
 # ============================================
 # Models
@@ -1504,6 +1505,88 @@ async def update_dietary_tags(
     return {"success": True, "message": "Dietary tags updated successfully"}
 
 # ============================================
+# CR-2026-05-30-002 — Non-QR block diagnostics
+# ============================================
+
+class NonQrBlockEvent(BaseModel):
+    """Client-side diagnostic event fired when a non-QR order is blocked."""
+    restaurant_id: str
+    checkpoint: str  # 'landing' | 'add_to_cart' | 'place_order'
+    scanned_room_or_table: Optional[str] = None  # 'table' | 'room' | 'walkin' | None
+    final_table_id: Optional[str] = "0"
+    is_edit_mode: bool = False
+    is_authenticated: bool = False
+
+
+NON_QR_BLOCKS_COLLECTION = "non_qr_blocks"
+NON_QR_BLOCKS_PER_RID_LIMIT = 200
+_NON_QR_INDEX_READY = False
+
+
+async def _ensure_non_qr_indexes():
+    """Idempotent. Creates the indexes we rely on for the rolling cap."""
+    global _NON_QR_INDEX_READY
+    if _NON_QR_INDEX_READY:
+        return
+    try:
+        await db[NON_QR_BLOCKS_COLLECTION].create_index(
+            [("restaurant_id", 1), ("ts", -1)],
+            name="rid_ts_desc",
+        )
+        _NON_QR_INDEX_READY = True
+    except Exception as exc:
+        logging.getLogger(__name__).warning("non_qr_blocks index creation skipped: %s", exc)
+
+
+@diagnostics_router.post("/non-qr-block", status_code=204)
+async def non_qr_block(event: NonQrBlockEvent, request: Request):
+    """Record a non-QR block event. Fire-and-forget; returns 204 always."""
+    await _ensure_non_qr_indexes()
+
+    xff = request.headers.get("x-forwarded-for") or ""
+    client_ip = xff.split(",")[0].strip() if xff else (
+        request.client.host if request.client else None
+    )
+
+    doc = {
+        "_id": str(uuid.uuid4()),
+        "restaurant_id": str(event.restaurant_id),
+        "checkpoint": event.checkpoint,
+        "scanned_room_or_table": event.scanned_room_or_table,
+        "final_table_id": event.final_table_id or "0",
+        "is_edit_mode": bool(event.is_edit_mode),
+        "is_authenticated": bool(event.is_authenticated),
+        "client_ip": client_ip,
+        "user_agent": request.headers.get("user-agent"),
+        "referer": request.headers.get("referer"),
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }
+
+    try:
+        await db[NON_QR_BLOCKS_COLLECTION].insert_one(doc)
+
+        # Rolling cap: keep newest 200 per restaurant_id.
+        count = await db[NON_QR_BLOCKS_COLLECTION].count_documents(
+            {"restaurant_id": doc["restaurant_id"]}
+        )
+        if count > NON_QR_BLOCKS_PER_RID_LIMIT:
+            excess = count - NON_QR_BLOCKS_PER_RID_LIMIT
+            cursor = (
+                db[NON_QR_BLOCKS_COLLECTION]
+                .find({"restaurant_id": doc["restaurant_id"]}, {"_id": 1})
+                .sort("ts", 1)
+                .limit(excess)
+            )
+            stale_ids = [d["_id"] async for d in cursor]
+            if stale_ids:
+                await db[NON_QR_BLOCKS_COLLECTION].delete_many({"_id": {"$in": stale_ids}})
+    except Exception as exc:
+        logging.getLogger(__name__).warning("non_qr_block insert failed: %s", exc)
+        # Still return 204 — diagnostics must never break the FE.
+
+    return None
+
+# ============================================
 # Include all routers
 # ============================================
 
@@ -1513,6 +1596,7 @@ api_router.include_router(config_router)
 api_router.include_router(upload_router)
 api_router.include_router(air_bnb_router)  # Add air-bnb router
 api_router.include_router(dietary_router)  # Add dietary tags router
+api_router.include_router(diagnostics_router)  # CR-2026-05-30-002
 
 # ============================================
 # Documentation Endpoints (must be before app.include_router)

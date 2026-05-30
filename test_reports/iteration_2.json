@@ -1,0 +1,56 @@
+{
+  "summary": "Runtime + code-level testing of CR-2026-05-30-002 (non-QR order block) on restaurant 698. Found TWO P0 implementation gaps that break the feature end-to-end: (1) the admin toggle cannot persist because the backend Pydantic model is missing the new field, and (2) Guard C1 on the landing page is wired up (import + state + modal render) but the `shouldBlockNonQrOrder()` call is missing from `handleDiningMenuClick`, so clicking Browse Menu never triggers the block. Scenarios 1 (admin section render), 0 (default preserve), backend 204 endpoint, MongoDB rolling-cap index, and config-context exposure of the flag all pass.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "PUT /api/config/",
+        "issue": "AppConfigUpdate Pydantic model (server.py L118-234) is MISSING the `allowNonQrOrders: Optional[bool]` field. Admin save returns success=True but FastAPI/Pydantic silently strips the unknown key, so the flag never lands in MongoDB via the admin UI. Reproduced: logged in as owner@cafeflora.com, PUT {allowNonQrOrders:false} → 200 success, but GET /api/config/698 still returns null. The only way to set the flag is direct Mongo update.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "LandingPage.jsx",
+        "issue": "Guard C1 is NOT CALLED. The file imports shouldBlockNonQrOrder/buildNonQrBlockPayload/postNonQrBlock, declares `showNonQrBlockModal` state at L144, and renders <NonQrBlockModal> at L1208 — but `grep -c 'shouldBlockNonQrOrder('` returns 0 inside this file. `handleDiningMenuClick` (L481) has no C1 guard at the top. Reproduced live: with allowNonQrOrders=false on 698 (direct Mongo write), clicking BROWSE MENU on /698 with no QR navigates to /password-setup instead of showing the Session Expired modal. This regresses the entire CR (Scenarios 3, 14, and the C1 path of 12).",
+        "selector": "[data-testid=\"landing-browse-menu-btn\"]",
+        "priority": "CRITICAL"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Admin Visibility → Save → Customer App",
+        "issue": "Even though AdminVisibilityPage.jsx renders the 'Order Access Policy' section with the correct testids, saving the toggle has no effect on the customer app because the backend silently drops the field (see backend_issues.critical). End-to-end admin → save → enforce flow is broken.",
+        "affected_selectors": ["[data-testid=\"toggle-allowNonQrOrders\"]", "[data-testid=\"admin-section-order-access\"]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_2.json"],
+  "action_items": [
+    "MAIN AGENT P0 — Add `allowNonQrOrders: Optional[bool] = None` to the AppConfigUpdate Pydantic model in /app/backend/server.py around L210 (next to the OTP toggles or after `feedbackEnabled`). Without this, the admin UI toggle is a no-op. Quick repro: `curl -X PUT $API/api/config/ -H 'Authorization: Bearer <admin>' -d '{\"allowNonQrOrders\":false}'` returns success but GET /api/config/<rid> still has the field as null.",
+    "MAIN AGENT P0 — Insert the C1 guard at the TOP of `handleDiningMenuClick` (LandingPage.jsx, before L489 room guard). The state setter, modal, and helpers are already wired (lines 144, 1208), only the call site is missing. Expected snippet: `const policy = shouldBlockNonQrOrder({ restaurantId: actualRestaurantId, isScanned, scannedTableId, scannedRoomOrTable, scannedOrderType, selectedMode, isEditMode }, { allowNonQrOrders }); if (policy.block) { clearCart(); postNonQrBlock(buildNonQrBlockPayload({...}, 'landing')); setShowNonQrBlockModal(true); return; }`. Also confirm the import set destructured at L41 (`allowNonQrOrders`) and at the useScannedTable hook is in scope.",
+    "MAIN AGENT — After both fixes, re-run Scenarios 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17 end-to-end. Scenarios 1, 2 (admin UI shape), 13 (modal non-dismissable), 14 (payload shape), backend 204 endpoint, and the (rid,ts) index are already confirmed."
+  ],
+  "critical_code_review_comments": [
+    "P0: LandingPage.jsx imports + state + render of NonQrBlockModal are present but the policy check is never invoked → dead code path. This is the most likely cause of regression and must be fixed before any further runtime testing.",
+    "P0: server.py AppConfigUpdate model does not include allowNonQrOrders (and also is missing skipOtpDineIn, skipOtpTakeaway, skipOtpDineInWithTable, skipOtpWalkIn, skipOtpRoomOrders, skipOtpDelivery, otpRequiredDelivery from iteration 1). This appears to be a systemic gap — admin toggles for those flags are also no-ops via the API. Recommend a single follow-up PR that adds all missing Optional[bool] fields. /app/backend/server.py L118-234.",
+    "GOOD: /app/frontend/src/utils/orderAccessPolicy.js logic matches CR spec exactly — HC1/HC4/HC5/HC6/HC7 carve-outs are correct, default behaviour (config.allowNonQrOrders !== false) is preserved.",
+    "GOOD: NonQrBlockModal.jsx is truly non-dismissable — no onClick on backdrop, no Escape handler, body scroll locked via useEffect. Single CTA. data-testids present (verified in DOM during runtime test).",
+    "GOOD: diagnosticsService.js correctly prefers navigator.sendBeacon and falls back to fetch keepalive — fire-and-forget never throws.",
+    "GOOD: MongoDB index `rid_ts_desc` on (restaurant_id, ts DESC) confirmed present via direct list_indexes(). Backend POST /api/diagnostics/non-qr-block returns 204 as specified.",
+    "GOOD: AdminVisibilityPage.jsx renders the new 'Order Access Policy' section (L119-130) with both required testids and a default-ON toggle.",
+    "GOOD: RestaurantConfigContext exposes allowNonQrOrders as `config.allowNonQrOrders !== false` (L474), preserving Day-1 behaviour when the field is missing.",
+    "MINOR: MenuItems.jsx and ReviewOrder.jsx each have exactly one shouldBlockNonQrOrder() call site (verified via grep). Couldn't runtime-verify because the upstream Guard C1 doesn't fire — once C1 is fixed, please rerun Scenarios 4 and 5."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "endpoint OK (204) + index OK; admin save API broken for new field", "frontend": "policy module + modal + admin section OK; Guard C1 missing → ~25% of feature actually works at runtime"},
+  "test_credentials": "owner@cafeflora.com / Qplazm@10 — restaurant 698. Login via POST /api/auth/login requires `phone_or_email` (NOT phone or email) plus `user_type:'restaurant'`. /app/memory/test_credentials.md present and accurate.",
+  "seed_data_creation": "Direct MongoDB write was required to set `allowNonQrOrders:false` on customer_app_config for restaurant 698 (since the admin API silently drops it). Cleanup performed at end of test run via $unset — verified GET /api/config/698 now returns allowNonQrOrders=null (default). MongoDB `non_qr_blocks` collection now has 2 documents from this test session (1 from manual curl smoke + 1 from earlier backend smoke); harmless given the 200-doc cap and they only affect 698's rolling window.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Two P0 fixes required before any further runtime testing makes sense: (1) add `allowNonQrOrders: Optional[bool] = None` to AppConfigUpdate in /app/backend/server.py, and (2) insert the missing shouldBlockNonQrOrder() call at the top of handleDiningMenuClick in /app/frontend/src/pages/LandingPage.jsx (the modal/state/imports are already there — only the call is missing). After fixes: (a) set allowNonQrOrders=false on 698 via the admin UI (now possible) and re-run Scenario 3, asserting modal+payload+CTA-routes-to-/698. (b) Run Scenarios 4,5,6,7,8,9,10,12,14,15. (c) For Scenario 11 (716 carve-out), set allowNonQrOrders=false on 716 via direct Mongo update and visit /716 — modal must NOT appear. (d) For Scenario 17 (rolling cap), POST 250 events with curl and assert db.non_qr_blocks.count_documents({restaurant_id:'TEST_RID'})==200. (e) Always restore 698 (and any rid you touched) to allowNonQrOrders unset/true at end. Note: while testing landing block, a non-existent customer phone (e.g. 9999988888) routes to /password-setup if the block guard is absent — that confirmed the missing guard live in this run.",
+  "rca of the issue": "Two independent gaps in the implementation: (A) Backend Pydantic schema not updated → admin save silently drops the new field → flag never reaches Mongo via the UI. (B) Frontend Guard C1 wired up at the structural level (imports/state/render) but missing the actual policy invocation in the click handler. Both are simple one-place edits but together they cause the feature to appear functional in code review while being completely non-functional at runtime."
+}
