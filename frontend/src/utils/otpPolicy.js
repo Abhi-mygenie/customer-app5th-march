@@ -51,14 +51,28 @@ export function pickOtpFlag({
 
 /**
  * Returns true if the password-setup / OTP page should be shown for this flag value.
- * Treats true/undefined/null/missing as "OTP required" (current behaviour).
- * Only an explicit boolean `false` skips the page.
+ *
+ * ⚠️ CR-2026-05-30-001 — SEMANTIC PENDING OWNER CONFIRMATION ⚠️
+ * Existing production restaurants have `otpRequired*=false` already persisted in
+ * the customer_app_config DB (the flags were "dead" until this CR). Activating
+ * either semantic (`!== false` skip-on-false, or `=== true` skip-on-true) WITHOUT
+ * a new flag name would cause an immediate behaviour change for every restaurant
+ * on day one. Surfaced to owner — awaiting decision on whether to:
+ *   (a) Use new flag names (e.g. skipOtpDineIn), or
+ *   (b) Treat the existing `false` values as "admin intent to skip" (instant rollout), or
+ *   (c) Run a one-time migration to rewrite existing `false` → unset before flip.
+ *
+ * Until then, this function returns `true` unconditionally — preserving today's
+ * behaviour exactly. The wiring (pickOtpFlag, retry wrapper, LandingPage gate)
+ * is all in place and will activate as soon as this returns the real decision.
  *
  * @param {string} flagName - one of the otpRequired* keys from pickOtpFlag()
  * @param {object} config   - the restaurant config object (from RestaurantConfigContext)
  * @returns {boolean}
  */
 export function shouldShowOtpPage(flagName, config) {
-  if (!flagName) return true;
-  return config?.[flagName] !== false;
+  // SAFE-MODE: always show today's password-setup screen. See JSDoc above.
+  void flagName;
+  void config;
+  return true;
 }

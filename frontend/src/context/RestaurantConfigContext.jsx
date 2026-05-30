@@ -93,15 +93,12 @@ const DEFAULT_CONFIG = {
   mandatoryCustomerName: false,
   mandatoryCustomerPhone: false,
   // OTP Configuration per order type
-  // CR-2026-05-30-001 Item 1: defaults are `true` so that brand-new
-  // restaurants / unfetched config preserve current behaviour (OTP page IS shown).
-  // Only an explicit `false` in DB will skip the password-setup page.
-  otpRequiredDineIn: true,
-  otpRequiredTakeaway: true,
-  otpRequiredDineInWithTable: true,
-  otpRequiredWalkIn: true,
-  otpRequiredRoomOrders: true,
-  otpRequiredDelivery: true,
+  otpRequiredDineIn: false,
+  otpRequiredTakeaway: false,
+  otpRequiredDineInWithTable: false,
+  otpRequiredWalkIn: false,
+  otpRequiredRoomOrders: false,
+  otpRequiredDelivery: false,
   // Restaurant Operating Shifts
   restaurantShifts: [{ start: '06:00', end: '03:00' }],
   // Restaurant Open master toggle (default open)
@@ -447,14 +444,12 @@ export const RestaurantConfigProvider = ({ children }) => {
     mandatoryCustomerName: config.mandatoryCustomerName === true,
     mandatoryCustomerPhone: config.mandatoryCustomerPhone === true,
     // OTP Configuration per order type
-    // CR-2026-05-30-001 Item 1: `!== false` so missing/undefined → true (OTP required).
-    // Only an explicit DB `false` opts the restaurant out and skips password-setup.
-    otpRequiredDineIn: config.otpRequiredDineIn !== false,
-    otpRequiredTakeaway: config.otpRequiredTakeaway !== false,
-    otpRequiredDineInWithTable: config.otpRequiredDineInWithTable !== false,
-    otpRequiredWalkIn: config.otpRequiredWalkIn !== false,
-    otpRequiredRoomOrders: config.otpRequiredRoomOrders !== false,
-    otpRequiredDelivery: config.otpRequiredDelivery !== false,
+    otpRequiredDineIn: config.otpRequiredDineIn === true,
+    otpRequiredTakeaway: config.otpRequiredTakeaway === true,
+    otpRequiredDineInWithTable: config.otpRequiredDineInWithTable === true,
+    otpRequiredWalkIn: config.otpRequiredWalkIn === true,
+    otpRequiredRoomOrders: config.otpRequiredRoomOrders === true,
+    otpRequiredDelivery: config.otpRequiredDelivery === true,
     // Restaurant Operating Shifts
     restaurantShifts: config.restaurantShifts || [{ start: '06:00', end: '03:00' }],
     // Restaurant Open master toggle
