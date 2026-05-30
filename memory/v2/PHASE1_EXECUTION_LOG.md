@@ -33,4 +33,8 @@
 - **Wiring the guardrail into CI/pre-commit** → planned for Phase 8 (CI).
 
 ## Status
-GAP-001 doc-redaction: **DONE (local, verified)**. Awaiting (1) owner password rotation, (2) owner decision on how to land these changes in the GitHub repo.
+GAP-001 doc-redaction: **DONE (local, verified)**.
+
+Open items (owner-owned):
+- **Password rotation: PENDING — owner will rotate later and confirm** (acknowledged 2026-05-30). ⚠️ Until rotated, the old Mongo + POS passwords remain LIVE/usable because git history was not scrubbed (option a). Redaction only stops future exposure.
+- **GitHub delivery: UNDECIDED** — redaction is in the local working copy + saved as `phase1_doc_redaction.patch`; not yet pushed (owner to choose: apply patch / provide write token / other).
