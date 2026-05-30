@@ -37,4 +37,4 @@ GAP-001 doc-redaction: **DONE (local, verified)**.
 
 Open items (owner-owned):
 - **Password rotation: PENDING — owner will rotate later and confirm** (acknowledged 2026-05-30). ⚠️ Until rotated, the old Mongo + POS passwords remain LIVE/usable because git history was not scrubbed (option a). Redaction only stops future exposure.
-- **GitHub delivery: UNDECIDED** — redaction is in the local working copy + saved as `phase1_doc_redaction.patch`; not yet pushed (owner to choose: apply patch / provide write token / other).
+- **GitHub delivery: OWNER WILL APPLY THE PATCH (parked)** — owner will `git apply phase1_doc_redaction.patch` on their checkout and push. No push from agent.
