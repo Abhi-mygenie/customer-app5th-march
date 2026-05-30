@@ -10,10 +10,10 @@
 |---|---|---|---|
 | G0.1 | Change the leaked passwords? | **YES** | ✅ Approved |
 | G0.x | DB ownership / maintenance window | **Owner controls it; it is a PRE-PROD DB; any time is fine** | ✅ De-risks Phase 1 (not live customer prod) |
-| G0.4 | Production CORS origins | **"Not sure — find from code/config"** → see findings below | ⏳ Needs owner pick |
-| G0.5 | Stop echoing OTP in responses? SMS working? | **YES stop it. SMS "working" but needs proper integration; a "skip SMS" option exists and must be investigated** | ⏳ Confirmed to stop echo; SMS/skip-SMS = Phase 4 investigation |
-| G0.3 | Just rotate vs rotate + scrub git history | **Owner asked: "which password?"** → answered below | ⏳ Pending owner pick (a/b) |
-| Scope | Switch from planning to implementing Phase 1 now? | **NO — keep planning only** | 🔒 Implementation remains BLOCKED |
+| G0.4 | Production CORS origins | **"Not sure — find from code/config"** → deferred (pre-prod); lock to `*.mygenie.online` + preview at real-prod time | ⏳ Deferred (pre-prod) |
+| G0.5 | Stop echoing OTP in responses? SMS working? | **YES stop it.** Confirmed SMS is **not integrated yet** → will be handled as a **separate CR**; skip-SMS/SMS investigation **parked** | ✅ Decided (stop echo); CR + investigation parked |
+| G0.3 | Just rotate vs rotate + scrub git history | **(a) Rotate ONLY** — do NOT scrub git history. **PLUS:** remove plaintext passwords from **ALL current docs** (no password in any doc) | ✅ Decided |
+| Scope | Switch from planning to implementing Phase 1 now? | **NO — no flip before explicit owner approval** | 🔒 Implementation remains BLOCKED |
 
 ---
 
@@ -73,3 +73,20 @@ From tracked code/docs, the domains fall into two groups:
 - Phase 1 urgency is **higher** for the secret leak because of `frontend/public/PRD.md` (potential public exposure).
 - Phase 4 must include an **OTP/SMS + skip-SMS investigation** before any production reliance.
 - **Still blocked on implementation** per owner ("keep planning only"). Outstanding owner picks: **G0.3** (rotate-only vs rotate+scrub) and **G0.4** (final CORS origins / confirm app domain).
+
+---
+
+## FINALIZED Phase 0 directives (owner-confirmed 2026-05-30)
+
+1. **Passwords — option (a): ROTATE ONLY.** Change both the MongoDB password and the POS/order-login password. **Do NOT scrub git history.**
+   - ⚠️ Residual to acknowledge: because history is not scrubbed, the *old* passwords remain visible in past commits — they are only made harmless by rotation. Once rotated, the old strings are dead/useless. Accepted by owner.
+2. **No password in ANY doc — hard rule.** Remove/redact every plaintext secret from **all current tracked docs** (working tree), including the high-risk `frontend/public/PRD.md` (browser-downloadable), `HANDOVER.md`, `DEPLOYMENT_HANDOVER.md`, the `memory_repo/*` handover/QA docs, the CR-001 handover docs, and the `test_reports/iteration_*.json` files. Replace with placeholders like `<set-in-env>`.
+   - **Add a guardrail** (planned) so secrets can't be re-committed into docs: a simple secret-scan check (e.g., a pre-commit hook / CI grep for known secret patterns). This becomes part of Phase 8 (CI) scope.
+3. **OTP echo — stop it, but as a separate CR.** Removing `otp_for_testing` from `/api/auth/send-otp` will be tracked as its **own change request**, not bundled. SMS is **not integrated yet**; real SMS + skip-SMS handling is **parked** for a later CR/Phase 4 investigation.
+4. **CORS — deferred** while on pre-prod. Lock to `*.mygenie.online` (regex) + active preview domain when moving to real production.
+5. **No implementation without explicit approval.** Every hands-on step (rotation, doc redaction, OTP CR, CORS) waits for the owner's explicit "go" — **planning only until then.**
+
+### Resulting adjustment to Phase 1A (plan)
+Phase 1A scope is now precisely: **(i)** owner rotates both passwords on the pre-prod systems (DB + POS), **(ii)** redact all plaintext secrets from all current docs → placeholders, **(iii)** add a no-secrets-in-docs guardrail (CI/pre-commit). **Git-history rewrite is explicitly OUT of scope** per owner decision (a). OTP-echo removal moves to its **own CR** (was Phase 1C).
+
+**State: PLANNING ONLY — no code, secret, DB, env, or file change has been made. Awaiting explicit owner approval to begin.**
