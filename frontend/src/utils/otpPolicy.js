@@ -4,11 +4,12 @@
  * Resolves which admin-config flag governs OTP for the customer's current
  * order context, and whether the OTP/password-setup page should be shown.
  *
- * Design:
- *   - Flag name encodes the matching mode (e.g. `otpRequiredDineInWithTable`).
- *   - `config[flag] !== false` means "show OTP page" (default = current behaviour).
- *   - Only an explicit `false` skips the page. Missing / null / undefined
- *     preserve today's behaviour (OTP page IS shown).
+ * Design (Plan C — new flag names):
+ *   - Flag namespace: `skipOtp*` (NEW — does NOT reuse the dead `otpRequired*`
+ *     flags, because those have explicit `false` values persisted in production
+ *     and reusing them would cause a Day-1 behaviour change).
+ *   - Missing / null / undefined / false → show /password-setup (current behaviour)
+ *   - Only an explicit boolean `true` skips the page.
  *
  * Used by `LandingPage.jsx` to gate the navigate('/password-setup', ...) call.
  *
@@ -27,7 +28,7 @@ import { hasAssignedTable } from './orderTypeHelpers';
  * @param {string|undefined} ctx.scannedOrderType     - from QR (`type=order_type`)
  * @param {string|undefined} ctx.scannedRoomOrTable   - 'room' | 'table' | 'walkin'
  * @param {string|undefined} ctx.scannedTableId       - table_id from QR
- * @returns {string} one of the otpRequired* flag names
+ * @returns {string} one of the skipOtp* flag names
  */
 export function pickOtpFlag({
   selectedMode,
@@ -35,44 +36,29 @@ export function pickOtpFlag({
   scannedRoomOrTable,
   scannedTableId,
 } = {}) {
-  if (scannedRoomOrTable === 'room') return 'otpRequiredRoomOrders';
-  if (scannedRoomOrTable === 'walkin') return 'otpRequiredWalkIn';
-  if (scannedOrderType === 'delivery' || selectedMode === 'delivery') return 'otpRequiredDelivery';
-  if (scannedOrderType === 'takeaway' || selectedMode === 'takeaway') return 'otpRequiredTakeaway';
+  if (scannedRoomOrTable === 'room') return 'skipOtpRoomOrders';
+  if (scannedRoomOrTable === 'walkin') return 'skipOtpWalkIn';
+  if (scannedOrderType === 'delivery' || selectedMode === 'delivery') return 'skipOtpDelivery';
+  if (scannedOrderType === 'takeaway' || selectedMode === 'takeaway') return 'skipOtpTakeaway';
   if (
     scannedOrderType === 'dinein' &&
     hasAssignedTable(scannedTableId) &&
     scannedRoomOrTable === 'table'
   ) {
-    return 'otpRequiredDineInWithTable';
+    return 'skipOtpDineInWithTable';
   }
-  return 'otpRequiredDineIn';
+  return 'skipOtpDineIn';
 }
 
 /**
  * Returns true if the password-setup / OTP page should be shown for this flag value.
+ * Default = show (current behaviour). Only an explicit boolean `true` skips.
  *
- * ⚠️ CR-2026-05-30-001 — SEMANTIC PENDING OWNER CONFIRMATION ⚠️
- * Existing production restaurants have `otpRequired*=false` already persisted in
- * the customer_app_config DB (the flags were "dead" until this CR). Activating
- * either semantic (`!== false` skip-on-false, or `=== true` skip-on-true) WITHOUT
- * a new flag name would cause an immediate behaviour change for every restaurant
- * on day one. Surfaced to owner — awaiting decision on whether to:
- *   (a) Use new flag names (e.g. skipOtpDineIn), or
- *   (b) Treat the existing `false` values as "admin intent to skip" (instant rollout), or
- *   (c) Run a one-time migration to rewrite existing `false` → unset before flip.
- *
- * Until then, this function returns `true` unconditionally — preserving today's
- * behaviour exactly. The wiring (pickOtpFlag, retry wrapper, LandingPage gate)
- * is all in place and will activate as soon as this returns the real decision.
- *
- * @param {string} flagName - one of the otpRequired* keys from pickOtpFlag()
+ * @param {string} flagName - one of the skipOtp* keys from pickOtpFlag()
  * @param {object} config   - the restaurant config object (from RestaurantConfigContext)
  * @returns {boolean}
  */
 export function shouldShowOtpPage(flagName, config) {
-  // SAFE-MODE: always show today's password-setup screen. See JSDoc above.
-  void flagName;
-  void config;
-  return true;
+  if (!flagName) return true;
+  return config?.[flagName] !== true;
 }

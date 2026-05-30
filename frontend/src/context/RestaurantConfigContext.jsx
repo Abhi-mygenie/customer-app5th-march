@@ -92,13 +92,21 @@ const DEFAULT_CONFIG = {
   // Customer Capture - Mandatory fields
   mandatoryCustomerName: false,
   mandatoryCustomerPhone: false,
-  // OTP Configuration per order type
+  // OTP Configuration per order type (LEGACY — DEAD FLAGS, never read at runtime)
   otpRequiredDineIn: false,
   otpRequiredTakeaway: false,
   otpRequiredDineInWithTable: false,
   otpRequiredWalkIn: false,
   otpRequiredRoomOrders: false,
-  otpRequiredDelivery: false,
+  // Skip-OTP toggles per order type (CR-2026-05-30-001 Item 1).
+  // Default false → show /password-setup (current behaviour). Admin opts in by
+  // setting true to silently bypass the OTP/password-setup screen via crmSkipOtp.
+  skipOtpDineIn: false,
+  skipOtpTakeaway: false,
+  skipOtpDineInWithTable: false,
+  skipOtpWalkIn: false,
+  skipOtpRoomOrders: false,
+  skipOtpDelivery: false,
   // Restaurant Operating Shifts
   restaurantShifts: [{ start: '06:00', end: '03:00' }],
   // Restaurant Open master toggle (default open)
@@ -443,13 +451,20 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Customer Capture - Mandatory fields
     mandatoryCustomerName: config.mandatoryCustomerName === true,
     mandatoryCustomerPhone: config.mandatoryCustomerPhone === true,
-    // OTP Configuration per order type
+    // OTP Configuration per order type (LEGACY — kept for admin UI back-compat)
     otpRequiredDineIn: config.otpRequiredDineIn === true,
     otpRequiredTakeaway: config.otpRequiredTakeaway === true,
     otpRequiredDineInWithTable: config.otpRequiredDineInWithTable === true,
     otpRequiredWalkIn: config.otpRequiredWalkIn === true,
     otpRequiredRoomOrders: config.otpRequiredRoomOrders === true,
-    otpRequiredDelivery: config.otpRequiredDelivery === true,
+    // Skip-OTP toggles (CR-2026-05-30-001 Item 1) — `=== true` so missing/false
+    // resolves to "do not skip" (show password-setup, current behaviour).
+    skipOtpDineIn: config.skipOtpDineIn === true,
+    skipOtpTakeaway: config.skipOtpTakeaway === true,
+    skipOtpDineInWithTable: config.skipOtpDineInWithTable === true,
+    skipOtpWalkIn: config.skipOtpWalkIn === true,
+    skipOtpRoomOrders: config.skipOtpRoomOrders === true,
+    skipOtpDelivery: config.skipOtpDelivery === true,
     // Restaurant Operating Shifts
     restaurantShifts: config.restaurantShifts || [{ start: '06:00', end: '03:00' }],
     // Restaurant Open master toggle

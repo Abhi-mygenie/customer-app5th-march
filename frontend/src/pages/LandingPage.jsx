@@ -35,7 +35,7 @@ const LandingPage = () => {
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, setRestaurantScope, setCrmAuth } = useAuth();
   const { startEditOrder, clearCart, cartItems, removeFromCart } = useCart();
-  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl, otpRequiredDineIn, otpRequiredTakeaway, otpRequiredDineInWithTable, otpRequiredWalkIn, otpRequiredRoomOrders, otpRequiredDelivery } = useRestaurantConfig();
+  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl, skipOtpDineIn, skipOtpTakeaway, skipOtpDineInWithTable, skipOtpWalkIn, skipOtpRoomOrders, skipOtpDelivery } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, foodFor: scannedFoodFor, updateOrderType } = useScannedTable();
 
@@ -561,7 +561,7 @@ const LandingPage = () => {
         }
           
         // CR-2026-05-30-001 Item 1: gate the password-setup navigation.
-        // If the matching otpRequired* flag is explicitly `false`, skip the
+        // If the matching skipOtp* flag is explicitly `true`, skip the
         // /password-setup screen and silently call crmSkipOtp to attach
         // CRM identity, then go straight to menu.
         const otpFlagName = pickOtpFlag({
@@ -571,12 +571,12 @@ const LandingPage = () => {
           scannedTableId,
         });
         const otpConfigSnapshot = {
-          otpRequiredDineIn,
-          otpRequiredTakeaway,
-          otpRequiredDineInWithTable,
-          otpRequiredWalkIn,
-          otpRequiredRoomOrders,
-          otpRequiredDelivery,
+          skipOtpDineIn,
+          skipOtpTakeaway,
+          skipOtpDineInWithTable,
+          skipOtpWalkIn,
+          skipOtpRoomOrders,
+          skipOtpDelivery,
         };
         const mustShowOtpPage = shouldShowOtpPage(otpFlagName, otpConfigSnapshot);
 
