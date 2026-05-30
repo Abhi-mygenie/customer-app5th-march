@@ -130,6 +130,7 @@ const VisibilityTab = ({ ToggleRow, restaurantFlags = {} }) => {
           <div className="toggle-list">
             <ToggleRow field="otpRequiredDineIn" label="OTP Required for Dine-In Orders" />
             <ToggleRow field="otpRequiredTakeaway" label="OTP Required for Takeaway Orders" />
+            <ToggleRow field="otpRequiredDelivery" label="OTP Required for Delivery Orders" />
             <ToggleRow field="otpRequiredDineInWithTable" label="OTP Required for Dine-In with Table Number" />
             <ToggleRow field="otpRequiredWalkIn" label="OTP Required for Walk-In Dine Orders" />
             <ToggleRow field="otpRequiredRoomOrders" label="OTP Required for Room Orders" />

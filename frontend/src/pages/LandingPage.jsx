@@ -13,6 +13,9 @@ import { checkTableStatus, getOrderDetails } from '../api/services/orderService'
 import { isDineInOrRoom, showsDineInActions, hasAssignedTable, isTakeawayOrDelivery } from '../utils/orderTypeHelpers';
 import { isItemAllowedForChannel, getChannelLabel } from '../utils/channelEligibility';
 import { getAuthToken } from '../utils/authToken';
+import { pickOtpFlag, shouldShowOtpPage } from '../utils/otpPolicy';
+import { crmSkipOtpWithRetry } from '../api/services/crmSkipOtpRetry';
+import { buildUserId } from '../api/services/crmService';
 import logger from '../utils/logger';
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
@@ -30,9 +33,9 @@ import './LandingPage.css';
 const LandingPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
-  const { isAuthenticated, setRestaurantScope } = useAuth();
+  const { isAuthenticated, setRestaurantScope, setCrmAuth } = useAuth();
   const { startEditOrder, clearCart, cartItems, removeFromCart } = useCart();
-  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl } = useRestaurantConfig();
+  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl, otpRequiredDineIn, otpRequiredTakeaway, otpRequiredDineInWithTable, otpRequiredWalkIn, otpRequiredRoomOrders, otpRequiredDelivery } = useRestaurantConfig();
 
   const { tableNo: scannedTableNo, tableId: scannedTableId, roomOrTable: scannedRoomOrTable, isScanned, orderType: scannedOrderType, foodFor: scannedFoodFor, updateOrderType } = useScannedTable();
 
@@ -399,6 +402,78 @@ const LandingPage = () => {
 
   // Theme colors now controlled by local admin config only (not POS)
 
+  // CR-2026-05-30-001 Item 1: silent skip-OTP helper.
+  // Called from handleDiningMenuClick when the matching otpRequired* flag is
+  // explicitly `false`. Mirrors PasswordSetup.handleSkip + navigateToMenu so
+  // the user lands on the same destination as a successful OTP login.
+  // Failure semantics:
+  //   - 409   → fall through to /password-setup (the one allowed exception, Q1=b)
+  //   - 4xx   → toast error, stay on landing
+  //   - else  → degraded guest mode (proceed to menu without CRM token, D=b)
+  const silentSkipOtpAndNavigate = async ({ phone, name, data, restaurantId: rid, orderMode }) => {
+    const userId = buildUserId(rid);
+    const navigateAfterSkip = () => {
+      if (orderMode === 'delivery' && !isAuthenticated) {
+        // setCrmAuth happens before this in success path; for guest fallback,
+        // delivery still requires explicit login → keep current UX.
+        toast.error('Please login to use delivery');
+        return;
+      }
+      if (orderMode === 'delivery') {
+        navigate(`/${rid}/delivery-address`);
+        return;
+      }
+      if (isMultipleMenu(restaurant)) {
+        navigate(`/${rid}/stations`);
+      } else {
+        navigate(`/${rid}/menu`);
+      }
+    };
+
+    try {
+      const result = await crmSkipOtpWithRetry(phone, userId);
+      if (result?.token) {
+        const customerProfile = { name, phone, ...(result.customer || {}) };
+        setCrmAuth(result.token, customerProfile, rid);
+      }
+      // Persist guestCustomer regardless of CRM token, so downstream payloads
+      // (cust_name, cust_phone) carry the captured identity.
+      const guestData = { name, phone, restaurantId: rid };
+      localStorage.setItem('guestCustomer', JSON.stringify(guestData));
+      navigateAfterSkip();
+    } catch (err) {
+      const status = err?.status;
+      if (status === 409) {
+        // Phone is locked to OTP — must use password-setup (Q1=b)
+        logger.order('[crmSkipOtp] 409 — falling through to password-setup');
+        navigate(`/${rid}/password-setup`, {
+          state: {
+            phone,
+            name,
+            restaurantId: rid,
+            customerExists: !!data?.exists,
+            hasPassword: data?.customer?.has_password || false,
+            customerName: data?.customer?.name || '',
+            orderMode,
+          },
+        });
+        return;
+      }
+      if (status === 400 || status === 401 || status === 403 || status === 404 || status === 422) {
+        // User-correctable / config error — keep them on landing
+        logger.order(`[crmSkipOtp] ${status} — staying on landing`);
+        toast.error(err?.message || 'Could not continue. Please try again.');
+        return;
+      }
+      // Retries exhausted, transport error, 5xx, 429 etc → degraded guest (D=b)
+      logger.order(`[crmSkipOtp] retries exhausted (status=${status || 'network'}) — degrading to guest`);
+      const guestData = { name, phone, restaurantId: rid };
+      localStorage.setItem('guestCustomer', JSON.stringify(guestData));
+      toast('Continuing as guest');
+      navigateAfterSkip();
+    }
+  };
+
   const handleDiningMenuClick = async () => {
     const actualRestaurantId = restaurant?.id || restaurantId;
     console.log('[Landing] Browse Menu clicked', { isAuthenticated, isTakeawayDeliveryMode, capturedPhone, capturedName, selectedMode });
@@ -485,37 +560,78 @@ const LandingPage = () => {
           setIsCheckingCustomer(false);
         }
           
+        // CR-2026-05-30-001 Item 1: gate the password-setup navigation.
+        // If the matching otpRequired* flag is explicitly `false`, skip the
+        // /password-setup screen and silently call crmSkipOtp to attach
+        // CRM identity, then go straight to menu.
+        const otpFlagName = pickOtpFlag({
+          selectedMode,
+          scannedOrderType,
+          scannedRoomOrTable,
+          scannedTableId,
+        });
+        const otpConfigSnapshot = {
+          otpRequiredDineIn,
+          otpRequiredTakeaway,
+          otpRequiredDineInWithTable,
+          otpRequiredWalkIn,
+          otpRequiredRoomOrders,
+          otpRequiredDelivery,
+        };
+        const mustShowOtpPage = shouldShowOtpPage(otpFlagName, otpConfigSnapshot);
+
         if (data.exists) {
           // Auto-populate name from lookup
           const customerName = data.customer?.name || '';
           if (customerName && !capturedName.trim()) {
             setCapturedName(customerName);
           }
-          // Navigate to password setup
-          navigate(`/${actualRestaurantId}/password-setup`, {
-            state: {
+          if (mustShowOtpPage) {
+            // Navigate to password setup (today's path — unchanged)
+            navigate(`/${actualRestaurantId}/password-setup`, {
+              state: {
+                phone: capturedPhone,
+                name: capturedName || customerName,
+                restaurantId: actualRestaurantId,
+                customerExists: true,
+                hasPassword: data.customer?.has_password || false,
+                customerName: customerName,
+                orderMode: selectedMode,
+              },
+            });
+          } else {
+            await silentSkipOtpAndNavigate({
               phone: capturedPhone,
               name: capturedName || customerName,
+              data,
               restaurantId: actualRestaurantId,
-              customerExists: true,
-              hasPassword: data.customer?.has_password || false,
-              customerName: customerName,
               orderMode: selectedMode,
-            },
-          });
+            });
+          }
         } else {
-          // New customer → password setup
-          navigate(`/${actualRestaurantId}/password-setup`, {
-            state: {
+          // New customer
+          if (mustShowOtpPage) {
+            // New customer → password setup (today's path — unchanged)
+            navigate(`/${actualRestaurantId}/password-setup`, {
+              state: {
+                phone: capturedPhone,
+                name: capturedName,
+                restaurantId: actualRestaurantId,
+                customerExists: false,
+                hasPassword: false,
+                customerName: '',
+                orderMode: selectedMode,
+              },
+            });
+          } else {
+            await silentSkipOtpAndNavigate({
               phone: capturedPhone,
               name: capturedName,
+              data: { exists: false, customer: null },
               restaurantId: actualRestaurantId,
-              customerExists: false,
-              hasPassword: false,
-              customerName: '',
               orderMode: selectedMode,
-            },
-          });
+            });
+          }
         }
         return;
       }

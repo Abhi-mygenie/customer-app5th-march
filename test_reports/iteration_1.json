@@ -1,0 +1,41 @@
+{
+  "summary": "Code-review-only validation of CR-2026-05-30-001 Item 1 (config-driven OTP/password-setup gate). Verified all 7 referenced files match spec: otpPolicy.js (pickOtpFlag + shouldShowOtpPage), crmSkipOtpRetry.js (retry policy with RETRIABLE/NON_RETRIABLE_BUBBLE sets, exponential backoff + jitter, Retry-After honoured), crmService.js (err.retryAfterMs additive only; crmSkipOtp helper unchanged), RestaurantConfigContext.jsx (defaults flipped to true, serializer uses !== false, otpRequiredDelivery added in both blocks), VisibilityTab.jsx (new Delivery ToggleRow inserted between Takeaway and DineInWithTable at L133), LandingPage.jsx (imports, setCrmAuth destructure, 6 OTP flags destructured, silentSkipOtpAndNavigate helper, gated navigate('/password-setup') calls with same `state` payload). Frontend served HTTP 200. Live mocked-CRM Playwright scenarios were NOT executed in this iteration due to token constraints, and pytest is not applicable (FE-only change with external CRM).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "MAIN AGENT: Run manual / Playwright scenarios 1, 2, 4, 11, 13, 14 from HANDOVER.md §12 against a test restaurant (suggest cloning rid 716 config or using a sandbox rid). Toggle otpRequiredDineInWithTable=false in customer_app_config, scan a table QR, enter phone, confirm route goes to /menu (not /password-setup) and localStorage.guestCustomer is populated.",
+    "MAIN AGENT: Verify Playwright route-mock for POST /scan/auth/skip-otp with 409 → /password-setup fallthrough preserves the same `state` keys (phone, name, restaurantId, customerExists, hasPassword, customerName, orderMode). The silentSkipOtpAndNavigate 409 branch DOES NOT include `customerExists` derived from data.exists when data is the synthesized {exists:false, customer:null} for new customers — verify this matches expected UX.",
+    "MAIN AGENT: Verify 503 x3 → toast('Continuing as guest') and that AuthContext.setCrmAuth is NOT called in the catch path (currently it isn't — only navigateAfterSkip runs). Good.",
+    "MAIN AGENT: Regression-check restaurant 716 specifically — confirm scenarios 19/20 (Items 2/3 carve-outs in ReviewOrder.jsx/OrderSuccess.jsx) remain untouched. git diff confirms no changes to those files."
+  ],
+  "critical_code_review_comments": [
+    "GOOD: shouldShowOtpPage correctly treats true/null/undefined/missing as 'OTP required' and only explicit boolean false skips — matches D1 spec.",
+    "GOOD: crmSkipOtpWithRetry uses Math.max(expDelay+jitter, retryAfterMs) so Retry-After takes precedence when larger — honours server backoff.",
+    "GOOD: PasswordSetup.handleSkip path still calls bare crmSkipOtp (not the retry wrapper) — risk isolation preserved.",
+    "GOOD: crmFetch retryAfterMs is purely additive (lines 136-144); existing callers ignore the field — no regression.",
+    "GOOD: RestaurantConfigContext defaults flipped from `=== true` to `!== false` only for the 6 OTP flags + new otpRequiredDelivery; other flags (e.g. showLandingCustomerCapture, codEnabled, feedbackEnabled) retain their `=== true` 'default OFF' semantics. Surgical.",
+    "GOOD: LandingPage.handleDiningMenuClick gates BOTH the existing/new-customer navigate('/password-setup') calls (L591 + L615) symmetrically — no fall-through bug.",
+    "MINOR/INFORMATIONAL: silentSkipOtpAndNavigate's 409 fall-through reuses data?.exists / data?.customer?.has_password / data?.customer?.name. For the new-customer branch the caller passes `data: { exists: false, customer: null }`, so the 409 password-setup state will correctly carry customerExists:false, hasPassword:false, customerName:'' — verified.",
+    "MINOR: silentSkipOtpAndNavigate guest-fallback for delivery mode shows toast 'Please login to use delivery' AND does NOT route anywhere — matches today's UX in handleDiningMenuClick L646-648. Consistent.",
+    "MINOR: pickOtpFlag returns 'otpRequiredDineIn' as final fallback. If selectedMode is e.g. 'dinein' with no scannedRoomOrTable/tableId, this is correct. Also covers scannedOrderType=dinein without table → otpRequiredDineIn (NOT otpRequiredDineInWithTable). Aligned with spec line 32-50 which requires all three conditions for DineInWithTable.",
+    "MINOR: crmSkipOtpRetry.js max-attempts boundary: `if (attempt >= maxAttempts - 1) throw e` with attempt starting at 0 ⇒ 3 attempts total (attempts 0,1,2). Correct.",
+    "MINOR: pickOtpFlag treats scannedOrderType='delivery' OR selectedMode='delivery' → otpRequiredDelivery; same for takeaway. This means a user who scans a takeaway QR but flips OrderModeSelector to delivery will be governed by otpRequiredDelivery — appears intentional given OrderModeSelector exists for takeaway↔delivery flips (LandingPage L151-184).",
+    "MINOR: silentSkipOtpAndNavigate does not set localStorage.guestCustomer on 409 path (it routes to password-setup, which presumably handles persistence). On 4xx 'stay on landing' path, guestCustomer is correctly NOT written. Correct.",
+    "NIT: silentSkipOtpAndNavigate writes localStorage.guestCustomer BOTH in the success branch and in the guest-degraded branch — duplicated 3-line block. Acceptable; could be extracted to a small helper but not blocking.",
+    "NIT: useScannedTable's `roomOrTable` field is referenced by pickOtpFlag for 'room' and 'walkin' before considering scannedOrderType — so a `type=room&order_type=delivery` QR will still resolve to otpRequiredRoomOrders. Matches spec (Restaurant 716 IN-scope: room scan honours otpRequiredRoomOrders).",
+    "CODE QUALITY: LandingPage.jsx is now ~1200 lines and uses a single mega-destructure (L38) with 30+ fields. Consider splitting useRestaurantConfig consumption into logical hooks (e.g. useLandingVisibility, useOtpFlags) in a future refactor. NOT blocking for this CR."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (FE-only CR)", "frontend": "code-review pass; runtime tests pending"},
+  "test_credentials": "REACT_APP_LOGIN_PHONE=+919579504871, REACT_APP_LOGIN_PASSWORD=Qplazm@10 (from frontend/.env per request). /app/memory/test_credentials.md was NOT found — flag for repo hygiene.",
+  "seed_data_creation": "None. Mongo customer_app_config edits would be required for live functional scenarios — deferred to main agent / next iteration.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Code review passed on all 7 reference files. Next iteration should: (1) Use Playwright with `page.route('**/scan/auth/skip-otp', ...)` to mock 200/409/422/503/network for the 6 failure scenarios. (2) Toggle otpRequiredDineInWithTable=false in MongoDB customer_app_config for a TEST rid (NOT 716 — keep 716 for the 'is included' assertion only), navigate to /<rid>?type=table&table_id=T1&order_type=dinein, enter phone, click Browse Menu, assert URL becomes /<rid>/menu and localStorage.guestCustomer is set. (3) Re-toggle to default (delete field or set true) and confirm /password-setup still shows. (4) For 409 path assert the password-setup state payload keys exactly. (5) Verify Skip-for-now button in PasswordSetup.jsx is unchanged (D=b regression).",
+  "rca of the issue": "N/A — feature addition, no bug RCA."
+}

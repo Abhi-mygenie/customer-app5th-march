@@ -133,6 +133,15 @@ const crmFetch = async (endpoint, options = {}) => {
     const error = new Error(message);
     error.status = response.status;
     error.data = data;
+    // CR-2026-05-30-001: surface Retry-After (seconds) to enable client-side
+    // backoff in crmSkipOtpRetry. Additive; no existing caller reads it.
+    const retryAfterHeader = response.headers.get('retry-after');
+    if (retryAfterHeader) {
+      const seconds = parseInt(retryAfterHeader, 10);
+      if (!Number.isNaN(seconds) && seconds >= 0) {
+        error.retryAfterMs = seconds * 1000;
+      }
+    }
     throw error;
   }
 
