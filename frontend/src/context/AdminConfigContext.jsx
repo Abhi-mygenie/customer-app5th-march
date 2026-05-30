@@ -123,6 +123,15 @@ const defaultConfig = {
   payAtCounterLabel: '',
   // Notification Popups (FEAT-003)
   notificationPopups: [],
+  // Skip OTP / Password Setup screen — CR-2026-05-30-001 Item 1
+  // Default false → password-setup screen IS shown (current behaviour preserved).
+  // Admin opts in per order type → silent crmSkipOtp + direct to /menu.
+  skipOtpDineIn: false,
+  skipOtpTakeaway: false,
+  skipOtpDelivery: false,
+  skipOtpDineInWithTable: false,
+  skipOtpWalkIn: false,
+  skipOtpRoomOrders: false,
 };
 
 export const AdminConfigProvider = ({ children }) => {

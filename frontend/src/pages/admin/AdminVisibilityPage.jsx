@@ -98,6 +98,23 @@ const AdminVisibilityPage = () => {
           <ToggleSwitch field="showExtraInfo" label="Show Extra Info" />
         </div>
       </div>
+
+      {/* Skip OTP / Password-Setup Screen — CR-2026-05-30-001 Item 1 */}
+      <div className="admin-section" data-testid="admin-section-skip-otp">
+        <h2 className="admin-section-title">Skip OTP / Password Setup</h2>
+        <p className="admin-section-description">
+          When ON, customers for the matching order type skip the password / OTP screen entirely
+          and go straight to the menu (CRM identity is attached silently). Default OFF.
+        </p>
+        <div className="admin-toggle-grid">
+          <ToggleSwitch field="skipOtpDineIn" label="Skip OTP for Dine-In Orders" />
+          <ToggleSwitch field="skipOtpTakeaway" label="Skip OTP for Takeaway Orders" />
+          <ToggleSwitch field="skipOtpDelivery" label="Skip OTP for Delivery Orders" />
+          <ToggleSwitch field="skipOtpDineInWithTable" label="Skip OTP for Dine-In with Table Number" />
+          <ToggleSwitch field="skipOtpWalkIn" label="Skip OTP for Walk-In Dine Orders" />
+          <ToggleSwitch field="skipOtpRoomOrders" label="Skip OTP for Room Orders" />
+        </div>
+      </div>
     </div>
   );
 };
