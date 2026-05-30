@@ -494,7 +494,6 @@ const LandingPage = () => {
           scannedTableId,
           scannedRoomOrTable,
           scannedOrderType,
-          selectedMode,
           isEditMode,
         },
         { allowNonQrOrders }
