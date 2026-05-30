@@ -482,6 +482,36 @@ const LandingPage = () => {
     const actualRestaurantId = restaurant?.id || restaurantId;
     console.log('[Landing] Browse Menu clicked', { isAuthenticated, isTakeawayDeliveryMode, capturedPhone, capturedName, selectedMode });
 
+    // CR-2026-05-30-002 — Guard C1 (Landing → Browse Menu).
+    // Fires when admin set allowNonQrOrders=false and the customer has no
+    // valid QR-scan context. Bypasses (716, takeaway/delivery, edit-mode,
+    // walk-in QR) are handled inside shouldBlockNonQrOrder.
+    {
+      const policy = shouldBlockNonQrOrder(
+        {
+          restaurantId,
+          isScanned,
+          scannedTableId,
+          scannedRoomOrTable,
+          scannedOrderType,
+          selectedMode,
+          isEditMode,
+        },
+        { allowNonQrOrders }
+      );
+      if (policy.block) {
+        clearCart();
+        postNonQrBlock(
+          buildNonQrBlockPayload(
+            { restaurantId, scannedRoomOrTable, scannedTableId, isEditMode, isAuthenticated },
+            'landing'
+          )
+        );
+        setShowNonQrBlockModal(true);
+        return;
+      }
+    }
+
     // CR Phase-1 — Room Scanner Availability Gate (defensive guard)
     // Block Browse Menu when room scanner says room is vacant / context lost / status unknown.
     // The button itself is hidden via `roomBlocked` below, but this guard catches

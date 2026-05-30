@@ -213,6 +213,15 @@ class AppConfigUpdate(BaseModel):
     otpRequiredDineInWithTable: Optional[bool] = None
     otpRequiredWalkIn: Optional[bool] = None
     otpRequiredRoomOrders: Optional[bool] = None
+    # Skip OTP / Password-Setup screen (CR-2026-05-30-001 Item 1)
+    skipOtpDineIn: Optional[bool] = None
+    skipOtpTakeaway: Optional[bool] = None
+    skipOtpDelivery: Optional[bool] = None
+    skipOtpDineInWithTable: Optional[bool] = None
+    skipOtpWalkIn: Optional[bool] = None
+    skipOtpRoomOrders: Optional[bool] = None
+    # Non-QR order access policy (CR-2026-05-30-002)
+    allowNonQrOrders: Optional[bool] = None
     # Restaurant Operating Shifts (up to 4)
     restaurantShifts: Optional[List[dict]] = None  # [{ "start": "07:00", "end": "11:00" }, ...]
     # Restaurant Open master toggle
