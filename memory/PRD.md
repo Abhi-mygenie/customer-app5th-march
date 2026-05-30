@@ -51,9 +51,10 @@
 - Items 2/3 carve-outs in OrderSuccess.jsx/ReviewOrder.jsx UNTOUCHED — no regression risk
 
 ## Backlog / Next Actions
-- **P0** — Item 2 (table → WC fallback prod-only): awaiting one failing `order_id` + restaurant_id + order-details response to choose fix path (G2/G3/G4/G5)
-- **P0** — Item 3 (room → walk-in): same blocker as Item 2
-- **P1** — Item 1 legacy cleanup: the dead `otpRequired*` toggles are still rendered in admin UI under the original section title. Consider a follow-up sub-CR to either delete them or annotate them as "(deprecated — use Skip OTP toggles below)"
+- **🅿 PARKED — Item 2** (table → WC fallback prod-only): Investigation complete (~10% rate root-caused to `ReviewOrder.jsx:982-985` ignoring `CartContext.editOrder.tableId` + sessionStorage loss on mobile ~10-25%). Owner parked because effort/risk too high relative to current tolerance. Recommended MVP F1+F3 (~31 LOC) drops rate to <0.5%. Resume materials in `ITEM2_PARKED.md` + `ITEM2_FIX_INVESTIGATION.md`.
+- **🅿 PARKED — Item 3** (room → walk-in): Same root cause family as Item 2; shares parking.
+- **🅿 PARKED — URL tampering sub-CR** (raised by owner during Item 2 investigation, brainstormed in conversation, fix surface F4 overlaps with Item 2 — revive alongside).
 - **P1** — Provide real `REACT_APP_GOOGLE_MAPS_API_KEY` (maps currently broken — pre-existing, unrelated)
+- **P1** — Item 1 legacy cleanup: dead `otpRequired*` toggles still in `RestaurantConfigContext.jsx` defaults/serializer for back-compat. Consider deletion.
 - **P2** — Rotate `JWT_SECRET` + restrict `CORS_ORIGINS` for production
 - **P2** — Move `REACT_APP_LOGIN_PASSWORD` server-side before production deploy
