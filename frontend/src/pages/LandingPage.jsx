@@ -498,6 +498,19 @@ const LandingPage = () => {
         },
         { allowNonQrOrders }
       );
+      // Debug — visible in browser console. Helps diagnose why a block
+      // didn't fire (e.g. stale config cache, stale sessionStorage scan).
+      // Remove or gate behind a flag once stable.
+      console.log('[CR-002 C1] policy decision', {
+        policy,
+        allowNonQrOrders,
+        restaurantId,
+        isScanned,
+        scannedTableId,
+        scannedRoomOrTable,
+        scannedOrderType,
+        isEditMode,
+      });
       if (policy.block) {
         clearCart();
         postNonQrBlock(
