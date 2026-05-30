@@ -134,15 +134,6 @@ const VisibilityTab = ({ ToggleRow, restaurantFlags = {} }) => {
             <ToggleRow field="otpRequiredWalkIn" label="OTP Required for Walk-In Dine Orders" />
             <ToggleRow field="otpRequiredRoomOrders" label="OTP Required for Room Orders" />
           </div>
-          <p className="section-description" style={{ marginTop: '1.25rem' }}>Skip the OTP / password-setup screen entirely for customers (silently attaches CRM identity)</p>
-          <div className="toggle-list">
-            <ToggleRow field="skipOtpDineIn" label="Skip OTP for Dine-In Orders" />
-            <ToggleRow field="skipOtpTakeaway" label="Skip OTP for Takeaway Orders" />
-            <ToggleRow field="skipOtpDelivery" label="Skip OTP for Delivery Orders" />
-            <ToggleRow field="skipOtpDineInWithTable" label="Skip OTP for Dine-In with Table Number" />
-            <ToggleRow field="skipOtpWalkIn" label="Skip OTP for Walk-In Dine Orders" />
-            <ToggleRow field="skipOtpRoomOrders" label="Skip OTP for Room Orders" />
-          </div>
         </div>
       )}
     </div>
