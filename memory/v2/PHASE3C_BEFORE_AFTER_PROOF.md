@@ -32,4 +32,9 @@
 Everything else is proven **zero-change** for the 4 configured restaurants, and the only font change is the approved Montserrat→Poppins on no-doc restaurants.
 
 ## Status
-Implementation **paused on this one decision** (Option A vs B). All other canonical values are finalized and zero-change.
+**DECISION: Option A — canonical `borderRadius = "rounded"`** (owner-approved 2026-05-31). Preserves no-doc restaurants + 364/618/698/478. **716 changes square → rounded** unless 716 is reconfigured (see advisory below). All other canonical values finalized and zero-change.
+
+## 716 advisory (how to keep 716's current look, if desired)
+- **Only** 716's corner-roundness changes (square → rounded). Font (Poppins), colours, and every show/hide toggle stay **identical**.
+- If 716 should keep its current **square** look: set 716's **Corner style = Sharp** in the **Admin → Branding** panel (one setting, no code). Then visually confirm it matches today (the current "unset" state renders the base-CSS corners, which is effectively square/minimal).
+- If rounded corners on 716 are acceptable (consistent with the other restaurants): **do nothing**.
