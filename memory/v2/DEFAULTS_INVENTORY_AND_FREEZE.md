@@ -74,3 +74,69 @@ Fallback used for the Mongo `customer_app_config` layer when a restaurant has **
 
 ## Recommended safe first action
 Produce a **read-only 3-way diff** of the TYPE-1 blocks (backend vs FE customer vs FE admin) so every current inconsistency (87 vs 98 vs 87) is visible, then consolidate to a single source with **current customer-facing values winning** every conflict, proven by before/after config snapshots.
+
+---
+
+## Owner directives — round 2 (2026-05-31)
+
+### NEW RULE — Admin "Menu Order" overrides (FREEZE behaviour)
+The app's admin panel **"Menu Order"** tab (`frontend/src/components/AdminSettings/MenuOrderTab.jsx`) can **override the POS menu**, stored in `customer_app_config.menuOrder` + timing fields:
+- **Re-order** categories / items / stations (`menuOrder.categoryOrder/itemOrder/stationOrder`)
+- **Show/hide** categories / items / stations (`menuOrder.*Visibility`)
+- **Order timing** — `categoryTimings` / `itemTimings` (e.g. breakfast item available 07:00–11:00) — backend models `server.py:229–231`, defaults `{}`.
+➡️ Business meaning: **the menu comes from POS, but the app config layers ON TOP** to re-order, hide, and time-restrict items. This is a **business rule → FROZEN** (keep working exactly as-is; only the empty-default `{}` value participates in TYPE-1 consolidation).
+
+### #1 DECISION — Defaults source of truth = BACKEND (Option A, confirmed)
+- Backend `get_app_config()` becomes the single authoritative default set; it always returns a **complete** config.
+- Frontend keeps only TWO safety nets (no big duplicated default list):
+  1. **Per-restaurant, per-device CACHE** (`localStorage["restaurant_config_<rid>"]`) = the last config the backend successfully returned for that restaurant on that device.
+  2. **One minimal global offline default** for a cold device when the backend is unreachable and there is no cache.
+- (See "How the offline fallback works" below.)
+
+### #2 RECLASSIFY — Loyalty / Coupon / Wallet = NOT integrated yet (DEFER)
+- Owner confirms loyalty/coupon/wallet are **not integrated with the real API**; those **rules belong to the CRM API**. The backend `loyalty_settings` defaults (`server.py:1377–1396`) are **placeholder/non-authoritative**, not a real business default.
+- **Action: DEFER** full loyalty/coupon/wallet CRM integration to an **upcoming sprint, AFTER** the consolidation is complete. **Do not touch now.**
+
+### #4 NEW KEY REQUIREMENT — De-hardcode ALL special/tenant behaviour (IN SCOPE)
+- **All tenant-specific / special behaviour must be refactored to come from ENV or ADMIN SETTINGS — never hardcoded in code.** This is an explicit, important goal of the refactor (behaviour-preserving: same behaviour, but config-driven).
+- Applies to: Restaurant **716** carve-outs (`TableRoomSelector.jsx`, `orderAccessPolicy.js`, `otpPolicy.js`, `FaviconRouteReset.jsx`, `DocumentTitleManager.jsx`), the hardcoded default restaurant **478** (`useRestaurantId.js:134`), and `pos_id` default **"0001"** (see #7). Was GAP-016/TYPE-3/TYPE-7 → now a **firm refactor objective**, done value/behaviour-preserving.
+
+### #5 — Microcopy/label defaults: consolidate + REMOVE DEAD CODE
+- Consolidate scattered UI label fallbacks (TYPE 5) and **remove dead code** (e.g., legacy `pages/AdminSettings.jsx` overlap, commented `DEFAULT_RESTAURANT_ID`, unused legacy `customer/*` routes) as part of the cleanup — after a usage trace, nothing deleted blindly.
+
+### #6 — Seed scripts: OUT OF SCOPE (confirmed).
+
+### #7 — `pos_id` explained
+- `pos_id` (default `"0001"`) is the **POS provider/aggregator id** (MyGenie = `0001`; others e.g. `petpooja`, `ezzo`). It namespaces a restaurant's records: `user_id = f"pos_{pos_id}_restaurant_{restaurant_id}"` (e.g. `pos_0001_restaurant_478`) — the exact format seen in live `loyalty_settings`.
+- It is currently a **hardcoded default in 8 places** (`server.py:66,79,84,250,257,265,415,443`). **Owner directive: `pos_id` must NOT be hardcoded — it is CONTROLLED BY THE BACKEND** (backend resolves/serves the correct `pos_id` per restaurant). Behaviour-preserving: keep `0001` as the effective value, stop hard-coding it in models/handlers.
+
+---
+
+## How the offline fallback works (answer to #1)
+Flow in `RestaurantConfigContext.jsx`:
+1. Read restaurant id from the URL (`/478` → "478").
+2. **Hydrate from per-device cache** `localStorage["restaurant_config_<rid>"]` if present (instant correct branding); else start from the single global `DEFAULT_CONFIG`.
+3. **Fetch** `GET /api/config/<rid>` → on success set `{...DEFAULT_CONFIG, ...backendData}` and **save to that restaurant's cache**.
+4. **On fetch failure (backend down):** the `catch` only logs — it keeps whatever was already set.
+
+So, when the **backend is off**:
+- **Returning device** (visited that restaurant before) → shows the **cached per-restaurant config** = correct branding for that restaurant.
+- **Cold device** (never visited, no cache) → shows the **generic global `DEFAULT_CONFIG`** (neutral defaults, e.g. default orange theme) — **NOT** that restaurant's real brand.
+- The cache is **per browser/device**, not a server-side per-restaurant store. There is **no per-restaurant default baked into code** — only the global default + per-device cache.
+
+---
+
+## Clarification — "dead code" vs "duplication" (owner challenge, resolved)
+- **In the DEFAULTS area there is NO dead code.** All 3 appearance-default blocks are actively used (`RestaurantConfigContext.DEFAULT_CONFIG` ×6, `AdminConfigContext.defaultConfig` ×4, backend `get_app_config` ×1). The problem here is **duplication & drift** (same defaults defined 3×, already inconsistent 87/98/87), **not** dead code. GAP-008 = de-duplicate to one backend source, value-preserving.
+- **Dead code is a SEPARATE, smaller concern** and is **only suspected, pending a usage trace** — nothing confirmed dead, nothing deleted blindly:
+  - `frontend/src/pages/AdminSettings.jsx` — imported in `App.js:19` but the active "settings" route uses the newer `pages/admin/AdminSettingsPage` (`App.js:28,75`); the old one looks **imported-but-unused** → needs a quick trace to confirm.
+  - Backend `customer/*` routes (`server.py:754–952`) — the frontend makes **zero** `/api/customer/*` calls → unused by THIS frontend (other clients may use them) → trace before any removal.
+  - `constants.js` commented-out `DEFAULT_RESTAURANT_ID`.
+  ➡️ Dead-code removal stays in the **Cleanup phase**, trace-gated; it is **not** part of the defaults consolidation.
+
+---
+
+## Future CR backlog (captured, not in current scope)
+- **CR-FUTURE-OFFLINE-BRANDING:** true per-restaurant offline branding for **cold devices** (no cache) when the backend is down — e.g. backend stamps a tiny cached brand bundle per restaurant. Enhancement only; revisit as a future CR.
+- **CR-FUTURE-LOYALTY-CRM:** integrate loyalty / coupon / wallet with the real **CRM API** — scheduled for an **upcoming sprint, AFTER** the consolidation is complete.
+
