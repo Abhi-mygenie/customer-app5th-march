@@ -38,16 +38,27 @@ Crucially: for a restaurant with **no config doc**, the customer app renders `{.
 - **Colours** hex (B) vs `null` (C) vs `DEFAULT_THEME.x` (A): `primaryColor, secondaryColor, backgroundColor, textColor, textSecondaryColor, buttonTextColor` → canonical = **backend hex** (what customers already get). Collapse the `DEFAULT_THEME` indirection into it.
 - **Same value, different syntax**: `restaurantShifts` (JSON vs JS), `extraInfoItems` (`[]` vs 5 empty strings), `menuOrder` (`{}` vs null), `borderRadius` (`rounded` both, C null), `welcomeMessage` ("Welcome!" both, C null), `payOnlineLabel`/`payAtCounterLabel` ("Pay Online"/"Pay at Counter" in B,C; empty in A).
 
-### B2. REAL semantic drift (needs an explicit pick)
-- **Default font:** `fontHeading` / `fontBody` → **B = Montserrat** vs **A = Poppins** (C = null).
-  - Customer-facing effective value today = **Montserrat** (backend wins on no-doc render).
-  - ➡️ Recommended canonical = **Montserrat** (preserves current customer behaviour). The admin preview's Poppins is pre-load only.
+### B2. REAL semantic drift — DEFAULT FONT (corrected)
+`fontHeading` / `fontBody` defaults disagree across **four** places:
+- backend `get_app_config` = **Montserrat**
+- FE admin `defaultConfig` = **Poppins**
+- FE customer **apply-time fallback** `config.fontX || 'Poppins'` (`RestaurantConfigContext.jsx:306,321`) = **Poppins**
+- legacy `pages/AdminSettings.jsx` inputs = `'Big Shoulders'` / `'Montserrat'`
+
+**Effective runtime default:**
+- restaurant with **no doc** → backend injects Montserrat → renders **Montserrat**
+- restaurant **with a doc but no font field** → `|| 'Poppins'` → renders **Poppins**
+- ⇒ the **dominant** default is **Poppins**; Montserrat only hits pure no-doc restaurants.
+
+➡️ Recommended canonical = **Poppins** (matches the dominant code fallback + admin panel + owner expectation). Only pure no-doc restaurants currently rendering Montserrat would change — confirm none rely on it before flipping.
+
+**Note:** `fontHeading` = heading font, `fontBody` = **body/content** font. Each brand sets **its own** pair in its Mongo config; the default applies only when a brand hasn't chosen one.
 
 ---
 
 ## C. Consolidation rule (value-preserving)
 1. **Canonical set lives in the backend** (`get_app_config`), made **complete** (add the 13 missing keys).
-2. Conflict resolution = **current customer-facing value WINS** → backend hex colours, **Montserrat** fonts, `null` for empty text, `{}`/`[]` for empty structures.
+2. Conflict resolution = **current customer-facing value WINS** → backend hex colours, **Poppins** fonts (dominant runtime default), `null` for empty text, `{}`/`[]` for empty structures.
 3. Frontend `DEFAULT_CONFIG` (C) shrinks to a **minimal offline default**; `AdminConfigContext.defaultConfig` (A) + `DEFAULT_THEME` derive from the same canonical source (no second/third copy).
 4. **Proof:** snapshot `GET /api/config/<no-doc rid>` + key customer/admin screens **before vs after** → must be identical.
 
