@@ -1,0 +1,74 @@
+diff --git a/backend/config_defaults.py b/backend/config_defaults.py
+new file mode 100644
+index 0000000..0dbdbb3
+--- /dev/null
++++ b/backend/config_defaults.py
+@@ -0,0 +1,68 @@
++"""
++Canonical default app-config (single source of truth) — Phase 3C / GAP-008.
++
++DEFAULT_APP_CONFIG is the ONE authoritative set of fallback values for
++`customer_app_config`. `get_app_config` returns `{**DEFAULT_APP_CONFIG, **doc}`
++so every API response is complete; the frontend no longer needs a duplicate list.
++
++Value-preserving (verified via before/after proof vs live config docs, 2026-05-31):
++- Colours unchanged (identical to the frontend DEFAULT_THEME).
++- Default font corrected from stale "Montserrat" -> "Poppins" (dominant runtime default).
++- 13 keys that previously existed only in the frontend default were added here verbatim.
++- borderRadius kept "rounded" (Option A, owner-approved); only restaurant 716 is affected.
++"""
++
++DEFAULT_APP_CONFIG = {
++    "showLogo": True, "showWelcomeText": False, "showDescription": False,
++    "showSocialIcons": False, "showTableNumber": True, "showPromotions": True,
++    "showPoweredBy": True, "showCallWaiter": False, "showPayBill": False,
++    "showLandingCallWaiter": False, "showLandingPayBill": False, "showAboutUs": True,
++    "showFooter": True, "showLandingCustomerCapture": False, "showHamburgerMenu": True,
++    "showLoginButton": False, "showEstimatedTimes": False, "showFoodStatus": True,
++    "showOrderStatusTracker": False,
++    "showPromotionsOnMenu": False, "showCategories": True, "showMenuFab": True,
++    "showCustomerDetails": False, "showCustomerName": False, "showCustomerPhone": True,
++    "showCookingInstructions": True, "showSpecialInstructions": True,
++    "showPriceBreakdown": True, "showTableInfo": True, "showLoyaltyPoints": True,
++    "showCouponCode": False, "showWallet": False,
++    "logoUrl": None, "primaryColor": "#E8531E", "secondaryColor": "#2E7D32",
++    "buttonTextColor": "#FFFFFF", "backgroundColor": "#FFFFFF", "textColor": "#333333",
++    "textSecondaryColor": "#666666",
++    "fontHeading": "Poppins", "fontBody": "Poppins",
++    "borderRadius": "rounded",
++    "welcomeMessage": "Welcome!", "tagline": None, "instagramUrl": None,
++    "facebookUrl": None, "twitterUrl": None, "youtubeUrl": None, "whatsappNumber": None,
++    "phone": None, "aboutUsContent": None, "aboutUsImage": None, "openingHours": None,
++    "footerText": None, "footerLinks": [], "address": None, "contactEmail": None,
++    "mapEmbedUrl": None, "feedbackEnabled": False, "feedbackIntroText": None,
++    "customPages": [],
++    "navMenuOrder": [
++        {"id": "home", "label": "Home", "type": "builtin", "visible": True},
++        {"id": "menu", "label": "Menu", "type": "builtin", "visible": True},
++        {"id": "about", "label": "About Us", "type": "builtin", "visible": False},
++        {"id": "contact", "label": "Contact", "type": "builtin", "visible": False},
++        {"id": "feedback", "label": "Feedback", "type": "builtin", "visible": False},
++        {"id": "login", "label": "Login", "type": "builtin", "visible": False},
++    ],
++    "banners": [],
++    "showExtraInfo": True, "extraInfoItems": [],
++    "mandatoryCustomerName": False, "mandatoryCustomerPhone": False,
++    "otpRequiredDineIn": False, "otpRequiredTakeaway": False,
++    "otpRequiredDineInWithTable": False, "otpRequiredWalkIn": False,
++    "otpRequiredRoomOrders": False,
++    "restaurantShifts": [{"start": "06:00", "end": "03:00"}],
++    "restaurantOpen": True,
++    "categoryTimings": {}, "itemTimings": {},
++    "codEnabled": False, "onlinePaymentDinein": True, "onlinePaymentTakeaway": True,
++    "onlinePaymentDelivery": True, "payOnlineLabel": "Pay Online",
++    "payAtCounterLabel": "Pay at Counter",
++    "poweredByText": "Powered by", "poweredByLogoUrl": "/assets/images/mygenie_logo.svg",
++    "notificationPopups": [],
++    # --- consolidated from frontend DEFAULT_CONFIG (Phase 3C) ---
++    "backgroundImageUrl": None, "mobileBackgroundImageUrl": None,
++    "successTitle": None, "successMessage": None,
++    "menuOrder": {}, "browseMenuButtonText": "Browse Menu",
++    "skipOtpDineIn": False, "skipOtpTakeaway": False, "skipOtpDineInWithTable": False,
++    "skipOtpWalkIn": False, "skipOtpRoomOrders": False, "skipOtpDelivery": False,
++    "allowNonQrOrders": True,
++}

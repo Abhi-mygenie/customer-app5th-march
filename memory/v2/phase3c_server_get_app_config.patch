@@ -1,0 +1,135 @@
+diff --git a/backend/server.py b/backend/server.py
+index b182d62..d9bdea2 100644
+--- a/backend/server.py
++++ b/backend/server.py
+@@ -15,6 +15,7 @@ import hashlib
+ import secrets
+ import jwt
+ import shutil
++from config_defaults import DEFAULT_APP_CONFIG
+ 
+ ROOT_DIR = Path(__file__).parent
+ load_dotenv(ROOT_DIR / '.env')
+@@ -985,121 +986,7 @@ async def get_app_config(restaurant_id: str):
+         {"_id": 0}
+     )
+     
+-    if not config:
+-        # Return defaults - everything visible
+-        return {
+-            "restaurant_id": restaurant_id,
+-            # Landing Page
+-            "showLogo": True,
+-            "showWelcomeText": False,
+-            "showDescription": False,
+-            "showSocialIcons": False,
+-            "showTableNumber": True,
+-            "showPromotions": True,
+-            "showPoweredBy": True,
+-            "showCallWaiter": False,
+-            "showPayBill": False,
+-            "showLandingCallWaiter": False,
+-            "showLandingPayBill": False,
+-            "showAboutUs": True,
+-            "showFooter": True,
+-            "showLandingCustomerCapture": False,  # Default OFF - restaurant opts in
+-            "showHamburgerMenu": True,
+-            "showLoginButton": False,
+-            "showEstimatedTimes": False,  # Default OFF
+-            "showFoodStatus": True,  # Default ON - show Preparing/Ready/Served
+-            "showOrderStatusTracker": False,  # Order Status Progress Bar
+-            # Menu Page
+-            "showPromotionsOnMenu": False,
+-            "showCategories": True,
+-            "showMenuFab": True,  # Menu FAB button
+-            # Order Page
+-            "showCustomerDetails": False,
+-            "showCustomerName": False,
+-            "showCustomerPhone": True,
+-            "showCookingInstructions": True,
+-            "showSpecialInstructions": True,
+-            "showPriceBreakdown": True,
+-            "showTableInfo": True,
+-            "showLoyaltyPoints": True,
+-            "showCouponCode": False,
+-            "showWallet": False,
+-            # Branding - Colors
+-            "logoUrl": None,
+-            "primaryColor": "#E8531E",
+-            "secondaryColor": "#2E7D32",
+-            "buttonTextColor": "#FFFFFF",
+-            "backgroundColor": "#FFFFFF",
+-            "textColor": "#333333",
+-            "textSecondaryColor": "#666666",
+-            # Branding - Typography
+-            "fontHeading": "Montserrat",
+-            "fontBody": "Montserrat",
+-            # Branding - Style
+-            "borderRadius": "rounded",
+-            # Branding - Text
+-            "welcomeMessage": "Welcome!",
+-            "tagline": None,
+-            "instagramUrl": None,
+-            "facebookUrl": None,
+-            "twitterUrl": None,
+-            "youtubeUrl": None,
+-            "whatsappNumber": None,
+-            "phone": None,
+-            "aboutUsContent": None,
+-            "aboutUsImage": None,
+-            "openingHours": None,
+-            "footerText": None,
+-            "footerLinks": [],
+-            "address": None,
+-            "contactEmail": None,
+-            "mapEmbedUrl": None,
+-            "feedbackEnabled": False,
+-            "feedbackIntroText": None,
+-            "customPages": [],
+-            "navMenuOrder": [
+-                {"id": "home", "label": "Home", "type": "builtin", "visible": True},
+-                {"id": "menu", "label": "Menu", "type": "builtin", "visible": True},
+-                {"id": "about", "label": "About Us", "type": "builtin", "visible": False},
+-                {"id": "contact", "label": "Contact", "type": "builtin", "visible": False},
+-                {"id": "feedback", "label": "Feedback", "type": "builtin", "visible": False},
+-                {"id": "login", "label": "Login", "type": "builtin", "visible": False}
+-            ],
+-            "banners": [],
+-            # Extra Info Section
+-            "showExtraInfo": True,
+-            "extraInfoItems": [],
+-            # Customer Capture - Mandatory fields
+-            "mandatoryCustomerName": False,
+-            "mandatoryCustomerPhone": False,
+-            # OTP Configuration per order type
+-            "otpRequiredDineIn": False,
+-            "otpRequiredTakeaway": False,
+-            "otpRequiredDineInWithTable": False,
+-            "otpRequiredWalkIn": False,
+-            "otpRequiredRoomOrders": False,
+-            # Restaurant Operating Shifts
+-            "restaurantShifts": [{"start": "06:00", "end": "03:00"}],
+-            # Restaurant Open master toggle (default open)
+-            "restaurantOpen": True,
+-            # Category & Item Timings
+-            "categoryTimings": {},
+-            "itemTimings": {},
+-            # Payment Options Configuration (FEAT-001)
+-            "codEnabled": False,  # Default OFF - restaurant opts in
+-            "onlinePaymentDinein": True,  # Default ON if Razorpay configured
+-            "onlinePaymentTakeaway": True,
+-            "onlinePaymentDelivery": True,
+-            "payOnlineLabel": "Pay Online",
+-            "payAtCounterLabel": "Pay at Counter",
+-            # Powered By Configuration (DFA-004)
+-            "poweredByText": "Powered by",
+-            "poweredByLogoUrl": "/assets/images/mygenie_logo.svg",
+-            # Notification Popups (FEAT-003)
+-            "notificationPopups": [],
+-        }
+-    
+-    return config
++    return {**DEFAULT_APP_CONFIG, "restaurant_id": restaurant_id, **(config or {})}
+ 
+ @config_router.put("/")
+ async def update_app_config(
