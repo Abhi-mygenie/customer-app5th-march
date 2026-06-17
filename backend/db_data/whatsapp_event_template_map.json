@@ -1,0 +1,18 @@
+[
+  {
+    "event_key": "birthday",
+    "user_id": "pos_0001_restaurant_478",
+    "created_at": "2026-02-25T07:28:47.899041+00:00",
+    "template_id": 25140,
+    "template_name": "loyality_points_collect_bill",
+    "updated_at": "2026-02-25T07:28:47.899041+00:00"
+  },
+  {
+    "event_key": "points_earned",
+    "user_id": "pos_0001_restaurant_478",
+    "created_at": "2026-02-25T07:28:47.899041+00:00",
+    "template_id": 25092,
+    "template_name": "aggrigator_new_order",
+    "updated_at": "2026-02-25T07:44:58.431214+00:00"
+  }
+]
