@@ -7,7 +7,7 @@
 | Locked at (UTC) | 2026-05-30 (Q1–Q10 answered by owner) |
 | Registered by | E1 (on behalf of owner) |
 | Parent context | Pulled out of CR-2026-05-30-001 Item 2 + URL-tampering brainstorm |
-| Status | **REGISTERED + DESIGN LOCKED — implementation NOT started** |
+| Status | **IMPLEMENTED — all components shipped (3 new FE files + 6 FE edits + 1 BE endpoint). Status label updated 2026-06-17 after code verification.** |
 | Action requested in this session | Registration + design lock. No code edits. |
 
 ---

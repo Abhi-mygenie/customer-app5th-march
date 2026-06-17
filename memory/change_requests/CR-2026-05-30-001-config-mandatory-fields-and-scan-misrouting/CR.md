@@ -5,7 +5,7 @@
 | CR ID | CR-2026-05-30-001 |
 | Registered at (UTC) | 2026-05-30 07:35 UTC |
 | Registered by | E1 (on behalf of user) |
-| Status | **REGISTERED — no investigation, planning, or implementation yet** |
+| Status | **IMPLEMENTED — Item 1 (skipOtp + mandatory fields) shipped. Items 2 & 3 (table/room misrouting root cause) parked by design — CR-2026-05-30-002 deployed as policy workaround.** |
 | Action requested in this session | Register only. No other action. |
 | Hard constraint (applies to entire CR) | **Restaurant `716` must NOT be disturbed by any change planned/implemented under this CR. All planning and changes must treat `716` as-is.** |
 
