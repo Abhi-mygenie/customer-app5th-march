@@ -5,7 +5,7 @@
 **Origin:** Discovered during INVESTIGATION on owner@fivestar.com timing-save report and follow-up Q&A about timing-blocked items / menu cache / place-order validation (2026-06-17).
 **Severity:** P1 (real-world correctness — customer can today order items that are not currently available)
 **Risk:** LOW (single concept — availability gating — touched in three places; no schema, no protected files)
-**Status:** PLANNING — impact analysis complete, awaiting owner approval to move to IMPLEMENTATION
+**Status:** IMPLEMENTED — all 3 items shipped, self-test passed, awaiting QA
 **Priority within CR:** APP-11 → APP-13 → APP-12 (menu hide first, cache freshness second, place-order safety net third — but they ship together)
 
 ---
@@ -38,9 +38,9 @@ Together: customer never orders something that is no longer available, and never
 
 | Item | Description | Severity | Risk | Status |
 |---|---|---|---|---|
-| **APP-11** | In `MenuItems.filterItems`, drop items where `isItemAvailable === false`. For items already in cart that become unavailable mid-session: **Option C — show a toast and auto-remove from cart**. | P1 | LOW | PLANNED |
-| **APP-12** | In `ReviewOrder.handlePlaceOrder`, before dispatching `placeOrder()`, re-validate every `cartItem` with `isItemAvailable` against current time + freshly fetched menu data (from APP-13). If any blocked: show toast listing them, prune from cart, abort the place-order. Customer reviews the new cart, clicks Place Order again. | P1 | LOW | PLANNED |
-| **APP-13** | Tighten React Query options in `useMenuData.js`: `staleTime: 30 s` (from 5 min), `refetchOnWindowFocus: true`, `refetchOnReconnect: true`. Plus, in APP-12's pre-place-order step, force a fresh fetch of the menu before validation runs. | P1 | LOW | PLANNED |
+| **APP-11** | In `MenuItems.filterItems`, drop items where `isItemAvailable === false`. For items already in cart that become unavailable mid-session: **Option C — show a toast and auto-remove from cart**. | P1 | LOW | IMPLEMENTED |
+| **APP-12** | In `ReviewOrder.handlePlaceOrder`, before dispatching `placeOrder()`, re-validate every `cartItem` with `isItemAvailable` against current time + freshly fetched menu data (from APP-13). If any blocked: show toast listing them, prune from cart, abort the place-order. Customer reviews the new cart, clicks Place Order again. | P1 | LOW | IMPLEMENTED |
+| **APP-13** | Tighten React Query options in `useMenuData.js`: `staleTime: 30 s` (from 5 min), `refetchOnWindowFocus: true`, `refetchOnReconnect: true`. Plus, in APP-12's pre-place-order step, force a fresh fetch of the menu before validation runs. | P1 | LOW | IMPLEMENTED |
 
 ---
 

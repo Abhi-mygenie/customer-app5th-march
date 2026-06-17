@@ -19,12 +19,13 @@ import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useCart } from '../context/CartContext';
 import { getAllergenIcon } from '../utils/allergenIcons';
 import { useCurrentTime } from '../hooks/useCurrentTime';
-import { isRestaurantOpen } from '../utils/itemAvailability';
+import { isRestaurantOpen, isItemAvailable } from '../utils/itemAvailability'; // CR-2026-06-17-003 APP-11
 import { isItemAllowedForChannel } from '../utils/channelEligibility';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAccessPolicy';
 import { postNonQrBlock } from '../api/services/diagnosticsService';
 import NonQrBlockModal from '../components/NonQrBlockModal';
+import toast from 'react-hot-toast'; // CR-2026-06-17-003 APP-11
 import './MenuItems.css';
 
 const MenuItems = () => {
@@ -144,10 +145,39 @@ const MenuItems = () => {
   }, [restaurantId, fetchConfig]);
 
   // Cart functionality
-  const { addToCart, updateQuantity, getTotalQuantityForItem, cartItems, isEditMode, editingOrderId, clearCart } = useCart();
+  const { addToCart, updateQuantity, getTotalQuantityForItem, cartItems, isEditMode, editingOrderId, clearCart, removeFromCart } = useCart(); // CR-2026-06-17-003 APP-11: added removeFromCart
 
   // Get current time in seconds since midnight (updates every 60 seconds) - for item availability
   const currentTimeInSeconds = useCurrentTime();
+
+  // CR-2026-06-17-003 APP-11: Auto-remove cart items that have become unavailable mid-session
+  useEffect(() => {
+    if (!cartItems || cartItems.length === 0) return;
+    if (!rawMenuSections || rawMenuSections.length === 0) return;
+
+    // Build lookup from raw menu data
+    const itemMap = new Map();
+    for (const section of rawMenuSections) {
+      const catId = section.categoryId || section.category_id;
+      for (const item of (section.items || [])) {
+        itemMap.set(String(item.id), { ...item, _categoryId: catId });
+      }
+    }
+
+    const unavailable = cartItems.filter(ci => {
+      const item = itemMap.get(String(ci.itemId || ci.id));
+      if (!item) return false;
+      const catTiming = categoryTimings?.[item._categoryId] || null;
+      const itmTiming = itemTimings?.[String(ci.itemId || ci.id)] || null;
+      return !isItemAvailable(item, currentTimeInSeconds, { categoryTiming: catTiming, itemTiming: itmTiming });
+    });
+
+    if (unavailable.length > 0) {
+      const names = unavailable.map(u => u.name).join(', ');
+      toast.error(`Some items are no longer available: ${names}. Removed from your cart.`, { duration: 5000 });
+      unavailable.forEach(u => removeFromCart(u.cartId || u.id));
+    }
+  }, [cartItems, currentTimeInSeconds, categoryTimings, itemTimings, rawMenuSections, removeFromCart]);
 
   // Update current time every minute for station availability (IST timezone)
   useEffect(() => {
@@ -347,6 +377,14 @@ const MenuItems = () => {
         itemOverride: channelOverrides?.item?.[String(item.id)] || null,
       };
       return isItemAllowedForChannel(item, scannedOrderType, adminOverrides);
+    });
+
+    // CR-2026-06-17-003 APP-11: Drop items that are not currently available
+    // (live_web, admin category/item timing, POS time window)
+    filtered = filtered.filter(item => {
+      const categoryTiming = categoryTimings?.[categoryId] || null;
+      const itemTiming = itemTimings?.[String(item.id)] || null;
+      return isItemAvailable(item, currentTimeInSeconds, { categoryTiming, itemTiming });
     });
 
     if (searchQuery) {

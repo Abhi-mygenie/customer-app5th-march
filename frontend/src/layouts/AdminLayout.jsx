@@ -33,7 +33,7 @@ const navItems = [
 const AdminLayoutContent = () => {
   const navigate = useNavigate();
   const { user, logout, isRestaurant, token } = useAuth();
-  const { saving, saveConfig, isDirty } = useAdminConfig();
+  const { saving, saveConfig, isDirty, discardChanges } = useAdminConfig();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -149,6 +149,39 @@ const AdminLayoutContent = () => {
             {saving ? 'Saving...' : isDirty ? 'Save Changes' : 'Saved'}
           </button>
         </div>
+
+        {/* CR-2026-06-17-002 APP-10: Sticky unsaved-changes banner */}
+        {isDirty && (
+          <div
+            className="unsaved-changes-banner"
+            data-testid="unsaved-changes-banner"
+            role="status"
+          >
+            <span className="unsaved-icon" aria-hidden="true">🟠</span>
+            <span className="unsaved-msg">You have unsaved changes.</span>
+            <button
+              type="button"
+              className="banner-save-now-btn"
+              data-testid="banner-save-now-btn"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? 'Saving…' : 'Save Now'}
+            </button>
+            <button
+              type="button"
+              className="banner-discard-btn"
+              data-testid="banner-discard-btn"
+              onClick={() => {
+                if (window.confirm('Discard all unsaved changes since last save? This cannot be undone.')) {
+                  discardChanges();
+                }
+              }}
+            >
+              Discard
+            </button>
+          </div>
+        )}
 
         <div className="admin-content">
           <Outlet />

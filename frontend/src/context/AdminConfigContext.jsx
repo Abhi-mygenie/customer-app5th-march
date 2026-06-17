@@ -247,6 +247,13 @@ export const AdminConfigProvider = ({ children }) => {
     setConfig(originalConfig);
   }, [originalConfig]);
 
+  // CR-2026-06-17-002 APP-10: Discard unsaved changes (alias for resetConfig, exposed separately)
+  const discardChanges = useCallback(() => {
+    if (originalConfig) {
+      setConfig(originalConfig);
+    }
+  }, [originalConfig]);
+
   // Banner operations
   const addBanner = useCallback(async (banner) => {
     if (!token) return;
@@ -380,6 +387,7 @@ export const AdminConfigProvider = ({ children }) => {
     toggleField,
     saveConfig,
     resetConfig,
+    discardChanges, // CR-2026-06-17-002 APP-10
     addBanner,
     updateBanner,
     deleteBanner,

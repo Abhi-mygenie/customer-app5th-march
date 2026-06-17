@@ -639,3 +639,40 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* CR-2026-06-17-002 APP-10: Unsaved changes sticky banner */
+.unsaved-changes-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 24px;
+  padding: 10px 16px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #9a3412;
+}
+.unsaved-changes-banner .unsaved-icon { font-size: 16px; }
+.unsaved-changes-banner .unsaved-msg { flex: 1; }
+.unsaved-changes-banner .banner-save-now-btn {
+  padding: 6px 14px;
+  background: #ea580c;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.unsaved-changes-banner .banner-save-now-btn:disabled {
+  opacity: 0.6; cursor: not-allowed;
+}
+.unsaved-changes-banner .banner-discard-btn {
+  padding: 6px 14px;
+  background: transparent;
+  color: #9a3412;
+  border: 1px solid #fdba74;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}

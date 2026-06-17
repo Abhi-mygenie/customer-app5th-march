@@ -33,6 +33,8 @@ import { getRestaurantProducts, getRestaurantDetails, getMenuMaster } from '../.
 import { isMultipleMenu } from '../../api/utils/restaurantIdConfig';
 import { useAuth } from '../../context/AuthContext';
 import './MenuOrderTab.css';
+import { isItemAllowedForChannel } from '../../utils/channelEligibility'; // CR-2026-06-17-002 APP-7
+import { useToast } from '../../hooks/use-toast'; // CR-2026-06-17-002 APP-10
 import logger from '../../utils/logger';
 
 // Sortable Item Component
@@ -132,35 +134,57 @@ const TimingEditor = ({ timing, posStart, posEnd, onChange, onReset, id }) => {
   );
 };
 
-// CR-2026-06-17-001 APP-3: Channel Toggles Component (D/T/Del pills)
-const ChannelToggles = ({ channels, onChange, id }) => {
-  const labels = [
-    { key: 'dinein', label: 'D', title: 'Dine-in' },
-    { key: 'takeaway', label: 'T', title: 'Takeaway' },
-    { key: 'delivery', label: 'Del', title: 'Delivery' },
+// CR-2026-06-17-002 APP-9: Status chip redesign (replaces old D/T/Del pills)
+const ChannelToggles = ({ channels, onChange, id, posFlags = null }) => {
+  const channelSpecs = [
+    { key: 'dinein',   label: 'Dine-in'   },
+    { key: 'takeaway', label: 'Takeaway'  },
+    { key: 'delivery', label: 'Delivery'  },
   ];
+
+  const stateFor = (key) => {
+    const adminVal = channels?.[key];
+    const posAllowed = posFlags ? posFlags[key] !== 'No' && posFlags[key] !== false : true;
+    if (adminVal === undefined || adminVal === null) {
+      return { kind: 'pos', allowed: posAllowed };
+    }
+    return { kind: 'admin', allowed: adminVal === true };
+  };
+
+  const handleClick = (key) => {
+    const cur = channels?.[key];
+    let next;
+    if (cur === undefined || cur === null) next = false;
+    else if (cur === false) next = true;
+    else next = undefined;
+
+    const updated = { ...(channels || {}) };
+    if (next === undefined) delete updated[key];
+    else updated[key] = next;
+    onChange(updated);
+  };
+
   return (
-    <div className="channel-toggles" onClick={(e) => e.stopPropagation()} data-testid={`channel-toggles-${id}`}>
-      {labels.map(({ key, label, title }) => {
-        const val = channels?.[key];
-        const isOn = val !== false; // null/undefined/true = on
-        const isOverridden = val === true || val === false;
+    <div className="channel-chips" onClick={(e) => e.stopPropagation()} data-testid={`channel-toggles-${id}`}>
+      {channelSpecs.map(({ key, label }) => {
+        const s = stateFor(key);
+        const cls = `channel-chip ${s.kind === 'pos' ? (s.allowed ? 'pos-on' : 'pos-off') : (s.allowed ? 'admin-on' : 'admin-off')}`;
         return (
           <button
             key={key}
-            className={`channel-pill ${isOn ? 'on' : 'off'} ${isOverridden ? 'overridden' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              // Cycle: unset → false → true → unset
-              const next = val === undefined || val === null ? false : val === false ? true : undefined;
-              const updated = { ...channels };
-              if (next === undefined) { delete updated[key]; } else { updated[key] = next; }
-              onChange(updated);
-            }}
-            title={`${title}: ${isOn ? 'Allowed' : 'Blocked'}${isOverridden ? ' (admin override)' : ' (POS default)'}`}
+            type="button"
+            className={cls}
+            onClick={(e) => { e.stopPropagation(); handleClick(key); }}
+            title={
+              s.kind === 'pos'
+                ? `${s.allowed ? 'Allowed' : 'Blocked'} by POS (no admin override)`
+                : `Admin override: ${s.allowed ? 'Allowed' : 'Blocked'}`
+            }
             data-testid={`channel-${key}-${id}`}
           >
-            {label}
+            <span className="chip-icon" aria-hidden="true">{s.allowed ? '✓' : '✗'}</span>
+            <span className="chip-label">{label}</span>
+            {s.kind === 'admin' && <span className="chip-dot" aria-hidden="true" />}
           </button>
         );
       })}
@@ -191,6 +215,12 @@ const CategoryCard = ({
   itemChannels,
   onCategoryChannelChange,
   onItemChannelChange,
+  // CR-2026-06-17-002 APP-7: Preview muting
+  previewChannel,
+  isCategoryMuted,
+  isItemMuted,
+  // CR-2026-06-17-002 APP-10: Save discoverability toast
+  onInlineEdit,
 }) => {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -214,23 +244,32 @@ const CategoryCard = ({
       className={`category-card ${!cat.visible ? 'hidden-category' : ''} ${isDragging ? 'dragging' : ''}`}
       data-testid={`category-${cat.id}`}
     >
-      <div className="category-header" onClick={onToggleExpand}>
+      <div
+        className={`category-header ${isCategoryMuted ? 'preview-muted' : ''}`}
+        onClick={onToggleExpand}
+        {...(isCategoryMuted ? { 'data-preview-hidden': 'true' } : {})}
+      >
         <DragHandle listeners={listeners} />
         <div className="category-info">
           <div className="category-title-row">
             <span className="category-name">{cat.name}</span>
             <span className="category-badge">{visibleCount}/{items.length} items</span>
+            {/* CR-2026-06-17-002 APP-7: Preview hidden badge */}
+            {isCategoryMuted && previewChannel && (
+              <span className="preview-hidden-badge">Hidden on {previewChannel}</span>
+            )}
           </div>
           {!expanded && itemPreview && (
             <span className="category-preview">{itemPreview}...</span>
           )}
         </div>
         <div className="category-actions">
-          {/* CR-2026-06-17-001 APP-3: Category-level channel override pills (D/T/Del) */}
+          {/* CR-2026-06-17-002 APP-9: Category-level channel status chips */}
           <ChannelToggles
             channels={categoryChannels}
-            onChange={onCategoryChannelChange}
+            onChange={(c) => { onCategoryChannelChange(c); if (onInlineEdit) onInlineEdit(); }}
             id={`cat-${cat.id}`}
+            posFlags={null}
           />
           <TimingEditor
             timing={categoryTiming}
@@ -293,17 +332,25 @@ const CategoryCard = ({
                   <SortableItem key={item.id} id={item.id}>
                     {({ listeners: itemListeners, isDragging: itemDragging }) => (
                       <div
-                        className={`item-row ${!item.visible ? 'hidden-item' : ''} ${itemDragging ? 'dragging' : ''}`}
+                        className={`item-row ${!item.visible ? 'hidden-item' : ''} ${itemDragging ? 'dragging' : ''} ${isItemMuted && isItemMuted(item) ? 'preview-muted' : ''}`}
                         data-testid={`item-${item.id}`}
+                        {...(isItemMuted && isItemMuted(item) ? { 'data-preview-hidden': 'true' } : {})}
                       >
                         <DragHandle listeners={itemListeners} />
                         <span className="item-index">{iIdx + 1}</span>
-                        <span className="item-name">{item.name}</span>
-                        {/* CR-2026-06-17-001 APP-3: Item-level channel override pills (overrides category) */}
+                        <span className="item-name">
+                          {item.name}
+                          {/* CR-2026-06-17-002 APP-7: Item preview hidden badge */}
+                          {isItemMuted && isItemMuted(item) && previewChannel && (
+                            <span className="preview-hidden-badge">Hidden on {previewChannel}</span>
+                          )}
+                        </span>
+                        {/* CR-2026-06-17-002 APP-9: Item-level channel status chips with posFlags */}
                         <ChannelToggles
                           channels={itemChannels?.[item.id]}
-                          onChange={(c) => onItemChannelChange(item.id, c)}
+                          onChange={(c) => { onItemChannelChange(item.id, c); if (onInlineEdit) onInlineEdit(); }}
                           id={`item-${item.id}`}
+                          posFlags={{ dinein: item.dinein, takeaway: item.takeaway, delivery: item.delivery }}
                         />
                         <TimingEditor
                           timing={itemTimings?.[item.id]}
@@ -340,6 +387,7 @@ const CategoryCard = ({
 // Main Component
 const MenuOrderTab = ({ config, setConfig }) => {
   const { user } = useAuth();
+  const { toast } = useToast(); // CR-2026-06-17-002 APP-10
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [apiCategories, setApiCategories] = useState([]);
@@ -351,6 +399,39 @@ const MenuOrderTab = ({ config, setConfig }) => {
   const [selectedStation, setSelectedStation] = useState(null); // NEW: Selected station for pills
   const [expandedCategories, setExpandedCategories] = useState({});
   const [activeId, setActiveId] = useState(null);
+  // CR-2026-06-17-002 APP-7: Preview channel state (local only, never saved)
+  const [previewChannel, setPreviewChannel] = useState(null);
+
+  // CR-2026-06-17-002 APP-10: Save discoverability toast (fires once per session)
+  const SESSION_TOAST_KEY = 'mygenie_save_discoverability_toast_shown';
+  const showSaveReminder = useCallback(() => {
+    if (sessionStorage.getItem(SESSION_TOAST_KEY) === '1') return;
+    toast({
+      title: 'Almost saved',
+      description: "Click 'Save Changes' at the top to persist.",
+      duration: 4000,
+    });
+    sessionStorage.setItem(SESSION_TOAST_KEY, '1');
+  }, [toast]);
+
+  // CR-2026-06-17-002 APP-7: Preview muting helpers
+  const isCategoryMutedInPreview = useCallback((cat) => {
+    if (!previewChannel) return false;
+    const catOverride = config.channelOverrides?.category?.[cat.id];
+    return catOverride && catOverride[previewChannel] === false;
+  }, [previewChannel, config.channelOverrides]);
+
+  const isItemMutedInPreview = useCallback((cat, item) => {
+    if (!previewChannel) return false;
+    return !isItemAllowedForChannel(
+      { dinein: item.dinein, takeaway: item.takeaway, delivery: item.delivery },
+      previewChannel,
+      {
+        categoryOverride: config.channelOverrides?.category?.[cat.id],
+        itemOverride: config.channelOverrides?.item?.[String(item.id)],
+      }
+    );
+  }, [previewChannel, config.channelOverrides]);
 
   const restaurantId = user?.restaurant_id || user?.id;
   const isMultiMenu = isMultipleMenu(restaurant);
@@ -400,6 +481,10 @@ const MenuOrderTab = ({ config, setConfig }) => {
           posTimeStart: i.web_available_time_starts || null,
           posTimeEnd: i.web_available_time_ends || null,
           foodOrder: Number(i.food_order || 0), // CR-2026-06-17-001 APP-1: carry food_order for default sort
+          // CR-2026-06-17-002 APP-9: carry POS channel flags for posFlags prop
+          dinein: i.dinein || 'Yes',
+          takeaway: i.takeaway || 'Yes',
+          delivery: i.delivery || 'Yes',
         }));
       }
       // CR-2026-06-17-001 APP-1: Sort items by food_order ascending (0s to end) as POS baseline
@@ -439,12 +524,16 @@ const MenuOrderTab = ({ config, setConfig }) => {
         }));
         for (const p of products) {
           const key = `${station.id}__${p.category_id}`;
-          itemResults[key] = (p.items || []).map((i) => ({
+        itemResults[key] = (p.items || []).map((i) => ({
             id: String(i.id),
             name: i.name || '',
             posTimeStart: i.web_available_time_starts || null,
             posTimeEnd: i.web_available_time_ends || null,
             foodOrder: Number(i.food_order || 0), // CR-2026-06-17-001 APP-1: carry food_order
+            // CR-2026-06-17-002 APP-9: carry POS channel flags
+            dinein: i.dinein || 'Yes',
+            takeaway: i.takeaway || 'Yes',
+            delivery: i.delivery || 'Yes',
           }));
         }
       }
@@ -857,6 +946,21 @@ const MenuOrderTab = ({ config, setConfig }) => {
                   data-testid="menu-search"
                 />
               </div>
+              {/* CR-2026-06-17-002 APP-7: Preview channel selector */}
+              <label className="preview-channel-label">
+                Preview as:
+                <select
+                  data-testid="preview-channel-select"
+                  className="preview-channel-select"
+                  value={previewChannel || ''}
+                  onChange={(e) => setPreviewChannel(e.target.value || null)}
+                >
+                  <option value="" data-testid="preview-channel-option-admin">Admin view</option>
+                  <option value="dinein" data-testid="preview-channel-option-dinein">Dine-in customer</option>
+                  <option value="takeaway" data-testid="preview-channel-option-takeaway">Takeaway customer</option>
+                  <option value="delivery" data-testid="preview-channel-option-delivery">Delivery customer</option>
+                </select>
+              </label>
             </div>
 
             <div className="menu-order-info">
@@ -936,6 +1040,12 @@ const MenuOrderTab = ({ config, setConfig }) => {
                           itemChannels={config.channelOverrides?.item}
                           onCategoryChannelChange={(c) => updateCategoryChannel(cat.id, c)}
                           onItemChannelChange={(itemId, c) => updateItemChannel(itemId, c)}
+                          // CR-2026-06-17-002 APP-7: Preview muting props
+                          previewChannel={previewChannel}
+                          isCategoryMuted={isCategoryMutedInPreview(cat)}
+                          isItemMuted={(item) => isItemMutedInPreview(cat, item)}
+                          // CR-2026-06-17-002 APP-10: Save discoverability
+                          onInlineEdit={showSaveReminder}
                         />
                       )}
                     </SortableItem>
@@ -1009,6 +1119,21 @@ const MenuOrderTab = ({ config, setConfig }) => {
             data-testid="menu-search"
           />
         </div>
+        {/* CR-2026-06-17-002 APP-7: Preview channel selector */}
+        <label className="preview-channel-label">
+          Preview as:
+          <select
+            data-testid="preview-channel-select"
+            className="preview-channel-select"
+            value={previewChannel || ''}
+            onChange={(e) => setPreviewChannel(e.target.value || null)}
+          >
+            <option value="" data-testid="preview-channel-option-admin">Admin view</option>
+            <option value="dinein" data-testid="preview-channel-option-dinein">Dine-in customer</option>
+            <option value="takeaway" data-testid="preview-channel-option-takeaway">Takeaway customer</option>
+            <option value="delivery" data-testid="preview-channel-option-delivery">Delivery customer</option>
+          </select>
+        </label>
         <button className="refresh-btn" onClick={fetchCategories} data-testid="menu-order-refresh">
           <IoRefresh /> Refresh
         </button>
@@ -1071,6 +1196,12 @@ const MenuOrderTab = ({ config, setConfig }) => {
                       itemChannels={config.channelOverrides?.item}
                       onCategoryChannelChange={(c) => updateCategoryChannel(cat.id, c)}
                       onItemChannelChange={(itemId, c) => updateItemChannel(itemId, c)}
+                      // CR-2026-06-17-002 APP-7: Preview muting props
+                      previewChannel={previewChannel}
+                      isCategoryMuted={isCategoryMutedInPreview(cat)}
+                      isItemMuted={(item) => isItemMutedInPreview(cat, item)}
+                      // CR-2026-06-17-002 APP-10: Save discoverability
+                      onInlineEdit={showSaveReminder}
                     />
                   )}
                 </SortableItem>

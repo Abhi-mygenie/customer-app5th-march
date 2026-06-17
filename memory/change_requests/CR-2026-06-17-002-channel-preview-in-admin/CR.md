@@ -5,7 +5,7 @@
 **Origin:** Follow-up to CR-2026-06-17-001 (Menu Order Enhancements). APP-7 suggested by main agent at end of CR-001 closure; APP-9 raised by owner after seeing live screenshot — current pills are too small and active/inactive states are not visually distinguishable.
 **Severity:** P2 (admin-UX quality)
 **Risk:** LOW
-**Status:** PLANNING COMPLETE — awaiting owner approval to move to IMPLEMENTATION
+**Status:** IMPLEMENTED — all 3 items shipped, self-test passed, awaiting QA
 **Priority (within this CR):** APP-9 first (fixes a real usability defect), then APP-7 (additive enhancement)
 
 ---
@@ -35,9 +35,9 @@ Both fixes live in the same component (`MenuOrderTab.jsx` + `.css`). Combining i
 
 | Item | Description | Severity | Risk | Status |
 |---|---|---|---|---|
-| **APP-9** | Replace the current 3-state pill UI with **status chips: icon + full label + state color** (Option C from owner's decision). ~80 px chip width, 26 px height, 3 distinct visual treatments for POS-default / admin-ON / admin-OFF. | P2 | LOW | PLANNED |
-| **APP-7** | "Preview as" channel selector in the Menu Order toolbar — mutes rows the customer cascade would hide. Local-only state, reuses `channelEligibility.isItemAllowedForChannel`. | P2 | LOW | PLANNED |
-| **APP-10** | Save Changes discoverability fix — (a) toast on inline ✓ click of TimingEditor: "Click Save Changes at the top to persist", (b) sticky "Unsaved changes — [Save Now]" banner appears below the page title while `isDirty=true`. Prevents the silent-data-loss trap that hit fivestar. | P1 | LOW | PLANNED |
+| **APP-9** | Replace the current 3-state pill UI with **status chips: icon + full label + state color** (Option C from owner's decision). ~80 px chip width, 26 px height, 3 distinct visual treatments for POS-default / admin-ON / admin-OFF. | P2 | LOW | IMPLEMENTED |
+| **APP-7** | "Preview as" channel selector in the Menu Order toolbar — mutes rows the customer cascade would hide. Local-only state, reuses `channelEligibility.isItemAllowedForChannel`. | P2 | LOW | IMPLEMENTED |
+| **APP-10** | Save Changes discoverability fix — (a) toast on inline ✓ click of TimingEditor: "Click Save Changes at the top to persist", (b) sticky "Unsaved changes — [Save Now]" banner appears below the page title while `isDirty=true`. Prevents the silent-data-loss trap that hit fivestar. | P1 | LOW | IMPLEMENTED |
 
 ---
 

@@ -5,9 +5,12 @@ import { isValidPhoneNumber } from 'react-phone-number-input';
 import { useCart } from '../context/CartContext';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantDetails, useTableConfig, useStations } from '../hooks/useMenuData';
+import { useQueryClient } from '@tanstack/react-query'; // CR-2026-06-17-003 APP-12
+import { isItemAvailable } from '../utils/itemAvailability'; // CR-2026-06-17-003 APP-12
 import { useScannedTable } from '../hooks/useScannedTable';
 import { useAuth } from '../context/AuthContext';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
+import { useCurrentTime } from '../hooks/useCurrentTime'; // CR-2026-06-17-003 APP-12
 import { getAuthToken, isTokenExpired } from '../utils/authToken';
 import { placeOrder, updateCustomerOrder, checkTableStatus, getOrderDetails } from '../api/services/orderService';
 import { DEFAULT_THEME } from '../constants/theme';
@@ -82,7 +85,7 @@ const ReviewOrder = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, user, isCustomer, setRestaurantScope } = useAuth();
-  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig, codEnabled, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery, payOnlineLabel, payAtCounterLabel, allowNonQrOrders } = useRestaurantConfig();
+  const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig, codEnabled, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery, payOnlineLabel, payAtCounterLabel, allowNonQrOrders, categoryTimings, itemTimings } = useRestaurantConfig(); // CR-2026-06-17-003 APP-12: added categoryTimings, itemTimings
   // console.log('restaurantId', restaurantId);
 
   // Inside ReviewOrder component, add:
@@ -105,7 +108,11 @@ const ReviewOrder = () => {
     deliveryAddress,
     deliveryCharge,
     clearDeliveryAddress,
+    removeFromCart, // CR-2026-06-17-003 APP-12
   } = useCart();
+
+  // CR-2026-06-17-003 APP-12: Current time for availability validation
+  const currentTimeInSeconds = useCurrentTime();
 
   // Fetch restaurant details FIRST to get numeric ID
   const { restaurant } = useRestaurantDetails(restaurantId);
@@ -113,6 +120,8 @@ const ReviewOrder = () => {
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
   const { stations } = useStations(numericRestaurantId);
+  // CR-2026-06-17-003 APP-12: QueryClient for forced menu refetch before place-order
+  const queryClient = useQueryClient();
 
   // Fetch admin config
   useEffect(() => {
@@ -1164,6 +1173,41 @@ const ReviewOrder = () => {
             // Continue with order on error (fail-safe)
           }
         }
+
+        // CR-2026-06-17-003 APP-12: Pre-place-order availability validation
+        // Force-refresh the menu cache (APP-13 dependency) before validating.
+        try {
+          await queryClient.refetchQueries({ queryKey: ['menuSections', restaurantId, stationId] });
+        } catch (refetchErr) {
+          logger.warn('order', 'Menu refetch failed, using cached data:', refetchErr);
+        }
+        const freshMenuData = queryClient.getQueryData(['menuSections', restaurantId, stationId]) || [];
+        const itemLookup = new Map();
+        for (const section of freshMenuData) {
+          for (const item of (section.items || [])) {
+            itemLookup.set(String(item.id), { ...item, _categoryId: section.categoryId || section.category_id });
+          }
+        }
+
+        const blockedItems = cartItems.filter(ci => {
+          const item = itemLookup.get(String(ci.itemId || ci.id));
+          if (!item) return false; // unknown items: don't block
+          const catTiming = categoryTimings?.[item._categoryId];
+          const itmTiming = itemTimings?.[String(ci.itemId || ci.id)];
+          return !isItemAvailable(item, currentTimeInSeconds, { categoryTiming: catTiming, itemTiming: itmTiming });
+        });
+
+        if (blockedItems.length > 0) {
+          const names = blockedItems.map(b => b.name).join(', ');
+          toast.error(`Some items are no longer available and were removed from your order: ${names}. Please review and try again.`, {
+            duration: 6000,
+          });
+          blockedItems.forEach(b => removeFromCart(b.cartId || b.id));
+          setIsPlacingOrder(false);
+          isPlacingOrderRef.current = false;
+          return;
+        }
+        // END CR-2026-06-17-003 APP-12
 
         // Place new order
         // SECURITY: Mark that the API call is about to be dispatched.

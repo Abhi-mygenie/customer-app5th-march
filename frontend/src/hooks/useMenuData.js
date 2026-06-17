@@ -173,8 +173,10 @@ export const buildMenuSectionsQueryOptions = (restaurantId, stationId) => {
     queryKey: ['menuSections', finalRestaurantId, stationId],
     queryFn: () => fetchMenuSections(finalRestaurantId, stationId),
     enabled: !!finalRestaurantId,
-    staleTime: 5 * 60 * 1000, // 5 minutes (unchanged)
-    gcTime: 15 * 60 * 1000,   // 15 minutes (unchanged)
+    staleTime: 30 * 1000,           // CR-2026-06-17-003 APP-13: was 5 * 60 * 1000
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: true,      // CR-2026-06-17-003 APP-13
+    refetchOnReconnect: true,        // CR-2026-06-17-003 APP-13
     retry: 3,
   };
 };
