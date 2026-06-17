@@ -1,4 +1,4 @@
-# CR-2026-06-17-004 — Delivery GST: Switch to Backend-Provided Rate Key
+# CR-2026-06-17-004 — Delivery GST: Switch to Backend-Provided Rate Key with Fallback
 
 | Field | Value |
 |---|---|
@@ -8,62 +8,48 @@
 | Classification | BUG / Deviation from plan |
 | Severity | P2 |
 | Risk | LOW |
-| Status | **REGISTERED — awaiting backend confirmation + owner approval** |
+| Status | **PLANNING COMPLETE — awaiting owner approval to implement** |
 | Parent | DELIVERY_CHARGE_GATING CR (D-3 bucket) |
 
 ---
 
 ## Problem
 
-The DELIVERY_CHARGE_GATING CR (D-3) planned to read the delivery GST rate from a **delivery-specific backend key** (`restaurant.delivery_charge_tax`). At implementation time, the POS API `/web/restaurant-info` did **not expose** that field. The implementer used `restaurant.gst_tax_percent` (the general item GST rate) as a workaround.
+The DELIVERY_CHARGE_GATING CR (D-3) planned to read the delivery GST rate from a **delivery-specific backend key** (`delivery_charge_tax`). At implementation time, the POS API `/web/restaurant-info` did **not expose** that field. The implementer used `restaurant.gst_tax_percent` (the general item GST rate) as a workaround.
+
+The POS API now has (or will have) a field **`delivery_charge_gst`** for the delivery-specific rate.
 
 ### Current code (`ReviewOrder.jsx:684`)
 ```js
 const deliveryGstRate = parseFloat(restaurant?.gst_tax_percent) || 0;
 ```
 
-### What the plan specified
+### Required behaviour (owner-confirmed)
 ```js
-const deliveryGstRate = parseFloat(restaurant?.delivery_charge_tax) || 0;
+const deliveryGstRate = parseFloat(restaurant?.delivery_charge_gst)
+                        || parseFloat(restaurant?.gst_tax_percent)
+                        || 0;
 ```
 
+**Priority chain:**
+1. `delivery_charge_gst` — delivery-specific rate from POS ← **preferred**
+2. `gst_tax_percent` — general item GST rate ← **fallback** (preserves current behaviour when delivery-specific key absent)
+3. `0` — safe default (no GST on delivery)
+
 ### Impact
-- Delivery GST is currently calculated at the **same rate as item GST** (e.g. 5%)
-- If the correct delivery GST rate differs from item GST rate, bills are **wrong**
-- If delivery should have **0% GST** (as D-4 originally specified: "0 flat unless backend config exists"), then current code **over-charges** GST on delivery
+- Restaurants WITH `delivery_charge_gst` set → delivery GST uses the correct delivery-specific rate (may differ from item GST)
+- Restaurants WITHOUT `delivery_charge_gst` → **no change** — falls back to `gst_tax_percent` (exactly what code does today)
+- Restaurants with neither field → delivery GST = 0
 
 ---
 
-## What needs to happen
+## Owner Decisions
 
-### Step 1 — Backend/POS team confirmation (BLOCKING)
-Confirm the **exact field name** the POS API exposes (or will expose) for delivery-specific GST rate:
-- Is it `delivery_charge_tax`? (per original plan)
-- Is it `delivery_charge_gst`? (per owner's mention)
-- Is it something else?
-- Does it exist today in the `/web/restaurant-info` response? For which restaurants?
-
-### Step 2 — Code change (1 line, after confirmation)
-
-**File:** `frontend/src/pages/ReviewOrder.jsx` line 684
-
-**From:**
-```js
-const deliveryGstRate = parseFloat(restaurant?.gst_tax_percent) || 0;
-```
-
-**To (example, pending confirmed key name):**
-```js
-const deliveryGstRate = parseFloat(restaurant?.delivery_charge_gst) || 0;
-```
-
-The `|| 0` fallback ensures that if the field is absent/null, delivery GST = 0 (matching the original D-4 rule: "0 flat unless backend config exists").
-
-### Step 3 — Validation
-- Delivery order for restaurant WITH the field set → delivery GST applied at the correct rate
-- Delivery order for restaurant WITHOUT the field → delivery GST = 0
-- Dine-in / takeaway / room orders → unchanged (delivery GST gate `includeDelivery` = false)
-- 716 multi-menu → unchanged
+| # | Decision | Date |
+|---|---|---|
+| 1 | Backend key name is `delivery_charge_gst` | 2026-06-17 |
+| 2 | If `delivery_charge_gst` is absent, fall back to `gst_tax_percent` (general item GST) | 2026-06-17 |
+| 3 | If both absent, delivery GST = 0 | 2026-06-17 (inherited from D-4 rule) |
 
 ---
 
@@ -71,7 +57,7 @@ The `|| 0` fallback ensures that if the field is absent/null, delivery GST = 0 (
 
 | File | Change |
 |---|---|
-| `frontend/src/pages/ReviewOrder.jsx` | 1 line — switch `gst_tax_percent` → confirmed backend key |
+| `frontend/src/pages/ReviewOrder.jsx` line 684 | 1 line — add `delivery_charge_gst` as preferred source with `gst_tax_percent` fallback |
 
 ---
 
@@ -79,14 +65,9 @@ The `|| 0` fallback ensures that if the field is absent/null, delivery GST = 0 (
 - Do NOT change any other delivery/SC/tax logic
 - Do NOT touch `OrderSuccess.jsx` (D-8 still deferred)
 - Do NOT touch `orderService.ts` or `helpers.js`
-- The `|| 0` fallback is mandatory (preserves D-4 zero-default behaviour)
+- Fallback chain is mandatory — never remove `gst_tax_percent` fallback
+- All downstream math (`deliveryCgst`, `deliverySgst`, `finalCgst`, `finalSgst`, UI rows) automatically uses the corrected rate — no other changes needed
 
 ---
 
-## Blocked on
-1. **POS team:** confirm the exact field name in `/web/restaurant-info` response
-2. **Owner:** approve the 1-line switch after field name is confirmed
-
----
-
-*Registered: 2026-06-17 | Status: REGISTERED — awaiting backend confirmation*
+*Registered: 2026-06-17 | Updated: 2026-06-17 | Status: PLANNING COMPLETE*
