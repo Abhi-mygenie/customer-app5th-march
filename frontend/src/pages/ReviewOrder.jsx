@@ -675,13 +675,12 @@ const ReviewOrder = () => {
                                 ? (parseFloat(deliveryCharge) || 0)
                                 : 0;
 
-  // ─── Delivery GST (DELIVERY_CHARGE_GATING CR D-3) ─────
-  // Per stakeholder decision (2026-05-06): backend response does NOT expose
-  // restaurant.delivery_charge_tax. Use existing restaurant.gst_tax_percent (verified
-  // present in /restaurant-info response, e.g., "5.00"). Same rate as item-GST.
+  // ─── Delivery GST (DELIVERY_CHARGE_GATING CR D-3, updated CR-2026-06-17-004) ─────
+  // Priority chain: prefer delivery-specific rate from POS (delivery_charge_gst),
+  // fall back to general item GST rate (gst_tax_percent), else 0.
   // Gated by gst_status (R3), includeDelivery (D-2), rate > 0, delivery > 0.
   // Folds into total_gst_tax_amount via finalCgst/finalSgst — no new payload field.
-  const deliveryGstRate     = parseFloat(restaurant?.gst_tax_percent) || 0;
+  const deliveryGstRate     = parseFloat(restaurant?.delivery_charge_gst) || parseFloat(restaurant?.gst_tax_percent) || 0;
   const applyDeliveryGst    = includeDelivery && isGstEnabledForSc && deliveryGstRate > 0 && effectiveDeliveryCharge > 0;
   const gstOnDeliveryCharge = applyDeliveryGst ? effectiveDeliveryCharge * deliveryGstRate / 100 : 0;
   const deliveryCgst        = parseFloat((gstOnDeliveryCharge / 2).toFixed(2));
