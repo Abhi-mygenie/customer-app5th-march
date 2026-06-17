@@ -78,6 +78,33 @@ agenthub/agents/youtube/db
 
 memory/test_credentials.md
 
+# ── CRITICAL: No docs in public (browser-downloadable) ──
+frontend/public/*.md
+frontend/public/*.xlsx
+
+# ── Stale DB exports & dangerous ops scripts ──
+backend/db_data/
+backend/db_export_new/
+backend/db_export.py
+backend/db_import.py
+backend/seed_demo_data.py
+backend/seed_defaults.py
+backend/uploads/
+
+# ── Agent / dev artifacts ──
+memory/
+memory_repo/
+test_reports/
+test_result.md
+frontend/src/__tests__/
+backend/tests/
+
+# ── Platform config ──
+.emergent/
+
+# ── Root docs ──
+README.md
+
 # Mobile development
 android-sdk/frontend/node_modules/.cache/default-development/0.pack
 frontend/node_modules/.cache/default-development/1.pack
@@ -91,3 +118,4 @@ credentials.json
 .credentials
 frontend/node_modules/.cache/default-development/0.pack
 frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/2.pack
