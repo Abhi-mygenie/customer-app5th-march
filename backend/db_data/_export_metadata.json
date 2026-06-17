@@ -1,0 +1,19 @@
+{
+  "exported_at": "2026-02-25T08:04:17.387453",
+  "db_name": "loyalty_app",
+  "collections": {
+    "automation_rules": 70,
+    "coupons": 3,
+    "cron_job_logs": 1,
+    "customers": 1967,
+    "feedback": 17,
+    "loyalty_settings": 7,
+    "orders": 0,
+    "points_transactions": 280,
+    "segments": 4,
+    "users": 6,
+    "wallet_transactions": 81,
+    "whatsapp_event_template_map": 2,
+    "whatsapp_templates": 70
+  }
+}

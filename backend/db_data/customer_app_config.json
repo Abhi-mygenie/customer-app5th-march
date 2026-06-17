@@ -1,0 +1,639 @@
+[
+  {
+    "_id": {
+      "$oid": "69a971365913c23df7eea1f7"
+    },
+    "restaurant_id": "pos_0001_restaurant_478",
+    "backgroundColor": "#F1FAEE",
+    "banners": [
+      {
+        "id": "banner-1",
+        "bannerImage": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=400&fit=crop",
+        "bannerTitle": "Happy Hour - 20% Off",
+        "bannerLink": "",
+        "bannerOrder": 0,
+        "bannerEnabled": false
+      },
+      {
+        "id": "banner-2",
+        "bannerImage": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=400&fit=crop",
+        "bannerTitle": "Weekend Special Menu",
+        "bannerLink": "",
+        "bannerOrder": 1,
+        "bannerEnabled": true
+      }
+    ],
+    "borderRadius": "very-rounded",
+    "buttonTextColor": "#FFFFFF",
+    "created_at": "2026-03-05T12:04:06.233322+00:00",
+    "fontBody": "Poppins",
+    "fontHeading": "Playfair Display",
+    "instagramUrl": "https://instagram.com/18march",
+    "logoUrl": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&h=200&fit=crop",
+    "primaryColor": "#E63946",
+    "secondaryColor": "#1D3557",
+    "showAboutUs": true,
+    "showCallWaiter": true,
+    "showCategories": true,
+    "showCookingInstructions": true,
+    "showCustomerDetails": true,
+    "showCustomerName": true,
+    "showCustomerPhone": true,
+    "showDescription": false,
+    "showFooter": true,
+    "showLogo": false,
+    "showPayBill": true,
+    "showPoweredBy": true,
+    "showPriceBreakdown": true,
+    "showPromotionsOnMenu": true,
+    "showSocialIcons": true,
+    "showSpecialInstructions": true,
+    "showTableInfo": true,
+    "showTableNumber": false,
+    "showWelcomeText": false,
+    "tagline": "Fine Dining Experience",
+    "updated_at": "2026-03-05T15:01:25.429870+00:00",
+    "welcomeMessage": "Welcome to 18march!",
+    "textColor": "#333333",
+    "textSecondaryColor": "#666666",
+    "facebookUrl": "https://facebook.com/testpage",
+    "phone": "+91 9998887776",
+    "twitterUrl": "https://x.com/testhandle",
+    "whatsappNumber": "+919998887776",
+    "youtubeUrl": "https://youtube.com/@testchannel",
+    "customPages": [],
+    "aboutUsContent": "<h1>Combined Test</h1><p>Full content update test.</p>",
+    "aboutUsImage": "https://example.com/about-us.jpg",
+    "openingHours": "<p>Open 24/7</p>",
+    "footerLinks": [
+      {
+        "label": "Contact",
+        "url": "/contact"
+      }
+    ],
+    "footerText": "Footer combined test",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": false
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "d7c05b32-9046-4ef0-aa10-56c50117cc8d",
+        "label": "TEST_Terms and Conditions",
+        "type": "custom",
+        "visible": true
+      }
+    ],
+    "address": "TEST_123 Food Street, Gourmet City",
+    "contactEmail": "test_contact@18march.com",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "TEST_We love hearing from you!",
+    "mapEmbedUrl": "https://www.google.com/maps/embed?pb=test123"
+  },
+  {
+    "_id": {
+      "$oid": "69a971745913c23df7eea216"
+    },
+    "restaurant_id": "",
+    "backgroundColor": "#F1FAEE",
+    "banners": [
+      {
+        "id": "banner-1",
+        "bannerImage": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=400&fit=crop",
+        "bannerTitle": "Happy Hour - 20% Off",
+        "bannerOrder": 0,
+        "bannerEnabled": true
+      }
+    ],
+    "borderRadius": "pill",
+    "buttonTextColor": "#FFFFFF",
+    "fontBody": "Poppins",
+    "fontHeading": "Playfair Display",
+    "primaryColor": "#E63946",
+    "secondaryColor": "#1D3557",
+    "tagline": "Fine Dining Experience",
+    "updated_at": "2026-03-05T12:05:08.894678+00:00",
+    "welcomeMessage": "Welcome to 18march!"
+  },
+  {
+    "_id": {
+      "$oid": "69a971965913c23df7eea231"
+    },
+    "restaurant_id": "478",
+    "backgroundColor": "#F1FAEE",
+    "banners": [
+      {
+        "id": "banner-1",
+        "bannerImage": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=400&fit=crop",
+        "bannerTitle": "Happy Hour - 20% Off",
+        "bannerOrder": 0,
+        "bannerEnabled": true
+      }
+    ],
+    "borderRadius": "pill",
+    "buttonTextColor": "#FFFFFF",
+    "fontBody": "Poppins",
+    "fontHeading": "Playfair Display",
+    "instagramUrl": "https://instagram.com/18march",
+    "primaryColor": "#3743e6",
+    "secondaryColor": "#1D3557",
+    "tagline": "Fine Dining Experience",
+    "updated_at": "2026-03-05T17:13:56.519162+00:00",
+    "welcomeMessage": "Welcome to 18march!",
+    "textColor": "#333333",
+    "textSecondaryColor": "#666666",
+    "facebookUrl": "https://facebook.com/18march",
+    "phone": "+91 9876543210",
+    "twitterUrl": "https://x.com/18march",
+    "whatsappNumber": "+919876543210",
+    "youtubeUrl": "https://youtube.com/@18march",
+    "aboutUsContent": "<h1>Test Update</h1><p>This should sync now!</p>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us.",
+    "footerText": "All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>",
+    "showLandingCustomerCapture": false,
+    "address": "",
+    "contactEmail": "",
+    "footerLinks": [],
+    "logoUrl": "",
+    "mapEmbedUrl": "",
+    "showAboutUs": true,
+    "showCallWaiter": true,
+    "showCategories": true,
+    "showCookingInstructions": true,
+    "showCustomerDetails": true,
+    "showCustomerName": true,
+    "showCustomerPhone": true,
+    "showDescription": true,
+    "showFooter": true,
+    "showLogo": true,
+    "showPayBill": true,
+    "showPoweredBy": true,
+    "showPriceBreakdown": true,
+    "showPromotionsOnMenu": true,
+    "showSocialIcons": true,
+    "showSpecialInstructions": true,
+    "showTableInfo": true,
+    "showTableNumber": true,
+    "showWelcomeText": true,
+    "extraInfoItems": [
+      "Test info 1",
+      "Test info 2"
+    ],
+    "showExtraInfo": true
+  },
+  {
+    "_id": {
+      "$oid": "69a998aad2f66442ebb64c3c"
+    },
+    "restaurant_id": "pos_0001_restaurant_689",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers. We believe that food is more than just sustenance \u2014 it's an experience that creates lasting memories.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community. We strive to make every visit special, whether you're dining in or ordering from the comfort of your home.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "address": "",
+    "contactEmail": "owner@kunafamahal.com",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us and help us serve you better.",
+    "footerText": "Kunafa Mahal. All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  },
+  {
+    "_id": {
+      "$oid": "69a998aad2f66442ebb64c3f"
+    },
+    "restaurant_id": "pos_0001_restaurant_634",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers. We believe that food is more than just sustenance \u2014 it's an experience that creates lasting memories.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community. We strive to make every visit special, whether you're dining in or ordering from the comfort of your home.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "address": "",
+    "contactEmail": "owner@hungry.com",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us and help us serve you better.",
+    "footerText": "Hungry Keya??. All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  },
+  {
+    "_id": {
+      "$oid": "69a998aad2f66442ebb64c42"
+    },
+    "restaurant_id": "demo-user-restaurant",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers. We believe that food is more than just sustenance \u2014 it's an experience that creates lasting memories.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community. We strive to make every visit special, whether you're dining in or ordering from the comfort of your home.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "address": "",
+    "contactEmail": "demo@restaurant.com",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us and help us serve you better.",
+    "footerText": "Demo Restaurant & Cafe. All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  },
+  {
+    "_id": {
+      "$oid": "69a998aad2f66442ebb64c45"
+    },
+    "restaurant_id": "pos_0001_restaurant_621",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers. We believe that food is more than just sustenance \u2014 it's an experience that creates lasting memories.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community. We strive to make every visit special, whether you're dining in or ordering from the comfort of your home.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "address": "",
+    "contactEmail": "owner@shimlatest.com",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us and help us serve you better.",
+    "footerText": "Shimla Test. All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  },
+  {
+    "_id": {
+      "$oid": "69a998aad2f66442ebb64c48"
+    },
+    "restaurant_id": "pos_0001_restaurant_703",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers. We believe that food is more than just sustenance \u2014 it's an experience that creates lasting memories.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community. We strive to make every visit special, whether you're dining in or ordering from the comfort of your home.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "address": "",
+    "contactEmail": "owner@companyclub.com",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us and help us serve you better.",
+    "footerText": "Company club. All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  },
+  {
+    "_id": {
+      "$oid": "69a999c8d2f66442ebb64c70"
+    },
+    "restaurant_id": "689",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us.",
+    "footerText": "All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  },
+  {
+    "_id": {
+      "$oid": "69a999c8d2f66442ebb64c73"
+    },
+    "restaurant_id": "634",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us.",
+    "footerText": "All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  },
+  {
+    "_id": {
+      "$oid": "69a999c8d2f66442ebb64c76"
+    },
+    "restaurant_id": "621",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us.",
+    "footerText": "All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  },
+  {
+    "_id": {
+      "$oid": "69a999c8d2f66442ebb64c79"
+    },
+    "restaurant_id": "703",
+    "aboutUsContent": "<h2>Our Story</h2>\n<p>Welcome to our restaurant! We are passionate about serving delicious, freshly prepared meals that bring people together. Our journey began with a simple idea \u2014 great food, warm hospitality, and a welcoming atmosphere.</p>\n<p>Every dish on our menu is crafted with care using the finest ingredients sourced from local suppliers.</p>\n<h2>Our Mission</h2>\n<p>To deliver exceptional dining experiences through quality food, outstanding service, and a commitment to our community.</p>\n<h2>Our Values</h2>\n<ul>\n<li><strong>Quality</strong> \u2014 We never compromise on ingredient quality</li>\n<li><strong>Freshness</strong> \u2014 Every dish is prepared fresh to order</li>\n<li><strong>Service</strong> \u2014 Customer satisfaction is our top priority</li>\n<li><strong>Community</strong> \u2014 We support local farmers and suppliers</li>\n</ul>",
+    "aboutUsImage": "https://images.unsplash.com/photo-1541856644905-bd40b138cbbd?w=1200&q=80",
+    "feedbackEnabled": true,
+    "feedbackIntroText": "We value your opinion! Share your dining experience with us.",
+    "footerText": "All rights reserved.",
+    "navMenuOrder": [
+      {
+        "id": "home",
+        "label": "Home",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "menu",
+        "label": "Menu",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "about",
+        "label": "About Us",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "contact",
+        "label": "Contact",
+        "type": "builtin",
+        "visible": true
+      },
+      {
+        "id": "feedback",
+        "label": "Feedback",
+        "type": "builtin",
+        "visible": true
+      }
+    ],
+    "openingHours": "<table>\n<tr><td><strong>Monday - Friday</strong></td><td>10:00 AM - 10:00 PM</td></tr>\n<tr><td><strong>Saturday</strong></td><td>10:00 AM - 11:00 PM</td></tr>\n<tr><td><strong>Sunday</strong></td><td>11:00 AM - 9:00 PM</td></tr>\n</table>"
+  }
+]
