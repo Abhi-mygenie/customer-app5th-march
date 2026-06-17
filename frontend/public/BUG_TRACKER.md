@@ -410,6 +410,94 @@ None — purely cosmetic, single CSS property change.
 
 ---
 
+## BUG-005: Delivery GST not sent as separate field to POS — folded into total_gst_tax_amount
+
+| Field | Details |
+|-------|---------|
+| **Bug ID** | BUG-005 |
+| **Date Reported** | 2026-06-17 |
+| **Date Fixed** | — |
+| **Severity** | P2 - Medium |
+| **Status** | Open — needs POS team confirmation |
+| **Author** | Abhi-mygenie |
+| **Fixed By** | — |
+| **Related Feature** | Delivery Orders / GST / Place Order Payload |
+| **Branch** | 16-june |
+| **Customer Impact** | All delivery orders with GST-enabled restaurants. Delivery GST IS calculated and IS included in grand total + `total_gst_tax_amount`, but POS cannot distinguish how much GST is from delivery vs food vs service charge. |
+
+### Summary
+When a customer places a delivery order, the app correctly calculates GST on the delivery charge (CGST + SGST split, same rate as `restaurant.gst_tax_percent`). However, this delivery GST is **folded into** the aggregate `total_gst_tax_amount` field in the POS payload — there is **no separate `delivery_charge_tax` or `delivery_gst_tax_amount` field** sent to POS.
+
+The POS receives:
+- `delivery_charge: "100"` ← the charge itself ✅
+- `total_gst_tax_amount: 30.00` ← food GST + SC GST + delivery GST all combined ✅
+- `delivery_charge_tax: ???` ← **field does not exist** ⚠️
+
+The customer-side UI **does** show "CGST on Delivery" and "SGST on Delivery" as separate line items on the ReviewOrder page — so the customer sees a correct breakdown. But the POS backend receives only the aggregate.
+
+### Evidence (code trace)
+
+| Step | File | Lines | What happens |
+|------|------|-------|-------------|
+| Delivery charge gated | ReviewOrder.jsx | 670-676 | `effectiveDeliveryCharge` = charge only when `orderType === 'delivery'` |
+| Delivery GST calculated | ReviewOrder.jsx | 684-688 | `deliveryCgst` and `deliverySgst` split from `deliveryCharge × gst_tax_percent / 100` |
+| Folded into final totals | ReviewOrder.jsx | 702-703 | `finalCgst = itemCgst + scCgst + deliveryCgst` — delivery GST merged |
+| Passed in payload | ReviewOrder.jsx | 1268 | `totalGstTaxAmount: finalCgst + finalSgst` — single aggregate |
+| POS payload built | orderService.ts | 403 | `total_gst_tax_amount: totalGstTaxAmount` — no separate delivery GST field |
+| Code comment | ReviewOrder.jsx | 678-681 | *"Per stakeholder decision (2026-05-06): …Folds into total_gst_tax_amount — no new payload field."* |
+
+### Paths checked (all 4 order submission paths)
+
+| Path | Delivery charge sent? | Delivery GST separate? |
+|------|----------------------|----------------------|
+| New order (placeOrder) | ✅ as `delivery_charge` | ❌ folded into `total_gst_tax_amount` |
+| Edit order (updateCustomerOrder) | ✅ | ❌ folded |
+| Edit order fallback | ✅ | ❌ folded |
+| 401-retry (placeOrder) | ✅ | ❌ folded |
+
+### Customer UI display
+
+The ReviewOrder page **correctly** shows separate line items when `deliveryCgst > 0`:
+- "CGST on Delivery 2.5% — ₹X.XX"
+- "SGST on Delivery 2.5% — ₹X.XX"
+
+These are display-only — not reflected as separate payload fields.
+
+### Impact assessment
+
+| If POS only reads `total_gst_tax_amount` | ✅ No issue — delivery GST is included |
+|---|---|
+| **If POS needs separate `delivery_charge_tax` field** | **⚠️ Missing — POS cannot break down delivery vs food vs SC GST** |
+| If POS re-calculates GST server-side | Potential mismatch — POS may calculate different delivery GST than client-side |
+
+### Root Cause
+Deliberate design decision from DELIVERY_CHARGE_GATING CR (2026-05-06): stakeholder decided to fold delivery GST into existing aggregate field rather than adding a new payload field. This was documented in code comments but not validated against POS API contract.
+
+### Recommended Action
+1. **Confirm with POS team**: Does POS need `delivery_charge_tax` (or similar) as a separate field?
+2. If **YES** → ~5-line fix in `orderService.ts` to add `delivery_charge_tax: deliveryCgst + deliverySgst` to payload
+3. If **NO** → close as Won't Fix / By Design
+
+### Fix (if needed)
+**File**: `frontend/src/api/services/orderService.ts` (placeOrder payload + updateCustomerOrder payload)
+
+Add to payload objects:
+```javascript
+delivery_charge_tax: parseFloat((orderData.deliveryChargeTax || 0).toFixed(2)),
+```
+
+And pass `deliveryChargeTax: deliveryCgst + deliverySgst` from ReviewOrder.jsx in all 4 paths.
+
+### Regression Risk
+LOW — additive field only. No existing fields change.
+
+### Notes
+- Related to prior DELIVERY_CHARGE_GATING CR (code markers D-2 through D-6)
+- The `service_gst_tax_amount` field DOES exist as a separate field for service charge GST — delivery GST should arguably follow the same pattern
+- `restaurant.delivery_charge_tax` field not present in POS `/restaurant-info` response (per code comment at L679)
+
+---
+
 <!-- TEMPLATE FOR NEW BUGS
 
 ## BUG-XXX: [One-line summary]
