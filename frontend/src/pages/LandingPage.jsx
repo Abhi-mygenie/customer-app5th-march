@@ -307,10 +307,24 @@ const LandingPage = () => {
           try {
             // Fetch order details to check status
             const orderDetails = await getOrderDetails(result.orderId);
-            
-            // Only redirect if order is active (not cancelled=3, not paid=6)
-            if (orderDetails.fOrderStatus !== 3 && orderDetails.fOrderStatus !== 6) {
-              // Auto-redirect to OrderSuccess page
+
+            // BUG-042 FIX: If the order contains ONLY system items (e.g. POS
+            // "Check In" placeholder), it's not a real food order. Skip redirect
+            // and treat as "no active order" so the user sees Browse Menu and
+            // the Phase 2 guest auto-populate flow runs normally.
+            // `previousItems` is already filtered by `filterSystemItems` in
+            // `getOrderDetails`, so Check In rows are stripped — length === 0
+            // means no real food items exist.
+            const hasRealFoodItems = (orderDetails.previousItems?.length ?? 0) > 0;
+
+            if (!hasRealFoodItems) {
+              logger.info('order', `[BUG-042] Order ${result.orderId} is check-in-only (no real food items). Skipping redirect.`);
+              // Nullify so downstream shows Browse Menu, not Edit Order.
+              result.orderId = null;
+              result.isOccupied = false;
+              // Fall through to Phase 2 guest auto-populate.
+            } else if (orderDetails.fOrderStatus !== 3 && orderDetails.fOrderStatus !== 6) {
+              // Real food order, active — auto-redirect to OrderSuccess page
               navigate(`/${numericRestaurantId}/order-success`, {
                 state: {
                   orderData: {
@@ -321,12 +335,11 @@ const LandingPage = () => {
                 }
               });
               return; // Don't update state, we're navigating away
+            } else {
+              // Order is cancelled or paid - clear any stale cart data
+              // This prevents users from accidentally adding items to a paid order
+              clearCart();
             }
-            
-            // Order is cancelled or paid - clear any stale cart data
-            // This prevents users from accidentally adding items to a paid order
-            clearCart();
-            
           } catch (orderErr) {
             logger.error('order', 'Failed to fetch order details for auto-redirect:', orderErr);
             // On error, fall through to show Edit Order button (user can retry manually)

@@ -1,25 +1,35 @@
-# MyGenie Customer App - PRD
+# MyGenie Customer App — PRD
 
-## Problem Statement
-Pull and set up the MyGenie Customer App from GitHub repo `Abhi-mygenie/customer-app5th-march` (branch: `16-june`), configure environment, install dependencies, and run.
+## Original Problem Statement
+Clone repo from https://github.com/Abhi-mygenie/customer-app5th-march.git (main branch), set up environment, deploy and run.
 
 ## Architecture
-- **Frontend**: React 19 + CRACO + Tailwind CSS + TypeScript + Radix UI + TanStack React Query
-- **Backend**: FastAPI (Python) with MongoDB (remote: 52.66.232.149)
-- **External APIs**: MyGenie preprod API (`preprod.mygenie.online`), Google Maps, CRM API
+- Frontend: React 19 + CRACO + Tailwind CSS + Radix UI
+- Backend: FastAPI (Python) — single file server.py
+- Database: Remote MongoDB (52.66.232.149)
+- External APIs: MyGenie POS (preprod.mygenie.online), CRM (crm.mygenie.online)
 
-## What's Been Implemented (2026-06-17)
-- Cloned repo from GitHub (branch: 16-june)
-- Configured backend `.env` (MONGO_URL, JWT_SECRET, MYGENIE_API_URL)
-- Configured frontend `.env` (REACT_APP_API_BASE_URL, Google Maps key, CRM URL, etc.)
-- Installed all backend (pip) and frontend (yarn) dependencies
-- Both services running successfully via supervisor
+## What's Been Implemented
+- **2026-06-18**: Cloned repo, set up env files, installed deps, deployed successfully
+- **2026-06-18**: BUG-042 — Fixed check-in-only order blocking room new orders. POS "Check In" system item (₹0.00) was causing auto-redirect to OrderSuccess, preventing users from placing real food orders on checked-in rooms. Fix: detect check-in-only orders via `previousItems.length === 0` and skip redirect.
 
-## Status
-- ✅ Backend: Running on port 8001, returns 200
-- ✅ Frontend: Compiled successfully, serving on port 3000
-- ✅ App loads with login/landing page (phone number + name input + Browse Menu)
+## Prioritized Backlog
+### P0 (Critical)
+- BUG-001: Session ambiguity (dual auth JWT vs CRM token)
+- BUG-002: API surface strategy (direct vs proxy)
 
-## Next Action Items
-- User to test app flows (login, menu browsing, ordering)
-- Any feature additions or bug fixes as needed
+### P1 (High)
+- BUG-003: Delivery charge calculation
+- Google Maps fix
+- LandingPage refactor (ROADMAP P1-1)
+- OrderSuccess refactor (ROADMAP P1-2)
+
+### P2
+- JWT rotation
+- CORS restriction
+- Remove legacy otpRequired flags
+
+## Next Tasks
+- QA verification of BUG-042 fix with live room check-in scenario
+- Test regression: real food orders still auto-redirect correctly
+- Test regression: Phase 2 guest auto-populate still works after fix
