@@ -8,7 +8,7 @@
 | Classification | BUG / Deviation from plan |
 | Severity | P2 |
 | Risk | LOW |
-| Status | **PLANNING COMPLETE — awaiting owner approval to implement** |
+| Status | **IMPLEMENTED + QA PASSED (iteration 11, 2026-06-18)** |
 | Parent | DELIVERY_CHARGE_GATING CR (D-3 bucket) |
 
 ---

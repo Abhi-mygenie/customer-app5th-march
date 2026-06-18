@@ -130,4 +130,4 @@ C6. No queryKey changes — existing prefetch and cache slots stay compatible.
 
 ---
 
-*Registered: 2026-06-17 | Last updated: 2026-06-17 | Stage: PLANNING — IA complete, awaiting owner approval*
+*Registered: 2026-06-17 | Last updated: 2026-06-18 | Stage: IMPLEMENTED + QA PASSED (iteration 8)*

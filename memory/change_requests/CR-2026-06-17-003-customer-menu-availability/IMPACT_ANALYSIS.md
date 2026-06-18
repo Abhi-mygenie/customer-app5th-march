@@ -2,7 +2,7 @@
 
 **Stage:** Impact Analysis
 **Risk:** LOW (single conceptual change — availability gating — touched in three coordinated places)
-**Status:** PLANNING — IA complete, awaiting owner approval to move to IMPLEMENTATION
+**Status:** IMPLEMENTED + QA PASSED (iteration 8, 2026-06-17)
 **Reuses:** `itemAvailability.isItemAvailable` (already shipped, unit-tested), `useCurrentTime` (already shipped), React Query (already in use)
 **Files in scope:** `MenuItems.jsx`, `MenuItem.jsx`, `ReviewOrder.jsx`, `useMenuData.js`, `CartContext.js`
 **Files NOT in scope:** every other file in the repo — verified by intent. Backend untouched. Protected files (`AuthContext`, `App.js` providers, `server.py` routes, `ReviewOrder`'s submission contract to POS) untouched.

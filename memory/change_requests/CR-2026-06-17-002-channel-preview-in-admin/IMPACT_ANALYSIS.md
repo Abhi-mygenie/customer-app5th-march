@@ -2,7 +2,7 @@
 
 **Stage:** Impact Analysis + Implementation Plan
 **Risk:** LOW
-**Status:** PLANNING COMPLETE — awaiting owner approval to move to IMPLEMENTATION
+**Status:** IMPLEMENTED + QA PASSED (iteration 8, 2026-06-17)
 **Reuses:** `channelEligibility.isItemAllowedForChannel` (Phase 2 QA-passed), CategoryCard prop wiring (already in place)
 **Files in scope:** `frontend/src/components/AdminSettings/MenuOrderTab.jsx`, `frontend/src/components/AdminSettings/MenuOrderTab.css`
 **Files NOT in scope (verified by intent):** every other file in the repo
