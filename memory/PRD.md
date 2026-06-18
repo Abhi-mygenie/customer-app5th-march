@@ -1,7 +1,7 @@
 # MyGenie Customer App — PRD
 
 ## Original Problem Statement
-Clone repo from https://github.com/Abhi-mygenie/customer-app5th-march.git (main branch), set up environment, deploy and run. Then investigate and fix room order placement issues.
+Clone repo from https://github.com/Abhi-mygenie/customer-app5th-march.git (main branch), set up environment, deploy and run. Investigate and fix room order placement issues. Full QA audit of all implemented features.
 
 ## User Personas
 - **Restaurant Customer** — Scans room/table QR, browses menu, places orders
@@ -26,51 +26,52 @@ Clone repo from https://github.com/Abhi-mygenie/customer-app5th-march.git (main 
 
 ## What's Been Implemented
 
-### Session 2026-06-18: Deployment + BUG-042 Fix
-1. **Deployment:** Cloned repo (main branch), configured backend/frontend .env files, installed dependencies, started services via supervisor. Backend (FastAPI) on port 8001, Frontend (React/CRACO) on port 3000. All services running.
+### Session 2026-06-18
+1. **Deployment** — Cloned repo, configured env files, installed deps, services running
+2. **BUG-042 Fix** — Check-in-only order no longer blocks room new orders (LandingPage.jsx)
+3. **Full QA Audit** — 3 QA iterations covering all previously-unverified items:
+   - Iteration 9: BUG-042 ✅
+   - Iteration 10: BUG-035/039/040/041 + CR-2026-05-30-002 ✅
+   - Iteration 11: CR-2026-06-17-004 + Phase 1 (F-1) + Phase 2 (F-2) ✅
+4. **Documentation** — 8 new docs created, 5 stale status labels updated, bug tracker updated
+5. **POS Investigation** — Confirmed APP-5 (category_order), APP-6 (menu_order), POS-4 (web_available_time) all still pending on POS team
 
-2. **Investigation: Room Check-In Order Blocking (BUG-042)**
-   - **Symptom:** User scans room QR for a checked-in room → sees "Order Placed! ₹0.00" (OrderSuccess) instead of Browse Menu
-   - **Root cause:** POS creates a "Check In" system-item order (₹0.00, f_order_status=5) at room check-in. The auto-redirect logic at `LandingPage.jsx:306` only filtered cancelled (3) and paid (6) statuses — status 5 (SERVED) passed through, causing auto-redirect to OrderSuccess for the check-in placeholder order.
-   - **Fix applied:** Added `hasRealFoodItems` check using existing `previousItems` (already filtered by `filterSystemItems`). If `previousItems.length === 0`, skip redirect and nullify `orderId`/`isOccupied` → user sees Browse Menu + Phase 2 guest auto-populate.
-   - **Files changed:** `frontend/src/pages/LandingPage.jsx` (lines 305-347, ~10 lines added)
-   - **Risk:** MEDIUM — no payload, backend, tax, or payment changes
-   - **Status:** IMPLEMENTED, compiled successfully, awaiting QA
-
-3. **Documentation reviewed:**
-   - Alpha agent system prompt (`memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md`)
-   - Room QR flow investigation (`INV-2026-06-17-003`)
-   - Room order validation investigation (`ROOM_ORDER_VALIDATION_AND_LANDING_MANDATORY_RULES_INVESTIGATION`)
-   - Room check-in gate CR plan (`ROOM_CHECKIN_GATE_AND_GUEST_AUTOPOPULATE_CR_PLAN`)
-   - Phase 2 auto-populate plan (`ROOM_GUEST_AUTOPOPULATE_PHASE2_PLAN`)
-   - Verified Phase 2 (F-2) is fully implemented across 5 files
+### Previously Implemented (QA verified this session)
+- CR-2026-05-30-001 Item 1: Skip OTP + mandatory fields
+- CR-2026-05-30-002: Restrict non-QR orders (3 checkpoint guards + diagnostics)
+- CR-2026-06-17-001: Menu order enhancements (APP-1 through APP-4)
+- CR-2026-06-17-002: Channel preview in admin
+- CR-2026-06-17-003: Customer menu availability
+- CR-2026-06-17-004: Delivery GST backend key switch
+- BUG-035/039/040/041: Order placement + payment retry fixes
+- Phase 1 (F-1): Room scanner availability gate
+- Phase 2 (F-2): Room guest auto-populate + lock
 
 ## Prioritized Backlog
 
-### P0 (Critical)
-- BUG-001: Hybrid auth ownership causes customer-session ambiguity
-- BUG-002: POS/CRM/backend contract drift risk
+### Blocked on POS Team
+- APP-5: `category_order` in `/web/restaurant-product` — backend will add
+- APP-6: `menu_order` in `/web/menu-master` — backend will add
+- POS-3: `food_order` populated for all restaurants
+- POS-4: `web_available_time_starts/ends` populated
 
-### P1 (High)
-- BUG-042: QA verification with live room check-in scenario (implemented, needs QA)
-- BUG-003: Delivery integration contract partially implicit
-- BUG-006: Restaurant 716 hardcoded behavior
-- BUG-007: Payment payload semantics (payment_method vs payment_type)
-- LandingPage refactor (ROADMAP P1-1)
-- OrderSuccess refactor (ROADMAP P1-2)
+### Parked (by design)
+- CR-2026-05-30-001 Items 2 & 3: Table/room misrouting root cause (CR-002 is workaround)
 
-### P2
-- BUG-004: Hook dependency warnings
-- BUG-005: Backend docs path divergence
-- BUG-008: International phone normalization
-- BUG-009: Table-status contract documentation
-- BUG-010: Order-details routing ambiguity
-- JWT rotation
-- CORS restriction
-- Remove legacy otpRequired flags
+### Architecture Debt (open, no implementation planned)
+- BUG-001 (P0): Hybrid auth session ambiguity
+- BUG-002 (P0): POS/CRM/backend contract drift
+- BUG-003 (P1): Delivery integration contract
+- BUG-004 (P1): Hook dependency warnings
+- BUG-005 (P1): Backend docs path divergence
+- BUG-006 (P1): Restaurant 716 hardcoded behavior
+- BUG-007 (P1): Payment payload semantics
+- BUG-008 (P1): Phone normalization India-biased
+- BUG-009 (P1): Table-status contract documentation
+- BUG-010 (P1): Order-details routing ambiguous
 
 ## Next Tasks
-1. QA BUG-042 fix with live room check-in scenario (Room r2, restaurant 478, order 939983)
-2. Regression: real food orders still auto-redirect correctly
-3. Regression: Phase 2 guest auto-populate + lock still works
-4. Regression: Edit Order flow for orders with real food items
+1. Wire APP-5/APP-6 frontend merge when POS adds fields
+2. Test POS-4 timing with real data when populated
+3. Owner sign-off on all QA-passed items
+4. Owner decision on BUG-001/BUG-002 architecture remediation
