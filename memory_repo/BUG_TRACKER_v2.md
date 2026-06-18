@@ -30,6 +30,7 @@ It is not a historical changelog. Items here are classified by present confidenc
 | BUG-008 | International phone normalization is still India-biased in CRM helpers | P1 | Open | Code-verified |
 | BUG-009 | Table-status contract is documented inconsistently across docs and client logic | P1 | Open | Code-verified |
 | BUG-010 | Order-details routing path remains environment-dependent and ambiguous | P1 | Open | Partially verified |
+| BUG-042 | Check-in-only POS order blocks room new order (auto-redirect to ₹0.00 OrderSuccess) | P1 | **Fixed** (2026-06-18) | Code-verified, POS API verified |
 
 ---
 
@@ -205,6 +206,25 @@ The frontend endpoint builder and backend proxy both represent valid-looking way
 **Impact**
 - unclear production routing strategy
 - difficult troubleshooting during incidents
+
+---
+
+### BUG-042: Check-in-only POS order blocks room new order
+- **Priority:** P1
+- **Status:** **Fixed** (2026-06-18)
+- **Evidence:** `LandingPage.jsx`, POS API response for order #939983
+
+**Problem**
+When a hotel room is checked in, POS creates a "Check In" system-item order (₹0.00, `f_order_status: 5`). The auto-redirect logic at `LandingPage.jsx:306` treated this as a real food order and redirected to OrderSuccess, trapping the user on a ₹0.00 screen.
+
+**Root cause**
+Auto-redirect only skipped for `fOrderStatus === 3` (CANCELLED) and `=== 6` (PAID). Status 5 (SERVED) for the check-in placeholder passed the filter.
+
+**Fix**
+Added `hasRealFoodItems` check: `(orderDetails.previousItems?.length ?? 0) > 0`. `previousItems` is already filtered by `filterSystemItems` (strips "Check In" rows). If no real items → skip redirect, nullify orderId → user sees Browse Menu + Phase 2 guest auto-populate.
+
+**Files changed:** `frontend/src/pages/LandingPage.jsx` (~10 lines)
+**Docs:** `/app/memory/change_requests/BUG-042-checkin-only-order-blocks-room/`
 
 ---
 
