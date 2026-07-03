@@ -1,6 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -15,13 +15,27 @@ import hashlib
 import secrets
 import jwt
 import shutil
+import asyncio
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+# CR-2026-07-03-003 — explicit timeouts.
+# Defaults were: serverSelectionTimeoutMS=30000 (caused 21:30 IST freeze),
+# socketTimeoutMS=None (∞), waitQueueTimeoutMS=None (∞).
+# retryReads/retryWrites are default-True on motor 3.x; set explicitly for clarity.
+client = AsyncIOMotorClient(
+    mongo_url,
+    serverSelectionTimeoutMS=5000,
+    connectTimeoutMS=5000,
+    socketTimeoutMS=10000,
+    waitQueueTimeoutMS=5000,
+    retryReads=True,
+    retryWrites=True,
+    appname="customer-app-backend",
+)
 db = client[os.environ['DB_NAME']]
 
 # JWT Config (CA-002 fix - removed weak fallback)
@@ -1346,6 +1360,29 @@ class StatusCheckCreate(BaseModel):
 @api_router.get("/")
 async def root():
     return {"message": "Customer App API"}
+
+@api_router.get("/healthz")
+async def healthz():
+    """
+    Liveness + Mongo reachability probe.
+    CR-2026-07-03-003 — used by LB / uptime monitoring to detect DB outages
+    (like the 2026-07-02 21:30 IST incident) and stop shipping traffic to
+    unhealthy pods before the connection pool tips over. Never blocks
+    longer than ~2 s regardless of client config.
+    """
+    try:
+        await asyncio.wait_for(db.command("ping"), timeout=2.0)
+        return {"ok": True, "mongo": "up"}
+    except asyncio.TimeoutError:
+        return JSONResponse(
+            status_code=503,
+            content={"ok": False, "mongo": "timeout"},
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={"ok": False, "mongo": "error", "detail": str(e)[:200]},
+        )
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
