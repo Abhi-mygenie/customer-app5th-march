@@ -32,6 +32,7 @@ INVESTIGATION → PLANNING → IMPLEMENTATION cycles on 2026-07-03.
 | [CR-2026-07-03-007](./CR-2026-07-03-007-prod-deploy-env-hardening/CR.md) | Prod deploy env hardening (backend URL + secret rotation) | 📝 REGISTERED | **P1 security** | 0 (ops) | half-day distributed | ops + DBA + security team |
 | [CR-2026-07-03-008](./CR-2026-07-03-008-prod-db-data-quality/CR.md) | Prod DB data quality remediation | 📝 REGISTERED (DATA) | P2 | 0 code | half-day + owner cross-check | approve seed/archive strategy |
 | [CR-2026-07-03-009](./CR-2026-07-03-009-observability-and-lb-probe/CR.md) | Observability + LB probe wiring (post CR-003) | 📝 REGISTERED | P1 (F-13), P3 (F-12) | 0-1 files | 30 min-2 hrs | ops points probe at `/api/healthz` |
+| [CR-2026-07-03-010](./CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/CR.md) | Registry hygiene & ID-scheme canonicalization (BUG-NNN vs CR-YYYY-MM-DD-NNN; tombstones; stale BUG_TRACKER_v2) | 📝 REGISTERED (Role 1+2 complete) | P2 | 6 MD (docs-only) | ~45 min | approve D-01..D-04 in [INTAKE_DOC.md](./CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/INTAKE_DOC.md#7-owner-decisions-surfaced-needed-before-role-3) |
 
 ## ID convention (per operating prompt §ID Format line 1364 + repo precedent)
 
