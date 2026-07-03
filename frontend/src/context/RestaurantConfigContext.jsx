@@ -6,6 +6,23 @@ const RestaurantConfigContext = createContext(null);
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
+// CR-2026-07-03-001 — manual cache-bust escape hatch.
+// If URL has ?bustCache=1 (alias ?nocache=1), the context will:
+//   1. NOT hydrate <html> from the cached restaurant_config_<rid>
+//   2. still call /api/config/<rid>; saveConfigToCache then overwrites
+//      the stale blob with the fresh data on the same visit.
+// Default behaviour (no query param) is fully preserved.
+const shouldBustCache = () => {
+  try {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    const v = (params.get('bustCache') || params.get('nocache') || '').toLowerCase();
+    return v === '1' || v === 'true' || v === 'yes';
+  } catch (_e) {
+    return false;
+  }
+};
+
 const DEFAULT_CONFIG = {
   // Landing Page
   showLogo: true,
@@ -147,6 +164,12 @@ export const RestaurantConfigProvider = ({ children }) => {
   const getInitialConfigFromCache = () => {
     try {
       if (typeof window === 'undefined') return null;
+      // CR-2026-07-03-001 — with ?bustCache=1, skip cache-first paint entirely.
+      // We do NOT remove the stored blob here: the subsequent /api/config fetch
+      // will overwrite it via saveConfigToCache with fresh data. Removing here
+      // races with saveConfigToCache when multiple consumers call fetchConfig
+      // in parallel and left the entry empty in tests.
+      if (shouldBustCache()) return null;
       const seg = window.location.pathname.split('/').filter(Boolean)[0];
       if (!seg) return null;
       const raw = window.localStorage && localStorage.getItem(`restaurant_config_${seg}`);
@@ -197,9 +220,17 @@ export const RestaurantConfigProvider = ({ children }) => {
   const fetchConfig = useCallback(async (restaurantId) => {
     if (!restaurantId || restaurantId === configRestaurantId) return;
 
-    // Load from cache FIRST (instant brand colors)
-    const hasCached = loadConfigFromCache(restaurantId);
-    
+    // CR-2026-07-03-001 — if ?bustCache=1 is present, skip the cache-first
+    // paint so the stale blob can't flash before the network resolves.
+    // NOTE: purging the cache is done ONCE at mount by
+    // getInitialConfigFromCache. Do NOT purge here — a second consumer's
+    // removeItem() could race a concurrent saveConfigToCache() and leave
+    // the entry empty.
+    const bust = shouldBustCache();
+
+    // Load from cache FIRST (instant brand colors) — unless we're busting.
+    const hasCached = bust ? false : loadConfigFromCache(restaurantId);
+
     // Then fetch from API to get latest (in case config was updated)
     setConfigLoading(!hasCached); // Only show loading if no cache
     try {
