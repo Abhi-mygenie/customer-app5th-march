@@ -92,8 +92,11 @@ backend/seed_defaults.py
 backend/uploads/
 
 # ── Agent / dev artifacts ──
-memory/
-memory_repo/
+# CR-2026-07-03 — memory/ and memory_repo/ hold the project's change-request
+# registry, intake docs, and control dashboard. They MUST be tracked in git
+# so the operating prompt at memory/control/ and the CR history under
+# memory/change_requests/ are shared across contributors, not stashed on
+# individual containers. memory/test_credentials.md stays ignored (line 79).
 test_reports/
 test_result.md
 frontend/src/__tests__/
@@ -103,7 +106,9 @@ backend/tests/
 .emergent/
 
 # ── Root docs ──
-README.md
+# Match only the top-level README.md, not READMEs nested anywhere
+# (e.g. memory/change_requests/README.md must stay tracked).
+/README.md
 
 # Mobile development
 android-sdk/frontend/node_modules/.cache/default-development/0.pack
