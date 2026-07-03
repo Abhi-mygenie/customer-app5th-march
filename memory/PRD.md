@@ -23,7 +23,7 @@ Pull latest code from https://github.com/Abhi-mygenie/customer-app5th-march.git 
 ### `/app/backend/.env`
 | Key | Value | Notes |
 |---|---|---|
-| `MONGO_URL` | `mongodb://localhost:27017` | Local Mongo (change for prod/remote) |
+| `MONGO_URL` | `mongodb://mygenie_admin:***@52.66.232.149:27017/mygenie` | Shared MyGenie remote Mongo (per handover §5.1) |
 | `DB_NAME` | `mygenie` | From deployment handover |
 | `CORS_ORIGINS` | `*` | |
 | `JWT_SECRET` | **`REPLACE_WITH_STRONG_RANDOM_SECRET_openssl_rand_hex_32`** | ⚠️ Placeholder — user must replace |
