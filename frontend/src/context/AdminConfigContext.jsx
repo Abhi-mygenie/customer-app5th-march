@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
+import { useRestaurantDetails } from '../hooks/useMenuData';
 import toast from 'react-hot-toast';
 import { DEFAULT_THEME } from '../constants/theme';
 import logger from '../utils/logger';
@@ -148,7 +149,18 @@ export const AdminConfigProvider = ({ children }) => {
   const [originalConfig, setOriginalConfig] = useState(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [restaurantFlags, setRestaurantFlags] = useState({});
+
+  // CR-2026-07-03-002 — restaurantFlags now come from POS restaurant-info
+  // (same source the customer app already uses via useRestaurantDetails).
+  // Removes a dead 404 to /api/restaurant-info/{id} which was never
+  // implemented on the local backend.
+  const configId = user?.restaurant_id || user?.id || null;
+  const { restaurant: posRestaurant } = useRestaurantDetails(configId);
+  const restaurantFlags = useMemo(() => ({
+    is_loyalty:    posRestaurant?.is_loyalty,            // 'Yes' | other
+    is_coupon:     posRestaurant?.is_coupon,             // 'Yes' | other
+    multiple_menu: posRestaurant?.multiple_menu === 'Yes', // boolean
+  }), [posRestaurant]);
 
   // Check if config has unsaved changes
   const isDirty = JSON.stringify(config) !== JSON.stringify(originalConfig);
@@ -158,14 +170,14 @@ export const AdminConfigProvider = ({ children }) => {
     if (!user?.id || !token) return;
 
     const fetchConfig = async () => {
-      const configId = user.restaurant_id || user.id;
+      const cfgId = user.restaurant_id || user.id;
       setLoading(true);
 
       try {
-        const [configResponse, restaurantResponse] = await Promise.all([
-          fetch(`${API_URL}/api/config/${configId}`),
-          fetch(`${API_URL}/api/restaurant-info/${configId}`).catch(() => null)
-        ]);
+        // CR-2026-07-03-002 — dropped parallel fetch of the never-implemented
+        // /api/restaurant-info/{id}. Flags now come from useRestaurantDetails
+        // above.
+        const configResponse = await fetch(`${API_URL}/api/config/${cfgId}`);
 
         if (configResponse.ok) {
           const data = await configResponse.json();
@@ -174,15 +186,6 @@ export const AdminConfigProvider = ({ children }) => {
           const newConfig = { ...defaultConfig, ...data, extraInfoItems };
           setConfig(newConfig);
           setOriginalConfig(newConfig);
-        }
-
-        if (restaurantResponse?.ok) {
-          const restaurantData = await restaurantResponse.json();
-          setRestaurantFlags({
-            is_loyalty: restaurantData.is_loyalty,
-            is_coupon: restaurantData.is_coupon,
-            multiple_menu: restaurantData.multiple_menu === 'Yes',
-          });
         }
       } catch (error) {
         logger.error('admin', 'Failed to load admin config:', error);
