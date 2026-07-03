@@ -1,0 +1,126 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# IDE and editors
+.idea/
+.vscode/
+
+# Dependencies
+node_modules/
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Production builds
+/build
+dist/
+dist
+
+# Environment files (comprehensive coverage)
+
+*token.json*
+*credentials.json*
+
+# Logs and debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dump.rdb
+
+# System files
+.DS_Store
+*.pem
+
+# Python
+__pycache__/
+*pyc*
+venv/
+.venv/
+
+# Development tools
+chainlit.md
+.chainlit
+.ipynb_checkpoints/
+.ac
+
+# Deployment
+.vercel
+
+# Data and databases
+agenthub/agents/youtube/db
+
+# Archive files and large assets
+**/*.zip
+**/*.tar.gz
+**/*.tar
+**/*.tgz
+*.pack
+*.deb
+*.dylib
+
+# Build caches
+.cache/
+
+memory/test_credentials.md
+
+# ── CRITICAL: No docs in public (browser-downloadable) ──
+frontend/public/*.md
+frontend/public/*.xlsx
+
+# ── Stale DB exports & dangerous ops scripts ──
+backend/db_data/
+backend/db_export_new/
+backend/db_export.py
+backend/db_import.py
+backend/seed_demo_data.py
+backend/seed_defaults.py
+backend/uploads/
+
+# ── Agent / dev artifacts ──
+# CR-2026-07-03 — memory/ and memory_repo/ hold the project's change-request
+# registry, intake docs, and control dashboard. They MUST be tracked in git
+# so the operating prompt at memory/control/ and the CR history under
+# memory/change_requests/ are shared across contributors, not stashed on
+# individual containers. memory/test_credentials.md stays ignored (line 79).
+test_reports/
+test_result.md
+frontend/src/__tests__/
+backend/tests/
+
+# ── Platform config ──
+.emergent/
+
+# ── Root docs ──
+# Match only the top-level README.md, not READMEs nested anywhere
+# (e.g. memory/change_requests/README.md must stay tracked).
+/README.md
+
+# Mobile development
+android-sdk/frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/1.pack
+frontend/node_modules/.cache/default-development/3.pack
+frontend/node_modules/.cache/default-development/4.pack
+.env
+.env.*
+*.env
+credentials.json
+*.key
+.credentials
+frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/2.pack

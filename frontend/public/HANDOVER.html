@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Handover — MyGenie Customer App Production Investigations</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-alt: #1f2530;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #ffa657;          /* warm handover-orange */
+    --accent-2: #79c0ff;
+    --ok: #3fb950;
+    --warn: #f59e0b;
+    --danger: #f85149;
+    --code-bg: #010409;
+    --code-text: #a5d6ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.6; font-size: 15px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 48px 32px; }
+  header { border-bottom: 2px solid var(--border); padding-bottom: 28px; margin-bottom: 36px; }
+  header .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  header h1 { margin: 0 0 12px 0; font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+  header .meta { color: var(--text-dim); font-size: 14px; display: flex; flex-wrap: wrap; gap: 20px; }
+  header .meta strong { color: var(--text); }
+  h2 { font-size: 22px; color: #fff; margin-top: 40px; margin-bottom: 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h3 { font-size: 17px; color: var(--accent-2); margin-top: 26px; margin-bottom: 8px; }
+  h4 { font-size: 15px; color: var(--text); margin-top: 20px; margin-bottom: 6px; }
+  p { margin: 8px 0; }
+  code { background: var(--code-bg); color: var(--code-text); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; }
+  pre { background: var(--code-bg); color: var(--code-text); padding: 16px; border-radius: 8px; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; border: 1px solid var(--border); margin: 12px 0; }
+  .alert { padding: 16px 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid; }
+  .alert.danger { background: rgba(248, 81, 73, 0.1); border-color: var(--danger); }
+  .alert.warn   { background: rgba(245, 158, 11, 0.1); border-color: var(--warn); }
+  .alert.info   { background: rgba(121, 192, 255, 0.1); border-color: var(--accent-2); }
+  .alert.ok     { background: rgba(63, 185, 80, 0.1); border-color: var(--ok); }
+  .alert-title { font-weight: 700; margin-bottom: 6px; color: #fff; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface); border-radius: 8px; overflow: hidden; font-size: 14px; }
+  thead { background: var(--surface-alt); }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: rgba(255, 255, 255, 0.02); }
+  .num-cell { width: 40px; color: var(--accent); font-weight: 700; font-family: monospace; }
+  ul, ol { padding-left: 24px; margin: 8px 0; }
+  li { margin: 6px 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 14px 0; }
+  .card-title { font-weight: 700; color: var(--accent); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 4px; }
+  .b-p0 { background: rgba(248, 81, 73, 0.2); color: #ff9994; }
+  .b-p1 { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+  .b-p2 { background: rgba(121, 192, 255, 0.2); color: #a1cfff; }
+  .b-info { background: rgba(139, 148, 158, 0.2); color: var(--text-dim); }
+  .b-ok  { background: rgba(63, 185, 80, 0.2); color: #7ee787; }
+  .footnote { color: var(--text-dim); font-size: 13px; font-style: italic; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; white-space: pre; overflow-x: auto; color: var(--text); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 20px 0; }
+  .toc h3 { margin-top: 0; color: var(--accent); }
+  .toc ol { columns: 2; column-gap: 24px; }
+  @media (max-width: 720px) {
+    .container { padding: 24px 16px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .toc ol { columns: 1; }
+    header h1 { font-size: 24px; }
+  }
+  @media print {
+    body { background: #fff; color: #000; }
+    .container { max-width: 100%; padding: 20px; }
+    table, .card, pre, .alert, .flow, .toc { background: #fff; color: #000; border: 1px solid #ccc; }
+    th, td { border-color: #ccc; }
+    h1, h2, h3, h4 { color: #000; }
+    code { background: #f4f4f4; color: #c7254e; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="eyebrow">Handover Doc • Investigation continues here</div>
+  <h1>MyGenie Customer App — Production Investigation Handover</h1>
+  <div class="meta">
+    <span><strong>Session:</strong> HANDOVER-2026-01-atlas-and-storage</span>
+    <span><strong>Prepared by:</strong> E1 (previous session)</span>
+    <span><strong>For:</strong> Next agent (any role)</span>
+    <span><strong>Scope:</strong> 2 investigations + 1 plan, ~30 steps</span>
+  </div>
+</header>
+
+<div class="alert warn">
+  <div class="alert-title">Read this before you touch anything</div>
+  Two production incidents were investigated. <strong>NO CODE WAS WRITTEN</strong>. DB access is on a <strong>READ-ONLY user</strong>. Both incidents have confirmed root causes; one has a drafted plan awaiting owner sign-off; the other has 8 open unknowns for Ops. Sections §1 → §4 → §6 in that order are enough to route yourself.
+</div>
+
+<div class="toc">
+  <h3>Table of contents</h3>
+  <ol>
+    <li><a href="#s1">Facts a new agent must know FIRST</a></li>
+    <li><a href="#s2">Session narrative (chronological)</a></li>
+    <li><a href="#s3">Confirmed root causes</a></li>
+    <li><a href="#s4">UNKNOWNS — questions for next agent</a></li>
+    <li><a href="#s5">Deliverables produced this session</a></li>
+    <li><a href="#s6">Next actions by role</a></li>
+    <li><a href="#s7">Safety rules inherited</a></li>
+    <li><a href="#s8">What the next session must NOT do</a></li>
+    <li><a href="#s9">One-paragraph handoff</a></li>
+  </ol>
+</div>
+
+<!-- §1 -->
+<h2 id="s1">1. Facts a new agent must know FIRST</h2>
+
+<table>
+  <tbody>
+    <tr><td style="width:220px"><strong>Repo</strong></td><td><code>Abhi-mygenie/customer-app5th-march</code>, branch <code>main</code>, SHA <code>4f8b3f8</code></td></tr>
+    <tr><td><strong>Code location</strong></td><td><code>/app/</code></td></tr>
+    <tr><td><strong>Backend</strong></td><td>FastAPI single-file <code>/app/backend/server.py</code> (~1711 lines, 38 API routes)</td></tr>
+    <tr><td><strong>Frontend</strong></td><td>React 19 + CRA + CRACO, Yarn (NOT npm)</td></tr>
+    <tr><td><strong>DB</strong></td><td>MongoDB Atlas, cluster <code>atlas-bae2xm-shard-0</code> (project <code>xdqqdpi</code>), 3-node replica set</td></tr>
+    <tr><td><strong>DB name in use</strong></td><td><code>mygenie_db</code> (NOT <code>mygenie</code> — that DB exists empty)</td></tr>
+    <tr><td><strong>DB access</strong></td><td>READ-ONLY user <code>mygenie_mongo_readonly</code> — <span class="badge b-p0">Do NOT upgrade without owner OK</span></td></tr>
+    <tr><td><strong>Backend</strong></td><td>Running under supervisor. <code>sudo supervisorctl status</code> → RUNNING</td></tr>
+    <tr><td><strong>Shared DB</strong></td><td>Yes — CRM app (separate repo, PM2 pid 3 in prod) also reads/writes <code>mygenie_db</code></td></tr>
+    <tr><td><strong>Two prod hosts</strong></td><td><code>app.mygenie.online</code> and <code>socket.mygenie.online</code> — separate <code>uploads/</code> directories <span class="badge b-p0">Architecture concern</span></td></tr>
+    <tr><td><strong>Data loss?</strong></td><td>No DB-level loss. Only image blobs missing for 2 restaurants (709, 689).</td></tr>
+  </tbody>
+</table>
+
+<!-- §2 -->
+<h2 id="s2">2. Session narrative</h2>
+
+<h3>2.1 Phase A — Deployment Validation</h3>
+<p>Cloned repo, installed deps, verified backend compile + frontend prod build. Deliverable: <code>/app/DEPLOYMENT_HANDOVER.md</code>. Flagged 8 deploy blockers (JWT_SECRET rotation, CORS lockdown, uploads persistent volume, etc.).</p>
+
+<h3>2.2 Phase B — Investigation #1: Atlas failover 500</h3>
+<p>Files <code>e1.txt</code> (Customer App backend) and <code>e2.txt</code> (CRM out-log) analysed. Root cause = MongoDB Atlas replica set had <code>ReplicaSetNoPrimary</code> at 2026-07-02 21:17–21:49 IST. Backend has no resilience in <code>get_app_config</code> → HTTP 500 to first-time customers during any failover.</p>
+
+<h3>2.3 Phase C — Planning: Atlas Resilience</h3>
+<p><code>PLAN-2026-01-atlas-resilience</code> drafted (3 commits, 13 verification tests, 6 owner decisions). <strong>Awaiting owner sign-off on D1–D6.</strong> No code written.</p>
+
+<h3>2.4 Phase D — Investigation #2: "Themes are gone"</h3>
+<p>Owner reported prod theme loss. DB inspection proved <strong>no DB-level loss</strong>. Deep-dive on restaurant 709 (Young Monk Cafe) found theme intact but 3 image assets 404. Owner confirmed re-upload works. Comparative test on restaurant 698 → healthy. Owner asked about hosts → discovered <strong>split-storage island architecture</strong>: <code>app.mygenie.online</code> and <code>socket.mygenie.online</code> have separate disks, no rsync. All 31 admin uploads in DB live on <code>socket.mygenie.online</code>; zero on <code>app.mygenie.online</code>. Contradicts the current prod env intent.</p>
+
+<!-- §3 -->
+<h2 id="s3">3. Confirmed root causes</h2>
+
+<div class="card">
+  <div class="card-title">3.1 Atlas failover → HTTP 500</div>
+  <strong>Root:</strong> <code>readPreference=Primary()</code> + <code>serverSelectionTimeoutMS=30000</code> + no exception handling in <code>get_app_config</code> (server.py line 987).<br>
+  <strong>Trigger:</strong> any Atlas election / step-down / maintenance.<br>
+  <strong>Fix path:</strong> <code>PLAN-2026-01-atlas-resilience</code> is drafted. Awaiting approval.
+</div>
+
+<div class="card">
+  <div class="card-title">3.2 Split-storage island architecture <span class="badge b-p0">P0</span></div>
+  <strong>Root:</strong> Two prod hosts, each with a local <code>uploads/</code> dir, no shared storage, no rsync.<br>
+  <strong>Consequence:</strong> A URL saved by one host is only servable from that host. If either disk is wiped, or a host is decommissioned, files break.<br>
+  <strong>Evidence:</strong>
+  <pre>Uploads on socket.mygenie.online : 31 records; latest 2026-06-28 (rid=698)
+Uploads on app.mygenie.online    : 0 records — NEVER.
+Uploads on manage.mygenie.online : 0 records — NEVER.</pre>
+  <strong>Implication:</strong> the prod env <code>REACT_APP_BACKEND_URL=https://app.mygenie.online</code> has NEVER produced an upload. Strongly implies the admin panel is a <strong>separate codebase</strong> whose env still points at <code>socket.mygenie.online</code>.
+</div>
+
+<div class="card">
+  <div class="card-title">3.3 Double-slash URL bug <span class="badge b-info">Cosmetic</span></div>
+  <strong>Root:</strong> <code>AdminConfigContext.jsx:372</code> and <code>AdminSettings.jsx:190</code> do <code>${API_URL}${data.url}</code>. When env value ends with <code>/</code>, result is <code>host//api/uploads/...</code>. Nginx normalises; not blocking.
+</div>
+
+<div class="card">
+  <div class="card-title">3.4 Latent data-integrity issues</div>
+  <ul>
+    <li>No unique index on <code>restaurant_id</code>. 5 restaurants stored under both short (<code>"709"</code>) and long (<code>"pos_0001_restaurant_709"</code>) keys.</li>
+    <li>1 orphan doc with <code>restaurant_id=""</code>.</li>
+    <li>40/41 docs have <code>created_at=null</code>.</li>
+    <li>2 records point to Emergent preview URLs → dev preview environments had prod DB credentials (governance issue).</li>
+    <li>14 records point to <code>images.unsplash.com</code> (probably admins pasted stock images intentionally).</li>
+  </ul>
+</div>
+
+<!-- §4 -->
+<h2 id="s4">4. UNKNOWNS — questions next agent must resolve <span class="badge b-p0">Blocker</span></h2>
+
+<table>
+  <thead>
+    <tr><th class="num-cell">#</th><th>Question</th><th>Priority</th><th>How to answer</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="num-cell">Q1</td>
+      <td>Is the admin panel a separate codebase from this Customer App repo?</td>
+      <td><span class="badge b-p0">P0</span></td>
+      <td>Ask admin to open DevTools → Network → upload a test file → report target hostname.</td>
+    </tr>
+    <tr>
+      <td class="num-cell">Q2</td>
+      <td>Why did image files vanish for restaurants 709 & 689 while others (698, 716, 523) remain intact?</td>
+      <td><span class="badge b-p0">P0</span></td>
+      <td>File-system audit on <code>socket.mygenie.online</code> (see §6.1).</td>
+    </tr>
+    <tr>
+      <td class="num-cell">Q3</td>
+      <td>Was there an Atlas failover on 2026-07-02 21:17–21:49 IST?</td>
+      <td><span class="badge b-p1">P1</span></td>
+      <td>Atlas UI → Project → Activity Feed → filter timestamps.</td>
+    </tr>
+    <tr>
+      <td class="num-cell">Q4</td>
+      <td>When did prod env switch from <code>socket.mygenie.online</code> to <code>app.mygenie.online</code>?</td>
+      <td><span class="badge b-p1">P1</span></td>
+      <td>Deploy log / git history of the admin-panel repo's env file.</td>
+    </tr>
+    <tr>
+      <td class="num-cell">Q5</td>
+      <td>Is <code>/app/backend/uploads/</code> a persistent volume or ephemeral on each prod host?</td>
+      <td><span class="badge b-p0">P0</span></td>
+      <td><code>df -h /app/backend/uploads; mount | grep uploads</code> on each host.</td>
+    </tr>
+    <tr>
+      <td class="num-cell">Q6</td>
+      <td>Owner decisions D1–D6 for <code>PLAN-2026-01-atlas-resilience</code>.</td>
+      <td><span class="badge b-p1">P1</span></td>
+      <td>Owner sign-off. Recommended defaults in the plan doc.</td>
+    </tr>
+    <tr>
+      <td class="num-cell">Q7</td>
+      <td>Recovery approach for 709 & 689's lost files?</td>
+      <td><span class="badge b-p1">P1</span></td>
+      <td>(A) admin re-upload, (B) backup restore, or (C) null out fields. Owner picks.</td>
+    </tr>
+    <tr>
+      <td class="num-cell">Q8</td>
+      <td>Governance: 2 Emergent preview URLs leaked into prod DB. Which environment had prod credentials?</td>
+      <td><span class="badge b-p1">P1</span></td>
+      <td>Access review by Ops + policy change.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- §5 -->
+<h2 id="s5">5. Deliverables produced this session</h2>
+
+<h3>5.1 Files</h3>
+<table>
+  <thead><tr><th>Path</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>/app/DEPLOYMENT_HANDOVER.md</code></td><td>Deploy readiness (Phase A)</td></tr>
+    <tr><td><code>/app/frontend/public/INFRA_CHECKLIST.html</code></td><td>Ops infra checklist (Phase B)</td></tr>
+    <tr><td><code>/app/frontend/public/PLAN.html</code></td><td>Atlas resilience plan (Phase C)</td></tr>
+    <tr><td><code>/app/memory/change_requests/INV-2026-01-prod-logs-analysis/{e1.txt,e2.txt,INVESTIGATION_REPORT.md,INFRA_CHECKLIST.html}</code></td><td>Phase B evidence + report</td></tr>
+    <tr><td><code>/app/memory/change_requests/PLAN-2026-01-atlas-resilience/PLAN.md</code></td><td>Phase C plan</td></tr>
+    <tr><td><code>/app/memory/change_requests/INV-2026-01-prod-data-loss-themes/INVESTIGATION_REPORT.md</code></td><td>Phase D themes-gone report</td></tr>
+    <tr><td><strong><code>/app/memory/change_requests/HANDOVER-2026-01-atlas-and-storage.md</code></strong></td><td><strong>Markdown version of this doc</strong></td></tr>
+  </tbody>
+</table>
+
+<h3>5.2 Live URLs (only while this preview container is running)</h3>
+<ul>
+  <li><a style="color:var(--accent-2)" href="/INFRA_CHECKLIST.html">/INFRA_CHECKLIST.html</a> — Ops infra checklist</li>
+  <li><a style="color:var(--accent-2)" href="/PLAN.html">/PLAN.html</a> — Atlas resilience plan</li>
+  <li><a style="color:var(--accent-2)" href="/HANDOVER.html">/HANDOVER.html</a> — this document</li>
+</ul>
+
+<!-- §6 -->
+<h2 id="s6">6. Next actions by role</h2>
+
+<h3>6.1 For Ops / DBA <span class="badge b-info">No agent needed</span></h3>
+<ol>
+  <li>Answer Q3, Q4, Q5.</li>
+  <li>Run file-system audit on <code>socket.mygenie.online</code>:
+<pre>find / -name "46e9a0bc55274309b49a4c4b933b9c56.jpeg" 2>/dev/null
+find / -name "1490dd22d2d54cdc963ba3e061dc48a7.jpeg" 2>/dev/null
+grep -i "uploads" /var/log/syslog /var/log/messages 2>/dev/null | tail -50
+crontab -l -u root; crontab -l -u www-data
+systemctl list-timers --all | grep -Ei "clean|prune|log"
+ls /app/backend/uploads/ | wc -l
+df -h /app/backend/uploads/; mount | grep uploads</pre>
+  </li>
+  <li>Run same audit on <code>app.mygenie.online</code>.</li>
+  <li>Send prod backend logs (out + err) for 2026-07-02 21:17–21:49.</li>
+  <li>Send CRM <strong>err</strong> log for the same window (we only have the out log).</li>
+  <li>Confirm Atlas Activity Feed events at that timestamp.</li>
+  <li>Decide backup restore feasibility for 709 & 689.</li>
+</ol>
+
+<h3>6.2 For the next INVESTIGATION AGENT <span class="badge b-p0">Phase D continuation</span></h3>
+<ol>
+  <li>Once Q1 is answered — if admin panel is a separate codebase, STOP investigating within this repo. Escalate finding to Ops.</li>
+  <li>Once Q2 evidence available, append findings to <code>INV-2026-01-prod-data-loss-themes/INVESTIGATION_REPORT.md</code>.</li>
+  <li>Run <strong>link-checker sweep</strong> across all 41 restaurants' image URLs (~2 min work). Produces preemptive list of broken restaurants BEFORE they complain.</li>
+  <li>Verify the "single write test" — ask admin to upload a file, then re-query DB to see what host the new URL uses. Directly answers Q1.</li>
+  <li><strong>DO NOT</strong> run write operations against Atlas. Read-only user is a safety net.</li>
+</ol>
+
+<h3>6.3 For the next PLANNING AGENT</h3>
+<ol>
+  <li>Take <code>PLAN-2026-01-atlas-resilience/PLAN.md</code> as-is. Do NOT redraft.</li>
+  <li>Wait for owner sign-off on D1–D6.</li>
+  <li>New plan docs likely needed:
+    <ul>
+      <li><code>PLAN-2026-01-storage-consolidation</code> — rsync + DB backfill + decommission, OR S3/GCS migration.</li>
+      <li><code>PLAN-2026-01-restaurant-id-normalization</code> — rewrite long-form + empty-string keys, add unique index, dedupe.</li>
+    </ul>
+    Both HIGH risk (prod data). Both need explicit owner approval.
+  </li>
+</ol>
+
+<h3>6.4 For the next IMPLEMENTATION AGENT</h3>
+<ul>
+  <li>Do not skip Planning. Do not begin coding until <code>PLAN-2026-01-atlas-resilience</code> is APPROVED.</li>
+  <li>Hotspot files (<code>server.py</code>) → Fast Lane NOT eligible per system prompt §5.</li>
+  <li>All V1–V13 acceptance tests must pass before QA hand-off.</li>
+</ul>
+
+<!-- §7 -->
+<h2 id="s7">7. Safety rules inherited</h2>
+<p>From <code>/app/memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md</code>:</p>
+<ul>
+  <li><strong>R1</strong> Read first, then act — every step of this session was read-only DB inspection.</li>
+  <li><strong>R2</strong> Do not invent policy — every unknown was surfaced as an owner question.</li>
+  <li><strong>R3</strong> Verify state before change — no changes made.</li>
+  <li><strong>R4</strong> Scope lock — Planning doc declares files WILL / WILL NOT change.</li>
+  <li><strong>R5</strong> Every code change carries a bug/CR ID — N/A this session.</li>
+  <li><strong>R6</strong> Persistence — all findings in <code>/app/memory/change_requests/*</code>.</li>
+  <li><strong>R7</strong> Handover honesty — this doc marks CONFIRMED vs HYPOTHESIS vs UNKNOWN explicitly.</li>
+  <li><strong>R8</strong> No prod writes without owner approval — DB user is read-only.</li>
+  <li><strong>R9</strong> No cross-repo assumptions — CRM and possibly admin panel are separate.</li>
+</ul>
+
+<!-- §8 -->
+<h2 id="s8">8. What the next session must NOT do</h2>
+<div class="alert danger">
+<ul style="margin:0">
+  <li>DO NOT restart or reconfigure the DB. The empty <code>mygenie</code> DB on Atlas must be discussed with DBA before any action.</li>
+  <li>DO NOT modify <code>MONGO_URL</code> to use a write user for "quick fix" work. Escalate to owner.</li>
+  <li>DO NOT touch the empty <code>mygenie</code> DB — its existence is significant evidence.</li>
+  <li>DO NOT delete the two Emergent preview-URL records without owner OK — evidence for the governance investigation.</li>
+  <li>DO NOT invalidate the frontend cache-first pattern (<code>localStorage</code>) — customers rely on it.</li>
+  <li>DO NOT rsync anything between prod hosts without owner OK — Ops decision, not the agent's.</li>
+</ul>
+</div>
+
+<!-- §9 -->
+<h2 id="s9">9. One-paragraph handoff for a human on-caller</h2>
+<div class="alert info">
+Two production incidents were investigated by E1. <strong>Incident 1 (Atlas failover, 2026-07-02):</strong> the app returns HTTP 500 to first-time customers during any MongoDB Atlas primary election because <code>get_app_config</code> (server.py:987) has no resilience. Full plan is drafted at <code>PLAN-2026-01-atlas-resilience/PLAN.md</code>, awaiting owner sign-off on 6 questions. <strong>Incident 2 (themes gone for restaurants 709 & 689):</strong> the theme records are 100% intact in the DB; only the actual image files on <code>socket.mygenie.online</code> are gone. Re-uploading works. Deeper finding: the app has <strong>two prod backends with SEPARATE <code>uploads/</code> disks</strong> (<code>app.mygenie.online</code> and <code>socket.mygenie.online</code>) — a split-storage island architecture. Every single one of the 31 admin uploads in the entire DB lives on <code>socket.mygenie.online</code>; zero live on <code>app.mygenie.online</code> even though prod env <code>REACT_APP_BACKEND_URL=https://app.mygenie.online</code> is set. Strongly implies the admin panel is a separate codebase whose env is still on socket, so the env change never actually reached the write path. <strong>Next agent: do not code. First, get an admin to upload a test file and confirm which host the request lands on. Everything else follows from that answer.</strong>
+</div>
+
+<p class="footnote">
+Generated by E1. Read-only. No code written.<br>
+Full markdown at <code>/app/memory/change_requests/HANDOVER-2026-01-atlas-and-storage.md</code>.<br>
+Press <kbd>Ctrl / ⌘ + P</kbd> to save as PDF.
+</p>
+
+</div>
+</body>
+</html>

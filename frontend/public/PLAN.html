@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLAN-2026-01 — Atlas Resilience Hardening</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --surface: #1a2028;
+    --surface-alt: #232b36;
+    --border: #2d3748;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent: #a78bfa;
+    --accent-2: #38bdf8;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --ok: #10b981;
+    --code-bg: #0b0f14;
+    --code-text: #a5f3fc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.65; font-size: 15px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 48px 32px; }
+  header { border-bottom: 2px solid var(--border); padding-bottom: 24px; margin-bottom: 32px; }
+  header .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  header h1 { margin: 0 0 8px 0; font-size: 30px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+  header .meta { color: var(--text-dim); font-size: 14px; display: flex; flex-wrap: wrap; gap: 20px; }
+  header .meta strong { color: var(--text); }
+  h2 { font-size: 22px; color: #fff; margin-top: 40px; margin-bottom: 16px; padding-left: 12px; border-left: 4px solid var(--accent); }
+  h3 { font-size: 17px; color: var(--accent-2); margin-top: 28px; margin-bottom: 10px; }
+  h4 { font-size: 15px; color: var(--text); margin-top: 20px; margin-bottom: 6px; }
+  p { margin: 10px 0; }
+  code { background: var(--code-bg); color: var(--code-text); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; }
+  pre { background: var(--code-bg); color: var(--code-text); padding: 16px; border-radius: 8px; overflow-x: auto; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; border: 1px solid var(--border); margin: 12px 0; }
+  .alert { padding: 16px 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid; }
+  .alert.danger { background: rgba(239, 68, 68, 0.1); border-color: var(--danger); }
+  .alert.warn   { background: rgba(245, 158, 11, 0.1); border-color: var(--warn); }
+  .alert.info   { background: rgba(56, 189, 248, 0.1); border-color: var(--accent-2); }
+  .alert.ok     { background: rgba(16, 185, 129, 0.1); border-color: var(--ok); }
+  .alert-title { font-weight: 700; margin-bottom: 6px; color: #fff; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; background: var(--surface); border-radius: 8px; overflow: hidden; font-size: 14px; }
+  thead { background: var(--surface-alt); }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: rgba(255, 255, 255, 0.02); }
+  .num-cell { width: 40px; color: var(--accent); font-weight: 700; font-family: monospace; }
+  .risk { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .r-critical { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+  .r-high { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+  .r-medium { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; }
+  .r-low { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+  ul, ol { padding-left: 24px; margin: 10px 0; }
+  li { margin: 6px 0; }
+  .decision-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+  .decision-card .did { color: var(--accent); font-weight: 700; margin-bottom: 6px; font-size: 13px; letter-spacing: 1px; }
+  .decision-card .rec { color: var(--ok); font-weight: 600; font-size: 13px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+  .footnote { color: var(--text-dim); font-size: 13px; font-style: italic; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; white-space: pre; overflow-x: auto; color: var(--text); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 4px; background: var(--surface-alt); color: var(--text-dim); }
+  @media (max-width: 720px) {
+    .container { padding: 24px 16px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    header h1 { font-size: 22px; }
+  }
+  @media print {
+    body { background: #fff; color: #000; }
+    .container { max-width: 100%; padding: 20px; }
+    table, .decision-card, pre, .alert, .flow { background: #fff; color: #000; border: 1px solid #ccc; }
+    th, td { border-color: #ccc; }
+    h1, h2, h3, h4 { color: #000; }
+    code { background: #f4f4f4; color: #c7254e; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="eyebrow">Planning Doc • Role 2 • Awaiting Owner Approval</div>
+  <h1>PLAN-2026-01 — Atlas Resilience Hardening</h1>
+  <div class="meta">
+    <span><strong>Parent:</strong> INV-2026-01-prod-logs-analysis</span>
+    <span><strong>Target:</strong> Customer App backend</span>
+    <span><strong>Risk:</strong> <span class="risk r-high">High</span></span>
+    <span><strong>Est. effort:</strong> 2.5 h wall-clock post-approval</span>
+    <span><strong>Fast Lane:</strong> NOT eligible</span>
+  </div>
+</header>
+
+<div class="alert info">
+  <div class="alert-title">Purpose</div>
+  Make the Customer App survive a MongoDB Atlas primary loss without returning 500 to end users. Two-tier fix:
+  a connection-string change (env-only, 1 line, immediate) and a small resilient wrapper around <code>GET /api/config/{restaurant_id}</code> (~60 LOC, additive). No frontend changes, no schema changes, no dependency changes.
+</div>
+
+<h2>1. Impact Analysis</h2>
+
+<h3>1.1 What is affected</h3>
+<table>
+  <thead><tr><th>Area</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr><td>Motor client init (server.py L22-25)</td><td>Timeout / read-preference / retry flags applied via <code>MONGO_URL</code> query string — no Python API change needed.</td></tr>
+    <tr><td><code>get_app_config</code> (L984-1106)</td><td>Body rewritten to use a resilient helper that falls back cache → default block. Response schema unchanged.</td></tr>
+    <tr><td>Every other DB endpoint (37)</td><td><strong>Implicit benefit only</strong> — they now fail fast in 5 s instead of 30 s. No per-endpoint changes in this plan.</td></tr>
+    <tr><td>Frontend</td><td><strong>No change.</strong> Existing localStorage config cache continues to work.</td></tr>
+    <tr><td><code>requirements.txt</code></td><td><strong>No change.</strong> Zero new dependencies.</td></tr>
+    <tr><td>New health endpoints</td><td><code>GET /api/health/live</code> and <code>GET /api/health/ready</code> added — separate from existing <code>GET /api/</code>.</td></tr>
+  </tbody>
+</table>
+
+<h3>1.2 Data flow — before vs. after (customer landing → config read)</h3>
+
+<h4>Before</h4>
+<div class="flow">Browser: GET /api/config/716
+  ↓
+FastAPI → await db.customer_app_config.find_one(...)
+  ↓
+Motor / PyMongo → topology.select_server(Primary())
+  ↓
+  ⌛ 30 s (no primary available during failover)
+  ↓
+ServerSelectionTimeoutError  ← unhandled
+  ↓
+HTTP 500 → red screen for the customer
+</div>
+
+<h4>After</h4>
+<div class="flow">Browser: GET /api/config/716
+  ↓
+FastAPI → _get_config_resilient(716)
+  ↓
+Motor with readPreference=secondaryPreferred, timeout=5s
+  ↓
+  ├── DB reachable → return live config, header X-Config-Source: db
+  ├── DB down + in-process cache HIT (&lt; 60s old) → return cached, X-Config-Source: cache
+  └── DB down + no cache → return inline defaults, X-Config-Source: default
+  ↓
+HTTP 200 in ≤5 s → customer sees app render
+</div>
+
+<h3>1.3 Risk classification &amp; scope lock</h3>
+<div class="alert warn">
+  <div class="alert-title">Declared risk: HIGH</div>
+  Reversible in seconds (env change) or minutes (git revert). Auth-adjacent (touches shared Motor client). Hotspot file (<code>server.py</code>). Fast Lane NOT eligible. Regression tests mandatory (V1–V13 below).
+</div>
+
+<h4>Files WILL change</h4>
+<ul>
+  <li><code>/app/backend/server.py</code> — Motor init, new <code>_get_config_resilient</code>, rewrite of <code>get_app_config</code>, two new health endpoints. ~+80 LOC / ~-110 LOC net (inline defaults extracted).</li>
+  <li><code>/app/backend/.env</code> (prod + UAT) — append query string to <code>MONGO_URL</code>.</li>
+  <li><code>/app/memory_repo/BUG_TRACKER_v2.md</code> — add BUG-011 entry.</li>
+</ul>
+
+<h4>Files WILL NOT touch <span class="tag">Scope-lock</span></h4>
+<ul>
+  <li>Frontend (any file)</li>
+  <li><code>backend/requirements.txt</code></li>
+  <li>Any auth / JWT / bcrypt code</li>
+  <li>Any other endpoint's business logic</li>
+  <li>Database schemas / data</li>
+  <li>CRM repo (recommendation only)</li>
+</ul>
+
+<h2>2. Owner decisions required (before Implementation starts)</h2>
+
+<div class="decision-card">
+  <div class="did">D1 — Read preference for config reads</div>
+  Choose one:
+  <ul>
+    <li>(a) <code>secondaryPreferred</code> — best availability, ≤1s stale possible</li>
+    <li>(b) <code>primaryPreferred</code> — freshest, still fails when no primary</li>
+    <li>(c) <code>primary</code> — least resilient (current default)</li>
+  </ul>
+  <div class="rec">Recommendation: (a) secondaryPreferred. Restaurant config tolerates 1s staleness; frontend already invalidates cache on admin save.</div>
+</div>
+
+<div class="decision-card">
+  <div class="did">D2 — Same read preference for other customer reads (orders, wallet, profile)?</div>
+  <ul>
+    <li>(a) Yes — apply URI-level, uniform</li>
+    <li>(b) No — keep primary for customer-specific reads</li>
+  </ul>
+  <div class="rec">Recommendation: (a) uniform. Simpler operationally. Rare staleness is acceptable for order-status displays; the frontend re-polls anyway.</div>
+</div>
+
+<div class="decision-card">
+  <div class="did">D3 — In-process TTL cache for config?</div>
+  <ul>
+    <li>(a) Add small 60-second in-process cache</li>
+    <li>(b) Skip — rely only on secondaryPreferred</li>
+    <li>(c) Add Redis (out of scope; needs new infra)</li>
+  </ul>
+  <div class="rec">Recommendation: (a). Zero infra cost. Survives the rare case where all 3 replica-set nodes are Unknown.</div>
+</div>
+
+<div class="decision-card">
+  <div class="did">D4 — Register as BUG-011 in the bug tracker?</div>
+  <ul>
+    <li>(a) Yes — register (traceability)</li>
+    <li>(b) No — treat as pure infra ticket</li>
+  </ul>
+  <div class="rec">Recommendation: (a). We are changing code; needs registry linkage per §10 of the system prompt.</div>
+</div>
+
+<div class="decision-card">
+  <div class="did">D5 — Rollout order</div>
+  <ul>
+    <li>(a) Env change to prod first (safe); code 24h later</li>
+    <li>(b) Both together in one deploy</li>
+    <li>(c) Staging (UAT) first, then prod env change, then prod code change</li>
+  </ul>
+  <div class="rec">Recommendation: (c). UAT validates the env-flag syntax (single-node Mongo silently ignores replica-specific flags — good sanity check).</div>
+</div>
+
+<div class="decision-card">
+  <div class="did">D6 — Send recommendation to CRM team?</div>
+  <ul>
+    <li>(a) Yes — draft included in §4 of this plan</li>
+    <li>(b) No — out of scope</li>
+  </ul>
+  <div class="rec">Recommendation: (a). Same shared DB; shared benefit if they apply the same URI flags. Zero code work on their side.</div>
+</div>
+
+<h2>3. Implementation Plan (3 commits)</h2>
+
+<h3>C1 — Environment hardening (env only) <span class="risk r-low">Low risk</span></h3>
+<p>Append this query string to <code>MONGO_URL</code> in prod and UAT <code>.env</code>:</p>
+<pre>?readPreference=secondaryPreferred
+&amp;retryReads=true
+&amp;retryWrites=true
+&amp;serverSelectionTimeoutMS=5000
+&amp;connectTimeoutMS=5000
+&amp;socketTimeoutMS=20000
+&amp;w=majority
+&amp;appName=customer-app5th-march</pre>
+
+<table>
+  <thead><tr><th>Param</th><th>Value</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>readPreference</code></td><td><code>secondaryPreferred</code></td><td>Reads succeed during primary election (D1)</td></tr>
+    <tr><td><code>retryReads</code></td><td><code>true</code></td><td>Motor default; make explicit</td></tr>
+    <tr><td><code>retryWrites</code></td><td><code>true</code></td><td>One-time write retry on retryable error</td></tr>
+    <tr><td><code>serverSelectionTimeoutMS</code></td><td><code>5000</code></td><td>Fail-fast in 5s (was 30s) — biggest UX win</td></tr>
+    <tr><td><code>connectTimeoutMS</code></td><td><code>5000</code></td><td>Initial socket connect fail-fast</td></tr>
+    <tr><td><code>socketTimeoutMS</code></td><td><code>20000</code></td><td>Long-running queries not killed prematurely</td></tr>
+    <tr><td><code>w</code></td><td><code>majority</code></td><td>Durability guarantee for writes</td></tr>
+    <tr><td><code>appName</code></td><td><code>customer-app5th-march</code></td><td>Shows in Atlas Performance Advisor / connection graph so DBA can distinguish this app's traffic from CRM's — <strong>critical for shared-DB visibility.</strong></td></tr>
+  </tbody>
+</table>
+
+<h3>C2 — Resilient config endpoint + LRU cache <span class="risk r-high">High risk</span></h3>
+<p>Sketch (pseudo — not code):</p>
+<pre>_CONFIG_CACHE: Dict[str, Tuple[dict, float]] = {}
+_CONFIG_CACHE_TTL_SECONDS = 60
+
+def _default_config_block(restaurant_id: str) -&gt; dict:
+    # extracted verbatim from current lines 993-1104
+    return { "restaurant_id": restaurant_id, "showLogo": True, ... }
+
+async def _get_config_resilient(restaurant_id: str) -&gt; Tuple[dict, str]:
+    """Returns (config, source) where source ∈ {'db','cache','default'}."""
+    now = time.monotonic()
+    try:
+        cfg = await db.customer_app_config.find_one({"restaurant_id": restaurant_id}, {"_id": 0})
+        if cfg is None:
+            cfg = _default_config_block(restaurant_id)
+        _CONFIG_CACHE[restaurant_id] = (cfg, now)
+        return cfg, "db"
+    except PyMongoError as e:
+        logging.warning(f"[atlas-resilience] Mongo error restaurant_id={restaurant_id}: {type(e).__name__}")
+
+    if restaurant_id in _CONFIG_CACHE:
+        cached, cached_at = _CONFIG_CACHE[restaurant_id]
+        if now - cached_at &lt; _CONFIG_CACHE_TTL_SECONDS:
+            return cached, "cache"
+
+    return _default_config_block(restaurant_id), "default"
+
+@config_router.get("/{restaurant_id}")
+async def get_app_config(restaurant_id: str, response: Response):
+    cfg, source = await _get_config_resilient(restaurant_id)
+    response.headers["X-Config-Source"] = source
+    return cfg</pre>
+
+<h3>C3 — Health endpoints <span class="risk r-low">Low risk</span></h3>
+<pre>@app.get("/api/health/live")
+async def health_live():
+    return {"status": "ok"}
+
+@app.get("/api/health/ready")
+async def health_ready():
+    try:
+        await asyncio.wait_for(client.admin.command("ping"), timeout=2.0)
+        return {"status": "ok", "db": "reachable"}
+    except Exception as e:
+        return JSONResponse(status_code=503,
+            content={"status": "degraded", "db": "unreachable", "reason": type(e).__name__})</pre>
+
+<h2>4. Verification Matrix (V1–V13)</h2>
+<table>
+  <thead>
+    <tr><th class="num-cell">#</th><th>Test</th><th>Expected</th><th>Blocker?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num-cell">V1</td><td>Backend starts after change</td><td><code>python -c "import server"</code> OK; <code>/api/</code> returns 200</td><td>Yes</td></tr>
+    <tr><td class="num-cell">V2</td><td>Config happy path — Atlas healthy</td><td>200 + full config + <code>X-Config-Source: db</code></td><td>Yes</td></tr>
+    <tr><td class="num-cell">V3</td><td>Unknown restaurant</td><td>200 + default block + <code>X-Config-Source: db</code></td><td>Yes</td></tr>
+    <tr><td class="num-cell">V4</td><td>DB unreachable (bogus <code>MONGO_URL</code>)</td><td>200 + default block + <code>X-Config-Source: default</code>, response ≤ 6 s, log line <code>[atlas-resilience]</code></td><td>Yes</td></tr>
+    <tr><td class="num-cell">V5</td><td>DB unreachable but cache warm</td><td>200 + cached config + <code>X-Config-Source: cache</code></td><td>Yes</td></tr>
+    <tr><td class="num-cell">V6</td><td>Cache expires after 60 s</td><td>Falls back to <code>default</code> after TTL</td><td>No (design check)</td></tr>
+    <tr><td class="num-cell">V7</td><td>Write endpoint with DB down</td><td>Fails cleanly in ≤ 5 s (not 30 s)</td><td>Yes</td></tr>
+    <tr><td class="num-cell">V8</td><td>Other read endpoints fail fast</td><td>≤ 5 s response even during DB outage</td><td>Yes</td></tr>
+    <tr><td class="num-cell">V9</td><td>Health endpoints</td><td><code>/live</code>=200 always; <code>/ready</code>=200/503 by DB state</td><td>Yes</td></tr>
+    <tr><td class="num-cell">V10</td><td>UAT boots with new URI flags</td><td>Single-node Mongo silently ignores replica-specific flags; app works</td><td>Yes</td></tr>
+    <tr><td class="num-cell">V11</td><td>Active CRs still work (OTP skip, non-QR block)</td><td>Smoke pass</td><td>Yes</td></tr>
+    <tr><td class="num-cell">V12</td><td>Response schema unchanged</td><td>Byte-identical JSON (headers aside)</td><td>Yes</td></tr>
+    <tr><td class="num-cell">V13</td><td>Frontend integration</td><td>Landing renders identically; RestaurantConfigContext receives same fields</td><td>Yes</td></tr>
+  </tbody>
+</table>
+
+<h2>5. Rollback plan</h2>
+<div class="grid-2">
+  <div class="decision-card">
+    <div class="did">C1 rollback (env)</div>
+    Remove query string, restart backend. Immediate. Previous 30-second timeout restored.
+  </div>
+  <div class="decision-card">
+    <div class="did">C2 + C3 rollback (code)</div>
+    <code>git revert &lt;commit&gt;</code> — original <code>get_app_config</code> restored. No data change, no migration.
+  </div>
+</div>
+
+<h2>6. Cross-team note — for the CRM team</h2>
+<div class="alert ok">
+  <div class="alert-title">Zero-code change for CRM (only if D6=a)</div>
+  Recommend the CRM team appends the same query string to their <code>MONGO_URL</code> (their own <code>.env</code>), swapping <code>appName=crm-backend</code>. Benefits: same 5-second fail-fast behavior; DBA can distinguish CRM traffic from Customer App traffic in Atlas Performance Advisor.<br><br>
+  <strong>What we do NOT commit them to:</strong> any code work. Their application-level fallback is a decision for the CRM team.
+</div>
+
+<h2>7. Backlog (deferred, out of scope for this plan)</h2>
+<ol>
+  <li>Per-endpoint try/except + typed error responses for the 37 non-config endpoints. → BACKLOG P2</li>
+  <li>Prometheus/OpenTelemetry metrics on cache hit/miss + Atlas failover events. → BACKLOG P3</li>
+  <li>Redis-backed shared cache. → BACKLOG P3</li>
+  <li>Circuit breaker library (<code>aiocircuitbreaker</code>) around Motor client. → BACKLOG P2</li>
+  <li>Structured logging + request correlation IDs. → BACKLOG P2</li>
+  <li>Motor 3.4+ / PyMongo 4.6+ upgrade (better failover semantics). → BACKLOG P3</li>
+  <li>Atlas Private Endpoint / VPC peering. → OPS BACKLOG</li>
+</ol>
+
+<h2>8. Compact Role-2 output</h2>
+<pre>Planning complete: PLAN-2026-01-atlas-resilience
+Stage: Impact Analysis + Implementation Plan
+Code reality: PARTIAL — target code exists (server.py:22-25, 984-1106); no resilience code exists.
+Risk: HIGH (touches hotspot file server.py + prod env; no auth/security/data-loss changes)
+Files WILL change:
+  - /app/backend/server.py
+  - /app/backend/.env (prod + UAT)
+  - /app/memory_repo/BUG_TRACKER_v2.md (add BUG-011)
+Files WILL NOT touch:
+  - Frontend (any file)
+  - backend/requirements.txt
+  - Auth / JWT / bcrypt code
+  - Any other endpoint's business logic
+  - Database schemas
+  - CRM repo (recommendation only)
+Owner decisions surfaced: D1..D6 (recommended defaults provided)
+Next: OWNER APPROVAL required to move to IMPLEMENTATION.
+      Technical blockers: none. Blocker: pending owner sign-off on D1..D6.</pre>
+
+<p class="footnote">
+Generated by E1 in PLANNING role (Role 2). No code has been written.<br>
+Full markdown version at <code>/app/memory/change_requests/PLAN-2026-01-atlas-resilience/PLAN.md</code>.<br>
+Print-friendly — press <kbd>Ctrl / ⌘ + P</kbd> to save as PDF.
+</p>
+
+</div>
+</body>
+</html>
