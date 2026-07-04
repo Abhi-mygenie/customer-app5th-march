@@ -42,7 +42,7 @@ with status `⚰️ TOMBSTONE`, pointing at the successor ID. Do not delete or r
 
 | ID | Title | Status | Priority | Files | Effort | Owner action needed |
 |---|---|---|---|---|---|---|
-| [CR-2026-07-03-000](./CR-2026-07-03-000-remove-hardcoded-login-creds/CR.md) | Remove hardcoded `REACT_APP_LOGIN_PHONE/PASSWORD` from bundle | 📝 REGISTERED | **P1 security** | 3-5 FE | 2-3 hrs | approve refactor path + rotate leaked creds |
+| [CR-2026-07-03-000](./CR-2026-07-03-000-remove-hardcoded-login-creds/CR.md) | Remove hardcoded POS login credentials from frontend bundle (Option 1 — FastAPI proxy for token issuance) | 📋 PLANNED (Role 6+2 done; Role 3 gated on D-01..D-04 + CRM rotation) | **P1 security** | 4 (2 FE + 2 BE incl. `.env`) | ~2.5 hrs code + rotation | approve D-01..D-04 in [CR.md §6](./CR-2026-07-03-000-remove-hardcoded-login-creds/CR.md#6-owner-decisions) |
 | [CR-2026-07-03-001](./CR-2026-07-03-001-theme-cache-busting/CR.md) | Theme cache busting (`?bustCache=1`) | ✅ SHIPPED | P1 | 1 FE | done | ops broadcasting to team |
 | [CR-2026-07-03-002](./CR-2026-07-03-002-remove-dead-restaurant-info-fetch/CR.md) | Remove dead `/api/restaurant-info/{id}` fetch | 🚧 IMPLEMENTED (QA-pending) | P3 | 1 FE | done | admin QA on VisibilityTab + Dietary |
 | [CR-2026-07-03-003](./CR-2026-07-03-003-backend-mongo-timeouts-and-healthz/CR.md) | Backend Mongo timeouts + `/api/healthz` | ✅ SHIPPED | P1 | 1 BE | done | ops points probe (see CR-009) |
@@ -54,6 +54,8 @@ with status `⚰️ TOMBSTONE`, pointing at the successor ID. Do not delete or r
 | [CR-2026-07-03-008](./CR-2026-07-03-008-prod-db-data-quality/CR.md) | Prod DB data quality remediation | 📝 REGISTERED (DATA) | P2 | 0 code | half-day + owner cross-check | approve seed/archive strategy |
 | [CR-2026-07-03-009](./CR-2026-07-03-009-observability-and-lb-probe/CR.md) | Observability + LB probe wiring (post CR-003) | 📝 REGISTERED | P1 (F-13), P3 (F-12) | 0-1 files | 30 min-2 hrs | ops points probe at `/api/healthz` |
 | [CR-2026-07-03-010](./CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/CR.md) | Registry hygiene & ID-scheme canonicalization (BUG-NNN vs CR-YYYY-MM-DD-NNN; tombstones; stale BUG_TRACKER_v2) | ✅ SHIPPED | P2 | 6 MD (docs-only) | ~45 min | none (owner-approved defaults executed 2026-07-03) |
+| [CR-2026-07-03-011](./CR-2026-07-03-011-full-pos-proxy-refactor/CR.md) | Full POS-proxy refactor (proxy ALL POS write calls through FastAPI; remediates BUG-001/BUG-002) | 📝 REGISTERED (Role 1 done) | P1 | ~15 files (BE+FE) | 2.5–3.5 dev-days | CR-000 SHIPPED + INV-001 COMPLETE + D-01..D-04 |
+| [CR-2026-07-03-012](./CR-2026-07-03-012-leaked-cred-doc-scrub-and-ci-lint/CR.md) | Leaked-credential doc scrub (18 files) + CI lint rule for `REACT_APP_*_PASSWORD/SECRET/TOKEN` | 📝 REGISTERED (Role 1 done) | P2 | 18 MD + 1 FE comment + 1 new CI script | ~1.5 hrs | approve D-01..D-04 + CRM rotation timing |
 
 ## ID convention (per operating prompt §ID Format line 1364 + repo precedent)
 
@@ -105,8 +107,10 @@ CR-009 ── depends on CR-003 (shipped) — just needs ops wiring
 | INV-001 | ✅ | ✅ | — | — |
 | CR-007 | ✅ | ✅ | — | — |
 | CR-008 | ✅ | ✅ | — | — |
-| CR-009 | ✅ | ✅ | — | — |
+| CR-000 | ✅ | ✅ | ✅ (FINDINGS + IMPACT + PLAN) | — |
 | CR-010 | ✅ | ✅ | ✅ (IMPACT + PLAN) | ✅ |
+| CR-011 | ✅ | ✅ | — | — |
+| CR-012 | ✅ | ✅ | — | — |
 
 ## What this registry is NOT
 
@@ -117,9 +121,9 @@ CR-009 ── depends on CR-003 (shipped) — just needs ops wiring
 ## Session shipping summary
 
 - **Session date:** 2026-07-03
-- **Items raised:** 11 (10 CR + 1 INV; CR-006 tombstoned in favour of INV-2026-07-03-001)
+- **Items raised:** 13 (12 CR + 1 INV; CR-006 tombstoned in favour of INV-2026-07-03-001)
 - **Shipped (code merged + self-tested):** 3 (001, 002, 003)
 - **Shipped (docs-only, self-tested):** 1 (010 — registry hygiene per CR-2026-07-03-010)
-- **Planned only:** 3 (004, 005, INV-001)
-- **Registered / DATA / ops:** 4 (000, 007, 008, 009)
-- **Process compliance:** Role 1 (INTAKE) was skipped initially; retroactively remediated on 2026-07-03 by adding INTAKE_DOC.md to each folder and renaming CR-006 → INV-2026-07-03-001 to match repo convention. Full ID-scheme canonicalization performed by CR-2026-07-03-010 (see `CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/`).
+- **Planned (Role 2 complete, awaiting owner approval / prereqs):** 4 (000, 004, 005, INV-001)
+- **Registered / DATA / ops / follow-up:** 5 (007, 008, 009, 011, 012)
+- **Process compliance:** Role 1 (INTAKE) was skipped initially; retroactively remediated on 2026-07-03 by adding INTAKE_DOC.md to each folder and renaming CR-006 → INV-2026-07-03-001 to match repo convention. Full ID-scheme canonicalization performed by CR-2026-07-03-010 (see `CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/`). CR-000 upgraded from stub to full Role 6 investigation + Role 2 plan; CR-011 (full POS proxy) and CR-012 (doc scrub + CI lint) filed as its architectural + hygiene follow-ups.
