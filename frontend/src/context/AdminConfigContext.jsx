@@ -4,6 +4,7 @@ import { useRestaurantDetails } from '../hooks/useMenuData';
 import toast from 'react-hot-toast';
 import { DEFAULT_THEME } from '../constants/theme';
 import logger from '../utils/logger';
+import fetchWithTimeout from '../utils/fetchWithTimeout'; // CR-2026-07-03-004
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -177,7 +178,8 @@ export const AdminConfigProvider = ({ children }) => {
         // CR-2026-07-03-002 — dropped parallel fetch of the never-implemented
         // /api/restaurant-info/{id}. Flags now come from useRestaurantDetails
         // above.
-        const configResponse = await fetch(`${API_URL}/api/config/${cfgId}`);
+        // CR-2026-07-03-004 — 8 s read timeout on initial config load.
+        const configResponse = await fetchWithTimeout(`${API_URL}/api/config/${cfgId}`);
 
         if (configResponse.ok) {
           const data = await configResponse.json();
@@ -189,7 +191,14 @@ export const AdminConfigProvider = ({ children }) => {
         }
       } catch (error) {
         logger.error('admin', 'Failed to load admin config:', error);
-        toast.error('Failed to load configuration');
+        if (error && error.name === 'TimeoutError') {
+          toast('Some restaurant details are taking a moment to update.', {
+            duration: 5000,
+            id: 'timeout-error-config-toast', // CR-2026-07-03-004 D-05
+          });
+        } else {
+          toast.error('Failed to load configuration');
+        }
       } finally {
         setLoading(false);
       }

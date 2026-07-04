@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { DEFAULT_THEME } from '../constants/theme';
 import logger from '../utils/logger';
+import toast from 'react-hot-toast';
+import fetchWithTimeout from '../utils/fetchWithTimeout'; // CR-2026-07-03-004
 
 const RestaurantConfigContext = createContext(null);
 
@@ -234,7 +236,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     // Then fetch from API to get latest (in case config was updated)
     setConfigLoading(!hasCached); // Only show loading if no cache
     try {
-      const response = await fetch(`${API_URL}/api/config/${restaurantId}`);
+      const response = await fetchWithTimeout(`${API_URL}/api/config/${restaurantId}`); // CR-2026-07-03-004 — 8 s read
       if (response.ok) {
         const data = await response.json();
         setConfig({ ...DEFAULT_CONFIG, ...data });
@@ -244,6 +246,14 @@ export const RestaurantConfigProvider = ({ children }) => {
       }
     } catch (error) {
       logger.error('menu', 'Failed to fetch restaurant config:', error);
+      // CR-2026-07-03-004 D-05 — non-blocking toast for background config timeout.
+      // aria-live=polite semantics handled by react-hot-toast internally.
+      if (error && error.name === 'TimeoutError') {
+        toast('Some restaurant details are taking a moment to update.', {
+          duration: 5000,
+          id: 'timeout-error-config-toast', // dedup key = data-testid
+        });
+      }
     } finally {
       setConfigLoading(false);
     }
@@ -263,7 +273,7 @@ export const RestaurantConfigProvider = ({ children }) => {
     // 3. Re-fetch from API
     setConfigLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/config/${restaurantId}`);
+      const response = await fetchWithTimeout(`${API_URL}/api/config/${restaurantId}`); // CR-2026-07-03-004 — 8 s read
       if (response.ok) {
         const data = await response.json();
         setConfig({ ...DEFAULT_CONFIG, ...data });
@@ -273,6 +283,12 @@ export const RestaurantConfigProvider = ({ children }) => {
       }
     } catch (error) {
       logger.error('menu', 'Failed to refresh restaurant config:', error);
+      if (error && error.name === 'TimeoutError') {
+        toast('Some restaurant details are taking a moment to update.', {
+          duration: 5000,
+          id: 'timeout-error-config-toast',
+        });
+      }
     } finally {
       setConfigLoading(false);
     }

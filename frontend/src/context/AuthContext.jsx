@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { crmGetProfile } from '../api/services/crmService';
 import logger from '../utils/logger';
+import fetchWithTimeout, { DEFAULT_WRITE_TIMEOUT_MS } from '../utils/fetchWithTimeout'; // CR-2026-07-03-004
 const AuthContext = createContext(null);
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -37,9 +38,9 @@ export const AuthProvider = ({ children }) => {
       const storedAdminToken = localStorage.getItem('auth_token');
       if (storedAdminToken) {
         try {
-          const response = await fetch(`${API_URL}/api/auth/me`, {
+          const response = await fetchWithTimeout(`${API_URL}/api/auth/me`, {
             headers: { 'Authorization': `Bearer ${storedAdminToken}` }
-          });
+          }); // CR-2026-07-03-004 — 8 s read timeout
           const contentType = response.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
             setLoading(false);
@@ -142,11 +143,11 @@ export const AuthProvider = ({ children }) => {
       body.pos_id = restaurantContext.pos_id || "0001";
     }
 
-    const response = await fetch(`${API_URL}/api/auth/login`, {
+    const response = await fetchWithTimeout(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
-    });
+    }, DEFAULT_WRITE_TIMEOUT_MS); // CR-2026-07-03-004 — 15 s write timeout
 
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
@@ -217,11 +218,11 @@ export const AuthProvider = ({ children }) => {
       body.pos_id = restaurantContext.pos_id || "0001";
     }
     
-    const response = await fetch(`${API_URL}/api/auth/send-otp`, {
+    const response = await fetchWithTimeout(`${API_URL}/api/auth/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
-    });
+    }, DEFAULT_WRITE_TIMEOUT_MS); // CR-2026-07-03-004 — 15 s write timeout
 
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {

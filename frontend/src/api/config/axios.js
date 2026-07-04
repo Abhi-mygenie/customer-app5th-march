@@ -13,20 +13,35 @@ if (!process.env.REACT_APP_API_BASE_URL) {
   logger.error('api', 'CRITICAL: REACT_APP_API_BASE_URL is not set in .env. API calls will fail.');
 }
 
-// Create axios instance with default config
-const apiClient = axios.create({
+// CR-2026-07-03-004 — split into read (8 s) and write (15 s) clients.
+// Rationale: reads should fail fast so users get error UI quickly during upstream
+// slowness; writes need more headroom because business ops (order-create, edit)
+// legitimately take longer, especially on flaky mobile networks.
+const commonHeaders = {
+  'Content-Type': 'application/json; charset=UTF-8',
+  'Accept': 'application/json',
+};
+
+const apiReadClient = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,
-  timeout: 30000, // 30 seconds
-  headers: {
-    'Content-Type': 'application/json; charset=UTF-8',
-    'Accept': 'application/json',
-  },
+  timeout: 8000, // CR-2026-07-03-004 D-01
+  headers: commonHeaders,
 });
 
-// Add request interceptor
-apiClient.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
+const apiWriteClient = axios.create({
+  baseURL: process.env.REACT_APP_API_BASE_URL,
+  timeout: 15000, // CR-2026-07-03-004 D-01
+  headers: commonHeaders,
+});
 
-// Add response interceptor
-apiClient.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+// Interceptors on both clients — auth token + response handling behave identically.
+[apiReadClient, apiWriteClient].forEach((client) => {
+  client.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
+  client.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+});
 
-export default apiClient;
+export { apiReadClient, apiWriteClient };
+
+// Default export stays as read-client for backward compat with any existing
+// `import apiClient from '../api/config/axios'` — reads dominate the call graph.
+export default apiReadClient;

@@ -34,21 +34,18 @@ import AdminMenuPage from './pages/admin/AdminMenuPage';
 import AdminDietaryPage from './pages/admin/AdminDietaryPage';
 import AdminQRPage from './pages/admin/AdminQRPage';
 
-// Create a QueryClient instance with default options
+// Create a QueryClient instance with default options.
+// CR-2026-07-03-004 D-03: retry 2× with exponential backoff capped at 5 s
+// (was 3× / 30 s cap). Rationale: 30 s cap made users wait ~90 s cumulatively
+// when upstream hung, which is exactly what CR-004 is trying to fix.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Cache data for 10 minutes
-      staleTime: 10 * 60 * 1000, // 10 minutes
-      // Keep unused data in cache for 30 minutes
-      gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
-      // Retry failed requests 3 times
-      retry: 3,
-      // Retry delay increases exponentially
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      // Refetch on window focus (optional, can be disabled)
+      staleTime: 10 * 60 * 1000,           // 10 minutes
+      gcTime: 30 * 60 * 1000,              // 30 minutes (formerly cacheTime)
+      retry: 2,                             // CR-2026-07-03-004 D-03
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // CR-2026-07-03-004 D-03
       refetchOnWindowFocus: false,
-      // Refetch on reconnect
       refetchOnReconnect: true,
     },
   },

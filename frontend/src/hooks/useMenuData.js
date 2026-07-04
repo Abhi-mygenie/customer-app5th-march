@@ -11,6 +11,7 @@ import logger from '../utils/logger';
 // import { getStations } from '../api/services/stationService';
 import { getTableConfig } from '../api/services/tableRoomService';
 import { getErrorMessage } from '../api/utils/errorHandler';
+import fetchWithTimeout from '../utils/fetchWithTimeout'; // CR-2026-07-03-004
 
 /**
  * Shared menu-sections fetch + transform.
@@ -177,7 +178,7 @@ export const buildMenuSectionsQueryOptions = (restaurantId, stationId) => {
     gcTime: 15 * 60 * 1000,
     refetchOnWindowFocus: true,      // CR-2026-06-17-003 APP-13
     refetchOnReconnect: true,        // CR-2026-06-17-003 APP-13
-    retry: 3,
+    retry: 2,                        // CR-2026-07-03-004 D-03 (was 3)
   };
 };
 
@@ -270,7 +271,7 @@ export const useStations = (restaurantId) => {
     enabled: !!finalRestaurantId,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    retry: 3,
+    retry: 2, // CR-2026-07-03-004 D-03
   });
 
   return {
@@ -394,7 +395,7 @@ export const useTableConfig = (restaurantId) => {
     enabled: !!restaurantId, // Fetch if restaurantId exists (not hardcoded to 478)
     staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
-    retry: 3,
+    retry: 2, // CR-2026-07-03-004 D-03
   });
 
   return {
@@ -419,7 +420,7 @@ export const useDietaryTags = (restaurantId) => {
   const { data: availableTagsData } = useQuery({
     queryKey: ['availableDietaryTags'],
     queryFn: async () => {
-      const response = await fetch(`${API_URL}/api/dietary-tags/available`);
+      const response = await fetchWithTimeout(`${API_URL}/api/dietary-tags/available`); // CR-2026-07-03-004 — 8 s read
       if (!response.ok) throw new Error('Failed to fetch available tags');
       return response.json();
     },
@@ -431,7 +432,7 @@ export const useDietaryTags = (restaurantId) => {
     queryKey: ['dietaryTagsMapping', restaurantId],
     queryFn: async () => {
       if (!restaurantId) return { mappings: {} };
-      const response = await fetch(`${API_URL}/api/dietary-tags/${restaurantId}`);
+      const response = await fetchWithTimeout(`${API_URL}/api/dietary-tags/${restaurantId}`); // CR-2026-07-03-004 — 8 s read
       if (!response.ok) throw new Error('Failed to fetch dietary tags mapping');
       return response.json();
     },
