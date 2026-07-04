@@ -1,13 +1,38 @@
-# CR-2026-07-03-006 — Order-Create Idempotency Audit
+# INV-2026-07-03-001 — Order-Create Idempotency Audit
 
-**Status:** REGISTERED — Discovery / Audit stage (NOT a code change yet)
-**Raised:** 2026-07-03
+**Status:** ✅ RESOLVED-BY-OWNER-ASSERTION (2026-07-04)
+**Raised:** 2026-07-03 (as CR-2026-07-03-006, renamed to INV-2026-07-03-001 by CR-2026-07-03-010)
 **Author:** E1 (blocker discovered during CR-004 planning)
-**Priority:** P1 (BLOCKER for CR-2026-07-03-004; also standalone risk mitigation)
+**Priority:** P1 (BLOCKER for CR-2026-07-03-004 — CLEARED 2026-07-04)
 **Severity:** HIGH (worst-case: double-charge / double-order for a customer)
 **Risk of the audit itself:** ZERO (read-only investigation)
 **Risk of any downstream fix:** MEDIUM–HIGH (order flow)
-**Blocks:** CR-2026-07-03-004 (frontend fetch timeouts on order-create path)
+**Blocks:** CR-2026-07-03-004 (frontend fetch timeouts on order-create path) — CLEARED
+**Related CR reincarnation note:** File header still references old CR-006 ID for historical continuity; canonical ID is INV-2026-07-03-001.
+
+---
+
+## 0. Resolution — Owner assertion (2026-07-04)
+
+**Owner statement (verbatim):** "d02 order wont get created backend take care of that"
+
+**Interpretation applied by E1:** MyGenie POS enforces server-side idempotency on order-create — i.e., repeated `POST /web/place-order` (or equivalent) with the same cart payload does NOT create a second order.
+
+**Effect on this audit:**
+- Formal audit (§2 below — grep + POS contract read + Mongo query) is **NOT executed**.
+- CR-2026-07-03-004 order-create timeout scope is **UNBLOCKED**.
+- All three write paths in CR-004 (auth, config, order-create) proceed with `apiWriteClient` (15 s) + React Query retry (2× exponential backoff).
+
+**Safety net in place regardless:**
+- CR-004 wires a **blocking `AlertDialog`** on order-create timeout (per design-agent D-05). Customer must explicitly acknowledge before any retry. Not a silent auto-retry.
+- CR-004 §V-04b defines a live test to confirm idempotency: submit an order with network throttled to offline, hit Retry after network returns, confirm exactly ONE order lands in POS.
+
+**Contingency if D-02 assertion is ever proven wrong:**
+- V-04b live test will surface the bug immediately (two orders instead of one).
+- On failure: halt release, escalate to owner, this file gets amended with the counter-evidence and status flips to `⚠️ REOPENED`.
+- Follow-up code work would then be: either add client-side idempotency key generation (per attempt), or escalate to MyGenie POS team to enforce server-side dedup.
+
+**Owner-record-of-record:** this section §0 is the audit trail for the safety guarantee. Any post-mortem starts here.
 
 ---
 

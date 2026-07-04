@@ -1,8 +1,30 @@
 # Implementation Plan — CR-2026-07-03-004
 
 **Companion doc:** `CR.md` (same folder).
-**Role:** PLANNING (no code will be written yet — deferred to next sprint).
-**Prerequisite:** CR-2026-07-03-003 should merge first.
+**Role:** PLANNING — refreshed 2026-07-04 with owner decisions + design-agent output.
+**Prerequisite:** CR-2026-07-03-003 (✅ SHIPPED) + CR-2026-07-03-000 (🚧 IMPLEMENTED).
+
+---
+
+## 0. Owner decisions (recorded 2026-07-04)
+
+| ID | Question | Owner answer | Date | Notes |
+|---|---|---|---|---|
+| D-01 | 8 s read / 15 s write timeouts | ✅ Approved as standard | 2026-07-04 | Matches Google web.dev / Stripe / Shopify norms |
+| D-02 | Order-create idempotency | ✅ **"Backend takes care of that"** — POS enforces server-side | 2026-07-04 | Recorded as owner assertion in `INV-2026-07-03-001/CR.md`; if a double-order incident ever occurs, that record identifies the source of the safety guarantee |
+| D-03 | React Query retry policy (`retry:2, exp backoff up to 5 s`) | ✅ Approved | 2026-07-04 | |
+| D-04 | `fetchWithTimeout` helper vs. all-axios migration | ✅ Helper approved | 2026-07-04 | All-axios rejected — 60-file refactor, zero user benefit |
+| D-05 | Error-UI treatment | ✅ Design agent output → `/app/design_guidelines.json` | 2026-07-04 | 3 patterns: empty-state / AlertDialog / Toast |
+
+## 0.1 Design-agent output summary (D-05)
+
+| Context | Pattern | shadcn/ui components | Copy | `data-testid` |
+|---|---|---|---|---|
+| **Menu-load timeout (read)** | Empty-state-with-CTA replacing skeleton | `div` + `Button` | "We're having trouble loading the menu. Please try again." | `timeout-error-menu-load-retry-button` |
+| **Order-create timeout (write)** | Blocking `AlertDialog` | `AlertDialog*` full family | "Connection timed out. We couldn't confirm your order. Please check with your server or try placing it again." | `timeout-error-order-alert-dialog` |
+| **Background config fetch** | Non-blocking `useToast` | `useToast` hook | "Some restaurant details are taking a moment to update." | `timeout-error-config-toast` |
+
+Full spec incl. accessibility + interaction rules: `/app/design_guidelines.json`.
 
 ---
 
@@ -132,11 +154,14 @@ If NONE of the above hold, **DO NOT apply timeout to order-create in this CR**. 
 ## 3. Order of implementation (safest sequence)
 
 1. **Ship the utility** — `fetchWithTimeout.js` as an isolated file, no consumers wired yet. Merge, verify build.
-2. **Ship axios read/write split** — no timeout enforcement yet if desired (set both to Infinity). Merge, verify no regression.
-3. **Ship AuthContext** — auth is the least catastrophic to timeout (worst case: user re-logs in).
-4. **Ship RestaurantConfigContext** — read-only, cache-first fallback protects UX.
-5. **Ship useMenuData / React Query defaults** — user-visible if wrong; verify with real users on canary.
-6. **DEFER order-create** — separate mini-CR after idempotency confirmed.
+2. **Ship axios read/write split** — dual `apiReadClient` (8 s) + `apiWriteClient` (15 s). Merge, verify no regression.
+3. **Ship QueryClient defaults in `App.js`** — retry:2 + exp backoff. Instantly applies to every existing `useQuery`.
+4. **Ship AuthContext** — 4 raw fetches wrapped. Auth is the least catastrophic to timeout (worst case: user re-logs in).
+5. **Ship RestaurantConfigContext** — read-only, cache-first fallback protects UX during timeouts.
+6. **Ship AdminConfigContext** — 1 raw fetch (after CR-002 lands cleanly — currently 🚧 QA-pending).
+7. **Ship useMenuData signal-aware** — user-visible if wrong; verify with real users on canary.
+8. **Ship order-create timeout + AlertDialog** — INCLUDED (D-02 cleared). Uses `apiWriteClient` (15 s) + design-agent AlertDialog on timeout.
+9. **Ship error-UI wiring** — empty-state on LandingPage / menu, Toast on config providers.
 
 Each step is a separate commit; each is independently revertable.
 
@@ -171,24 +196,41 @@ for i in range(20):
 | # | Criterion | Owner-visible |
 |---|---|---|
 | 1 | Happy paths unchanged (login, /698, /716, admin) | YES |
-| 2 | 30 s upstream hang surfaces error UI at 8-9 s (reads) | YES |
-| 3 | 30 s upstream hang for writes surfaces at 15-16 s | YES |
-| 4 | Order-create either untouched (deferred) OR verified idempotent | YES |
+| 2 | 30 s upstream hang surfaces error UI at 8-9 s (reads) | YES — Empty-state-with-CTA appears |
+| 3 | 30 s upstream hang for writes surfaces at 15-16 s | YES — AlertDialog appears |
+| 4 | Order-create timeout uses `apiWriteClient` (15 s) with idempotency safety per D-02 owner assertion | YES — verified via V-04b below |
 | 5 | Component unmount aborts in-flight fetches | dev-console only |
 | 6 | No new eslint errors | CI |
 | 7 | Existing e2e tests pass | CI |
+| 8 | `data-testid`s from `/app/design_guidelines.json` present on the 3 error-UI elements | YES |
+| 9 | Bundle size delta ≤ 3 KB gzipped | CI |
+
+### V-04b Order-create safety self-test (extra check because of D-02 reliance)
+
+1. Trigger a real order in preprod with a network throttle set to "offline" at the moment of submit.
+2. Observe: AlertDialog appears at 15 s ± 1 s. No POS receipt yet.
+3. Restore network. Tap "Retry" in the AlertDialog.
+4. Observe: exactly ONE order lands in POS (not two). Confirms POS idempotency.
+5. Repeat with 5-second network interruption instead of full offline. Same expectation.
+
+If step 4 shows two orders: **halt release**, escalate to owner, note in INV-001 that D-02 assumption is broken.
 
 ---
 
-## 6. Design agent involvement
+## 6. Design agent involvement — ✅ COMPLETE (2026-07-04)
 
-Recommended: engage design agent for **error UI treatment** on timeout:
+Design agent output saved to `/app/design_guidelines.json`. Three patterns provided:
 
-- Toast? "We're having trouble reaching the server. Retrying..."
-- Blocking overlay? Only for critical flows (auth, order-create).
-- Skeleton-with-retry-button? For content pages.
+1. **Menu-load read timeout** → Empty-state-with-CTA (replaces skeleton). `role="alert"`, focus moves to Retry button.
+2. **Order-create write timeout** → Blocking AlertDialog with explicit Dismiss + Retry. Native focus trap. Prevents outside-click dismissal.
+3. **Background config timeout** → Non-blocking Toast, auto-dismiss 5 s, `aria-live="polite"`.
 
-Ask the design agent to sketch the 3 error states (transient, persistent, offline) before wiring components.
+Constraints reinforced: no new fonts/colors/tokens, reuse existing shadcn/ui components only, mobile-first (44 px min tap target), keep framer-motion animations simple.
+
+`data-testid`s already assigned — use verbatim:
+- `timeout-error-menu-load-retry-button`
+- `timeout-error-order-alert-dialog`
+- `timeout-error-config-toast`
 
 ---
 
@@ -196,14 +238,15 @@ Ask the design agent to sketch the 3 error states (transient, persistent, offlin
 
 | Item | Status now |
 |---|---|
-| Registry updated | ✅ CR.md + this file exist |
+| Registry updated | ✅ CR.md + this file exist; README.md row present |
 | Code markers added | ⏳ IMPL — `CR-2026-07-03-004` in comments |
 | Self-test complete | ⏳ IMPL |
 | Lint clean | ⏳ IMPL |
 | QA handover written | ⏳ IMPL |
-| Owner sign-off | ⏳ waiting (owner deferred to next sprint) |
-| Design agent input on error UI | ⏳ pending |
-| Prerequisite CR-2026-07-03-003 merged | ⏳ pending |
+| Owner sign-off (D-01..D-05) | ✅ APPROVED 2026-07-04 (see §0 above) |
+| Design agent input on error UI | ✅ COMPLETE — see `/app/design_guidelines.json` |
+| Prerequisite CR-2026-07-03-003 merged | ✅ SHIPPED |
+| Prerequisite CR-2026-07-03-000 endpoint exists (auth path) | ✅ IMPLEMENTED (QA-pending on real creds; no blocker for CR-004) |
 
 ---
 
