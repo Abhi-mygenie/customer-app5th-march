@@ -1,6 +1,11 @@
 # Bug Tracker - MyGenie Customer App
 
-## Last Updated: April 14, 2026 (Session 13 - Restaurant-Scoped Auth + Places Autocomplete)
+> ✅ **STATUS: CANONICAL BUG TRACKER for the 3-july branch.**
+> New bugs go here. Historical architectural audit is in [`BUG_TRACKER_ARCHITECTURAL_AUDIT_2026-05.md`](./BUG_TRACKER_ARCHITECTURAL_AUDIT_2026-05.md) (do not use for new work; formerly `BUG_TRACKER_v2.md`).
+> ID convention: legacy `BUG-NNN` sequence is **FROZEN at BUG-050**. All new items use `CR-YYYY-MM-DD-NNN` / `INV-YYYY-MM-DD-NNN` and live under [`memory/change_requests/`](../memory/change_requests/README.md).
+> Last canonical review: 2026-07-03 (CR-2026-07-03-010).
+
+## Last Updated: April 14, 2026 (Session 13 - Restaurant-Scoped Auth + Places Autocomplete) — stats block refreshed 2026-07-03 by CR-010
 
 ---
 
@@ -31,15 +36,20 @@
 | BUG-030 | Restaurant 716 table check skip | 🟡 P1 | ✅ Fixed | Mar 25 | Mar 25 | Hyatt Goa |
 | BUG-029 | QR Code URL empty | 🟡 P1 | ✅ Fixed | Mar 25 | Apr 10 | Uses API qr_code_urls now |
 
-### Stats
+### Stats (refreshed 2026-07-03 by CR-2026-07-03-010)
 
 | Metric | Count |
 |--------|-------|
-| **Total Bugs** | 14 |
-| **Open (P0)** | 0 |
-| **Open (P1)** | 0 |
-| **Fixed** | 8 |
-| **Partial** | 1 |
+| **Total unique BUG-NNN IDs** | 50 |
+| **Fixed** | 42 |
+| **Partial** | 1 (BUG-035) |
+| **Open / Pending / Discussion / External** | 7 |
+| **Open by priority — P0** | 3 (BUG-042, BUG-044, external/discussion) |
+| **Open by priority — P1** | 4 (BUG-037, BUG-038, BUG-046, BUG-049, BUG-050) |
+| **Sequence status** | **FROZEN at BUG-050** — new items use `CR-YYYY-MM-DD-NNN` under `memory/change_requests/` |
+| **Currently-open IDs** | BUG-035 (partial), BUG-037, BUG-038, BUG-042, BUG-044, BUG-046, BUG-049, BUG-050 |
+
+> Note: the earlier `Total Bugs = 14` figure predated Session 13 and was never refreshed. Historical row-level statuses inside this file are preserved verbatim.
 
 **Legend:** 🔴 P0 Critical | 🟡 P1 High | 🟢 P2 Medium | ✅ Fixed | ⚠️ Partial | 🔍 Debugging | ⏳ Pending | ⏸️ Parked
 

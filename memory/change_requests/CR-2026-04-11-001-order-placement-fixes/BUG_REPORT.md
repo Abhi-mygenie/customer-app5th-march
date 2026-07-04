@@ -1,5 +1,12 @@
 # BUG-035 / 039 / 040 / 041 — Order Placement & Payment Bug Fixes
 
+> **Folder rename note (CR-2026-07-03-010, 2026-07-03):**
+> This folder was originally named `BUG-035-039-040-041-order-placement-fixes/`.
+> It was renamed to `CR-2026-04-11-001-order-placement-fixes/` to comply with the operating
+> prompt's ID convention (one folder = one CR-YYYY-MM-DD-NNN ID). The four legacy BUG IDs
+> (BUG-035, BUG-039, BUG-040, BUG-041) remain valid cross-references and are documented below.
+> Canonical status for each is in [`/app/memory_repo/BUG_TRACKER.md`](../../../memory_repo/BUG_TRACKER.md).
+
 **ID:** BUG-035, BUG-039, BUG-040, BUG-041
 **Classification:** Bug fixes (4 related issues in the order placement / payment retry flow)
 **Severity:** BUG-035 = P3 (logging), BUG-039/040/041 = P1 (CRITICAL path — order placement + payment)

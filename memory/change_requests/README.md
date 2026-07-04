@@ -17,6 +17,26 @@ INVESTIGATION → PLANNING → IMPLEMENTATION cycles on 2026-07-03.
 - 📋 PLANNED — CR + IMPLEMENTATION_PLAN written, awaiting owner approval
 - 📝 REGISTERED — CR written, no plan yet OR data/ops-owned
 - 🔬 AUDIT (INV) — read-only investigation task, no code planned
+- ⚰️ TOMBSTONE — ID was issued but renamed to another ID; row kept for traceability
+
+## ID Scheme (canonicalized 2026-07-03 by CR-2026-07-03-010)
+
+This branch uses two ID formats. Both are valid; use is scoped by era, not by type:
+
+| Format | Status | Use for |
+|---|---|---|
+| `BUG-NNN` (global 3-digit sequence, 001..050) | **FROZEN** at BUG-050 as of 2026-07-03 | Historical cross-references only. Do not issue new IDs in this format. |
+| `CR-YYYY-MM-DD-NNN` (per-day 3-digit sequence) | **ACTIVE** — canonical for all new work | New change requests, feature work, refactors, doc updates, data ops. |
+| `INV-YYYY-MM-DD-NNN` (per-day 3-digit sequence) | **ACTIVE** | Investigations only (read-only, no code, per Alpha v0.1 §8 Role 6). |
+
+**Canonical bug tracker for the legacy `BUG-NNN` sequence:**
+[`/app/memory_repo/BUG_TRACKER.md`](../../memory_repo/BUG_TRACKER.md). Do not consult
+[`BUG_TRACKER_ARCHITECTURAL_AUDIT_2026-05.md`](../../memory_repo/BUG_TRACKER_ARCHITECTURAL_AUDIT_2026-05.md)
+(formerly `BUG_TRACKER_v2.md`) for status of any BUG-NNN — that file is a historical audit only.
+
+**Tombstones.** If an ID is issued and later renamed (e.g. CR-2026-07-03-006 was renamed
+mid-session to INV-2026-07-03-001), a **tombstone row** must be added to the table below
+with status `⚰️ TOMBSTONE`, pointing at the successor ID. Do not delete or reuse tombstone IDs.
 
 ## Table
 
@@ -28,19 +48,23 @@ INVESTIGATION → PLANNING → IMPLEMENTATION cycles on 2026-07-03.
 | [CR-2026-07-03-003](./CR-2026-07-03-003-backend-mongo-timeouts-and-healthz/CR.md) | Backend Mongo timeouts + `/api/healthz` | ✅ SHIPPED | P1 | 1 BE | done | ops points probe (see CR-009) |
 | [CR-2026-07-03-004](./CR-2026-07-03-004-frontend-fetch-timeouts/CR.md) | Frontend fetch timeouts + AbortController | 📋 PLANNED | P2 | 7 FE | ~1 day | approve after INV-001 verdict |
 | [CR-2026-07-03-005](./CR-2026-07-03-005-theme-and-flags-dedup/CR.md) | Theme `themeVersion` + dedup follow-ups | 📋 PLANNED | P3 | 3 files | ~1.2 days | approve F-01 design + F-02 cleanup |
+| CR-2026-07-03-006 | *(renamed — see INV-2026-07-03-001)* | ⚰️ TOMBSTONE | — | — | — | Renamed mid-session on 2026-07-03; formalised by CR-2026-07-03-010 |
 | [INV-2026-07-03-001](./INV-2026-07-03-001-order-create-idempotency-audit/CR.md) | Order-create idempotency AUDIT | 🔬 AUDIT | **P1** (blocks CR-004) | 0 | 2-3 hrs + MyGenie coord | approve audit + broker POS convo |
 | [CR-2026-07-03-007](./CR-2026-07-03-007-prod-deploy-env-hardening/CR.md) | Prod deploy env hardening (backend URL + secret rotation) | 📝 REGISTERED | **P1 security** | 0 (ops) | half-day distributed | ops + DBA + security team |
 | [CR-2026-07-03-008](./CR-2026-07-03-008-prod-db-data-quality/CR.md) | Prod DB data quality remediation | 📝 REGISTERED (DATA) | P2 | 0 code | half-day + owner cross-check | approve seed/archive strategy |
 | [CR-2026-07-03-009](./CR-2026-07-03-009-observability-and-lb-probe/CR.md) | Observability + LB probe wiring (post CR-003) | 📝 REGISTERED | P1 (F-13), P3 (F-12) | 0-1 files | 30 min-2 hrs | ops points probe at `/api/healthz` |
-| [CR-2026-07-03-010](./CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/CR.md) | Registry hygiene & ID-scheme canonicalization (BUG-NNN vs CR-YYYY-MM-DD-NNN; tombstones; stale BUG_TRACKER_v2) | 📝 REGISTERED (Role 1+2 complete) | P2 | 6 MD (docs-only) | ~45 min | approve D-01..D-04 in [INTAKE_DOC.md](./CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/INTAKE_DOC.md#7-owner-decisions-surfaced-needed-before-role-3) |
+| [CR-2026-07-03-010](./CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/CR.md) | Registry hygiene & ID-scheme canonicalization (BUG-NNN vs CR-YYYY-MM-DD-NNN; tombstones; stale BUG_TRACKER_v2) | ✅ SHIPPED | P2 | 6 MD (docs-only) | ~45 min | none (owner-approved defaults executed 2026-07-03) |
 
 ## ID convention (per operating prompt §ID Format line 1364 + repo precedent)
+
+> **See the `## ID Scheme` section above** for the authoritative arbitration between
+> `BUG-NNN` (frozen legacy), `CR-YYYY-MM-DD-NNN` (active), and `INV-YYYY-MM-DD-NNN` (active).
 
 | Prefix | Meaning | Example in this session |
 |---|---|---|
 | `CR-YYYY-MM-DD-NNN` | Change Request (code, data, or ops change) | CR-2026-07-03-003 |
 | `INV-YYYY-MM-DD-NNN` | Investigation only (no code) | INV-2026-07-03-001 |
-| `BUG-*` | Explicit bug fix (existing repo precedent, not used this session) | — |
+| `BUG-NNN` | **FROZEN** legacy sequence (001–050). No new IDs issued in this format after 2026-07-03. | BUG-048 |
 
 ## Blocking / Dependencies
 
@@ -82,6 +106,7 @@ CR-009 ── depends on CR-003 (shipped) — just needs ops wiring
 | CR-007 | ✅ | ✅ | — | — |
 | CR-008 | ✅ | ✅ | — | — |
 | CR-009 | ✅ | ✅ | — | — |
+| CR-010 | ✅ | ✅ | ✅ (IMPACT + PLAN) | ✅ |
 
 ## What this registry is NOT
 
@@ -92,8 +117,9 @@ CR-009 ── depends on CR-003 (shipped) — just needs ops wiring
 ## Session shipping summary
 
 - **Session date:** 2026-07-03
-- **Items raised:** 10 (9 CR + 1 INV)
+- **Items raised:** 11 (10 CR + 1 INV; CR-006 tombstoned in favour of INV-2026-07-03-001)
 - **Shipped (code merged + self-tested):** 3 (001, 002, 003)
+- **Shipped (docs-only, self-tested):** 1 (010 — registry hygiene per CR-2026-07-03-010)
 - **Planned only:** 3 (004, 005, INV-001)
 - **Registered / DATA / ops:** 4 (000, 007, 008, 009)
-- **Process compliance:** Role 1 (INTAKE) was skipped initially; retroactively remediated on 2026-07-03 by adding INTAKE_DOC.md to each folder and renaming CR-006 → INV-2026-07-03-001 to match repo convention.
+- **Process compliance:** Role 1 (INTAKE) was skipped initially; retroactively remediated on 2026-07-03 by adding INTAKE_DOC.md to each folder and renaming CR-006 → INV-2026-07-03-001 to match repo convention. Full ID-scheme canonicalization performed by CR-2026-07-03-010 (see `CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/`).

@@ -1,4 +1,14 @@
 # Document Audit Status
+
+> ⚠️ **STATUS: HISTORICAL AUDIT — NOT THE CANONICAL BUG TRACKER**
+> This file is the code-verified architectural audit performed on 2026-05-14.
+> It intentionally covers only a subset of the full bug population (11 of ~50 IDs at time of audit).
+> For the canonical, live bug tracker see [`BUG_TRACKER.md`](./BUG_TRACKER.md) in the same directory.
+> Do not add new bugs here. Do not update statuses here.
+> (Renamed from `BUG_TRACKER_v2.md` by CR-2026-07-03-010.)
+
+---
+
 - Source File: BUG_TRACKER.md
 - Reviewed By: Senior Architecture Agent
 - Review Type: Code-verified documentation refresh

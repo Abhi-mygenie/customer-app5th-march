@@ -1,6 +1,6 @@
 # CR-2026-07-03-010 — Registry hygiene & ID-scheme canonicalization
 
-**Status:** 📝 REGISTERED (Role 1 intake complete; Role 2 planning complete; owner approval pending before Role 3)
+**Status:** ✅ SHIPPED (Role 1 intake, Role 2 planning, Role 3 implementation, Role 4 self-QA all complete on 2026-07-03; owner approved defaults D-01=a, D-02=a, D-03=a, D-04=a)
 **Session:** 2026-07-03
 **Priority:** P2
 **Risk:** LOW

@@ -45,6 +45,7 @@ Sequence of owner asks in chronological order:
 | CR-2026-07-03-001 | Theme cache busting (`?bustCache=1`) | `frontend/src/context/RestaurantConfigContext.jsx` |
 | CR-2026-07-03-002 | Remove dead `/api/restaurant-info/{id}` fetch | `frontend/src/context/AdminConfigContext.jsx` |
 | CR-2026-07-03-003 | Backend Mongo timeouts + `/api/healthz` | `backend/server.py` |
+| CR-2026-07-03-010 | Registry hygiene & ID-scheme canonicalization (docs-only) | `memory/change_requests/README.md`, `memory_repo/BUG_TRACKER.md`, rename `BUG_TRACKER_v2.md` → `BUG_TRACKER_ARCHITECTURAL_AUDIT_2026-05.md`, rename `BUG-035-039-040-041-order-placement-fixes/` → `CR-2026-04-11-001-order-placement-fixes/` |
 | Infra | Restore `memory/` from `origin/main`, un-gitignore | `.gitignore`, `memory/`, `memory_repo/` |
 
 **Self-tests passed** for each. QA_HANDOVER.md in each folder documents evidence.
@@ -60,6 +61,7 @@ Sequence of owner asks in chronological order:
 | CR-2026-07-03-008 | REGISTERED (DATA — 15 partial restaurants, 9 orphans, etc.) | Operator team cross-check |
 | CR-2026-07-03-009 | REGISTERED (LB probe wiring + Mongo alerting) | Ops team |
 | INV-2026-07-03-001 | AUDIT PENDING (order-create idempotency) | Blocks CR-004 |
+| CR-2026-07-03-010 | ✅ SHIPPED — docs-only registry hygiene & ID-scheme canonicalization (Role 1+2+3 complete, self-tested) | none (already executed 2026-07-03) |
 
 ## 4. Admin QA remaining
 
