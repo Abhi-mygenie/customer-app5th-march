@@ -56,6 +56,9 @@ with status `⚰️ TOMBSTONE`, pointing at the successor ID. Do not delete or r
 | [CR-2026-07-03-010](./CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/CR.md) | Registry hygiene & ID-scheme canonicalization (BUG-NNN vs CR-YYYY-MM-DD-NNN; tombstones; stale BUG_TRACKER_v2) | ✅ SHIPPED | P2 | 6 MD (docs-only) | ~45 min | none (owner-approved defaults executed 2026-07-03) |
 | [CR-2026-07-03-011](./CR-2026-07-03-011-full-pos-proxy-refactor/CR.md) | Full POS-proxy refactor (proxy ALL POS write calls through FastAPI; remediates BUG-001/BUG-002) | 📝 REGISTERED (Role 1 done) | P1 | ~15 files (BE+FE) | 2.5–3.5 dev-days | CR-000 SHIPPED + INV-001 COMPLETE + D-01..D-04 |
 | [CR-2026-07-03-012](./CR-2026-07-03-012-leaked-cred-doc-scrub-and-ci-lint/CR.md) | Leaked-credential doc scrub (18 files) + CI lint rule for `REACT_APP_*_PASSWORD/SECRET/TOKEN` | 📝 REGISTERED (Role 1 done) | P2 | 18 MD + 1 FE comment + 1 new CI script | ~1.5 hrs | approve D-01..D-04 + CRM rotation timing |
+| [CR-2026-07-04-002](./CR-2026-07-04-002-registry-finish-up/CR.md) | Registry finish-up (A: Alpha v0.1 §10.1349 ref update · B: 39-item reconciliation · C: legacy `memory_repo/change_requests/` README) | 📝 REGISTERED (Role 1 done) | P3 | 1 prompt file + 40+ tracker rows + 1 dir README | 3–4 hrs | approve D-01..D-03 (prompt versioning) |
+| [CR-2026-07-04-003](./CR-2026-07-04-003-cr004-residual-scope/CR.md) | CR-004 residual scope (empty-state on menu-load timeout + 5 AdminConfig CRUD timeout swaps) | 📝 REGISTERED (Role 1 done) | P2 | 3-5 FE (menu component + AdminConfigContext) | 2.5–3 hrs | approve D-01..D-04 or wait for user-pain report |
+| [CR-2026-07-04-004](./CR-2026-07-04-004-client-telemetry/CR.md) | Client telemetry to Mongo (POST fetch-timeout + React ErrorBoundary events, 30-day TTL, admin read endpoint) | 📝 REGISTERED (Role 1 done) | P2 | 2 BE endpoints + 1 Mongo collection + ~15 LOC FE | ~4 hrs | approve D-01..D-06 (retention, rate-limit, hashing) |
 
 ## ID convention (per operating prompt §ID Format line 1364 + repo precedent)
 
@@ -111,6 +114,9 @@ CR-009 ── depends on CR-003 (shipped) — just needs ops wiring
 | CR-010 | ✅ | ✅ | ✅ (IMPACT + PLAN) | ✅ |
 | CR-011 | ✅ | ✅ | — | — |
 | CR-012 | ✅ | ✅ | — | — |
+| CR-2026-07-04-002 | ✅ | ✅ | — | — |
+| CR-2026-07-04-003 | ✅ | ✅ | — | — |
+| CR-2026-07-04-004 | ✅ | ✅ | — | — |
 
 ## What this registry is NOT
 
@@ -120,10 +126,12 @@ CR-009 ── depends on CR-003 (shipped) — just needs ops wiring
 
 ## Session shipping summary
 
-- **Session date:** 2026-07-03
-- **Items raised:** 13 (12 CR + 1 INV; CR-006 tombstoned in favour of INV-2026-07-03-001)
+- **Session dates:** 2026-07-03 (initial) + 2026-07-04 (continuation)
+- **Items raised:** 16 (14 CR + 1 INV + 1 tombstone; CR-006 tombstoned in favour of INV-2026-07-03-001)
 - **Shipped (code merged + self-tested):** 3 (001, 002, 003)
-- **Shipped (docs-only, self-tested):** 1 (010 — registry hygiene per CR-2026-07-03-010)
-- **Planned (Role 2 complete, awaiting owner approval / prereqs):** 4 (000, 004, 005, INV-001)
-- **Registered / DATA / ops / follow-up:** 5 (007, 008, 009, 011, 012)
-- **Process compliance:** Role 1 (INTAKE) was skipped initially; retroactively remediated on 2026-07-03 by adding INTAKE_DOC.md to each folder and renaming CR-006 → INV-2026-07-03-001 to match repo convention. Full ID-scheme canonicalization performed by CR-2026-07-03-010 (see `CR-2026-07-03-010-registry-hygiene-and-id-scheme-canonicalization/`). CR-000 upgraded from stub to full Role 6 investigation + Role 2 plan; CR-011 (full POS proxy) and CR-012 (doc scrub + CI lint) filed as its architectural + hygiene follow-ups.
+- **Shipped (docs-only, self-tested):** 1 (010 — registry hygiene)
+- **Resolved by owner assertion:** 1 (INV-001 — order-create idempotency, D-02)
+- **Implemented, awaiting owner smoke:** 2 (000, 004)
+- **Planned (Role 2 complete, awaiting owner approval / prereqs):** 1 (005)
+- **Registered (Role 1 complete):** 8 (007, 008, 009, 011, 012, plus new 2026-07-04 items 002/003/004)
+- **Process compliance:** Role 1 (INTAKE) was skipped initially; retroactively remediated on 2026-07-03. Full ID-scheme canonicalization performed by CR-2026-07-03-010. CR-000 upgraded from stub to full Role 6+2+3 flow; CR-011 (full POS proxy) and CR-012 (doc scrub + CI lint) filed as its architectural + hygiene follow-ups. CR-004 shipped in plumbing scope; residual UI + admin work filed as CR-2026-07-04-003. Owner-asked telemetry gap filed as CR-2026-07-04-004. Registry canonicalization finish-up (A/B/C from CR-010 §8) filed as CR-2026-07-04-002.
