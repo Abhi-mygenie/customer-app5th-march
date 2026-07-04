@@ -53,6 +53,16 @@ MYGENIE_API_URL = os.environ.get("MYGENIE_API_URL")
 if not MYGENIE_API_URL:
     raise ValueError("CRITICAL: MYGENIE_API_URL environment variable must be set")
 
+# CR-2026-07-03-000: POS service credentials for token-issuance proxy.
+# Server-side only — never bundled into the frontend.
+POS_LOGIN_PHONE = os.environ.get("MYGENIE_POS_LOGIN_PHONE")
+if not POS_LOGIN_PHONE:
+    raise ValueError("CRITICAL: MYGENIE_POS_LOGIN_PHONE environment variable must be set")
+
+POS_LOGIN_PASSWORD = os.environ.get("MYGENIE_POS_LOGIN_PASSWORD")
+if not POS_LOGIN_PASSWORD:
+    raise ValueError("CRITICAL: MYGENIE_POS_LOGIN_PASSWORD environment variable must be set")
+
 # Create the main app
 app = FastAPI(title="Customer App API")
 
@@ -812,6 +822,40 @@ async def get_customer_orders(
         order_type=o.get("order_type"),
         items=o.get("items", [])
     ) for o in orders]
+
+# CR-2026-07-03-000: Proxy endpoint so the frontend does not need to bundle POS creds.
+# The frontend calls this instead of the POS /auth/login directly.
+@api_router.post("/pos/auth-token")
+async def get_pos_auth_token(request: Request):
+    """Issue a short-lived POS auth token.
+
+    Server-side credentials (MYGENIE_POS_LOGIN_PHONE / _PASSWORD) log into the MyGenie
+    POS /auth/login endpoint and the resulting token is returned to the caller.
+    """
+    import httpx
+
+    # D-04(b): log count + IP only (no PII / no User-Agent)
+    client_ip = request.client.host if request.client else "unknown"
+    logger.info(f"[pos-auth-token] issuance requested from {client_ip}")
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as http_client:
+            resp = await http_client.post(
+                f"{MYGENIE_API_URL}/auth/login",
+                json={"phone": POS_LOGIN_PHONE, "password": POS_LOGIN_PASSWORD},
+            )
+        resp.raise_for_status()
+        data = resp.json()
+        if not data.get("token"):
+            raise HTTPException(status_code=502, detail="POS returned no token")
+        return data
+    except httpx.RequestError as exc:
+        logger.error(f"[pos-auth-token] POS unreachable: {exc}")
+        raise HTTPException(status_code=502, detail="POS auth service unreachable")
+    except httpx.HTTPStatusError as exc:
+        logger.error(f"[pos-auth-token] POS rejected login: {exc.response.status_code}")
+        raise HTTPException(status_code=502, detail="POS auth service rejected credentials")
+
 
 # Air BnB router for order details (Edit Order feature)
 air_bnb_router = APIRouter(prefix="/air-bnb", tags=["Air BnB"])

@@ -42,7 +42,7 @@ with status `⚰️ TOMBSTONE`, pointing at the successor ID. Do not delete or r
 
 | ID | Title | Status | Priority | Files | Effort | Owner action needed |
 |---|---|---|---|---|---|---|
-| [CR-2026-07-03-000](./CR-2026-07-03-000-remove-hardcoded-login-creds/CR.md) | Remove hardcoded POS login credentials from frontend bundle (Option 1 — FastAPI proxy for token issuance) | 📋 PLANNED (Role 6+2 done; Role 3 gated on D-01..D-04 + CRM rotation) | **P1 security** | 4 (2 FE + 2 BE incl. `.env`) | ~2.5 hrs code + rotation | approve D-01..D-04 in [CR.md §6](./CR-2026-07-03-000-remove-hardcoded-login-creds/CR.md#6-owner-decisions) |
+| [CR-2026-07-03-000](./CR-2026-07-03-000-remove-hardcoded-login-creds/CR.md) | Remove hardcoded POS login credentials from frontend bundle (Option 1 — FastAPI proxy for token issuance) | 🚧 IMPLEMENTED (QA-pending — needs rotated POS creds in `backend/.env` + owner smoke) | **P1 security** | 4 (2 FE + 2 BE incl. `.env`) | done ✓ | paste rotated creds + 4-step smoke ([QA_HANDOVER §4](./CR-2026-07-03-000-remove-hardcoded-login-creds/QA_HANDOVER.md#4-owner-action-required-to-close-the-last-3-checks)) |
 | [CR-2026-07-03-001](./CR-2026-07-03-001-theme-cache-busting/CR.md) | Theme cache busting (`?bustCache=1`) | ✅ SHIPPED | P1 | 1 FE | done | ops broadcasting to team |
 | [CR-2026-07-03-002](./CR-2026-07-03-002-remove-dead-restaurant-info-fetch/CR.md) | Remove dead `/api/restaurant-info/{id}` fetch | 🚧 IMPLEMENTED (QA-pending) | P3 | 1 FE | done | admin QA on VisibilityTab + Dietary |
 | [CR-2026-07-03-003](./CR-2026-07-03-003-backend-mongo-timeouts-and-healthz/CR.md) | Backend Mongo timeouts + `/api/healthz` | ✅ SHIPPED | P1 | 1 BE | done | ops points probe (see CR-009) |

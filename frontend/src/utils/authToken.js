@@ -1,6 +1,5 @@
 // src/utils/authToken.js
 
-import apiClient from '../api/config/axios';
 import logger from './logger';
 
 // Storage keys
@@ -10,15 +9,9 @@ const TOKEN_EXPIRY_KEY = 'order_token_expiry';
 // Token expiration: 30 minutes
 const TOKEN_EXPIRY_TIME = 10 * 60 * 1000; // 30 minutes in milliseconds
 
-// Auth credentials from environment variables (CA-001 fix)
-// IMPORTANT: These must be set in .env file - no hardcoded fallbacks for security
-const HARDCODED_PHONE = process.env.REACT_APP_LOGIN_PHONE;
-const HARDCODED_PASSWORD = process.env.REACT_APP_LOGIN_PASSWORD;
-
-// Validate credentials are configured
-if (!HARDCODED_PHONE || !HARDCODED_PASSWORD) {
-  logger.error('auth', 'CRITICAL: Missing REACT_APP_LOGIN_PHONE or REACT_APP_LOGIN_PASSWORD in environment');
-}
+// CR-2026-07-03-000: POS service credentials are no longer bundled into the frontend.
+// The FastAPI backend now proxies token issuance via POST /api/pos/auth-token,
+// reading server-side env vars MYGENIE_POS_LOGIN_PHONE / _PASSWORD.
 
 /**
  * Get stored token from localStorage
@@ -87,38 +80,50 @@ export const clearStoredToken = () => {
 };
 
 /**
- * Call login API to get token
- * @returns {Promise<string>} JWT token
+ * Call FastAPI to get a fresh POS token.
+ * CR-2026-07-03-000: creds no longer bundled — server-side proxy issues the token.
+ * @returns {Promise<string>} POS auth token
  */
 export const loginForToken = async () => {
+  const BACKEND = process.env.REACT_APP_BACKEND_URL;
+  if (!BACKEND) {
+    logger.error('auth', 'CRITICAL: REACT_APP_BACKEND_URL is not set — cannot obtain POS token');
+    throw new Error('Backend URL not configured');
+  }
+
   try {
-    console.log('[Auth] Calling login API...');
-    
-    const response = await apiClient.post('/auth/login', {
-      phone: HARDCODED_PHONE,
-      password: HARDCODED_PASSWORD
+    console.log('[Auth] Requesting POS token via backend proxy...');
+
+    const response = await fetch(`${BACKEND}/api/pos/auth-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
     });
-    
-    if (response.data && response.data.token) {
-      const token = response.data.token;
-      storeToken(token); // Store with 30-minute expiration
-      
-      console.log('[Auth] Login successful', {
-        tokenReceived: true,
-        isPhoneVerified: response.data.is_phone_verified,
-        userId: response.data.user_id
-      });
-      
-      return token;
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(`Backend token proxy returned ${response.status}${detail ? ` — ${detail}` : ''}`);
     }
-    
+
+    const data = await response.json();
+
+    if (data && data.token) {
+      storeToken(data.token); // Store with 30-minute expiration
+
+      console.log('[Auth] POS token received via proxy', {
+        tokenReceived: true,
+        isPhoneVerified: data.is_phone_verified,
+        userId: data.user_id,
+      });
+
+      return data.token;
+    }
+
     throw new Error('No token in response');
   } catch (error) {
-    console.error('[Auth] Login failed:', error);
+    console.error('[Auth] Token proxy failed:', error);
     clearStoredToken();
-    
-    // Re-throw with more context
-    const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+
+    const errorMessage = error.message || 'Login failed';
     throw new Error(`Failed to get authentication token: ${errorMessage}`);
   }
 };

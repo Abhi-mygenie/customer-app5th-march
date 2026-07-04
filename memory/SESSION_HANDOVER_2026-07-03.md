@@ -44,6 +44,7 @@ Sequence of owner asks in chronological order:
 |---|---|---|
 | CR-2026-07-03-001 | Theme cache busting (`?bustCache=1`) | `frontend/src/context/RestaurantConfigContext.jsx` |
 | CR-2026-07-03-002 | Remove dead `/api/restaurant-info/{id}` fetch | `frontend/src/context/AdminConfigContext.jsx` |
+| CR-2026-07-03-000 | Remove hardcoded POS login creds from frontend bundle (Option 1: FastAPI token-issuance proxy) | `backend/server.py`, `backend/.env`, `frontend/src/utils/authToken.js`, `frontend/.env` |
 | CR-2026-07-03-003 | Backend Mongo timeouts + `/api/healthz` | `backend/server.py` |
 | CR-2026-07-03-010 | Registry hygiene & ID-scheme canonicalization (docs-only) | `memory/change_requests/README.md`, `memory_repo/BUG_TRACKER.md`, rename `BUG_TRACKER_v2.md` → `BUG_TRACKER_ARCHITECTURAL_AUDIT_2026-05.md`, rename `BUG-035-039-040-041-order-placement-fixes/` → `CR-2026-04-11-001-order-placement-fixes/` |
 | Infra | Restore `memory/` from `origin/main`, un-gitignore | `.gitignore`, `memory/`, `memory_repo/` |
