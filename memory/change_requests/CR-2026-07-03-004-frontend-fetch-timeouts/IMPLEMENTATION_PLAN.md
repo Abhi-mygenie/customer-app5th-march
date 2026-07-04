@@ -158,10 +158,33 @@ If NONE of the above hold, **DO NOT apply timeout to order-create in this CR**. 
 3. **Ship QueryClient defaults in `App.js`** — retry:2 + exp backoff. Instantly applies to every existing `useQuery`.
 4. **Ship AuthContext** — 4 raw fetches wrapped. Auth is the least catastrophic to timeout (worst case: user re-logs in).
 5. **Ship RestaurantConfigContext** — read-only, cache-first fallback protects UX during timeouts.
-6. **Ship AdminConfigContext** — 1 raw fetch (after CR-002 lands cleanly — currently 🚧 QA-pending).
+6. **Ship AdminConfigContext initial fetch** — 1 raw fetch (deferred: 5 CRUD fetches to follow-up CR).
 7. **Ship useMenuData signal-aware** — user-visible if wrong; verify with real users on canary.
-8. **Ship order-create timeout + AlertDialog** — INCLUDED (D-02 cleared). Uses `apiWriteClient` (15 s) + design-agent AlertDialog on timeout.
-9. **Ship error-UI wiring** — empty-state on LandingPage / menu, Toast on config providers.
+8. **Ship order-create timeout + AlertDialog** — DEFERRED, then **REVISED (2026-07-04):** dropped from scope. `ReviewOrder.jsx` line 1347 already shows a well-worded network-loss toast that duplicates the AlertDialog message. Adding a blocking dialog on top would be UX regression. See step 8b for the residual micro-fix.
+9. **Ship error-UI wiring** — Toast on config providers ONLY (D-05 pattern 3). Empty-state on menu-load DEFERRED (needs LandingPage/MenuItems edits). AlertDialog DROPPED (see step 8).
+
+### Step 8b (added 2026-07-04) — orderService.ts micro-fix
+
+**Rationale:** After steps 1–7 shipped, discovered `orderService.ts` imports the default axios export (now = `apiReadClient` with 8 s timeout). That means `placeOrder()`, `checkTableStatus()`, `getOrderDetails()` all run with an 8 s cap. Legitimate slow orders on flaky mobile networks (8–15 s window) get cancelled unnecessarily and trigger the network-loss toast even though POS would have accepted the order.
+
+**Fix:** two-line change in `/app/frontend/src/api/services/orderService.ts`:
+
+```diff
+-import apiClient from '../config/axios';
++// CR-2026-07-03-004 — order-create is a WRITE. Use 15 s write client, not 8 s read.
++import { apiWriteClient as apiClient } from '../config/axios';
+```
+
+**Why safe:**
+- No API contract change; every downstream call still uses `apiClient.post(...)`.
+- Rollback = revert 2 lines.
+- All 4 functions in orderService.ts (`placeOrder`, `updateCustomerOrder`, `checkTableStatus`, `getOrderDetails`) legitimately benefit from 15 s cap.
+- No hotspot file touched (orderService.ts is a service, not a page/context/hook).
+- No test breakage (no test refs the axios import choice).
+
+**Impact:**
+- Before micro-fix: order-create cancels at 8 s → user sees existing network-loss toast even for legitimate slow orders → user re-taps → POS idempotency dedups → but user is confused.
+- After micro-fix: order-create waits full 15 s. The 8–15 s slow-but-successful window is now respected.
 
 Each step is a separate commit; each is independently revertable.
 

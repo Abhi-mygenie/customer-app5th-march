@@ -18,8 +18,9 @@
 | 5 | 2 raw fetches wrapped (both `/api/config/{rid}`) + non-blocking Toast on TimeoutError (D-05 design agent) | `frontend/src/context/RestaurantConfigContext.jsx` |
 | 6 | 1 raw fetch wrapped (initial `/api/config/{cfgId}`) + Toast on TimeoutError | `frontend/src/context/AdminConfigContext.jsx` |
 | 7 | 2 raw fetches wrapped (`/dietary-tags/available`, `/dietary-tags/{rid}`); 3 per-query `retry:3` → `retry:2` | `frontend/src/hooks/useMenuData.js` |
+| **8** | **Order-service axios client swap: default read (8 s) → write (15 s)** — see PLAN §Step 8b for rationale | `frontend/src/api/services/orderService.ts` |
 
-**Total: 7 files, +80/−32 LOC net.**
+**Total: 8 files, +80/−32 LOC net (step 8 adds +2/−1 LOC).**
 
 ## 2. What was NOT changed (Scope Lock enforced — Alpha v0.1 R4)
 

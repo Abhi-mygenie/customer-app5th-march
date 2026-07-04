@@ -4,7 +4,10 @@
  * Uses centralized transformers for data mapping
  */
 
-import apiClient from '../config/axios';
+// CR-2026-07-03-004 Step 8b — order-create is a WRITE. Import the 15 s write
+// client (aliased to apiClient) so legitimately slow orders on flaky mobile
+// networks don't get cancelled at the 8 s read default. See PLAN §Step 8b.
+import { apiWriteClient as apiClient } from '../config/axios';
 import { ENDPOINTS } from '../config/endpoints';
 import logger from '../../utils/logger';
 
