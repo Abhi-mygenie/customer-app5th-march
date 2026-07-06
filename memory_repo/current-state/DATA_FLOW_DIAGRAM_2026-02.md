@@ -23,9 +23,9 @@ sequenceDiagram
     participant Browser
     participant Landing as LandingPage.jsx
     participant Ctx as RestaurantConfigContext
-    participant LS as 🗄 localStorage
-    participant BE as 🟦 Own-Backend
-    participant POS as 🟧 POS API
+    participant LS as [LS] localStorage
+    participant BE as [BE] Own-Backend
+    participant POS as [POS] POS API
 
     Cust->>Browser: scan QR → open /:restaurantId?tableId=X&roomId=Y
     Browser->>Landing: mount route
@@ -33,7 +33,7 @@ sequenceDiagram
     Landing->>Landing: useScannedTable() reads tableId/roomId (query + sessionStorage)
 
     Landing->>Ctx: fetchConfig(rid)
-    Ctx->>LS: read restaurant_config_${rid}
+    Ctx->>LS: read restaurant_config_{rid}
     alt cache hit AND not bustCache
         LS-->>Ctx: cached blob
         Ctx-->>Landing: config (fast path, hydrates <html> CSS vars)
@@ -42,7 +42,7 @@ sequenceDiagram
     BE->>Mongo: db.customer_app_config.find_one({restaurant_id: rid})
     Mongo-->>BE: config doc
     BE-->>Ctx: {config, branding, flags}
-    Ctx->>LS: write restaurant_config_${rid}
+    Ctx->>LS: write restaurant_config_{rid}
     Ctx-->>Landing: fresh config (isOn() flags now active)
 
     Landing->>POS: POST /web/restaurant-info {rid}
@@ -75,15 +75,15 @@ sequenceDiagram
     actor Cust
     participant Landing
     participant Auth as AuthContext
-    participant BE as 🟦 Own-Backend
-    participant CRM as 🟪 CRM (v1 or v2)
-    participant LS as 🗄 localStorage
+    participant BE as [BE] Own-Backend
+    participant CRM as [CRM] CRM (v1 or v2)
+    participant LS as [LS] localStorage
 
     Cust->>Landing: submit phone (existing customer)
     Landing->>BE: POST /api/auth/send-otp {phone, rid}
     BE->>POS: POST /auth/login (POS session first) [server.py:402]
     POS-->>BE: pos_session_token
-    BE->>BE: generate OTP, store in-memory dict (⚠ lost on restart)
+    BE->>BE: generate OTP, store in-memory dict ( lost on restart)
     BE-->>Landing: {success, otp_sent}
     Note over BE: in some flows OTP is sent by CRM via /send-otp
 
@@ -98,7 +98,7 @@ sequenceDiagram
     CRM-->>Landing: {access_token (JWT), user}
 
     Landing->>Auth: setCrmToken(token, rid)
-    Auth->>LS: write crm_token_${rid}
+    Auth->>LS: write crm_token_{rid}
     Auth->>Auth: getRestaurantIdFromToken(token) — parse user_id claim
     Auth->>CRM: crmGetProfile(token) [/scan/auth/me or /customer/me]
     CRM-->>Auth: user profile
@@ -122,10 +122,10 @@ sequenceDiagram
     actor Admin
     participant Login as Login.jsx
     participant Auth as AuthContext
-    participant BE as 🟦 Own-Backend
-    participant Mongo as 🟨 Mongo
-    participant POS as 🟧 POS API
-    participant LS as 🗄 localStorage
+    participant BE as [BE] Own-Backend
+    participant Mongo as [Mongo] Mongo
+    participant POS as [POS] POS API
+    participant LS as [LS] localStorage
 
     Admin->>Login: enter phone + password
     Login->>BE: POST /api/auth/login {phone_or_email, password, restaurant_id?, pos_id}
@@ -149,7 +149,7 @@ sequenceDiagram
     Auth->>Auth: setToken(jwt), setUserType('restaurant')
     Login->>Browser: navigate /admin/settings
 
-    Note over Auth: JWT has no explicit exp claim in server.py<br/>Frontend uses 10-min TTL via order_auth_token separately (⚠ inconsistent)
+    Note over Auth: JWT has no explicit exp claim in server.py<br/>Frontend uses 10-min TTL via order_auth_token separately ( inconsistent)
 ```
 
 **Key files:** `Login.jsx:10`, `AuthContext.jsx:38-58`, `server.py:501-616`.
@@ -165,34 +165,34 @@ sequenceDiagram
     actor Cust
     participant Menu as MenuItems.jsx
     participant CartCtx as CartContext
-    participant LS as 🗄 localStorage
+    participant LS as [LS] localStorage
     participant OtherTab as Other browser tab
     participant Bar as CartBar (global)
 
     Cust->>Menu: tap item → Add to cart
     Menu->>CartCtx: addItem(item)
     CartCtx->>CartCtx: calculateCartItemPrice() + isItemAllowedForChannel()
-    CartCtx->>LS: setItem(cart_${rid}, {items, createdAt, expiresAt: now+3h})
+    CartCtx->>LS: setItem(cart_{rid}, {items, createdAt, expiresAt: now+3h})
     CartCtx-->>Bar: state update → CartBar visible
     CartCtx-->>OtherTab: window.dispatchEvent('storage') + CustomEvent('cartUpdated')
 
-    OtherTab->>CartCtx: storage event handler reloads cart_${rid}
+    OtherTab->>CartCtx: storage event handler reloads cart_{rid}
     Note over CartCtx: Cross-tab sync — both tabs now show same cart
 
     Cust->>Menu: change restaurant → navigate /:otherRid
     CartCtx->>CartCtx: detect rid change (prevRestaurantId vs current)
-    CartCtx->>LS: removeItem(cart_${prevRid})
+    CartCtx->>LS: removeItem(cart_{prevRid})
     CartCtx->>LS: setItem(prevRestaurantId, currentRid)
 
     alt cart expired (>3h old)
-        CartCtx->>LS: read cart_${rid} → expiresAt < now
-        CartCtx->>LS: removeItem(cart_${rid})
+        CartCtx->>LS: read cart_{rid} → expiresAt < now
+        CartCtx->>LS: removeItem(cart_{rid})
         CartCtx->>CartCtx: reset to empty cart
     end
 
     alt edit-order mode
         Cust->>Bar: tap "Edit Order"
-        CartCtx->>LS: setItem(editOrder_${rid}, {previousItems, sessionId, expiresAt})
+        CartCtx->>LS: setItem(editOrder_{rid}, {previousItems, sessionId, expiresAt})
         Note over CartCtx: prior items tracked so diff can be sent on re-submit
     end
 ```
@@ -212,10 +212,13 @@ sequenceDiagram
     actor Cust
     participant Rev as ReviewOrder.jsx
     participant OS as orderService.ts
-    participant BE as 🟦 Own-Backend
-    participant POS as 🟧 POS API
+    participant BE as [BE] Own-Backend
+    participant POS as [POS] POS API
     participant OSuc as OrderSuccess.jsx
-    participant LS as 🗄 localStorage
+    participant LS as [LS] localStorage
+    participant Mongo as [Mongo] Mongo
+    participant CRM as [CRM] CRM
+    participant Browser
 
     Cust->>Rev: enter Review Order
     Rev->>BE: GET /api/loyalty-settings/{rid} [ReviewOrder.jsx:139]
@@ -227,11 +230,11 @@ sequenceDiagram
     CRM-->>BE: {customer_id, points, wallet}
     BE-->>Rev: customer summary
 
-    Rev->>OS: checkTableStatus(tableId, rid) → POS /customer/check-table-status
+    Rev->>OS: checkTableStatus(tableId, rid) to POS /customer/check-table-status
     POS-->>OS: {table_available, existing_order_id?}
 
     alt edit-order mode & existing order
-        OS-->>Rev: existing order → diff items
+        OS-->>Rev: existing order to diff items
     end
 
     Cust->>Rev: select payment (Cash / Online) + Place Order
@@ -240,7 +243,7 @@ sequenceDiagram
         OS->>POS: POST /razor-pay/create-razor-order
         POS-->>OS: razorpay_order_id
         OS-->>Rev: open Razorpay checkout
-        Cust->>Rev: pay → razorpay callback
+        Cust->>Rev: pay to razorpay callback
         Rev->>OS: razorpayVerifyPayment(payment_id, signature)
         OS->>POS: POST /razor-pay/verify-payment
         POS-->>OS: {verified: true}
@@ -249,19 +252,19 @@ sequenceDiagram
         OS->>POS: POST /customer/order/place (PLACE_ORDER)
     end
 
-    Note over OS,POS: payload contains<br/>⚠ payment_method: "cash_on_delivery" (hardcoded)<br/>⚠ payment_type: actual selection (postpaid/prepaid)
+    Note over OS,POS: payload contains<br/> payment_method: "cash_on_delivery" (hardcoded)<br/> payment_type: actual selection (postpaid/prepaid)
 
     POS-->>OS: {order_id, status}
     OS-->>Rev: place-order response
     Rev->>Browser: navigate /:rid/order-success?orderId=...
 
-    OSuc->>OS: getOrderDetails(order_id) — poll every N seconds
+    OSuc->>OS: getOrderDetails(order_id) - poll every N seconds
     OS->>BE: GET /api/air-bnb/get-order-details/{oid}
     BE->>POS: GET /air-bnb/get-order-details/{oid} [server.py:869]
     POS-->>BE: order status + payment_status
     BE-->>OSuc: {order, payment_status}
-    OSuc->>OSuc: display status; repeat until terminal state
-    OSuc->>LS: on success — clear cart_${rid}, editOrder_${rid}
+    OSuc->>OSuc: display status, repeat until terminal state
+    OSuc->>LS: on success - clear cart_{rid}, editOrder_{rid}
 ```
 
 **Key files:** `ReviewOrder.jsx:139, 411`, `orderService.ts:83-565`, `endpoints.js:16-50`, `server.py:861-882, 1452-1487`.
@@ -279,11 +282,11 @@ Traced from `pages/DeliveryAddress.jsx`.
 sequenceDiagram
     actor Cust
     participant Del as DeliveryAddress.jsx
-    participant GMaps as 🌐 Google Maps JS
+    participant GMaps as [GMaps] Google Maps JS
     participant Auth as AuthContext
-    participant CRM as 🟪 CRM
-    participant BE as 🟦 Own-Backend
-    participant LS as 🗄 localStorage
+    participant CRM as [CRM] CRM
+    participant BE as [BE] Own-Backend
+    participant LS as [LS] localStorage
 
     Cust->>Del: /:rid/delivery-address
     Del->>GMaps: useJsApiLoader(REACT_APP_GOOGLE_MAPS_API_KEY)
@@ -291,7 +294,7 @@ sequenceDiagram
 
     alt customer has CRM token
         Del->>Auth: getCrmToken(rid)
-        Auth-->>Del: token from LS[crm_token_${rid}]
+        Auth-->>Del: token from LS[crm_token_{rid}]
         Del->>CRM: GET /customer/me/addresses (v2) or /scan/addresses (v1)
         CRM-->>Del: [saved addresses]
     end
@@ -305,7 +308,7 @@ sequenceDiagram
         Del->>CRM: POST /customer/me/addresses (v2) or /scan/addresses (v1)
         CRM-->>Del: {saved address}
     end
-    Del->>LS: setItem(delivery_${rid}, {address, phone, coords})
+    Del->>LS: setItem(delivery_{rid}, {address, phone, coords})
     Del->>Browser: navigate /:rid/review-order
 
     Note over Del: Delivery zone validation & delivery charge<br/>are UNKNOWN — see BUG-003 P1 / Agent prompt §13-9
@@ -327,10 +330,10 @@ sequenceDiagram
     participant Layout as AdminLayout
     participant AdmCfg as AdminConfigContext
     participant Settings as AdminSettingsPage
-    participant BE as 🟦 Own-Backend
-    participant Mongo as 🟨 Mongo
+    participant BE as [BE] Own-Backend
+    participant Mongo as [Mongo] Mongo
     participant RestCfg as RestaurantConfigContext (customer app)
-    participant LS as 🗄 localStorage
+    participant LS as [LS] localStorage
 
     Adm->>Layout: /admin (requires auth_token, user_type=restaurant)
     Layout->>Layout: redirect /login if unauth, /profile if not restaurant
@@ -375,7 +378,7 @@ Traced from `AdminSettings.jsx`, `AdminBrandingPage`, `server.py:1368`.
 sequenceDiagram
     actor Adm
     participant UI as Admin UI
-    participant BE as 🟦 Own-Backend
+    participant BE as [BE] Own-Backend
     participant FS as backend/uploads/ (disk)
 
     Adm->>UI: choose logo / banner file
@@ -389,7 +392,7 @@ sequenceDiagram
     UI->>BE: PUT /api/config/ (persist URL into config)
     BE->>Mongo: update customer_app_config
 
-    Note over BE,FS: ⚠ /api/uploads is mounted as StaticFiles [server.py:70]<br/>Uploads directory MUST exist on start (mkdir at boot)<br/>⚠ In production: needs persistent volume — else lost on redeploy
+    Note over BE,FS:  /api/uploads is mounted as StaticFiles [server.py:70]<br/>Uploads directory MUST exist on start (mkdir at boot)<br/> In production: needs persistent volume — else lost on redeploy
 ```
 
 ---

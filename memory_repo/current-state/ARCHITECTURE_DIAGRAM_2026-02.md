@@ -12,12 +12,12 @@
 ## 1. System Context (who talks to whom)
 
 ```mermaid
-graph TB
-    Browser["🖥 Customer / Admin<br/>Browser"]
+flowchart TB
+    Browser[" Customer / Admin<br/>Browser"]
 
     subgraph EmergentPod["Emergent Container (K8s + supervisor)"]
-        Frontend["<b>React 19 Frontend</b><br/>CRA + CRACO + Tailwind + shadcn<br/>:3000 (dev via craco start)<br/>build/ served in prod"]
-        Backend["<b>FastAPI Backend</b><br/>server.py — single file<br/>1,791 lines<br/>:8001 via uvicorn"]
+        Frontend["React 19 Frontend<br/>CRA + CRACO + Tailwind + shadcn<br/>:3000 (dev via craco start)<br/>build/ served in prod"]
+        Backend["FastAPI Backend<br/>server.py — single file<br/>1,791 lines<br/>:8001 via uvicorn"]
     end
 
     Mongo[("MongoDB<br/>52.66.232.149:27017<br/>db=mygenie<br/>12 collections")]
@@ -71,21 +71,21 @@ graph TB
 Verified: `frontend/src/App.js:56-143`.
 
 ```mermaid
-graph TB
-    QueryClient["<b>QueryClientProvider</b><br/>@tanstack/react-query<br/>cache for menu/restaurant/tables"]
-    Auth["<b>AuthProvider</b><br/>admin JWT + per-restaurant CRM token<br/>context/AuthContext.jsx"]
-    RestConfig["<b>RestaurantConfigProvider</b><br/>~80 config keys, CSS branding vars<br/>cache-first from localStorage<br/>context/RestaurantConfigContext.jsx"]
-    Router["<b>BrowserRouter</b><br/>react-router-dom v7"]
-    CartWrap["<b>CartWrapper</b><br/>mounts CartContext + persistent CartBar<br/>context/CartContext.js"]
-    Routes["<b>Routes</b> — 24 routes<br/>customer / admin / auth / fallback"]
-    Toaster["<b>Toaster</b><br/>react-hot-toast (global)"]
+flowchart TB
+    QueryClient["QueryClientProvider<br/>@tanstack/react-query<br/>cache for menu/restaurant/tables"]
+    Auth["AuthProvider<br/>admin JWT + per-restaurant CRM token<br/>context/AuthContext.jsx"]
+    RestConfig["RestaurantConfigProvider<br/>~80 config keys, CSS branding vars<br/>cache-first from localStorage<br/>context/RestaurantConfigContext.jsx"]
+    Router["BrowserRouter<br/>react-router-dom v7"]
+    CartWrap["CartWrapper<br/>mounts CartContext + persistent CartBar<br/>context/CartContext.js"]
+    Routes["Routes — 24 routes<br/>customer / admin / auth / fallback"]
+    Toaster["Toaster<br/>react-hot-toast (global)"]
 
     QueryClient --> Auth --> RestConfig --> Router --> CartWrap --> Routes
     Router --> Toaster
 
     subgraph AdminSubtree["Under /admin route only"]
-        AdminLayout["<b>AdminLayout</b><br/>layouts/AdminLayout.jsx"]
-        AdminConfig["<b>AdminConfigProvider</b><br/>context/AdminConfigContext.jsx"]
+        AdminLayout["AdminLayout<br/>layouts/AdminLayout.jsx"]
+        AdminConfig["AdminConfigProvider<br/>context/AdminConfigContext.jsx"]
         AdminLayout --> AdminConfig
     end
 
@@ -102,7 +102,7 @@ graph TB
 ### 2.2 Frontend API Layer (three destinations)
 
 ```mermaid
-graph LR
+flowchart LR
     subgraph Layer1["UI Layer (pages / components)"]
         Pages["React Pages"]
     end
@@ -183,20 +183,20 @@ graph LR
 Verified `server.py`. All routers listed with **exact line numbers**.
 
 ```mermaid
-graph TB
+flowchart TB
     Uvicorn["uvicorn :8001<br/>--reload (dev)"]
-    App["<b>FastAPI app</b><br/>server.py:67"]
+    App["FastAPI app<br/>server.py:67"]
     CORS["CORSMiddleware<br/>server.py:1774-1781<br/>origins = env CORS_ORIGINS or '*'"]
     Uploads["/api/uploads static mount<br/>server.py:70<br/>→ backend/uploads/"]
 
     subgraph RouterTree["api_router (prefix /api) — server.py:73"]
-        Auth["<b>auth_router</b> /auth<br/>server.py:74<br/>7 routes"]
-        Cust["<b>customer_router</b> /customer<br/>server.py:75<br/>7 routes"]
-        Cfg["<b>config_router</b> /config<br/>server.py:76<br/>10 routes"]
-        Up["<b>upload_router</b> /upload<br/>server.py:77<br/>1 route"]
-        Diet["<b>dietary_router</b> /dietary-tags<br/>server.py:78<br/>3 routes"]
-        Diag["<b>diagnostics_router</b> /diagnostics<br/>server.py:79<br/>1 route (CR-2026-05-30-002)"]
-        AirBnb["<b>air_bnb_router</b> /air-bnb<br/>server.py:861<br/>1 route"]
+        Auth["auth_router /auth<br/>server.py:74<br/>7 routes"]
+        Cust["customer_router /customer<br/>server.py:75<br/>7 routes"]
+        Cfg["config_router /config<br/>server.py:76<br/>10 routes"]
+        Up["upload_router /upload<br/>server.py:77<br/>1 route"]
+        Diet["dietary_router /dietary-tags<br/>server.py:78<br/>3 routes"]
+        Diag["diagnostics_router /diagnostics<br/>server.py:79<br/>1 route (CR-2026-05-30-002)"]
+        AirBnb["air_bnb_router /air-bnb<br/>server.py:861<br/>1 route"]
         Misc["Inline on api_router:<br/>/ · /healthz · /status ·<br/>/loyalty-settings/{rid} ·<br/>/customer-lookup/{rid} ·<br/>/pos/auth-token ·<br/>/table-config ·<br/>/docs/* (8 markdown routes)"]
     end
 
@@ -372,7 +372,7 @@ These are marked with ⚠ throughout the doc. Reproducing here for a single sour
 ## 7. Deployment topology (this container)
 
 ```mermaid
-graph TB
+flowchart TB
     Ingress["Emergent K8s ingress<br/>*.preview.emergentagent.com<br/>routes /api/* → :8001<br/>routes /* → :3000"]
     subgraph Pod["Container (supervisor-managed)"]
         SupBE["backend<br/>uvicorn server:app :8001 --reload"]
