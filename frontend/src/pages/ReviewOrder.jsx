@@ -31,6 +31,7 @@ import { calculateCartItemPrice } from '../api/transformers/helpers';
 import { calculateTaxBreakdown } from '../utils/taxCalculation';
 import { isDineInOrRoom, hasAssignedTable } from '../utils/orderTypeHelpers';
 import logger from '../utils/logger';
+import fetchWithTimeout, { DEFAULT_WRITE_TIMEOUT_MS } from '../utils/fetchWithTimeout'; // CR-2026-02-XX-001
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAccessPolicy';
 import { postNonQrBlock } from '../api/services/diagnosticsService';
@@ -136,7 +137,7 @@ const ReviewOrder = () => {
     const fetchLoyaltySettings = async () => {
       if (!numericRestaurantId) return;
       try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/loyalty-settings/${numericRestaurantId}`);
+        const response = await fetchWithTimeout(`${process.env.REACT_APP_BACKEND_URL}/api/loyalty-settings/${numericRestaurantId}`); // CR-2026-02-XX-001 — 8 s read
         if (response.ok) {
           const data = await response.json();
           setLoyaltySettings(data);
@@ -407,9 +408,9 @@ const ReviewOrder = () => {
     const timer = setTimeout(async () => {
       setIsLookingUp(true);
       try {
-        const response = await fetch(
+        const response = await fetchWithTimeout(
           `${process.env.REACT_APP_BACKEND_URL}/api/customer-lookup/${numericRestaurantId}?phone=${bareDigits}`
-        );
+        ); // CR-2026-02-XX-001 — 8 s read
         if (response.ok) {
           const data = await response.json();
           setLookedUpCustomer(data);
@@ -950,11 +951,11 @@ const ReviewOrder = () => {
         total_amount: orderResponse.total_amount
       });
 
-      const createOrderResponse = await fetch(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
+      const createOrderResponse = await fetchWithTimeout(ENDPOINTS.RAZORPAY_CREATE_ORDER(), {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({ order_id: String(orderResponse.order_id) })
-      });
+      }, DEFAULT_WRITE_TIMEOUT_MS); // CR-2026-02-XX-001 — 15 s write (POS)
 
       const razorpayOrder = await createOrderResponse.json();
       logger.razorpay(`[${label}] Create order response:`, razorpayOrder);

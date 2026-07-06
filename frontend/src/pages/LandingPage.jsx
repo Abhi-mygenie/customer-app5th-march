@@ -20,6 +20,7 @@ import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAcc
 import { postNonQrBlock } from '../api/services/diagnosticsService';
 import NonQrBlockModal from '../components/NonQrBlockModal';
 import logger from '../utils/logger';
+import fetchWithTimeout from '../utils/fetchWithTimeout'; // CR-2026-02-XX-001
 import { LandingPageSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
 import HamburgerMenu from '../components/HamburgerMenu/HamburgerMenu';
@@ -79,7 +80,7 @@ const LandingPage = () => {
       setIsAutoLooking(true);
       try {
         const API_URL = process.env.REACT_APP_BACKEND_URL || '';
-        const res = await fetch(`${API_URL}/api/auth/check-customer`, {
+        const res = await fetchWithTimeout(`${API_URL}/api/auth/check-customer`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -87,7 +88,7 @@ const LandingPage = () => {
             restaurant_id: String(restaurantId),
             pos_id: '0001',
           }),
-        });
+        }); // CR-2026-02-XX-001 — 8 s read
         const data = await res.json();
         lastLookedUpPhone.current = capturedPhone;
         setCustomerLookup({ ...data, phone: capturedPhone });
@@ -593,7 +594,7 @@ const LandingPage = () => {
           setIsCheckingCustomer(true);
           try {
             const API_URL = process.env.REACT_APP_BACKEND_URL || '';
-            const res = await fetch(`${API_URL}/api/auth/check-customer`, {
+            const res = await fetchWithTimeout(`${API_URL}/api/auth/check-customer`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -601,7 +602,7 @@ const LandingPage = () => {
                 restaurant_id: String(restaurantId),
                 pos_id: '0001',
               }),
-            });
+            }); // CR-2026-02-XX-001 — 8 s read
             data = await res.json();
           } catch (err) {
             logger.error('order', 'Customer lookup failed:', err);
