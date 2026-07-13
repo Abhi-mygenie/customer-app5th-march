@@ -41,6 +41,7 @@
 | GAP-018 | Low | P3-Cleanup | Doc endpoints | **Backend `/api/docs/*` endpoints 404** — point to `/app/memory/*.md` paths that don't exist (files live in `memory_repo/` with `_v2`). | `backend/server.py:1614-1684`; Discovery R16 | Dead endpoints; misleading. | Decide fix paths vs remove endpoints. | NOT STARTED — implementation not approved |
 | GAP-019 | Low | P3-Cleanup | Stale docs | **Stale/misleading docs** — `DEPLOYMENT_HANDOVER.md`, `memory_repo/*_v2.md`, `db_data/README.md`, empty `test_result.md`, `round_up_*`/`metadata_branch_diff_*`. | Discovery §11/§14; doc git dates 2026-05-14 | Future agents may trust stale truth/counts. | Approve archiving/labelling stale docs. | NOT STARTED — implementation not approved |
 | GAP-020 | Low | P3-Cleanup | Legacy code | **Legacy FastAPI `customer/*` routes likely unused** (CRM serves live customer flows); legacy `pages/AdminSettings.jsx` overlaps new `pages/admin/*`. | `server.py:754-952`; `crmService.js`; `App.js`; Discovery §4/PROJECT_INVENTORY §12 | Dead/duplicate paths increase confusion + maintenance. | Decide after a usage trace (do NOT delete blindly — some paths runtime-active). | NOT STARTED — implementation not approved |
+| GAP-021 | Low | P3-Cleanup | Hardcoding | **Restaurant `699` — hardcoded ₹10 takeaway charge sent via `delivery_charge` payload field** (POS schema has no `takeaway_charge` field; user-confirmed temporary). | CR-2026-02-XX-002 INTAKE_DOC; likely lands in `orderService.ts` or new `utils/tenantOverrides.js`; 2026-02 owner directive | Tenant-specific carve-out baked into shared payload code → downstream analytics attribution error (rest-699 takeaway ₹10 booked as delivery charge). Second-restaurant-with-carve-out risk. | Approve temporary implementation. Sunset when POS adds `takeaway_charge` field OR `customer_app_config` gains per-restaurant `takeaway_charge` field. | NOT STARTED — CR-2026-02-XX-002 at intake stage |
 
 ---
 
@@ -51,10 +52,13 @@
 | **P0** | GAP-001, GAP-002, GAP-003 (P0-Security); GAP-005, GAP-010 (P0-Production Risk) | **5** |
 | **P1** | GAP-006 (Frontend-Control); GAP-008, GAP-015 (Config-Baseline); GAP-011, GAP-012 (Auth-Control) | **5** |
 | **P2** | GAP-004 (Observability); GAP-007, GAP-013, GAP-014 (Architecture); GAP-009 (Test-CI) | **5** |
-| **P3** | GAP-016, GAP-017, GAP-018, GAP-019, GAP-020 (Cleanup) | **5** |
-| **Total** | | **20** |
+| **P3** | GAP-016, GAP-017, GAP-018, GAP-019, GAP-020, GAP-021 (Cleanup) | **6** |
+| **Total** | | **21** |
 
-**By severity:** High = 5 (GAP-001/002/003/005/010), Med = 10 (GAP-004/006/007/008/009/011/012/013/014/015), Low = 5 (GAP-016/017/018/019/020).
+**By severity:** High = 5 (GAP-001/002/003/005/010), Med = 10 (GAP-004/006/007/008/009/011/012/013/014/015), Low = 6 (GAP-016/017/018/019/020/021).
+
+**Update log:**
+- 2026-02 — GAP-021 added (Restaurant 699 takeaway ₹10 hardcode via `delivery_charge`, temporary; ref CR-2026-02-XX-002).
 
 **Bucket coverage:** P0-Security (3), P0-Production Risk (2), P1-Auth-Control (2), P1-Frontend-Control (1), P1-Config-Baseline (2), P2-Architecture (3), P2-Observability (1), P2-Test-CI (1), P3-Cleanup (5).
 
