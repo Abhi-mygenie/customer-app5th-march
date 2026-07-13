@@ -36,7 +36,7 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 | Field | Value |
 |---|---|
-| Status | Investigation complete — BLOCKER 1 resolved (2026-07-13). Awaiting D1 + D2 owner decisions. |
+| Status | **PLANNING COMPLETE (2026-07-13)** — awaiting owner gate approval (B-1 CRITICAL hotspot). Plan: `PLANNING_REPORT.md` |
 | Severity | P1 |
 | Risk | LOW-MEDIUM (`orderService.ts` is CRITICAL hotspot) |
 | What is needed | ₹10 takeaway packaging charge for restaurant 699 injected into `delivery_charge` payload field |
@@ -61,7 +61,7 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | What shipped | `order_value: '0'` → `order_value: String(getTotalPrice() \|\| 0)` |
 | Why smoke failed | `checkDistance` not re-triggered when cart total crosses ₹250 threshold after delivery address page already loaded — stale `distanceResult` shown |
 | API confirmed | `manage.mygenie.online` distance API works correctly: order_value ≥ ₹250 → shipping_charge=0 for restaurant 699 |
-| Next action | **Owner must choose R1 or R2 (see SESSION_HANDOVER.md)** then Bug Fix role |
+| Next action | **Owner gate approval needed** — approve A-1, A-2 (bundle/separate?), and R1/R2. Plan: `PLANNING_REPORT.md` |
 | Folder | `/app/memory/change_requests/BUG-2026-02-XX-001-delivery-charge-not-calculated/` |
 | Key docs | INTAKE_DOC.md, INVESTIGATION_REPORT.md (+ addendum §9), QA_HANDOVER.md (+ §9), SESSION_HANDOVER.md |
 
@@ -98,3 +98,4 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | 2026-07-13 | Pull 13-july branch; create .env placeholders; start services | ✅ Services running |
 | 2026-07-13 | Investigation: BUG-2026-02-XX-001 smoke failure on restaurant 699 | Root cause identified (stale checkDistance); live API confirmed working; owner decision pending |
 | 2026-07-13 | Investigation: CR-2026-02-XX-002 re-investigation after owner curl + field name provided | BLOCKER 1 resolved (`takeaway_charges:10` confirmed); recommendation changed B→C; B3+B4 still need owner decision |
+| 2026-07-13 | Planning (Role 2): BUG-001 + CR-002 impact analysis + implementation plan | Plans written; owner gate approval needed before Implementation (Role 3) |
