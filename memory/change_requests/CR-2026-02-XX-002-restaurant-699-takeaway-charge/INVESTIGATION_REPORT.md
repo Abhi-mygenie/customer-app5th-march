@@ -200,4 +200,98 @@ Next: Owner decision → Role 2 (Planning) → Role 3 (Implementation) → testi
 
 ---
 
-*End of INVESTIGATION_REPORT CR-2026-02-XX-002. Investigation agent must not code.*
+## 11. ADDENDUM — Re-investigation after owner clarification (2026-07-13)
+
+**Trigger:** Owner provided exact API curl + field name (`takeaway_charges`) + DevTools screenshot confirming `"takeaway_charges":10` in POS restaurant-info response.
+**Agent:** E1 (Investigation role — read-only)
+
+### 11.1 BLOCKER 1 — RESOLVED ✅
+
+Live probe of `preprod.mygenie.online/api/v1/web/restaurant-info` with payload `{"restaurant_web":"699"}` confirmed:
+
+```json
+"takeaway_charges": 10
+```
+
+Field is present, integer-typed, value = 10. **The field name is `takeaway_charges` (plural).**
+
+**Why the prior validation missed it:** BACKEND_VALIDATION_ADDENDUM called the same endpoint with `{"restaurant_web":"699","pos_id":"0001"}`. The correct payload omits `pos_id`. Same endpoint, wrong payload shape — field was there all along.
+
+### 11.2 Full data chain traced — Option C immediately viable ✅
+
+| Layer | Status | Detail |
+|---|---|---|
+| POS API (`/web/restaurant-info`) | ✅ Has `takeaway_charges: 10` | Confirmed live |
+| `endpoints.js` `RESTAURANT_DETAILS` | ✅ Points to this exact endpoint | `${API_BASE_URL}/web/restaurant-info` |
+| `useRestaurantDetails` (`useMenuData.js:326`) | ✅ Returns full POS response | Includes `takeaway_charges` |
+| `AdminConfigContext.jsx:159` | ✅ Already calls `useRestaurantDetails` | `posRestaurant.takeaway_charges = 10` available |
+| `orderService.ts` | ❌ Not wired | Caller does not pass `takeaway_charges` into `orderData` |
+| Own-backend `/api/config/699` | ❌ Does not expose `takeaway_charges` | Not needed for Option C |
+
+**Key insight:** The frontend already fetches the POS restaurant-info (via `useRestaurantDetails`) which contains `takeaway_charges`. No backend change is required. The gap is purely a wiring gap in the FE call chain from `useRestaurantDetails` → `orderData` → `orderService.ts`.
+
+### 11.3 Recommendation changed: Option B → Option C
+
+**Previous recommendation:** Option B (hardcode helper `utils/tenantOverrides.js`) — still a tracked landmine, tied to restaurant 699.
+
+**New recommendation: Option C (config-driven via existing POS restaurant-info hook)**
+
+| Property | Option B | Option C |
+|---|---|---|
+| Hardcodes restaurant ID | Yes (`'699'`) | No |
+| Backend changes needed | None | None |
+| Works for other restaurants automatically | No | Yes |
+| Creates GAP-021 landmine | Yes | No — GAP-021 can be CLOSED immediately |
+| Effort | ~1-2 hr | ~1-2 hr (same) |
+| Risk | LOW | LOW-MEDIUM (callers must pass new field; one extra param) |
+
+**Rough Option C wiring (not code, investigation only):**
+```
+Caller (ReviewOrder.jsx or equivalent, already has posRestaurant via useRestaurantDetails)
+  → orderData.takeawayCharges = posRestaurant.takeaway_charges || 0
+
+orderService.ts → buildOrderPayload → for orderType === 'takeaway':
+  delivery_charge = String((orderData.deliveryCharge || 0) + (orderData.takeawayCharges || 0))
+  // For all other order types: delivery_charge unchanged
+```
+
+### 11.4 Updated blocker status
+
+| Blocker | Prior status | Updated status |
+|---|---|---|
+| B1 — field not found | ⛔ ACTIVE | ✅ RESOLVED |
+| B2 — owner@brew.com not in own-BE | ⛔ ACTIVE | ⚠ REDUCED — only blocks smoke test, not implementation |
+| B3 — owner approval for orderService.ts | ⛔ ACTIVE | ⛔ STILL ACTIVE |
+| B4 — fix option not selected | ⛔ ACTIVE | ⛔ STILL ACTIVE (recommendation now C) |
+
+### 11.5 Updated owner decisions needed (before Bug Fix role)
+
+| # | Decision | Notes |
+|---|---|---|
+| **D1** | Approve **Option C** | Config-driven via existing POS hook; no hardcode; no backend changes |
+| **D2** | Explicitly approve editing `orderService.ts` | CRITICAL hotspot per Alpha v0.1 Part C; required before any agent touches it |
+| **D3 (optional)** | Provision `owner@brew.com` in own-BE `users` OR share alternate local admin creds | Only needed for post-fix smoke testing |
+
+Q1 / Q3 / Q6 remain nice-to-have, not blockers for Option C.
+
+### 11.6 Updated investigation output (canonical)
+
+```text
+Re-investigation complete: CR-2026-02-XX-002 (addendum 2026-07-13)
+BLOCKER 1: RESOLVED — takeaway_charges:10 confirmed in POS /web/restaurant-info
+           Field name: takeaway_charges (plural, integer)
+           Prior miss reason: wrong payload shape (pos_id included incorrectly)
+Data chain: POS → useRestaurantDetails → posRestaurant.takeaway_charges = 10 (live in FE already)
+Recommendation changed: Option B → Option C (config-driven, no hardcode, no backend changes)
+GAP-021: Can be CLOSED immediately if Option C is implemented
+Remaining blockers: B3 (owner approval for orderService.ts), B4 (fix option selection)
+Steps used: 8/10
+Docs updated: INVESTIGATION_REPORT.md (§11), BACKEND_VALIDATION_ADDENDUM.md (§9),
+              SESSION_HANDOVER.md (new), PRD.md
+Next: Owner approves D1 (Option C) + D2 (orderService.ts) → Role 2 (Planning) →
+      Role 3 (Implementation) → testing_agent_v3
+```
+
+---
+
+*End of INVESTIGATION_REPORT CR-2026-02-XX-002 (including 2026-07-13 addendum). Investigation agent must not code.*

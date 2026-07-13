@@ -165,4 +165,41 @@ Next: Owner clarifies deploy location or field name → I re-validate → if con
 
 ---
 
-*End of validation addendum. Investigation agent must not code. No CR is being amended; this is a blocking clarification request.*
+## 9. RE-VALIDATION — Owner clarification received (2026-07-13) ✅ RESOLVED
+
+**Owner provided:**
+- Exact curl: `POST preprod.mygenie.online/api/v1/web/restaurant-info` with `{"restaurant_web":"699"}` (no `pos_id`)
+- Exact field name: `takeaway_charges` (plural)
+- DevTools screenshot confirming `"takeaway_charges":10` in live response
+
+**Re-validation result: ✅ CLAIM VERIFIED**
+
+```json
+// preprod.mygenie.online/api/v1/web/restaurant-info — {"restaurant_web":"699"}
+"takeaway_charges": 10
+```
+
+**Root cause of prior miss:**
+The original validation called the endpoint with `{"restaurant_web":"699","pos_id":"0001"}`. The correct minimal payload is `{"restaurant_web":"699"}` without `pos_id`. This payload difference caused a different response shape (or the field was stripped). The field was present in the POS all along.
+
+**Own-backend `/api/config/699` still does NOT expose `takeaway_charges`** — confirmed. However, this is NOT needed. The FE already fetches POS restaurant-info directly via `useRestaurantDetails` → `RESTAURANT_DETAILS` endpoint. `posRestaurant.takeaway_charges = 10` is available in the FE without any backend changes.
+
+**Q-B1/Q-B2/Q-B3: All resolved by the owner curl + field name.**
+**Q-B4: owner@brew.com still not in own-BE users — only blocks smoke test, not implementation.**
+
+### 9.1 Updated validation output (canonical)
+
+```text
+Re-validation complete: CR-2026-02-XX-002 (BACKEND_VALIDATION_ADDENDUM §9)
+Result: CLAIM VERIFIED — takeaway_charges:10 confirmed in POS /web/restaurant-info
+Field: takeaway_charges (plural, integer, value=10 for restaurant 699)
+Prior miss: payload included pos_id which is not required; omitting it returns the field
+Own-BE /api/config: still does NOT expose field — not needed (FE reads POS directly)
+Recommendation: Option C (config-driven via useRestaurantDetails) — no backend changes required
+All Q-B1/Q-B2/Q-B3 resolved. Q-B4 (owner@brew.com) still open — non-blocking for implementation.
+Docs updated: BACKEND_VALIDATION_ADDENDUM.md (§9), INVESTIGATION_REPORT.md (§11), SESSION_HANDOVER.md (new)
+```
+
+---
+
+*End of validation addendum (updated 2026-07-13 — claim verified, blockers resolved). Investigation agent must not code.*

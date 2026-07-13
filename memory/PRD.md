@@ -32,6 +32,24 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 ## Active Change Requests
 
+### CR-2026-02-XX-002 — Restaurant 699 takeaway charge ⛔ PENDING OWNER DECISION
+
+| Field | Value |
+|---|---|
+| Status | Investigation complete — BLOCKER 1 resolved (2026-07-13). Awaiting D1 + D2 owner decisions. |
+| Severity | P1 |
+| Risk | LOW-MEDIUM (`orderService.ts` is CRITICAL hotspot) |
+| What is needed | ₹10 takeaway packaging charge for restaurant 699 injected into `delivery_charge` payload field |
+| Field confirmed | `takeaway_charges: 10` in `preprod.mygenie.online/api/v1/web/restaurant-info` (payload: `{"restaurant_web":"699"}`) |
+| Fix recommendation | **Option C** (config-driven via `useRestaurantDetails` hook — already in FE, no backend changes needed, no hardcode) |
+| Blockers remaining | B3: owner approval to touch `orderService.ts` · B4: owner selects Option C |
+| Non-blocker | B2: `owner@brew.com` not in own-BE users (only blocks smoke test) |
+| GAP-021 | Can be CLOSED immediately once Option C is implemented (no hardcode, no sunset needed) |
+| Folder | `/app/memory/change_requests/CR-2026-02-XX-002-restaurant-699-takeaway-charge/` |
+| Key docs | INTAKE_DOC.md, INVESTIGATION_REPORT.md (+ §11), BACKEND_VALIDATION_ADDENDUM.md (+ §9), SESSION_HANDOVER.md |
+
+---
+
 ### BUG-2026-02-XX-001 — Delivery charge not calculated ❌ SMOKE FAILED
 
 | Field | Value |
@@ -79,3 +97,4 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 |---|---|---|
 | 2026-07-13 | Pull 13-july branch; create .env placeholders; start services | ✅ Services running |
 | 2026-07-13 | Investigation: BUG-2026-02-XX-001 smoke failure on restaurant 699 | Root cause identified (stale checkDistance); live API confirmed working; owner decision pending |
+| 2026-07-13 | Investigation: CR-2026-02-XX-002 re-investigation after owner curl + field name provided | BLOCKER 1 resolved (`takeaway_charges:10` confirmed); recommendation changed B→C; B3+B4 still need owner decision |
