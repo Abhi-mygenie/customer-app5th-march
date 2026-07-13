@@ -287,3 +287,73 @@ Branch: `13-july` — no code changes made this session.
 ---
 
 *End of SESSION_HANDOVER CR-2026-02-XX-002 (planning session 2026-07-13). Planning agent did not edit any code.*
+
+---
+---
+
+# SESSION_HANDOVER — CR-2026-02-XX-002 (Implementation — Role 3)
+
+**Session date:** 2026-07-13
+**Agent:** E1 (Implementation role — Role 3)
+**Status at close:** ✅ IMPLEMENTED + structural test PASS — owner smoke test pending
+
+---
+
+## Changes made this session
+
+### Plan B-1 — ReviewOrder.jsx (lines 671–682)
+
+Injected `takeawaySurcharge` into `effectiveDeliveryCharge` computation block:
+
+```javascript
+const takeawaySurcharge = (scannedOrderType === 'takeaway')
+                        ? (restaurant?.takeaway_charges || 0)
+                        : 0;
+const effectiveDeliveryCharge = (includeDelivery
+                              ? (parseFloat(deliveryCharge) || 0)
+                              : 0) + takeawaySurcharge;
+```
+
+All 7 downstream `placeOrder`/`updateCustomerOrder` call sites auto-corrected — no further changes.
+`totalToPay` and `roundedTotal` include the ₹10 via `effectiveDeliveryCharge → finalSubtotal`.
+POS payload: `delivery_charge: "10"` for restaurant 699 takeaway.
+
+### Plan B-2 — ReviewOrder.jsx (lines 1808–1814) — Q3-B
+
+New standalone "Takeaway Charges" JSX row added after the existing "Delivery Charge" block:
+
+```jsx
+{scannedOrderType === 'takeaway' && takeawaySurcharge > 0 && (
+  <div className="price-row price-row-sub">
+    <span className="price-label-sub">Takeaway Charges</span>
+    <span className="price-value-sub">₹{takeawaySurcharge.toFixed(2)}</span>
+  </div>
+)}
+```
+
+Existing "Delivery Charge" row (lines 1803–1807) — NOT touched.
+
+### Plan B-3 — PROJECT_GAP_REGISTER.md
+
+GAP-021 marked CLOSED. Config-driven implementation — no hardcode — no sunset needed.
+
+## Test result
+
+**testing_agent_v3: structural verification PASS 100%** (`/app/test_reports/iteration_1.json`)
+- All code markers confirmed present
+- App loads without JS errors
+- No issues found
+
+## Owner smoke test checklist (pending)
+
+1. Restaurant 699, takeaway order
+2. Add items to cart → proceed to ReviewOrder
+3. Verify "Takeaway Charges ₹10.00" row visible in bill summary
+4. Verify grand total includes the ₹10
+5. Place order → verify `delivery_charge: "10"` in POS network payload (browser DevTools → Network → order API call)
+6. Regression: restaurant 478 takeaway → no "Takeaway Charges" row, `delivery_charge: "0"`
+7. Regression: restaurant 699 delivery order → no "Takeaway Charges" row; delivery charge from distance API shown correctly
+
+---
+
+*End of SESSION_HANDOVER CR-2026-02-XX-002 (implementation session 2026-07-13).*

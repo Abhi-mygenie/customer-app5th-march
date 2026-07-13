@@ -304,3 +304,57 @@ Branch: `13-july` — no code changes made this session.
 ---
 
 *End of SESSION_HANDOVER BUG-2026-02-XX-001 (planning session 2026-07-13). Planning agent did not edit any code.*
+
+---
+---
+
+# SESSION_HANDOVER — BUG-2026-02-XX-001 (Implementation — Role 3)
+
+**Session date:** 2026-07-13
+**Agent:** E1 (Implementation role — Role 3)
+**Status at close:** ✅ IMPLEMENTED + structural test PASS — owner smoke test pending
+
+---
+
+## Changes made this session
+
+### Plan A-1 — DeliveryAddress.jsx (lines 653–660)
+
+Added `cartTotal` computed value and a `useEffect` that re-fires `checkDistance` when cart total changes and an address is already selected.
+
+```javascript
+// BUG-2026-02-XX-001 R1: Re-check delivery charge when cart total changes after address load.
+const cartTotal = getTotalPrice();
+useEffect(() => {
+  if (!markerPos || !hasActiveAddress) return;
+  checkDistance(markerPos.lat, markerPos.lng);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [cartTotal]);
+```
+
+### Plan A-2 — CartContext.js (lines 504–517, 532, 573)
+
+- `deliveryCharge` useState now lazy-initializes from `localStorage('delivery_charge_<restaurantId>')`
+- `persistDeliveryCharge` useCallback wrapper writes to localStorage on every set
+- `clearDeliveryAddress` removes `delivery_charge_<restaurantId>` key
+- Context exports `setDeliveryCharge: persistDeliveryCharge`
+
+## Test result
+
+**testing_agent_v3: structural verification PASS 100%** (`/app/test_reports/iteration_1.json`)
+- All code markers confirmed present
+- App loads without JS errors
+- No issues found
+
+## Owner smoke test checklist (pending)
+
+1. Restaurant 699, delivery order
+2. Add items totalling < ₹250 → navigate to delivery address page → verify charge = ₹10
+3. Return to menu → add more items (total now > ₹250) → return to delivery address page WITHOUT re-selecting address
+4. Verify charge auto-updates to ₹0 (no user action needed)
+5. Proceed to ReviewOrder → verify ₹0 delivery charge shown
+6. Page refresh → verify delivery charge still correct (persistence)
+
+---
+
+*End of SESSION_HANDOVER BUG-2026-02-XX-001 (implementation session 2026-07-13).*

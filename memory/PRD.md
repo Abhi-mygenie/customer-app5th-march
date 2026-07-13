@@ -32,11 +32,17 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 ## Active Change Requests
 
-### CR-2026-02-XX-002 — Restaurant 699 takeaway charge ⏳ READY FOR IMPLEMENTATION
+### CR-2026-02-XX-002 — Restaurant 699 takeaway charge ✅ IMPLEMENTED
 
 | Field | Value |
 |---|---|
-| Status | **PLANNING COMPLETE — all gates open (2026-07-13). Implementation (Role 3) may proceed.** |
+| Status | **✅ IMPLEMENTED + TESTED (2026-07-13)** — structural verification PASS (100%). Owner smoke test pending. |
+| Files changed | `frontend/src/pages/ReviewOrder.jsx` (lines 671–683, 1808–1814), `memory/v2/PROJECT_GAP_REGISTER.md` (GAP-021 CLOSED) |
+| Screen behaviour | "Takeaway Charges ₹10.00" shown as separate bill row for restaurant 699 takeaway orders |
+| API behaviour | `delivery_charge: "10"` in POS order payload |
+| GAP-021 | ✅ CLOSED |
+| Next action | Owner smoke test — restaurant 699, takeaway order |
+| Folder | `/app/memory/change_requests/CR-2026-02-XX-002-restaurant-699-takeaway-charge/` |
 | Severity | P1 |
 | Risk | CRITICAL (`ReviewOrder.jsx` — §6.1 hotspot) |
 | Approved plan | B-1: effectiveDeliveryCharge + takeawaySurcharge · B-2: "Takeaway Charges" standalone row (Q3-B) · B-3: GAP-021 closure |
@@ -53,11 +59,15 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 ---
 
-### BUG-2026-02-XX-001 — Delivery charge not calculated ❌ SMOKE FAILED
+### BUG-2026-02-XX-001 — Delivery charge not calculated ✅ IMPLEMENTED
 
 | Field | Value |
 |---|---|
-| Status | Option A SHIPPED — Smoke test FAILED (2026-07-13) |
+| Status | **✅ IMPLEMENTED + TESTED (2026-07-13)** — structural verification PASS (100%). Owner smoke test pending. |
+| Files changed | `frontend/src/pages/DeliveryAddress.jsx` (lines 653–660), `frontend/src/context/CartContext.js` (lines 504–517, 532, 573) |
+| Fix | cartTotal useEffect re-triggers checkDistance on cart change; deliveryCharge persisted to localStorage |
+| Next action | Owner smoke test — restaurant 699, delivery order, cart > ₹250 |
+| Folder | `/app/memory/change_requests/BUG-2026-02-XX-001-delivery-charge-not-calculated/` |
 | Severity | P1 |
 | Risk | MEDIUM |
 | File changed | `frontend/src/pages/DeliveryAddress.jsx` (line 320) |
@@ -103,3 +113,4 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | 2026-07-13 | Investigation: CR-2026-02-XX-002 re-investigation after owner curl + field name provided | BLOCKER 1 resolved (`takeaway_charges:10` confirmed); recommendation changed B→C; B3+B4 still need owner decision |
 | 2026-07-13 | Planning (Role 2): BUG-001 + CR-002 impact analysis + implementation plan | Plans written; Q3-B finalised ("Takeaway Charges" label, new standalone row); all owner gates open — Implementation (Role 3) ready |
 | 2026-07-13 | Q3-B confirmed by owner: label "Takeaway Charges"; behaviour confirmed (screen ₹10 row · POS delivery_charge="10") | PLANNING_REPORT.md finalised for both items; SESSION_HANDOVER.md updated; all docs closed |
+| 2026-07-13 | Implementation (Role 3): BUG-001 A-1+A-2 + CR-002 B-1+B-2+B-3 implemented | 6 code edits across 3 files; testing_agent_v3 structural verification PASS 100%; services running; owner smoke test pending |
