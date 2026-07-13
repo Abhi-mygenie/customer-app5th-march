@@ -32,21 +32,24 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 ## Active Change Requests
 
-### CR-2026-02-XX-002 — Restaurant 699 takeaway charge ⛔ PENDING OWNER DECISION
+### CR-2026-02-XX-002 — Restaurant 699 takeaway charge ⏳ READY FOR IMPLEMENTATION
 
 | Field | Value |
 |---|---|
-| Status | **PLANNING COMPLETE (2026-07-13)** — awaiting owner gate approval (B-1 CRITICAL hotspot). Plan: `PLANNING_REPORT.md` |
+| Status | **PLANNING COMPLETE — all gates open (2026-07-13). Implementation (Role 3) may proceed.** |
 | Severity | P1 |
-| Risk | LOW-MEDIUM (`orderService.ts` is CRITICAL hotspot) |
-| What is needed | ₹10 takeaway packaging charge for restaurant 699 injected into `delivery_charge` payload field |
+| Risk | CRITICAL (`ReviewOrder.jsx` — §6.1 hotspot) |
+| Approved plan | B-1: effectiveDeliveryCharge + takeawaySurcharge · B-2: "Takeaway Charges" standalone row (Q3-B) · B-3: GAP-021 closure |
+| Files | `frontend/src/pages/ReviewOrder.jsx`, `memory_repo/v2/PROJECT_GAP_REGISTER.md` |
+| Files NOT touching | orderService.ts, CartContext.js, RestaurantConfigContext.jsx, server.py, any .env |
 | Field confirmed | `takeaway_charges: 10` in `preprod.mygenie.online/api/v1/web/restaurant-info` (payload: `{"restaurant_web":"699"}`) |
-| Fix recommendation | **Option C** (config-driven via `useRestaurantDetails` hook — already in FE, no backend changes needed, no hardcode) |
-| Blockers remaining | B3: owner approval to touch `orderService.ts` · B4: owner selects Option C |
-| Non-blocker | B2: `owner@brew.com` not in own-BE users (only blocks smoke test) |
-| GAP-021 | Can be CLOSED immediately once Option C is implemented (no hardcode, no sunset needed) |
+| Screen behaviour | "Takeaway Charges ₹10.00" shown as separate bill row for restaurant 699 takeaway orders |
+| API behaviour | `delivery_charge: "10"` in POS order payload under existing key |
+| Grand total | Includes ₹10 automatically via `effectiveDeliveryCharge → finalSubtotal → totalToPay` (line 707) |
+| GAP-021 | Ready to CLOSE — config-driven, no hardcode |
+| Next action | Implementation (Role 3) → read `PLANNING_REPORT.md` → implement B-1 + B-2 + B-3 → testing_agent_v3 |
 | Folder | `/app/memory/change_requests/CR-2026-02-XX-002-restaurant-699-takeaway-charge/` |
-| Key docs | INTAKE_DOC.md, INVESTIGATION_REPORT.md (+ §11), BACKEND_VALIDATION_ADDENDUM.md (+ §9), SESSION_HANDOVER.md |
+| Key docs | INVESTIGATION_REPORT.md (+ §11), BACKEND_VALIDATION_ADDENDUM.md (+ §9), PLANNING_REPORT.md ✅ FINAL, SESSION_HANDOVER.md |
 
 ---
 
@@ -71,7 +74,7 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 | Item | Status | Note |
 |---|---|---|
-| CR-2026-02-XX-002 (Rest 699 takeaway ₹10) | PARKED | Per owner instruction; awaiting `takeaway_charge` field clarification |
+| CR-2026-02-XX-002 (Rest 699 takeaway ₹10) | ✅ UNPARKED — in active implementation queue | PLANNING_REPORT.md finalised; ready for Role 3 |
 | BUG-006 (Rest 716 hardcode in ReviewOrder) | PARKED | Intentional business exception |
 | BUG-007 (`payment_method` hardcode) | PARKED | Intentional; `payment_type` carries actual selection |
 | Google Maps API key restriction | BACKLOG | Key needs domain restriction in GCP console |
@@ -99,3 +102,4 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | 2026-07-13 | Investigation: BUG-2026-02-XX-001 smoke failure on restaurant 699 | Root cause identified (stale checkDistance); live API confirmed working; owner decision pending |
 | 2026-07-13 | Investigation: CR-2026-02-XX-002 re-investigation after owner curl + field name provided | BLOCKER 1 resolved (`takeaway_charges:10` confirmed); recommendation changed B→C; B3+B4 still need owner decision |
 | 2026-07-13 | Planning (Role 2): BUG-001 + CR-002 impact analysis + implementation plan | Plans written; Q3-B finalised ("Takeaway Charges" label, new standalone row); all owner gates open — Implementation (Role 3) ready |
+| 2026-07-13 | Q3-B confirmed by owner: label "Takeaway Charges"; behaviour confirmed (screen ₹10 row · POS delivery_charge="10") | PLANNING_REPORT.md finalised for both items; SESSION_HANDOVER.md updated; all docs closed |

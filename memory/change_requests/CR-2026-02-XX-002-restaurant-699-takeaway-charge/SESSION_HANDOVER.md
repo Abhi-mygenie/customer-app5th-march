@@ -153,3 +153,137 @@ Branch: `13-july` — no code changes made this session.
 ---
 
 *End of SESSION_HANDOVER CR-2026-02-XX-002. Investigation agent did not edit any code.*
+
+---
+---
+
+# SESSION_HANDOVER — CR-2026-02-XX-002 (Planning, Q3-B confirmation)
+
+**Session date:** 2026-07-13
+**Agent:** E1 (Planning role — Role 2, read-only, no code edits made)
+**Status at close:** PLANNING COMPLETE — all owner gate approvals received — Implementation (Role 3) ready to proceed immediately
+
+---
+
+## Session summary
+
+### What happened
+- Owner granted all approvals: A-1, A-2 (bundled), CR-002 B-1 (CRITICAL gate)
+- Planning agent (Role 2) produced full impact analysis + implementation plan for BUG-001 and CR-002 jointly
+- Q3-B resolved: owner confirmed label = **"Takeaway Charges"** as a new standalone bill row
+- Owner confirmed the exact behaviour: screen shows "Takeaway Charges ₹10.00" · POS receives `delivery_charge: "10"`
+- Key plan correction discovered during code read: original B-1 display change at line 1799 was CANCELLED — "Delivery Charge" row is gated by `scannedOrderType === 'delivery'` and is invisible for takeaway. New standalone row (B-2) is the correct approach.
+
+### Critical code finding (confirmed during planning)
+
+```
+ReviewOrder.jsx:1795-1801 — "Delivery Charge" row
+  {scannedOrderType === 'delivery' && (   ← GATED — hidden for takeaway
+    <div>Delivery Charge / {deliveryCharge > 0 ? ₹X : 'Free'}</div>
+  )}
+
+ReviewOrder.jsx:707 — effectiveDeliveryCharge flows into totalToPay
+  const finalSubtotal = subtotalAfterDiscount + serviceCharge + effectiveDeliveryCharge;
+  const totalToPay    = finalSubtotal + finalTotalTax;
+  // → Adding takeawaySurcharge to effectiveDeliveryCharge auto-propagates to:
+  //   totalToPay, roundedTotal, order_amount (POS), all 7 placeOrder call sites
+```
+
+### Files read (no edits)
+- `frontend/src/pages/ReviewOrder.jsx` (lines 660–700 computation; lines 1788–1815 bill display)
+- `frontend/src/pages/DeliveryAddress.jsx`
+- `frontend/src/context/CartContext.js`
+- `frontend/src/api/services/orderService.ts`
+- `frontend/src/hooks/useMenuData.js`
+- Alpha v0.1 (full)
+
+---
+
+## Approved implementation plan (FINAL)
+
+### CR-2026-02-XX-002
+
+**Plan B-1 — `frontend/src/pages/ReviewOrder.jsx`** (CRITICAL — lines 671–677)
+- Inject `takeawaySurcharge` into `effectiveDeliveryCharge` computation block
+- `const takeawaySurcharge = (scannedOrderType === 'takeaway') ? (restaurant?.takeaway_charges || 0) : 0;`
+- `const effectiveDeliveryCharge = (includeDelivery ? ... : 0) + takeawaySurcharge;`
+- Existing delivery row (line 1795): NOT touched
+- All 7 downstream call sites auto-correct — no further changes needed
+- Code marker: `// CR-2026-02-XX-002:`
+
+**Plan B-2 — `frontend/src/pages/ReviewOrder.jsx`** (CRITICAL — after line 1801)
+- Add new JSX block immediately after existing "Delivery Charge" block:
+  ```jsx
+  {scannedOrderType === 'takeaway' && takeawaySurcharge > 0 && (
+    <div className="price-row price-row-sub">
+      <span className="price-label-sub">Takeaway Charges</span>
+      <span className="price-value-sub">₹{takeawaySurcharge.toFixed(2)}</span>
+    </div>
+  )}
+  ```
+- Code marker: `// CR-2026-02-XX-002 Q3-B:`
+
+**Plan B-3 — `memory_repo/v2/PROJECT_GAP_REGISTER.md`** (LOW)
+- Mark GAP-021 CLOSED (config-driven, no hardcode, no sunset needed)
+
+### BUG-2026-02-XX-001 (co-planned in same session)
+- Plan A-1: `DeliveryAddress.jsx` — cartTotal useEffect re-trigger
+- Plan A-2: `CartContext.js` — deliveryCharge localStorage persistence
+- Full details in BUG-001 SESSION_HANDOVER.md and PLANNING_REPORT.md
+
+---
+
+## Owner approvals received (on record)
+
+| Approval | Decision | Date |
+|---|---|---|
+| B-1 (ReviewOrder.jsx — CRITICAL gate) | ✅ Approved | 2026-07-13 |
+| Q3-B display label | ✅ "Takeaway Charges" (new standalone row) | 2026-07-13 |
+| Behaviour confirmation | ✅ Screen shows "Takeaway Charges ₹10" · POS `delivery_charge="10"` | 2026-07-13 |
+| Grand total includes ₹10 | ✅ Confirmed (effectiveDeliveryCharge → finalSubtotal → totalToPay) | 2026-07-13 |
+
+---
+
+## Next agent instructions (Implementation — Role 3)
+
+**All gates open. Proceed immediately.**
+
+1. Read `PLANNING_REPORT.md` for exact code snippets and line anchors
+2. B-1 and B-2 are in the same file (`ReviewOrder.jsx`) — implement together in one edit pass
+3. B-3 (GAP register) can be done in parallel
+4. After changes: `sudo supervisorctl restart frontend`
+5. Call `testing_agent_v3` with the full verification matrix from PLANNING_REPORT.md §4
+
+**Test cases to prioritise:**
+- CR-TC1: Restaurant 699 takeaway → `delivery_charge = "10"` in POS payload
+- CR-TC2: Restaurant 699 takeaway → "Takeaway Charges ₹10.00" row visible in ReviewOrder
+- CR-TC5: Restaurant 478 takeaway → `delivery_charge = "0"` (no regression)
+- CR-TC7: Restaurant 699 takeaway edit-order → update payload `delivery_charge = "10"` preserved
+
+**Landmines — do NOT touch:**
+- Existing "Delivery Charge" row (lines 1795–1801) — must remain untouched
+- `payment_method: "cash_on_delivery"` hardcode (BUG-007 parked)
+- Restaurant 716 carve-out at `orderService.ts:325` (BUG-006 parked)
+- `isOn()` helper default polarity
+- Any `.env` file
+
+**Do NOT change:**
+- `orderService.ts` — not in scope
+- `CartContext.js` — handled under BUG-001, not CR-002
+- `backend/server.py` — not in scope
+
+---
+
+## Services state at handover
+
+| Service | Status |
+|---|---|
+| Backend (FastAPI :8001) | ✅ RUNNING |
+| Frontend (React :3000) | ✅ RUNNING |
+| MongoDB | ✅ RUNNING |
+
+Branch: `13-july` — no code changes made this session.
+
+---
+
+*End of SESSION_HANDOVER CR-2026-02-XX-002 (planning session 2026-07-13). Planning agent did not edit any code.*
