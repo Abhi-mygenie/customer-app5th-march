@@ -1,9 +1,10 @@
 # QA_HANDOVER — BUG-2026-02-XX-001
 
-**Title:** Delivery charge not calculated on Select-Address page — FIX SHIPPED
-**Status:** ✅ IMPLEMENTED + testing_agent VERIFIED (static) — awaiting owner E2E smoke on a real device
+**Title:** Delivery charge not calculated on Select-Address page — FIX SHIPPED BUT SMOKE FAILED
+**Status:** ❌ OWNER SMOKE TEST FAILED (2026-07-13) — root cause identified, awaiting owner decision on supplementary fix
 **Testing report:** `/app/test_reports/iteration_2.json` (100% static PASS, 0 issues raised)
 **CR ancestor:** `INVESTIGATION_REPORT.md` → Option A selected (recommended)
+**Smoke failure report:** `SESSION_HANDOVER.md` (2026-07-13) + `INVESTIGATION_REPORT.md §8 (addendum)`
 
 ---
 
@@ -90,4 +91,42 @@ The existing 500 ms debounce in `checkDistance` (line 305 setTimeout) already co
 
 ---
 
-*End of QA Handover. Fix is ready for owner smoke sign-off.*
+## 9. SMOKE TEST RESULT (2026-07-13) — FAILED
+
+**Owner:** owner@brew.com  
+**Restaurant:** 699  
+**Test condition:** Order value > ₹250, distance < 2 km  
+**Expected:** delivery charge = ₹0  
+**Actual:** delivery charge = ₹10 still shown  
+**Verdict:** ❌ FAIL
+
+### Root cause of smoke failure (confirmed via live API probe)
+
+The external API (`manage.mygenie.online/api/v1/config/distance-api-new`) is working correctly. Live probe confirmed:
+
+| order_value | shipping_charge |
+|---|---|
+| "0" | 10 |
+| "249" | 10 |
+| "250" | 0 |
+| "300" | 0 |
+
+The fix (Option A) sends the correct cart total at the time `checkDistance` fires. The gap is that **`checkDistance` is never re-triggered when the cart total changes after the delivery address page has already loaded.** If the owner added items to the cart to cross ₹250 AFTER viewing the delivery address page, the stale `distanceResult` (with `shipping_charge=10`) remains until an address-level event (re-select, drag, GPS) forces a new check.
+
+Full analysis: `SESSION_HANDOVER.md §2.3`
+
+### Owner decision required before next fix
+
+Choose one:
+
+- **Option R1:** Add `useEffect` in `DeliveryAddress.jsx` watching `getTotalPrice()` — re-call `checkDistance` when cart total changes and an address is already selected. Risk: LOW.
+- **Option R2:** Re-run distance check on `ReviewOrder.jsx` mount with final cart total. Risk: MEDIUM (hotspot file — needs explicit owner approval).
+
+**Recommendation: R1.**
+
+Secondary fix (independent): persist `deliveryCharge` to localStorage in CartContext.js.
+
+---
+
+*End of QA Handover (updated 2026-07-13 — smoke failed, root cause documented).*
+

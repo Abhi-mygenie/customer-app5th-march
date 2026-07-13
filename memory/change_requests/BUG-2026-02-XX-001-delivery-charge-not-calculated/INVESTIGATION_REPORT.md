@@ -189,4 +189,70 @@ Next: Owner approval → Role 2 (Planning) → Role 3 (Implementation) → testi
 
 ---
 
-*End of INVESTIGATION_REPORT BUG-2026-02-XX-001. Investigation agent must not code.*
+## 9. ADDENDUM — Post-smoke-test re-investigation (2026-07-13)
+
+**Trigger:** Owner smoke test FAILED on restaurant 699 despite Option A being shipped.  
+**Agent:** E1 (Investigation role — read-only)
+
+### 9.1 Q2 / Q4 now answered
+
+- **Q2 (config location):** Delivery charge config lives server-side in the external distance API (`manage.mygenie.online/api/v1/config/distance-api-new`). No separate config field is needed in RestaurantConfigContext.
+- **Q4 (which API):** Same distance API — must be called. Option C (client-side calculation) is NOT the owner's intent.
+
+### 9.2 Live API probe results (restaurant 699)
+
+Endpoint: `manage.mygenie.online/api/v1/config/distance-api-new`  
+Coordinates: lat=22.641516499999998, lng=88.47206969999999, restaurant_id=699
+
+| order_value | shipping_charge | Notes |
+|---|---|---|
+| "0" | 10 | Base charge (below threshold) |
+| "249" | 10 | Below threshold |
+| "250" | 0 | Free delivery (at threshold) |
+| "300" | 0 | Free delivery (above threshold) |
+
+**Both `manage.mygenie.online` and `preprod.mygenie.online` return identical results.**  
+The external API is working correctly. GAP #1 from original investigation is CLOSED.  
+Option A fix direction is confirmed correct.
+
+### 9.3 True root cause of smoke failure
+
+**Option A fix is correct but incomplete.**
+
+The fix passes `getTotalPrice()` at the moment `checkDistance` fires. But there is no mechanism to re-fire `checkDistance` when the cart total changes after the delivery address page is already loaded.
+
+**Stale-check scenario (confirmed as the smoke test failure path):**
+```
+Cart < ₹250 → open delivery-address → checkDistance fires → charge=10 stored
+Cart updated to > ₹250 (user returns to menu) → return to delivery-address
+→ NO re-check → stale charge=10 still displayed and stored on "Confirm & Proceed"
+```
+
+### 9.4 Supplementary fix options (owner to decide)
+
+| Option | File(s) | Risk | Description |
+|---|---|---|---|
+| R1 | `DeliveryAddress.jsx` only | LOW | useEffect watching getTotalPrice() — re-call checkDistance when address already selected |
+| R2 | `ReviewOrder.jsx` | MEDIUM (hotspot) | Re-run checkDistance on ReviewOrder mount with final cart total |
+
+**Recommendation: R1.**
+
+Secondary independent fix: persist `deliveryCharge` to localStorage in CartContext.js (currently in-memory only; resets on remount/refresh).
+
+### 9.5 Updated investigation output
+
+```text
+Re-investigation complete: BUG-2026-02-XX-001 (smoke failure)
+Root cause (supplementary): checkDistance not re-triggered on cart-total change after address load — stale distanceResult persists
+Classification: PLAN_GAP (Option A incomplete — correct at point of call, missing re-trigger mechanism)
+Confidence: HIGH
+API evidence: manage.mygenie.online confirmed working; threshold ≥ ₹250 → charge=0 for restaurant 699
+Owner decisions: R1 or R2 fix path; deliveryCharge persistence (bundle or separate)
+Docs updated: INVESTIGATION_REPORT.md (this addendum), QA_HANDOVER.md (§9), SESSION_HANDOVER.md (new)
+Next: Owner approves R1/R2 → Bug Fix role (Role 5) → testing_agent_v3 on restaurant 699 live
+```
+
+---
+
+*End of INVESTIGATION_REPORT BUG-2026-02-XX-001 (including 2026-07-13 addendum). Investigation agent must not code.*
+
