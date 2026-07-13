@@ -98,4 +98,4 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | 2026-07-13 | Pull 13-july branch; create .env placeholders; start services | ✅ Services running |
 | 2026-07-13 | Investigation: BUG-2026-02-XX-001 smoke failure on restaurant 699 | Root cause identified (stale checkDistance); live API confirmed working; owner decision pending |
 | 2026-07-13 | Investigation: CR-2026-02-XX-002 re-investigation after owner curl + field name provided | BLOCKER 1 resolved (`takeaway_charges:10` confirmed); recommendation changed B→C; B3+B4 still need owner decision |
-| 2026-07-13 | Planning (Role 2): BUG-001 + CR-002 impact analysis + implementation plan | Plans written; owner gate approval needed before Implementation (Role 3) |
+| 2026-07-13 | Planning (Role 2): BUG-001 + CR-002 impact analysis + implementation plan | Plans written; Q3-B finalised ("Takeaway Charges" label, new standalone row); all owner gates open — Implementation (Role 3) ready |

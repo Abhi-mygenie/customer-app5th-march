@@ -150,11 +150,11 @@ setDeliveryCharge: persistDeliveryCharge, // BUG-2026-02-XX-001 persist
 
 ---
 
-### Plan B-1 — ReviewOrder.jsx — takeawaySurcharge injection
+### Plan B-1 — ReviewOrder.jsx — takeawaySurcharge injection (computation only)
 
 **File:** `frontend/src/pages/ReviewOrder.jsx`
 **Code marker:** `// CR-2026-02-XX-002:`
-**REQUIRES OWNER GATE BEFORE IMPLEMENTATION**
+**Owner gate:** ✅ APPROVED (2026-07-13)
 
 **Locate anchor (lines 671–677):**
 ```javascript
@@ -179,10 +179,60 @@ const effectiveDeliveryCharge = (includeDelivery
                               : 0) + takeawaySurcharge;
 ```
 
-**Bill display change (around line 1799):**
+**Why no display change here:**
+The existing "Delivery Charge" display row (line 1795) is gated by `{scannedOrderType === 'delivery' && ...}` — it is completely hidden for takeaway orders. For delivery orders `takeawaySurcharge = 0`, so `effectiveDeliveryCharge = deliveryCharge` (unchanged). The delivery row is NOT touched.
 
-Locate: `{deliveryCharge > 0 ? \`₹${deliveryCharge.toFixed(2)}\` : 'Free'}`
-Replace with: `{/* CR-2026-02-XX-002 */ effectiveDeliveryCharge > 0 ? \`₹${effectiveDeliveryCharge.toFixed(2)}\` : 'Free'}`
+**Financial propagation (no extra work needed):**
+```javascript
+// Line 707 — effectiveDeliveryCharge already flows into all financial totals:
+const finalSubtotal = subtotalAfterDiscount + serviceCharge + effectiveDeliveryCharge;
+// → totalToPay (line 710) +₹10 ✅
+// → roundedTotal (line 714) +₹10 ✅
+// → order_amount in POS payload +₹10 ✅
+// → delivery_charge in POS payload = "10" ✅ (all 7 call sites via effectiveDeliveryCharge)
+```
+
+---
+
+### Plan B-2 — ReviewOrder.jsx — Q3-B "Takeaway Charges" display row (NEW row)
+
+**File:** `frontend/src/pages/ReviewOrder.jsx`
+**Code marker:** `// CR-2026-02-XX-002 Q3-B:`
+**Owner decision:** ✅ Q3-B approved — label = "Takeaway Charges" (2026-07-13)
+
+**Locate anchor — end of the existing "Delivery Charge" block (after line 1801):**
+```jsx
+{scannedOrderType === 'delivery' && (
+  <div className="price-row price-row-sub">
+    <span className="price-label-sub">Delivery Charge</span>
+    <span className="price-value-sub">{deliveryCharge > 0 ? `₹${deliveryCharge.toFixed(2)}` : 'Free'}</span>
+  </div>
+)}
+```
+
+**Insert immediately AFTER this block:**
+```jsx
+{/* CR-2026-02-XX-002 Q3-B: Takeaway Charges — packaging/handling fee from POS restaurant.takeaway_charges */}
+{scannedOrderType === 'takeaway' && takeawaySurcharge > 0 && (
+  <div className="price-row price-row-sub">
+    <span className="price-label-sub">Takeaway Charges</span>
+    <span className="price-value-sub">₹{takeawaySurcharge.toFixed(2)}</span>
+  </div>
+)}
+```
+
+**Why this is the correct approach:**
+- Does NOT touch the existing "Delivery Charge" row — zero regression risk on delivery flow
+- Only renders when `takeawaySurcharge > 0` — safe for all other restaurants
+- `totalToPay` and `roundedTotal` already include the ₹10 via `effectiveDeliveryCharge` (line 707) — grand total is correct without any separate calculation change
+
+**Customer-visible result (restaurant 699, takeaway):**
+```
+Takeaway Charges    ₹10.00
+──────────────────────────
+Subtotal            ₹XXX.00
+Grand Total         ₹(XXX+10).00
+```
 
 ---
 
@@ -211,7 +261,7 @@ Mark GAP-021 as CLOSED with date and reason (Option C implemented, config-driven
 | ID | Test | Expected |
 |---|---|---|
 | CR-TC1 | Rest 699, takeaway → place order | POS `delivery_charge = "10"` |
-| CR-TC2 | Rest 699, takeaway → ReviewOrder bill | Delivery row shows ₹10.00 |
+| CR-TC2 | Rest 699, takeaway → ReviewOrder bill | **"Takeaway Charges" row shows ₹10.00** (separate row; "Delivery Charge" row hidden for takeaway) |
 | CR-TC3 | Rest 699, delivery → place order | `delivery_charge = distance API charge` (unchanged) |
 | CR-TC4 | Rest 699, dinein → place order | `delivery_charge = "0"` (unchanged) |
 | CR-TC5 | Rest 478, takeaway → place order | `delivery_charge = "0"` (no regressions) |
@@ -224,15 +274,23 @@ Mark GAP-021 as CLOSED with date and reason (Option C implemented, config-driven
 ## 5. Owner Approval Gate
 
 ```
-OWNER APPROVAL REQUIRED — Implementation Gate
+OWNER APPROVALS — ALL RECEIVED (2026-07-13)
 
 BUG-2026-02-XX-001:
-  [ ] A-1 (DeliveryAddress.jsx useEffect) — MEDIUM risk — approve?
-  [ ] A-2 (CartContext.js persistence) — HIGH risk (§6.3 hotspot) — approve? bundle or separate CR?
+  [✅] A-1 (DeliveryAddress.jsx useEffect) — approved
+  [✅] A-2 (CartContext.js persistence)    — approved, bundled with A-1
 
 CR-2026-02-XX-002:
-  [ ] B-1 (ReviewOrder.jsx — CRITICAL hotspot) — explicit gate required per Part C
-  [ ] Display label: "Delivery ₹10.00" acceptable for MVP? (Q3 deferral confirm)
+  [✅] B-1 (ReviewOrder.jsx CRITICAL hotspot) — approved
+  [✅] B-2 (Q3-B display row) — "Takeaway Charges" label approved
+  [✅] Display: "Delivery Charge" row unchanged; new "Takeaway Charges" row added
+
+OWNER CONFIRMED:
+  Screen will show "Takeaway Charges ₹10.00" as a separate bill row for takeaway orders.
+  POS order API receives delivery_charge = "10" under the existing delivery_charge key.
+  Grand total on screen correctly includes ₹10 (via effectiveDeliveryCharge → finalSubtotal → totalToPay).
+
+STATUS: GATE OPEN — Implementation (Role 3) may proceed immediately.
 ```
 
 ---
@@ -240,37 +298,44 @@ CR-2026-02-XX-002:
 ## 6. Planning output (canonical)
 
 ```text
-Planning complete: BUG-2026-02-XX-001 + CR-2026-02-XX-002
-Stage: Impact Analysis + Implementation Plan (both)
-Code reality: PARTIAL — Option A shipped for BUG-001 (gap remains); CR-002 not started
-Risk: BUG-001 = HIGH · CR-002 = CRITICAL
+Planning complete + all owner approvals received: BUG-2026-02-XX-001 + CR-2026-02-XX-002
+Stage: Implementation (Role 3) — GATE OPEN
+Date: 2026-07-13
 
-BUG-2026-02-XX-001:
+BUG-2026-02-XX-001 (approved):
   Files WILL change:
-    - frontend/src/pages/DeliveryAddress.jsx  (MEDIUM)
-    - frontend/src/context/CartContext.js      (HIGH)
+    - frontend/src/pages/DeliveryAddress.jsx  (MEDIUM  — Plan A-1: cartTotal useEffect)
+    - frontend/src/context/CartContext.js      (HIGH    — Plan A-2: deliveryCharge localStorage persistence)
   Files WILL NOT touch:
     - ReviewOrder.jsx, orderService.ts, RestaurantConfigContext.jsx, server.py, any .env
 
-CR-2026-02-XX-002:
+CR-2026-02-XX-002 (approved):
   Files WILL change:
-    - frontend/src/pages/ReviewOrder.jsx        (CRITICAL)
-    - memory_repo/v2/PROJECT_GAP_REGISTER.md    (LOW)
+    - frontend/src/pages/ReviewOrder.jsx        (CRITICAL — Plan B-1: effectiveDeliveryCharge + Plan B-2: new Takeaway Charges row)
+    - memory_repo/v2/PROJECT_GAP_REGISTER.md    (LOW      — Plan B-3: GAP-021 closure)
   Files WILL NOT touch:
     - orderService.ts, CartContext.js, RestaurantConfigContext.jsx, server.py, any .env
 
-Owner decisions:
-  - BUG-001 A-1 (DeliveryAddress.jsx): approve?
-  - BUG-001 A-2 (CartContext.js): approve? bundle or separate?
-  - CR-002 B-1 (ReviewOrder.jsx CRITICAL gate): explicit approval required
-  - CR-002 display label acceptable for MVP?
+Owner confirmations:
+  [✅] A-1 approved
+  [✅] A-2 approved (bundle)
+  [✅] CR-002 B-1 ReviewOrder.jsx gate approved
+  [✅] Q3-B: label "Takeaway Charges" approved; new standalone row (not modifying delivery row)
+  [✅] Confirmed: screen shows "Takeaway Charges ₹10" | POS receives delivery_charge="10"
+  [✅] Confirmed: grand total includes ₹10 automatically (effectiveDeliveryCharge → finalSubtotal → totalToPay)
+
+Key correction vs original plan:
+  - "Delivery Charge" row (line 1795) is gated scannedOrderType==='delivery' — NOT shown for takeaway
+  - Plan B-2 adds a NEW "Takeaway Charges" row after the delivery block — zero touch to delivery row
+  - Original B-1 display change (deliveryCharge → effectiveDeliveryCharge in line 1799) CANCELLED —
+    unnecessary and incorrect (delivery row hidden for takeaway; delivery orders unaffected)
 
 Docs: /app/memory/change_requests/BUG-2026-02-XX-001-delivery-charge-not-calculated/PLANNING_REPORT.md
       /app/memory/change_requests/CR-2026-02-XX-002-restaurant-699-takeaway-charge/PLANNING_REPORT.md
-Next: Owner gate approval → Implementation (Role 3) → QA (Role 4) →
-      Owner smoke (restaurant 699, both flows) → Regression → Closure
+Next: Implementation (Role 3) → QA (Role 4) →
+      Owner smoke (restaurant 699, takeaway + delivery flows) → Regression → Closure
 ```
 
 ---
 
-*End of PLANNING REPORT. Planning agent must not code.*
+*End of PLANNING REPORT (finalised 2026-07-13 — all gates open). Planning agent must not code.*
