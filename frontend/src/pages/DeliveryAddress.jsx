@@ -47,7 +47,7 @@ const DeliveryAddress = () => {
   const navigate = useNavigate();
   const { restaurantId } = useParams();
   const { crmToken, isCustomer, user, setRestaurantScope } = useAuth();
-  const { setDeliveryAddress, setDeliveryCharge } = useCart();
+  const { setDeliveryAddress, setDeliveryCharge, getTotalPrice } = useCart(); // BUG-2026-02-XX-001 — getTotalPrice added
   const { primaryColor, buttonTextColor } = useRestaurantConfig();
 
   // Google Maps loader
@@ -317,7 +317,7 @@ const DeliveryAddress = () => {
             destination_lat: String(lat),
             destination_lng: String(lng),
             restaurant_id: String(restaurantId),
-            order_value: '0',
+            order_value: String(getTotalPrice() || 0), // BUG-2026-02-XX-001 — pass actual cart total so distance API returns correct shipping_charge
           }),
         });
         const data = await res.json();
@@ -328,7 +328,7 @@ const DeliveryAddress = () => {
         setDistanceLoading(false);
       }
     }, 500);
-  }, [restaurantId]);
+  }, [restaurantId, getTotalPrice]); // BUG-2026-02-XX-001 — getTotalPrice added to deps so re-check fires on cart change
 
   // Cleanup timers
   useEffect(() => {
