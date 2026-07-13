@@ -671,10 +671,15 @@ const ReviewOrder = () => {
   // ─── Delivery Charge gating (DELIVERY_CHARGE_GATING CR D-2) ─────
   // Delivery charge from CartContext is non-zero only when delivery address is selected,
   // but we additionally gate on orderType === 'delivery' for explicit safety.
-  const includeDelivery        = scannedOrderType === 'delivery';
-  const effectiveDeliveryCharge = includeDelivery
+  const includeDelivery   = scannedOrderType === 'delivery';
+  // CR-2026-02-XX-002: POS restaurant.takeaway_charges funds packaging fee for takeaway orders.
+  // Returns 0 for all other order types and restaurants that have no takeaway_charges configured.
+  const takeawaySurcharge = (scannedOrderType === 'takeaway')
+                          ? (restaurant?.takeaway_charges || 0)
+                          : 0;
+  const effectiveDeliveryCharge = (includeDelivery
                                 ? (parseFloat(deliveryCharge) || 0)
-                                : 0;
+                                : 0) + takeawaySurcharge;
 
   // ─── Delivery GST (DELIVERY_CHARGE_GATING CR D-3, updated CR-2026-06-17-004) ─────
   // Priority chain: prefer delivery-specific rate from POS (delivery_charge_gst),
@@ -1797,6 +1802,14 @@ const ReviewOrder = () => {
                 <div className="price-row price-row-sub">
                   <span className="price-label-sub">Delivery Charge</span>
                   <span className="price-value-sub">{deliveryCharge > 0 ? `₹${deliveryCharge.toFixed(2)}` : 'Free'}</span>
+                </div>
+              )}
+
+              {/* CR-2026-02-XX-002 Q3-B: Takeaway Charges — packaging/handling fee from POS restaurant.takeaway_charges */}
+              {scannedOrderType === 'takeaway' && takeawaySurcharge > 0 && (
+                <div className="price-row price-row-sub">
+                  <span className="price-label-sub">Takeaway Charges</span>
+                  <span className="price-value-sub">₹{takeawaySurcharge.toFixed(2)}</span>
                 </div>
               )}
 

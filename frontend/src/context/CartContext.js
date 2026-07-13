@@ -501,7 +501,20 @@ export const CartProvider = ({ children, restaurantId }) => {
 
   // Delivery address state (Phase 3)
   const [deliveryAddress, setDeliveryAddressState] = useState(null);
-  const [deliveryCharge, setDeliveryCharge] = useState(0);
+  // BUG-2026-02-XX-001 persist: load persisted delivery charge on mount
+  const [deliveryCharge, setDeliveryCharge] = useState(() => {
+    if (!restaurantId || restaurantId === 'default') return 0;
+    const stored = localStorage.getItem(`delivery_charge_${restaurantId}`);
+    return stored ? (parseFloat(stored) || 0) : 0;
+  });
+
+  // BUG-2026-02-XX-001 persist: wrap setter to persist charge to localStorage
+  const persistDeliveryCharge = useCallback((charge) => {
+    setDeliveryCharge(charge);
+    if (restaurantId && restaurantId !== 'default') {
+      localStorage.setItem(`delivery_charge_${restaurantId}`, String(charge));
+    }
+  }, [restaurantId]);
 
   const setDeliveryAddress = (address) => {
     setDeliveryAddressState(address);
@@ -516,6 +529,7 @@ export const CartProvider = ({ children, restaurantId }) => {
     setDeliveryAddressState(null);
     setDeliveryCharge(0);
     localStorage.removeItem(`delivery_${restaurantId}`);
+    localStorage.removeItem(`delivery_charge_${restaurantId}`); // BUG-2026-02-XX-001 persist
   };
 
   // Load delivery address from localStorage on mount
@@ -556,7 +570,7 @@ export const CartProvider = ({ children, restaurantId }) => {
     deliveryAddress,
     deliveryCharge,
     setDeliveryAddress,
-    setDeliveryCharge,
+    setDeliveryCharge: persistDeliveryCharge, // BUG-2026-02-XX-001 persist
     clearDeliveryAddress,
   };
 

@@ -650,6 +650,15 @@ const DeliveryAddress = () => {
   // mis-read as a chosen delivery location.
   const hasActiveAddress = Boolean(selectedId) || Boolean(reverseAddress);
 
+  // BUG-2026-02-XX-001 R1: Re-check delivery charge when cart total changes after address load.
+  // cartTotal drives this effect; checkDistance already handles the 500ms debounce internally.
+  const cartTotal = getTotalPrice();
+  useEffect(() => {
+    if (!markerPos || !hasActiveAddress) return;
+    checkDistance(markerPos.lat, markerPos.lng);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartTotal]); // intentional: only cartTotal; address/marker changes already trigger via their own handlers
+
   // Empty-hero state: no saved addresses, no active selection/reverse address,
   // and the form isn't open. In this state we hide the map (Shoghi fallback
   // was confusing) and show a centred primary CTA instead.
