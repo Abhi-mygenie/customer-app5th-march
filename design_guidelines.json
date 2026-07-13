@@ -1,0 +1,42 @@
+{
+  "theme_and_archetype": {
+    "theme": "LIGHT",
+    "archetype": "1 (Organic & Earthy)"
+  },
+  "patterns": [
+    {
+      "context": "menu-load-read",
+      "pattern": "Empty-state-with-CTA (Inline replacing Skeleton)",
+      "components": "div, Button (shadcn/ui)",
+      "copy": "We're having trouble loading the menu. Please try again.",
+      "interaction_rules": "Persistent until user clicks Retry. Button shows loading spinner and disables during the retry attempt to prevent spamming.",
+      "accessibility": "Container must have role=\"alert\" and aria-live=\"assertive\". Focus should smoothly move to the retry button upon error appearance.",
+      "data_testid": "timeout-error-menu-load-retry-button"
+    },
+    {
+      "context": "order-create-write",
+      "pattern": "AlertDialog (Blocking modal)",
+      "components": "AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel (shadcn/ui)",
+      "copy": "Connection timed out. We couldn't confirm your order. Please check with your server or try placing it again.",
+      "interaction_rules": "Requires explicit user dismissal. Prevent outside click to close. If retrying, disable the action button to prevent double submissions. Provide both a Dismiss and Retry option.",
+      "accessibility": "AlertDialog handles focus trapping natively. Ensure the description uses aria-describedby linked to the dialog title.",
+      "data_testid": "timeout-error-order-alert-dialog"
+    },
+    {
+      "context": "background-config-fetches",
+      "pattern": "Toast (Non-blocking notification)",
+      "components": "useToast hook (shadcn/ui)",
+      "copy": "Some restaurant details are taking a moment to update.",
+      "interaction_rules": "Auto-dismiss after 5 seconds. Does not block the screen or user interaction. Stack seamlessly with existing toasts.",
+      "accessibility": "Toast container should use role=\"status\" or aria-live=\"polite\" so it doesn't aggressively interrupt screen readers.",
+      "data_testid": "timeout-error-config-toast"
+    }
+  ],
+  "general_constraints": [
+    "No new fonts, colors, or design tokens.",
+    "No new animation libraries; utilize existing framer-motion if necessary but keep simple.",
+    "Must reuse existing shadcn/ui components.",
+    "Mobile-first layouts: Ensure AlertDialog buttons are easily tappable (min 44px height) and Toasts do not obscure primary mobile navigation or floating action buttons."
+  ],
+  "instructions_to_main_agent": "Use these exact patterns for implementing the UI portion of CR-2026-07-03-004. Apply them specifically to the LandingPage, CartDrawer/ReviewOrder, and general layout contexts. Inject the data-testids as provided."
+}

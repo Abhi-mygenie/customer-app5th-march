@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyGenie — DevOps Runbook · Mongo Outage Response &amp; LB Probe Wiring</title>
+<style>
+  :root {
+    --ink:#1d2129;
+    --ink-soft:#4a5568;
+    --paper:#fafaf7;
+    --card:#ffffff;
+    --line:#e5e7eb;
+    --accent:#c65a2d;
+    --accent-soft:#fbe9df;
+    --success:#0f766e;
+    --success-soft:#d9f3ef;
+    --warn:#b45309;
+    --warn-soft:#fef3c7;
+    --danger:#b91c1c;
+    --danger-soft:#fee2e2;
+    --code-bg:#1a1f2e;
+    --code-ink:#e5e7eb;
+    --code-key:#89b4fa;
+    --code-str:#a6e3a1;
+    --code-com:#7a839a;
+    --code-num:#fab387;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.03);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+  header.doc {
+    border-bottom: 3px double var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+  }
+  header.doc .kicker {
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px 0;
+  }
+  header.doc h1 {
+    font-size: 34px;
+    line-height: 1.2;
+    margin: 0 0 8px 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header.doc .subtitle {
+    font-size: 17px;
+    color: var(--ink-soft);
+    margin: 0 0 20px 0;
+    font-style: italic;
+  }
+  header.doc .meta {
+    display: flex;
+    gap: 24px;
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+  header.doc .meta span strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  h2 {
+    font-size: 24px;
+    margin: 56px 0 12px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+  h2 .piece-num {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 13px;
+    color: white;
+    background: var(--ink);
+    border-radius: 50%;
+    margin-right: 12px;
+    vertical-align: middle;
+  }
+  h3 {
+    font-size: 18px;
+    margin: 32px 0 8px 0;
+    font-weight: 700;
+  }
+  h4 {
+    font-size: 15px;
+    margin: 24px 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  p { margin: 0 0 14px 0; }
+  ul, ol { margin: 0 0 14px 0; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  code {
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 0.88em;
+    background: #efece5;
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 18px 20px;
+    border-radius: 6px;
+    overflow-x: auto;
+    line-height: 1.55;
+    margin: 16px 0;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+    border-left: 3px solid var(--accent);
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  pre .k { color: var(--code-key); }
+  pre .s { color: var(--code-str); }
+  pre .c { color: var(--code-com); font-style: italic; }
+  pre .n { color: var(--code-num); }
+  .callout {
+    padding: 16px 20px;
+    border-radius: 6px;
+    margin: 20px 0;
+    border-left: 4px solid;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  .callout.tip     { border-color: var(--success); background: var(--success-soft); }
+  .callout.warn    { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.danger  { border-color: var(--danger); background: var(--danger-soft); }
+  .callout.info    { border-color: var(--accent); background: var(--accent-soft); }
+  .callout .label {
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+  }
+  .callout.tip .label    { color: var(--success); }
+  .callout.warn .label   { color: var(--warn); }
+  .callout.danger .label { color: var(--danger); }
+  .callout.info .label   { color: var(--accent); }
+  .callout p:last-child { margin-bottom: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    background: #f5f2ea;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+  tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .badge.time { background: var(--accent-soft); color: var(--accent); }
+  .badge.prio { background: var(--danger-soft); color: var(--danger); }
+  .badge.easy { background: var(--success-soft); color: var(--success); }
+  .toc {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 24px 28px;
+    margin: 0 0 48px 0;
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+  }
+  .toc h4 {
+    margin: 0 0 12px 0;
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 11px;
+  }
+  .toc ol {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 15px;
+    counter-reset: item;
+    list-style: none;
+  }
+  .toc ol li {
+    counter-increment: item;
+    margin-bottom: 8px;
+    padding-left: 30px;
+    position: relative;
+  }
+  .toc ol li::before {
+    content: counter(item, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    top: 4px;
+  }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { color: var(--accent); text-decoration: underline; }
+  .architecture-box {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 24px;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    font-size: 13px;
+    margin: 16px 0;
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+  .checklist {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px 24px;
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    margin: 20px 0;
+  }
+  .checklist ul { list-style: none; padding-left: 0; }
+  .checklist li {
+    padding-left: 32px;
+    position: relative;
+    margin-bottom: 10px;
+    line-height: 1.55;
+  }
+  .checklist li::before {
+    content: '☐';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    font-size: 18px;
+    color: var(--accent);
+  }
+  hr { border: none; border-top: 1px dashed var(--line); margin: 40px 0; }
+  footer.doc {
+    margin-top: 96px;
+    padding-top: 32px;
+    border-top: 3px double var(--ink);
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    text-align: center;
+  }
+  footer.doc p { margin: 0 0 4px 0; }
+
+  @media print {
+    body { background: white; font-size: 11pt; }
+    .page { padding: 0; }
+    pre { break-inside: avoid; }
+    .callout { break-inside: avoid; }
+    table { break-inside: avoid; }
+    .toc a { color: var(--ink); text-decoration: none; }
+    h2 { break-before: page; }
+    h2:first-of-type { break-before: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="doc">
+  <p class="kicker">DevOps Runbook · Internal</p>
+  <h1>Mongo Outage Response &amp; LB Probe Wiring</h1>
+  <p class="subtitle">PM2 / Supervisor + nginx topology · Ready-to-apply configs for the MyGenie Customer App backend.</p>
+  <div class="meta">
+    <span><strong>Version:</strong> 1.0</span>
+    <span><strong>Date:</strong> 2026-07-04</span>
+    <span><strong>Owner:</strong> DevOps</span>
+    <span><strong>Related CR:</strong> CR-2026-07-03-009 F-13 &amp; F-12</span>
+    <span><strong>Depends on:</strong> CR-2026-07-03-003 (shipped)</span>
+  </div>
+</header>
+
+<section class="toc">
+  <h4>Contents</h4>
+  <ol>
+    <li><a href="#context">Context — what's already fixed vs. what needs you</a></li>
+    <li><a href="#architecture">Assumed architecture</a></li>
+    <li><a href="#piece-1">Piece 1 — nginx upstream health check</a></li>
+    <li><a href="#piece-2">Piece 2 — PM2 auto-restart on health failure</a></li>
+    <li><a href="#piece-3">Piece 3 — Supervisor + cron wrapper (if not PM2)</a></li>
+    <li><a href="#piece-4">Piece 4 — External uptime service</a></li>
+    <li><a href="#antipatterns">What NOT to do</a></li>
+    <li><a href="#rollout">Suggested rollout order (45-min window)</a></li>
+    <li><a href="#validation">End-to-end validation test</a></li>
+    <li><a href="#runbook">Quick-reference runbook commands</a></li>
+    <li><a href="#followup">Additional Mongo hygiene items</a></li>
+  </ol>
+</section>
+
+<h2 id="context"><span class="piece-num">01</span>Context</h2>
+
+<p>The MyGenie customer-app backend now has explicit Mongo timeouts and a <code>/api/healthz</code> endpoint (shipped in CR-2026-07-03-003), plus client-side fetch timeouts (CR-2026-07-03-004). What's missing is the <em>ops-layer wiring</em> that makes those signals matter: load-balancer probe, watchdog restart, and external alerting.</p>
+
+<h3>Already fixed by code — no action needed</h3>
+
+<table>
+  <thead><tr><th>Fix</th><th>Ships in</th></tr></thead>
+  <tbody>
+    <tr><td><code>MONGO_URL</code> fails fast if unset; PyMongo has explicit connection/operation timeouts</td><td>CR-003 (prior session)</td></tr>
+    <tr><td><code>GET /api/healthz</code> returns <code>200 {"ok":true,"mongo":"up"}</code> or <code>503 {"ok":false,"mongo":"timeout"}</code></td><td>CR-003</td></tr>
+    <tr><td>Frontend cache-first skeleton during Mongo slowness (no blank screens)</td><td>CR-001</td></tr>
+    <tr><td>Frontend fetches auto-abort at 8 s reads / 15 s writes; toast on config timeouts</td><td>CR-2026-07-03-004</td></tr>
+  </tbody>
+</table>
+
+<h3>What DevOps must do now (this document)</h3>
+
+<table>
+  <thead><tr><th>#</th><th>Action</th><th>Effort</th><th>Priority</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Wire nginx upstream health check + <code>/healthz</code> location</td><td><span class="badge time">15 min</span></td><td><span class="badge prio">P1</span></td></tr>
+    <tr><td>2</td><td>PM2 or Supervisor auto-restart on sustained health failure</td><td><span class="badge time">15 min</span></td><td><span class="badge prio">P1</span></td></tr>
+    <tr><td>3</td><td>External uptime service (UptimeRobot / BetterUptime / Pingdom)</td><td><span class="badge time">10 min</span></td><td><span class="badge prio">P1</span></td></tr>
+    <tr><td>4</td><td>Alert rule on <code>ServerSelectionTimeoutError</code> in backend logs</td><td><span class="badge time">30 min</span></td><td><span class="badge easy">P2</span></td></tr>
+  </tbody>
+</table>
+
+<div class="callout tip">
+  <p class="label">Estimated total time</p>
+  <p><strong>~45 minutes</strong> to fully wire pieces 1-3 (P1). Piece 4 is a follow-up that closes the observability loop.</p>
+</div>
+
+<h2 id="architecture"><span class="piece-num">02</span>Assumed Architecture</h2>
+
+<div class="architecture-box">Customer → Cloudflare → nginx (443) → PM2/Supervisor-managed FastAPI (127.0.0.1:8001)
+                                    ↓
+                                    MongoDB (52.66.232.149:27017)</div>
+
+<p>Adjust IPs / ports if yours differ. Everything below assumes this topology.</p>
+
+<h2 id="piece-1"><span class="piece-num">03</span>Piece 1 — nginx upstream health check</h2>
+
+<p><strong>Most important piece.</strong> Stops nginx from routing to a dead FastAPI process, and exposes a public <code>/healthz</code> for external monitors.</p>
+
+<h3>Add to your nginx site config</h3>
+<p>Typically <code>/etc/nginx/sites-available/mygenie</code> (or equivalent).</p>
+
+<pre><code><span class="c"># Define the FastAPI upstream with fail-fast semantics.</span>
+<span class="c"># After 3 consecutive failed requests within 30s, nginx marks it "down"</span>
+<span class="c"># for 30s and stops sending traffic. Recovery is automatic.</span>
+<span class="k">upstream</span> fastapi_backend {
+    <span class="k">server</span> 127.0.0.1:8001 <span class="k">max_fails</span>=<span class="n">3</span> <span class="k">fail_timeout</span>=<span class="n">30s</span>;
+    <span class="k">keepalive</span> <span class="n">32</span>;
+}
+
+<span class="c"># Health-check location — proxies to FastAPI /api/healthz with tight timeout.</span>
+<span class="c"># Cloudflare / uptime services should point at this path.</span>
+<span class="k">location</span> = /healthz {
+    <span class="k">proxy_pass</span> http://127.0.0.1:8001/api/healthz;
+    <span class="k">proxy_read_timeout</span> <span class="n">3s</span>;
+    <span class="k">proxy_connect_timeout</span> <span class="n">2s</span>;
+    <span class="k">proxy_send_timeout</span> <span class="n">2s</span>;
+    <span class="k">access_log</span> off;
+    <span class="k">add_header</span> Cache-Control <span class="s">"no-cache, no-store"</span> always;
+
+    <span class="c"># Rate limit — 60 req/min/IP. Requires the limit_req_zone below.</span>
+    <span class="k">limit_req</span> zone=healthz burst=<span class="n">10</span> nodelay;
+}
+
+<span class="c"># Main API routing — nginx auto-fails-over between upstreams if you have multiple.</span>
+<span class="k">location</span> /api/ {
+    <span class="k">proxy_pass</span> http://fastapi_backend;
+    <span class="k">proxy_http_version</span> <span class="n">1.1</span>;
+    <span class="k">proxy_set_header</span> Host $host;
+    <span class="k">proxy_set_header</span> X-Real-IP $remote_addr;
+    <span class="k">proxy_set_header</span> X-Forwarded-For $proxy_add_x_forwarded_for;
+    <span class="k">proxy_set_header</span> X-Forwarded-Proto $scheme;
+
+    <span class="c"># Aligned with CR-004 client-side caps (FE waits 15s, BE has 20s room).</span>
+    <span class="k">proxy_read_timeout</span> <span class="n">20s</span>;
+    <span class="k">proxy_connect_timeout</span> <span class="n">5s</span>;
+    <span class="k">proxy_send_timeout</span> <span class="n">20s</span>;
+
+    <span class="c"># Fast-fail cascade on upstream error.</span>
+    <span class="k">proxy_next_upstream</span> error timeout http_502 http_503;
+    <span class="k">proxy_next_upstream_tries</span> <span class="n">2</span>;
+    <span class="k">proxy_next_upstream_timeout</span> <span class="n">5s</span>;
+}</code></pre>
+
+<h3>Add once in the <code>http { }</code> block</h3>
+<p>Typically <code>/etc/nginx/nginx.conf</code>.</p>
+
+<pre><code><span class="c"># Rate-limit zone for /healthz — 1MB memory, 60 requests per minute per IP.</span>
+<span class="k">limit_req_zone</span> $binary_remote_addr zone=healthz:<span class="n">1m</span> rate=<span class="n">60r/m</span>;</code></pre>
+
+<h3>Apply</h3>
+
+<pre><code><span class="k">sudo</span> nginx -t                    <span class="c"># syntax check</span>
+<span class="k">sudo</span> systemctl reload nginx      <span class="c"># zero-downtime reload</span></code></pre>
+
+<h3>Verify</h3>
+
+<pre><code><span class="c"># Public health endpoint responds</span>
+curl -s https://YOUR_DOMAIN/healthz
+<span class="c"># → {"ok":true,"mongo":"up"}</span>
+
+<span class="c"># Rate limit works (11th request in a second should 503)</span>
+<span class="k">for</span> i in {1..15}; <span class="k">do</span> curl -so /dev/null -w <span class="s">"%{http_code} "</span> https://YOUR_DOMAIN/healthz; <span class="k">done</span>
+<span class="c"># → 200 200 200 200 200 200 200 200 200 200 503 503 ...</span></code></pre>
+
+<h3>What this buys you</h3>
+<ul>
+  <li><strong>When Mongo dies:</strong> FastAPI's <code>/api/healthz</code> returns 503 → nginx sees consecutive failures on <code>/api/*</code> → marks upstream down → returns 502 to clients (fast fail) → auto-recovers when Mongo returns.</li>
+  <li><strong>When FastAPI crashes:</strong> Same behavior — nginx bypasses it.</li>
+  <li><strong>Public probe endpoint at <code>/healthz</code>:</strong> external uptime services can hit it with 3s timeout.</li>
+</ul>
+
+<h2 id="piece-2"><span class="piece-num">04</span>Piece 2 — PM2 auto-restart on health failure</h2>
+
+<p>Only if you're using PM2 (not just Supervisor). If Supervisor, skip to <a href="#piece-3">Piece 3</a>.</p>
+
+<h3>Option A — Watchdog script + cron</h3>
+
+<p>Create <code>/app/ops/watchdog.sh</code>:</p>
+
+<pre><code><span class="c">#!/usr/bin/env bash</span>
+<span class="c"># Watchdog: restarts FastAPI via PM2 if /healthz is unhealthy for 3</span>
+<span class="c"># consecutive minutes. Prevents flapping on brief Mongo blips.</span>
+<span class="c">#</span>
+<span class="c"># Add to cron: */1 * * * * /app/ops/watchdog.sh &gt;&gt; /var/log/watchdog.log 2&gt;&amp;1</span>
+
+<span class="k">set</span> -euo pipefail
+
+STATE_FILE=/var/run/mygenie-watchdog.count
+MAX_FAILURES=<span class="n">3</span>
+HEALTH_URL=<span class="s">"http://127.0.0.1:8001/api/healthz"</span>
+PM2_APP_NAME=<span class="s">"mygenie-backend"</span>
+
+count=$(cat <span class="s">"$STATE_FILE"</span> <span class="n">2</span>&gt;/dev/null || echo <span class="n">0</span>)
+
+<span class="k">if</span> curl -sf --max-time <span class="n">3</span> <span class="s">"$HEALTH_URL"</span> | grep -q <span class="s">'"ok":true'</span>; <span class="k">then</span>
+    echo <span class="n">0</span> &gt; <span class="s">"$STATE_FILE"</span>
+    exit <span class="n">0</span>
+<span class="k">fi</span>
+
+count=$((count + <span class="n">1</span>))
+echo <span class="s">"$count"</span> &gt; <span class="s">"$STATE_FILE"</span>
+echo <span class="s">"$(date -Iseconds) unhealthy count=$count"</span>
+
+<span class="k">if</span> [ <span class="s">"$count"</span> -ge <span class="s">"$MAX_FAILURES"</span> ]; <span class="k">then</span>
+    echo <span class="s">"$(date -Iseconds) restart triggered (count=$count)"</span>
+    pm2 restart <span class="s">"$PM2_APP_NAME"</span>
+    echo <span class="n">0</span> &gt; <span class="s">"$STATE_FILE"</span>
+<span class="k">fi</span></code></pre>
+
+<p>Make executable + add to root's crontab:</p>
+
+<pre><code><span class="k">sudo</span> chmod +x /app/ops/watchdog.sh
+<span class="k">sudo</span> crontab -e
+<span class="c"># Add this line:</span>
+<span class="c"># */1 * * * * /app/ops/watchdog.sh &gt;&gt; /var/log/watchdog.log 2&gt;&amp;1</span></code></pre>
+
+<h3>Option B — PM2 ecosystem file</h3>
+
+<p>Create/update <code>/app/ecosystem.config.js</code>:</p>
+
+<pre><code><span class="k">module</span>.exports = {
+  apps: [{
+    name: <span class="s">'mygenie-backend'</span>,
+    script: <span class="s">'uvicorn'</span>,
+    args: <span class="s">'server:app --host 0.0.0.0 --port 8001'</span>,
+    cwd: <span class="s">'/app/backend'</span>,
+    interpreter: <span class="s">'python'</span>,
+
+    <span class="c">// Restart if memory usage indicates a leak</span>
+    max_memory_restart: <span class="s">'1G'</span>,
+
+    <span class="c">// Prevent restart storm</span>
+    max_restarts: <span class="n">10</span>,
+    min_uptime: <span class="s">'60s'</span>,
+
+    <span class="c">// Log rotation</span>
+    out_file: <span class="s">'/var/log/pm2/mygenie-out.log'</span>,
+    error_file: <span class="s">'/var/log/pm2/mygenie-err.log'</span>,
+    time: <span class="k">true</span>,
+
+    env: {
+      <span class="c">// Real secrets from a secret manager, not this file</span>
+      NODE_ENV: <span class="s">'production'</span>
+    }
+  }]
+};</code></pre>
+
+<pre><code>pm2 start /app/ecosystem.config.js
+pm2 save                          <span class="c"># persist across reboots</span>
+pm2 startup                       <span class="c"># generate systemd unit for boot</span></code></pre>
+
+<div class="callout warn">
+  <p class="label">Do not do this</p>
+  <p>Don't set the watchdog to restart on every health-check failure. Nginx already handles routing-layer fail-over. Thrashing PM2 restarts during a Mongo outage causes worse UX than clean 502s.</p>
+</div>
+
+<h2 id="piece-3"><span class="piece-num">05</span>Piece 3 — Supervisor + cron wrapper</h2>
+
+<p>Use if you're on Supervisor (like the dev container). Supervisor doesn't natively call HTTP health checks.</p>
+
+<h3>Verify supervisor config</h3>
+
+<p><code>/etc/supervisor/conf.d/mygenie-backend.conf</code>:</p>
+
+<pre><code><span class="k">[program:backend]</span>
+<span class="k">command</span>=/root/.venv/bin/uvicorn server:app --host <span class="n">0.0.0.0</span> --port <span class="n">8001</span>
+<span class="k">directory</span>=/app/backend
+<span class="k">autostart</span>=<span class="s">true</span>
+<span class="k">autorestart</span>=<span class="s">true</span>
+<span class="k">startretries</span>=<span class="n">5</span>
+<span class="k">startsecs</span>=<span class="n">15</span>
+<span class="k">stdout_logfile</span>=/var/log/supervisor/backend.out.log
+<span class="k">stderr_logfile</span>=/var/log/supervisor/backend.err.log
+<span class="k">environment</span>=PATH=<span class="s">"/root/.venv/bin:%(ENV_PATH)s"</span></code></pre>
+
+<p>Key settings:</p>
+<ul>
+  <li><code>autorestart=true</code> — restarts on unclean exit</li>
+  <li><code>startretries=5</code> + <code>startsecs=15</code> — gives up if it can't stay up 15 s five times (prevents thrash)</li>
+</ul>
+
+<h3>Cron watchdog (same as Piece 2 Option A)</h3>
+
+<p>Use the identical script from Piece 2, but replace the PM2 restart line with:</p>
+
+<pre><code><span class="k">sudo</span> supervisorctl restart backend</code></pre>
+
+<h2 id="piece-4"><span class="piece-num">06</span>Piece 4 — External uptime service</h2>
+
+<p>Even with pieces 1-3 in place, you want a third party watching from outside your network. Covers the failure mode where your entire host disappears.</p>
+
+<h3>Recommended free-tier options</h3>
+
+<table>
+  <thead><tr><th>Service</th><th>Free tier</th><th>Best for</th></tr></thead>
+  <tbody>
+    <tr><td><strong>UptimeRobot</strong></td><td>50 monitors, 5-min interval</td><td>Simple ping + Slack alert</td></tr>
+    <tr><td><strong>BetterUptime</strong></td><td>10 monitors, 3-min interval</td><td>Better UI, incident timeline</td></tr>
+    <tr><td><strong>Cronitor</strong></td><td>5 monitors, 1-min interval</td><td>If you also monitor cron jobs</td></tr>
+    <tr><td><strong>Pingdom</strong></td><td>Paid only</td><td>Enterprise SLA reports</td></tr>
+    <tr><td><strong>Cloudflare Health Checks</strong></td><td>With CF Pro plan</td><td>Integrates with existing CF edge</td></tr>
+  </tbody>
+</table>
+
+<h3>Configuration (any of them, same shape)</h3>
+
+<ul>
+  <li><strong>URL:</strong> <code>https://YOUR_DOMAIN/healthz</code></li>
+  <li><strong>Method:</strong> GET</li>
+  <li><strong>Interval:</strong> 60 s (some free tiers cap at 5 min — still fine)</li>
+  <li><strong>Timeout:</strong> 5 s</li>
+  <li><strong>Expected status:</strong> 200</li>
+  <li><strong>Expected body contains:</strong> <code>"ok":true</code></li>
+  <li><strong>Alert on:</strong> 2 consecutive failures</li>
+  <li><strong>Alert channels:</strong> Slack webhook + email + SMS (optional)</li>
+</ul>
+
+<h2 id="antipatterns"><span class="piece-num">07</span>What NOT to do</h2>
+
+<table>
+  <thead><tr><th>Don't</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Set <code>proxy_read_timeout 3s</code> on <code>/api/*</code> (not just <code>/healthz</code>)</td><td>Legitimate requests take longer than 3s (uploads, complex queries). Only the health check should be that tight.</td></tr>
+    <tr><td>Restart FastAPI on every <code>/healthz</code> 503</td><td>Thrashes the process during a Mongo outage. Nginx already handles fail-over. The watchdog needs a 3-min sustained threshold.</td></tr>
+    <tr><td>Set PM2 <code>max_restarts: 100</code></td><td>PM2's default (10 restarts / 60s) is protection. If your app crashes more, restarting harder won't help.</td></tr>
+    <tr><td>Log <code>/healthz</code> to access log</td><td>Uptime monitors poll every 60s = 1440 noise lines/day. Use <code>access_log off;</code>.</td></tr>
+    <tr><td>Put real Mongo credentials in <code>ecosystem.config.js</code></td><td>Use a secret manager or systemd Environment file with 0600 permissions.</td></tr>
+    <tr><td>Point external uptime at <code>/api/healthz</code> (with prefix)</td><td>Better to expose <code>/healthz</code> via nginx — cleaner, and if <code>/api/*</code> routing has a bug you still see the health signal.</td></tr>
+    <tr><td>Skip the rate limit on <code>/healthz</code></td><td>It's public. Someone will script-hammer it. <code>60r/m</code> is plenty.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="rollout"><span class="piece-num">08</span>Suggested rollout order (~45 minutes)</h2>
+
+<div class="checklist">
+  <ul>
+    <li><strong>Piece 1 — nginx config</strong> · reload nginx, verify <code>/healthz</code> from public URL. <span class="badge time">20 min</span></li>
+    <li><strong>Piece 4 — external uptime service</strong> · sign up, add URL, test alert to Slack. <span class="badge time">10 min</span></li>
+    <li><strong>Piece 2 or 3 — watchdog cron</strong> · deploy script, verify cron runs, test by stopping FastAPI temporarily. <span class="badge time">10 min</span></li>
+    <li><strong>Piece 2B or 3 — ecosystem/supervisor conf review</strong> · confirm <code>autorestart</code> + <code>max_restarts</code> are sane. <span class="badge time">5 min</span></li>
+  </ul>
+</div>
+
+<h2 id="validation"><span class="piece-num">09</span>End-to-end validation test</h2>
+
+<p>Once all pieces are in place, simulate a Mongo outage:</p>
+
+<pre><code><span class="c"># Block outbound traffic to Mongo</span>
+<span class="k">sudo</span> iptables -A OUTPUT -d <span class="n">52.66.232.149</span> -p tcp --dport <span class="n">27017</span> -j DROP</code></pre>
+
+<p>Watch what happens over ~2 minutes:</p>
+
+<ol>
+  <li>Backend logs show <code>ServerSelectionTimeoutError</code> (existing behaviour)</li>
+  <li><code>/api/healthz</code> returns 503</li>
+  <li>Nginx starts returning 502 on <code>/api/*</code> after 3 failures (fast-fail)</li>
+  <li>Watchdog cron increments failure count</li>
+  <li>External uptime service alerts within 60s</li>
+  <li>Watchdog restarts backend after 3 minutes if configured</li>
+</ol>
+
+<p>Recover:</p>
+
+<pre><code><span class="k">sudo</span> iptables -D OUTPUT -d <span class="n">52.66.232.149</span> -p tcp --dport <span class="n">27017</span> -j DROP</code></pre>
+
+<p>Within 30s:</p>
+<ol>
+  <li><code>/api/healthz</code> → 200</li>
+  <li>Nginx auto-recovers upstream (<code>fail_timeout=30s</code>)</li>
+  <li>Traffic resumes normally</li>
+  <li>External uptime posts "resolved"</li>
+</ol>
+
+<div class="callout danger">
+  <p class="label">If any step doesn't fire</p>
+  <p>That pipeline has a gap. Investigate before considering the wiring complete.</p>
+</div>
+
+<h2 id="runbook"><span class="piece-num">10</span>Quick-reference runbook commands</h2>
+
+<p>Save these somewhere ops can find in an incident (e.g. <code>/app/ops/README.md</code>):</p>
+
+<pre><code><span class="c"># Health check</span>
+curl -s https://YOUR_DOMAIN/healthz
+<span class="c"># → {"ok":true,"mongo":"up"}  on green</span>
+
+<span class="c"># Recent Mongo errors in backend logs</span>
+<span class="k">sudo</span> tail -f /var/log/supervisor/backend.err.log | grep -E <span class="s">"ServerSelection|NetworkTimeout"</span>
+
+<span class="c"># Restart backend gracefully</span>
+<span class="k">sudo</span> supervisorctl restart backend    <span class="c"># supervisor</span>
+pm2 restart mygenie-backend            <span class="c"># or PM2</span>
+
+<span class="c"># Watchdog log</span>
+<span class="k">sudo</span> tail -f /var/log/watchdog.log
+
+<span class="c"># Force nginx to re-check upstream</span>
+<span class="k">sudo</span> nginx -s reload</code></pre>
+
+<h2 id="followup"><span class="piece-num">11</span>Additional Mongo hygiene items</h2>
+
+<p>Beyond this document's scope but worth tracking in ops backlog:</p>
+
+<table>
+  <thead><tr><th>Item</th><th>Priority</th></tr></thead>
+  <tbody>
+    <tr><td>Backup / snapshot policy — daily automated Mongo backups + tested restore drill</td><td><span class="badge prio">P1 prod</span></td></tr>
+    <tr><td>Capacity monitoring — disk usage + connection count alerts on Mongo host <code>52.66.232.149</code></td><td><span class="badge prio">P1 prod</span></td></tr>
+    <tr><td>Formal Mongo credential rotation cadence (quarterly minimum) — also scrub leaked value from <code>DEPLOYMENT_HANDOVER.md</code></td><td><span class="badge easy">P2</span></td></tr>
+    <tr><td>Move <code>MONGO_URL</code> from plaintext <code>.env</code> to a secret manager (Vault / K8s Secret / AWS Secrets Manager)</td><td><span class="badge easy">P2</span></td></tr>
+    <tr><td>Verify <code>appuser</code> Mongo role has minimum-necessary permissions (not <code>dbAdmin</code>)</td><td><span class="badge easy">P2</span></td></tr>
+    <tr><td>Confirm <code>52.66.232.149:27017</code> is only reachable from backend hosts, not the public internet</td><td><span class="badge prio">P1</span></td></tr>
+    <tr><td>Connection pool tuning — PyMongo default 100. If backend scales horizontally, verify total connection count stays under Mongo's cap</td><td><span class="badge easy">P3</span></td></tr>
+    <tr><td>Read preference / replica routing — if replicas exist, consider <code>readPreference=primaryPreferred</code> for read paths</td><td><span class="badge easy">P3</span></td></tr>
+    <tr><td>Mongo version + patching — confirm on a supported release track (5.0+ / 6.0+)</td><td><span class="badge easy">P2</span></td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<div class="callout info">
+  <p class="label">One-sentence summary</p>
+  <p>Wire nginx to check <code>/api/healthz</code>, add a cron watchdog with sustained-failure threshold, sign up for an external uptime service — and Mongo outages become auto-detected, auto-routed, and auto-alerted instead of discovered via customer complaints.</p>
+</div>
+
+<footer class="doc">
+  <p>MyGenie Customer App · DevOps Runbook · Internal Distribution Only</p>
+  <p>Change requests · <code>memory/change_requests/CR-2026-07-03-009-observability-and-lb-probe/</code></p>
+  <p>Session handover · <code>memory/SESSION_HANDOVER_2026-07-04.md</code></p>
+</footer>
+
+</div>
+</body>
+</html>

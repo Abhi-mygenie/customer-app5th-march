@@ -78,5 +78,50 @@ agenthub/agents/youtube/db
 
 memory/test_credentials.md
 
+# ── CRITICAL: No docs in public (browser-downloadable) ──
+frontend/public/*.md
+frontend/public/*.xlsx
+
+# ── Stale DB exports & dangerous ops scripts ──
+backend/db_data/
+backend/db_export_new/
+backend/db_export.py
+backend/db_import.py
+backend/seed_demo_data.py
+backend/seed_defaults.py
+backend/uploads/
+
+# ── Agent / dev artifacts ──
+# CR-2026-07-03 — memory/ and memory_repo/ hold the project's change-request
+# registry, intake docs, and control dashboard. They MUST be tracked in git
+# so the operating prompt at memory/control/ and the CR history under
+# memory/change_requests/ are shared across contributors, not stashed on
+# individual containers. memory/test_credentials.md stays ignored (line 79).
+test_reports/
+test_result.md
+frontend/src/__tests__/
+backend/tests/
+
+# ── Platform config ──
+.emergent/
+
+# ── Root docs ──
+# Match only the top-level README.md, not READMEs nested anywhere
+# (e.g. memory/change_requests/README.md must stay tracked).
+/README.md
+
 # Mobile development
-android-sdk/
+android-sdk/frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/1.pack
+frontend/node_modules/.cache/default-development/3.pack
+frontend/node_modules/.cache/default-development/4.pack
+.env
+.env.*
+*.env
+credentials.json
+*.key
+.credentials
+frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/0.pack
+frontend/node_modules/.cache/default-development/2.pack
+frontend/node_modules/.cache/default-development/5.pack
