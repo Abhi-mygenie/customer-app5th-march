@@ -59,17 +59,17 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 ---
 
-### BUG-2026-02-XX-001 — Delivery charge not calculated ✅ PLAN R2 IMPLEMENTED
+### BUG-2026-02-XX-001 — Delivery charge not calculated ✅ PLAN R3 IMPLEMENTED
 
 | Field | Value |
 |---|---|
-| Status | **✅ PLAN R2 IMPLEMENTED (2026-07-14)** — ReviewOrder.jsx mount re-check added. QA + owner smoke test pending. |
-| Files changed | `frontend/src/pages/DeliveryAddress.jsx` (A-1: cartTotal useEffect), `frontend/src/context/CartContext.js` (A-2: localStorage persistence), `frontend/src/pages/ReviewOrder.jsx` (R2: mount re-check) |
-| Fix summary | A-1+A-2: Re-trigger checkDistance on cart change in DeliveryAddress; persist charge to localStorage. R2: On ReviewOrder mount, call distance API with final cart total — fixes stale charge when user bypasses DeliveryAddress page. |
-| Root cause of A-1 gap | A-1 only fires while user is on DeliveryAddress page; bypassing it meant no re-check on ReviewOrder. R2 closes this gap. |
-| Next action | QA testing (R2-TC1 through R2-TC8) → Owner smoke test — restaurant 699, delivery order, cart > ₹250, bypass DeliveryAddress page |
+| Status | **✅ PLAN R3 IMPLEMENTED (2026-07-14)** — All three sub-fixes shipped. QA + owner smoke test pending. |
+| Files changed | `DeliveryAddress.jsx` (A-1), `CartContext.js` (A-2), `ReviewOrder.jsx` (R2→R3) |
+| Fix summary | A-1: Re-trigger checkDistance on cart change in DeliveryAddress. A-2: Persist charge to localStorage. R3: `useEffect([subtotal])` with 500ms debounce in ReviewOrder — fires on every cart total change, delivery-only guard ensures API only calls for delivery orders with a valid saved address. |
+| Root cause of R2 gap | R2 used `[]` (mount-only). Cart changes WHILE on ReviewOrder page were not caught. R3 changes dep to `[subtotal]` to catch those. |
+| Next action | QA testing (R3-TC1..TC11) → Owner smoke test — restaurant 699, delivery, remove/add items on ReviewOrder page, verify charge updates |
 | Folder | `/app/memory/change_requests/BUG-2026-02-XX-001-delivery-charge-not-calculated/` |
-| Key docs | QA_HANDOVER_R2.md (test cases R2-TC1..TC8), PLANNING_REPORT.md (addendum), SESSION_HANDOVER_R2.md |
+| Key docs | QA_HANDOVER_R3.md (test cases R3-TC1..TC11), PLANNING_REPORT.md (R3 addendum), SESSION_HANDOVER_R3.md |
 
 ---
 
@@ -108,3 +108,4 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | 2026-07-13 | Q3-B confirmed by owner: label "Takeaway Charges"; behaviour confirmed (screen ₹10 row · POS delivery_charge="10") | PLANNING_REPORT.md finalised for both items; SESSION_HANDOVER.md updated; all docs closed |
 | 2026-07-13 | Implementation (Role 3): BUG-001 A-1+A-2 + CR-002 B-1+B-2+B-3 implemented | 6 code edits across 3 files; testing_agent_v3 structural verification PASS 100%; services running; owner smoke test pending |
 | 2026-07-14 | Implementation (Role 3): BUG-001 Plan R2 implemented | 2 surgical edits in ReviewOrder.jsx (setDeliveryCharge destructure + mount useEffect); exit gate 7/7; QA_HANDOVER_R2.md written; owner smoke test pending |
+| 2026-07-14 | Implementation (Role 3): BUG-001 Plan R3 implemented | R2 mount-only useEffect replaced with [subtotal] dep + 500ms debounce; ref added; exit gate 7/7; QA_HANDOVER_R3.md written; owner smoke test pending |

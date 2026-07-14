@@ -256,6 +256,7 @@ const ReviewOrder = () => {
   // SECURITY: Tracks whether placeOrder API was dispatched in the current attempt.
   // Used to detect network-loss scenarios where order may have reached server but no response came back.
   const orderDispatchedRef = useRef(false);
+  const deliveryChargeTimerRef = useRef(null); // BUG-2026-02-XX-001 Plan R3: debounce for cart-change delivery re-check
 
   // Countdown state for empty-cart redirect
   const [countdown, setCountdown] = useState(10);
@@ -755,15 +756,18 @@ const ReviewOrder = () => {
     fetchToken();
   }, []); // Only run once on mount
 
-  // BUG-2026-02-XX-001 Plan R2: On ReviewOrder mount, re-check delivery charge using the
-  // current cart total. Fixes stale charge when user bypasses the DeliveryAddress page
-  // by adding items on the Menu page and navigating directly to ReviewOrder.
+  // BUG-2026-02-XX-001 Plan R3: Re-check delivery charge whenever cart total (subtotal) changes.
+  // Extends R2 (mount-only fix) to also cover cart modifications while already on ReviewOrder.
+  // Guards at the top ensure the API only fires for delivery orders with a valid saved address;
+  // all other order types hit the first guard and return immediately — zero API calls.
   useEffect(() => {
     if (scannedOrderType !== 'delivery') return;
     if (!deliveryAddress?.latitude || !deliveryAddress?.longitude) return;
     if (!restaurantId) return;
 
-    const recalculateDeliveryCharge = async () => {
+    if (deliveryChargeTimerRef.current) clearTimeout(deliveryChargeTimerRef.current);
+
+    deliveryChargeTimerRef.current = setTimeout(async () => {
       try {
         const MANAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL || 'https://manage.mygenie.online';
         const res = await fetch(`${MANAGE_BASE_URL}/api/v1/config/distance-api-new`, {
@@ -773,7 +777,7 @@ const ReviewOrder = () => {
             destination_lat: String(deliveryAddress.latitude),
             destination_lng: String(deliveryAddress.longitude),
             restaurant_id: String(restaurantId),
-            order_value: String(getTotalPrice() || 0),
+            order_value: String(subtotal || 0),
           }),
         });
         const data = await res.json();
@@ -783,11 +787,13 @@ const ReviewOrder = () => {
       } catch {
         // Silent fail — stale charge is shown; order flow must not be blocked
       }
-    };
+    }, 500);
 
-    recalculateDeliveryCharge();
+    return () => {
+      if (deliveryChargeTimerRef.current) clearTimeout(deliveryChargeTimerRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Intentional: run once on mount only
+  }, [subtotal]); // BUG-2026-02-XX-001 Plan R3: fires on every cart total change; delivery-only guard at top
 
   // Auto-redirect if cart is empty — counts down 10→0 then goes to LandingPage
   useEffect(() => {

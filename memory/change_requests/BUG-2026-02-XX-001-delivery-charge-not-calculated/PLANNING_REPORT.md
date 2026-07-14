@@ -453,17 +453,15 @@ useEffect(() => {
 ---
 
 ```text
-R2 Plan: APPROVED (2026-07-13) — owner smoke test failure confirmed A-1 insufficient
-Scope: ReviewOrder.jsx only (~20 lines: 1 destructure add + 1 const + 1 useEffect)
-Risk: CRITICAL (§6.1 hotspot — gate already open from previous session)
-Complementary: A-1 and A-2 stay — R2 adds the ReviewOrder-mount re-check
-Next: Implementation (Role 3) → testing_agent_v3 → owner smoke re-test
+R3 Plan: APPROVED (2026-07-14) — R2 mount-only fix insufficient; cart changes on ReviewOrder not covered
+Scope: ReviewOrder.jsx only (~10 lines net: 1 ref + R2 useEffect replaced by R3)
+Risk: CRITICAL (§6.1 hotspot — gate open from previous sessions)
+Change from R2: [] → [subtotal] + 500ms debounce + cleanup return
 
-R2 IMPLEMENTATION STATUS: ✅ COMPLETE (2026-07-14)
+R3 IMPLEMENTATION STATUS: ✅ COMPLETE (2026-07-14)
 Files changed: frontend/src/pages/ReviewOrder.jsx
-  - Line 111: Added setDeliveryCharge to useCart() destructure (marker: BUG-2026-02-XX-001 Plan R2)
-  - Lines 758–790: Added mount-only useEffect with distance API call (marker: BUG-2026-02-XX-001 Plan R2)
-  - MANAGE_BASE_URL defined inline in async function (cleaner than top-level const)
-Implementation exit gate: 7/7 — see QA_HANDOVER_R2.md
+  - Line 259: deliveryChargeTimerRef = useRef(null) added (marker: BUG-2026-02-XX-001 Plan R3)
+  - Lines 759–796: R2 useEffect replaced with R3 useEffect — [subtotal] dep + 500ms debounce (marker: BUG-2026-02-XX-001 Plan R3)
+Implementation exit gate: 7/7
 Next: QA (Role 4) → Owner smoke re-test
 ```
