@@ -63,7 +63,7 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 | Field | Value |
 |---|---|
-| Status | **✅ PLAN R4 IMPLEMENTED (2026-07-14)** — Root cause confirmed + fixed. QA + owner smoke test pending. |
+| Status | **✅ PLAN R4 IMPLEMENTED + QA PASSED (2026-07-14)** — testing_agent_v3 iteration_4: 4/4 TCs PASS. Owner smoke test pending. |
 | Files changed | `DeliveryAddress.jsx` (A-1), `CartContext.js` (A-2), `ReviewOrder.jsx` (R2→R3→R4) |
 | Fix summary | A-1: Re-trigger checkDistance on cart change in DeliveryAddress. A-2: Persist charge to localStorage. R3: `useEffect([subtotal])` — fires on cart total change. **R4: Added `deliveryAddress` to dep array → `[subtotal, deliveryAddress]` — fixes async address load race condition on back-nav.** |
 | Root cause of R3 gap | R3 `[subtotal]` only. On back-nav: `subtotal` available sync but `deliveryAddress` null on mount. Effect returned early. Address loaded later but subtotal unchanged → effect never re-fired. Stale charge persisted. |
