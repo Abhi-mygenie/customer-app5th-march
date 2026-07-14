@@ -59,17 +59,18 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 ---
 
-### BUG-2026-02-XX-001 — Delivery charge not calculated ✅ PLAN R3 IMPLEMENTED
+### BUG-2026-02-XX-001 — Delivery charge not calculated ✅ PLAN R4 IMPLEMENTED
 
 | Field | Value |
 |---|---|
-| Status | **✅ PLAN R3 IMPLEMENTED (2026-07-14)** — All three sub-fixes shipped. QA + owner smoke test pending. |
-| Files changed | `DeliveryAddress.jsx` (A-1), `CartContext.js` (A-2), `ReviewOrder.jsx` (R2→R3) |
-| Fix summary | A-1: Re-trigger checkDistance on cart change in DeliveryAddress. A-2: Persist charge to localStorage. R3: `useEffect([subtotal])` with 500ms debounce in ReviewOrder — fires on every cart total change, delivery-only guard ensures API only calls for delivery orders with a valid saved address. |
-| Root cause of R2 gap | R2 used `[]` (mount-only). Cart changes WHILE on ReviewOrder page were not caught. R3 changes dep to `[subtotal]` to catch those. |
-| Next action | QA testing (R3-TC1..TC11) → Owner smoke test — restaurant 699, delivery, remove/add items on ReviewOrder page, verify charge updates |
+| Status | **✅ PLAN R4 IMPLEMENTED (2026-07-14)** — Root cause confirmed + fixed. QA + owner smoke test pending. |
+| Files changed | `DeliveryAddress.jsx` (A-1), `CartContext.js` (A-2), `ReviewOrder.jsx` (R2→R3→R4) |
+| Fix summary | A-1: Re-trigger checkDistance on cart change in DeliveryAddress. A-2: Persist charge to localStorage. R3: `useEffect([subtotal])` — fires on cart total change. **R4: Added `deliveryAddress` to dep array → `[subtotal, deliveryAddress]` — fixes async address load race condition on back-nav.** |
+| Root cause of R3 gap | R3 `[subtotal]` only. On back-nav: `subtotal` available sync but `deliveryAddress` null on mount. Effect returned early. Address loaded later but subtotal unchanged → effect never re-fired. Stale charge persisted. |
+| R4 fix | `deliveryAddress` added to dep array. When address hydrates async, effect re-fires with correct `subtotal` → API called → correct charge. |
+| Next action | QA testing (R4-TC1..TC7 in QA_HANDOVER_R4.md) → Owner smoke test — restaurant 699, delivery, back-nav, cross threshold |
 | Folder | `/app/memory/change_requests/BUG-2026-02-XX-001-delivery-charge-not-calculated/` |
-| Key docs | QA_HANDOVER_R3.md (test cases R3-TC1..TC11), PLANNING_REPORT.md (R3 addendum), SESSION_HANDOVER_R3.md |
+| Key docs | QA_HANDOVER_R4.md (test cases R4-TC1..TC7), SESSION_HANDOVER_R4.md |
 
 ---
 
@@ -109,3 +110,4 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | 2026-07-13 | Implementation (Role 3): BUG-001 A-1+A-2 + CR-002 B-1+B-2+B-3 implemented | 6 code edits across 3 files; testing_agent_v3 structural verification PASS 100%; services running; owner smoke test pending |
 | 2026-07-14 | Implementation (Role 3): BUG-001 Plan R2 implemented | 2 surgical edits in ReviewOrder.jsx (setDeliveryCharge destructure + mount useEffect); exit gate 7/7; QA_HANDOVER_R2.md written; owner smoke test pending |
 | 2026-07-14 | Implementation (Role 3): BUG-001 Plan R3 implemented | R2 mount-only useEffect replaced with [subtotal] dep + 500ms debounce; ref added; exit gate 7/7; QA_HANDOVER_R3.md written; owner smoke test pending |
+| 2026-07-14 | Implementation (Role 3): BUG-001 Plan R4 implemented | Root cause confirmed: async deliveryAddress load race with [subtotal] dep. Fix: added deliveryAddress to dep array → [subtotal, deliveryAddress]. Exit gate 7/7. QA_HANDOVER_R4.md + SESSION_HANDOVER_R4.md written. testing_agent_v3 dispatched. |

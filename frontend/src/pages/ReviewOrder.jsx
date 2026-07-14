@@ -792,8 +792,13 @@ const ReviewOrder = () => {
     return () => {
       if (deliveryChargeTimerRef.current) clearTimeout(deliveryChargeTimerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subtotal]); // BUG-2026-02-XX-001 Plan R3: fires on every cart total change; delivery-only guard at top
+  // BUG-2026-02-XX-001 Plan R4: added deliveryAddress so effect re-fires when address loads async on mount.
+  // Without this, navigating back from Menu with a modified cart causes the guard (!deliveryAddress?.latitude)
+  // to return early on mount (address = null), and the effect never re-fires once address hydrates because
+  // subtotal hasn't changed — leaving a stale delivery charge. Adding deliveryAddress triggers a re-run
+  // once CartContext's async localStorage load completes, calling the distance API with the correct subtotal.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal, deliveryAddress]); // BUG-2026-02-XX-001 Plan R4
 
   // Auto-redirect if cart is empty — counts down 10→0 then goes to LandingPage
   useEffect(() => {
