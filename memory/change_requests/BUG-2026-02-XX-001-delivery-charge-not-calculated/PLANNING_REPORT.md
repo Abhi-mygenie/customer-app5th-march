@@ -339,3 +339,123 @@ Next: Implementation (Role 3) → QA (Role 4) →
 ---
 
 *End of PLANNING REPORT (finalised 2026-07-13 — all gates open). Planning agent must not code.*
+
+---
+---
+
+## ADDENDUM — Plan R2 (2026-07-13 — post smoke-test failure)
+
+**Trigger:** BUG-001 smoke test failed. Screenshot confirmed: item total ₹260 (> ₹250 threshold), delivery charge shown ₹10 (wrong — should be ₹0). Network tab: `distance-api-new` NOT called on ReviewOrder page. R2 approved by owner.
+
+**Root cause of A-1 gap:**
+Plan A-1 re-triggers `checkDistance` in `DeliveryAddress.jsx` — only fires while the user is ON the delivery address page. The smoke test flow was:
+```
+Address selected (cart < ₹250) → setDeliveryCharge(10)
+User navigated to menu → added items (cart = ₹260 > ₹250) — A-1 never fired
+User navigated directly to /699/review-order — no checkDistance call here
+ReviewOrder reads stale deliveryCharge = 10 from CartContext/localStorage → shows ₹10
+```
+
+A-1 alone is not sufficient. R2 is required as an additional fix.
+
+---
+
+### Plan R2 — ReviewOrder.jsx — mount re-check of delivery charge
+
+**File:** `frontend/src/pages/ReviewOrder.jsx`
+**Risk:** CRITICAL (§6.1, Part C — owner gate: ✅ approved 2026-07-13)
+**Code marker:** `// BUG-2026-02-XX-001 R2:`
+
+**Pre-conditions confirmed (from code read):**
+- `getTotalPrice` ✅ already destructured from `useCart()` at line 100
+- `deliveryAddress` ✅ already destructured from `useCart()` at line 109 — has `latitude`, `longitude` (string fields, set in DeliveryAddress.jsx lines 247–248)
+- `scannedOrderType` ✅ already available from `useScannedTable()`
+- `restaurantId` ✅ already available
+- `setDeliveryCharge` ❌ NOT in ReviewOrder.jsx useCart destructure — **must be added to line 109 block**
+- `MANAGE_BASE_URL` ❌ NOT defined in ReviewOrder.jsx — **must be defined in component body**
+
+**Change 1 — add `setDeliveryCharge` to useCart destructuring (line 109):**
+
+Locate the existing `useCart()` destructure block (lines 97–113). Add `setDeliveryCharge` after `clearDeliveryAddress`:
+```javascript
+clearDeliveryAddress,
+setDeliveryCharge,    // BUG-2026-02-XX-001 R2
+```
+
+**Change 2 — define `MANAGE_BASE_URL` in component body (near top of component, after `restaurant` line ~120):**
+```javascript
+// BUG-2026-02-XX-001 R2: distance API base URL (mirrors DeliveryAddress.jsx)
+const MANAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL || 'https://manage.mygenie.online';
+```
+
+**Change 3 — add mount-only useEffect (after existing delivery-related state, around line 155):**
+```javascript
+// BUG-2026-02-XX-001 R2: Re-check delivery charge on ReviewOrder mount using final cart total.
+// Handles the case where user adds items on menu page then navigates directly to ReviewOrder
+// without returning to DeliveryAddress — A-1 (cartTotal useEffect) cannot catch that scenario.
+// Guards: delivery orders only; valid lat/lng from saved address required.
+useEffect(() => {
+  if (scannedOrderType !== 'delivery') return;
+  if (!deliveryAddress?.latitude || !deliveryAddress?.longitude) return;
+  const finalCartTotal = getTotalPrice();
+  fetch(`${MANAGE_BASE_URL}/api/v1/config/distance-api-new`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      destination_lat: String(deliveryAddress.latitude),
+      destination_lng: String(deliveryAddress.longitude),
+      restaurant_id:   String(restaurantId),
+      order_value:     String(finalCartTotal || 0),
+    }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data?.shipping_charge !== undefined) {
+        setDeliveryCharge(data.shipping_charge || 0); // persistDeliveryCharge under the hood (A-2)
+      }
+    })
+    .catch(() => {}); // silent fail — stale charge stays if network error; user can go back and re-select
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []); // mount-only: fires once per ReviewOrder visit; finalCartTotal stable at mount
+```
+
+**Why `[]` deps (mount-only) is correct:**
+- Cart is already fully loaded from localStorage before ReviewOrder renders
+- `getTotalPrice()` at mount time returns the final, correct cart total
+- We want exactly ONE re-check per ReviewOrder visit (not on every render)
+- If the user goes back to menu and changes the cart, they must revisit ReviewOrder — which re-mounts and fires the effect again
+
+**Blast radius:**
+- Delivery orders with a saved address: one extra API call per ReviewOrder mount
+- Takeaway/dinein orders: `scannedOrderType !== 'delivery'` guard exits immediately — NO API call
+- All other restaurants: fires the same way; harmless (API returns correct charge for any restaurant)
+- A-2 (`persistDeliveryCharge`): the `setDeliveryCharge` from context IS `persistDeliveryCharge` — the updated charge is automatically persisted to localStorage
+
+**Files changing for R2:**
+| File | Change | Risk |
+|---|---|---|
+| `frontend/src/pages/ReviewOrder.jsx` | Add `setDeliveryCharge` to destructure + `MANAGE_BASE_URL` const + mount useEffect (~20 lines) | CRITICAL |
+
+**Files NOT changing:** `DeliveryAddress.jsx` (A-1 stays — complements R2), `CartContext.js` (A-2 stays), `orderService.ts`, `server.py`, any `.env`
+
+---
+
+### Updated verification matrix (R2 additional test cases)
+
+| ID | Test | Expected |
+|---|---|---|
+| R2-TC1 (primary) | Restaurant 699, delivery · Set address (cart ₹100) · Go to menu · Add items (cart ₹260) · Navigate directly to ReviewOrder | ReviewOrder auto-rechecks → delivery charge updates to ₹0 |
+| R2-TC2 | Restaurant 699, delivery · Cart ₹260 · Open ReviewOrder · Check Network tab | `distance-api-new` POST called on mount with `order_value: "260"` |
+| R2-TC3 | Restaurant 699, **takeaway** order | No `distance-api-new` call on ReviewOrder mount |
+| R2-TC4 | Restaurant 699, delivery · No saved address (deliveryAddress = null) | No `distance-api-new` call on ReviewOrder mount |
+| R2-TC5 (regression) | Delivery charge ₹10 already correct (cart < ₹250) | Mount re-check returns ₹10 — no visible change |
+
+---
+
+```text
+R2 Plan: APPROVED (2026-07-13) — owner smoke test failure confirmed A-1 insufficient
+Scope: ReviewOrder.jsx only (~20 lines: 1 destructure add + 1 const + 1 useEffect)
+Risk: CRITICAL (§6.1 hotspot — gate already open from previous session)
+Complementary: A-1 and A-2 stay — R2 adds the ReviewOrder-mount re-check
+Next: Implementation (Role 3) → testing_agent_v3 → owner smoke re-test
+```
