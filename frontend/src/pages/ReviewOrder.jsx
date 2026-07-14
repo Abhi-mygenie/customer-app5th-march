@@ -108,6 +108,7 @@ const ReviewOrder = () => {
     // Delivery (Phase 3)
     deliveryAddress,
     deliveryCharge,
+    setDeliveryCharge, // BUG-2026-02-XX-001 Plan R2
     clearDeliveryAddress,
     removeFromCart, // CR-2026-06-17-003 APP-12
   } = useCart();
@@ -753,6 +754,40 @@ const ReviewOrder = () => {
 
     fetchToken();
   }, []); // Only run once on mount
+
+  // BUG-2026-02-XX-001 Plan R2: On ReviewOrder mount, re-check delivery charge using the
+  // current cart total. Fixes stale charge when user bypasses the DeliveryAddress page
+  // by adding items on the Menu page and navigating directly to ReviewOrder.
+  useEffect(() => {
+    if (scannedOrderType !== 'delivery') return;
+    if (!deliveryAddress?.latitude || !deliveryAddress?.longitude) return;
+    if (!restaurantId) return;
+
+    const recalculateDeliveryCharge = async () => {
+      try {
+        const MANAGE_BASE_URL = process.env.REACT_APP_IMAGE_BASE_URL || 'https://manage.mygenie.online';
+        const res = await fetch(`${MANAGE_BASE_URL}/api/v1/config/distance-api-new`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            destination_lat: String(deliveryAddress.latitude),
+            destination_lng: String(deliveryAddress.longitude),
+            restaurant_id: String(restaurantId),
+            order_value: String(getTotalPrice() || 0),
+          }),
+        });
+        const data = await res.json();
+        if (data?.shipping_status === 'Yes') {
+          setDeliveryCharge(parseFloat(data.shipping_charge) || 0);
+        }
+      } catch {
+        // Silent fail — stale charge is shown; order flow must not be blocked
+      }
+    };
+
+    recalculateDeliveryCharge();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentional: run once on mount only
 
   // Auto-redirect if cart is empty — counts down 10→0 then goes to LandingPage
   useEffect(() => {

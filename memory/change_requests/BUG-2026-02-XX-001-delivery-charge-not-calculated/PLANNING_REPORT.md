@@ -458,4 +458,12 @@ Scope: ReviewOrder.jsx only (~20 lines: 1 destructure add + 1 const + 1 useEffec
 Risk: CRITICAL (§6.1 hotspot — gate already open from previous session)
 Complementary: A-1 and A-2 stay — R2 adds the ReviewOrder-mount re-check
 Next: Implementation (Role 3) → testing_agent_v3 → owner smoke re-test
+
+R2 IMPLEMENTATION STATUS: ✅ COMPLETE (2026-07-14)
+Files changed: frontend/src/pages/ReviewOrder.jsx
+  - Line 111: Added setDeliveryCharge to useCart() destructure (marker: BUG-2026-02-XX-001 Plan R2)
+  - Lines 758–790: Added mount-only useEffect with distance API call (marker: BUG-2026-02-XX-001 Plan R2)
+  - MANAGE_BASE_URL defined inline in async function (cleaner than top-level const)
+Implementation exit gate: 7/7 — see QA_HANDOVER_R2.md
+Next: QA (Role 4) → Owner smoke re-test
 ```
