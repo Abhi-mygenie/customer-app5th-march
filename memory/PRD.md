@@ -1,6 +1,6 @@
 # MyGenie Customer App — PRD (Active Working Memory)
 
-**Last updated:** 2026-07-13  
+**Last updated:** 2026-07-14  
 **Branch:** 13-july  
 **Repo:** https://github.com/Abhi-mygenie/customer-app5th-march.git  
 **Stack:** React (TypeScript) + FastAPI (Python) + MongoDB  
@@ -78,7 +78,7 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 | Item | Status | Note |
 |---|---|---|
-| CR-2026-02-XX-002 (Rest 699 takeaway ₹10) | ✅ UNPARKED — in active implementation queue | PLANNING_REPORT.md finalised; ready for Role 3 |
+| CR-2026-02-XX-002 (Rest 699 takeaway ₹10) | ✅ IMPLEMENTED + AGENT-TESTED | Owner smoke test pending |
 | BUG-006 (Rest 716 hardcode in ReviewOrder) | PARKED | Intentional business exception |
 | BUG-007 (`payment_method` hardcode) | PARKED | Intentional; `payment_type` carries actual selection |
 | Google Maps API key restriction | BACKLOG | Key needs domain restriction in GCP console |
@@ -113,3 +113,4 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | 2026-07-14 | Implementation (Role 3): BUG-001 Plan R4 implemented | Root cause confirmed: async deliveryAddress load race with [subtotal] dep. Fix: added deliveryAddress to dep array → [subtotal, deliveryAddress]. Exit gate 7/7. QA_HANDOVER_R4.md + SESSION_HANDOVER_R4.md written. testing_agent_v3 dispatched. |
 | 2026-07-14 | Owner smoke test R4 FAILED | Network tab: zero POST to distance-api-new. Investigated useScannedTable.js — useState(null) init + async useEffect load → scannedOrderType null on first render → guard blocks → effect never re-fires when scannedOrderType loads. |
 | 2026-07-14 | Implementation (Role 3): BUG-001 Plan R5 implemented | Definitive fix: dep array [subtotal, deliveryAddress, scannedOrderType]. Catches all three async loads. Build clean. QA_HANDOVER_R5.md + SESSION_HANDOVER_R5.md written. Owner smoke test pending. |
+| 2026-07-14 | Session closure | PRD.md updated (last-updated, CR-002 status, session log). All handover docs current. Owner smoke test for BUG-001 R5 and CR-002 still pending. |
