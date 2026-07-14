@@ -59,18 +59,18 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 
 ---
 
-### BUG-2026-02-XX-001 — Delivery charge not calculated ✅ PLAN R4 IMPLEMENTED
+### BUG-2026-02-XX-001 — Delivery charge not calculated ✅ PLAN R5 IMPLEMENTED
 
 | Field | Value |
 |---|---|
-| Status | **✅ PLAN R4 IMPLEMENTED + QA PASSED (2026-07-14)** — testing_agent_v3 iteration_4: 4/4 TCs PASS. Owner smoke test pending. |
-| Files changed | `DeliveryAddress.jsx` (A-1), `CartContext.js` (A-2), `ReviewOrder.jsx` (R2→R3→R4) |
-| Fix summary | A-1: Re-trigger checkDistance on cart change in DeliveryAddress. A-2: Persist charge to localStorage. R3: `useEffect([subtotal])` — fires on cart total change. **R4: Added `deliveryAddress` to dep array → `[subtotal, deliveryAddress]` — fixes async address load race condition on back-nav.** |
-| Root cause of R3 gap | R3 `[subtotal]` only. On back-nav: `subtotal` available sync but `deliveryAddress` null on mount. Effect returned early. Address loaded later but subtotal unchanged → effect never re-fired. Stale charge persisted. |
-| R4 fix | `deliveryAddress` added to dep array. When address hydrates async, effect re-fires with correct `subtotal` → API called → correct charge. |
-| Next action | QA testing (R4-TC1..TC7 in QA_HANDOVER_R4.md) → Owner smoke test — restaurant 699, delivery, back-nav, cross threshold |
+| Status | **✅ PLAN R5 IMPLEMENTED (2026-07-14)** — Owner smoke test pending. |
+| Files changed | `DeliveryAddress.jsx` (A-1), `CartContext.js` (A-2), `ReviewOrder.jsx` (R2→R3→R4→R5) |
+| Fix summary | R5: Final dep array `[subtotal, deliveryAddress, scannedOrderType]`. Catches all three async loads: (1) subtotal change, (2) deliveryAddress async load from CartContext, (3) scannedOrderType async load from useScannedTable (was root cause of R4 smoke failure). |
+| Root cause of R4 gap | `useScannedTable` initialises `scannedTable` as `null` via `useState(null)` and reads sessionStorage in its own `useEffect`. So `scannedOrderType` is `null` on ReviewOrder's first render → guard `null !== 'delivery'` blocks the API. When `scannedOrderType` loads to `'delivery'`, subtotal/deliveryAddress are unchanged → R4's dep array `[subtotal, deliveryAddress]` never re-fires. |
+| R5 fix | Added `scannedOrderType` to dep array. When it transitions `null → 'delivery'`, effect re-fires with correct subtotal and deliveryAddress → API called → correct charge. |
+| Next action | Owner smoke test — restaurant 699, delivery, back-nav scenario (below ₹250 → ReviewOrder → back to Menu → above ₹250 → ReviewOrder → verify Free delivery). See R5-TC1 in QA_HANDOVER_R5.md |
 | Folder | `/app/memory/change_requests/BUG-2026-02-XX-001-delivery-charge-not-calculated/` |
-| Key docs | QA_HANDOVER_R4.md (test cases R4-TC1..TC7), SESSION_HANDOVER_R4.md |
+| Key docs | QA_HANDOVER_R5.md (R5-TC1..TC4), SESSION_HANDOVER_R5.md |
 
 ---
 
@@ -111,3 +111,5 @@ Backend health: `GET /api/` → `{"message":"Customer App API"}`
 | 2026-07-14 | Implementation (Role 3): BUG-001 Plan R2 implemented | 2 surgical edits in ReviewOrder.jsx (setDeliveryCharge destructure + mount useEffect); exit gate 7/7; QA_HANDOVER_R2.md written; owner smoke test pending |
 | 2026-07-14 | Implementation (Role 3): BUG-001 Plan R3 implemented | R2 mount-only useEffect replaced with [subtotal] dep + 500ms debounce; ref added; exit gate 7/7; QA_HANDOVER_R3.md written; owner smoke test pending |
 | 2026-07-14 | Implementation (Role 3): BUG-001 Plan R4 implemented | Root cause confirmed: async deliveryAddress load race with [subtotal] dep. Fix: added deliveryAddress to dep array → [subtotal, deliveryAddress]. Exit gate 7/7. QA_HANDOVER_R4.md + SESSION_HANDOVER_R4.md written. testing_agent_v3 dispatched. |
+| 2026-07-14 | Owner smoke test R4 FAILED | Network tab: zero POST to distance-api-new. Investigated useScannedTable.js — useState(null) init + async useEffect load → scannedOrderType null on first render → guard blocks → effect never re-fires when scannedOrderType loads. |
+| 2026-07-14 | Implementation (Role 3): BUG-001 Plan R5 implemented | Definitive fix: dep array [subtotal, deliveryAddress, scannedOrderType]. Catches all three async loads. Build clean. QA_HANDOVER_R5.md + SESSION_HANDOVER_R5.md written. Owner smoke test pending. |

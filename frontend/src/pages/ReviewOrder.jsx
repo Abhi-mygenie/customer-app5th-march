@@ -792,13 +792,15 @@ const ReviewOrder = () => {
     return () => {
       if (deliveryChargeTimerRef.current) clearTimeout(deliveryChargeTimerRef.current);
     };
-  // BUG-2026-02-XX-001 Plan R4: added deliveryAddress so effect re-fires when address loads async on mount.
-  // Without this, navigating back from Menu with a modified cart causes the guard (!deliveryAddress?.latitude)
-  // to return early on mount (address = null), and the effect never re-fires once address hydrates because
-  // subtotal hasn't changed — leaving a stale delivery charge. Adding deliveryAddress triggers a re-run
-  // once CartContext's async localStorage load completes, calling the distance API with the correct subtotal.
+  // BUG-2026-02-XX-001 Plan R5: added scannedOrderType to dep array.
+  // useScannedTable initialises scannedTable as null (useState(null)) and loads from sessionStorage
+  // inside its own useEffect — so scannedOrderType is null on the very first render of ReviewOrder.
+  // On fresh mount the effect fires, guard "scannedOrderType !== 'delivery'" blocks it (null !== 'delivery'),
+  // then useScannedTable's effect sets scannedOrderType to 'delivery', but subtotal and deliveryAddress
+  // are unchanged so the effect never re-fires — leaving a stale delivery charge.
+  // Adding scannedOrderType ensures the effect re-fires when it transitions null → 'delivery'.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subtotal, deliveryAddress]); // BUG-2026-02-XX-001 Plan R4
+  }, [subtotal, deliveryAddress, scannedOrderType]); // BUG-2026-02-XX-001 Plan R5
 
   // Auto-redirect if cart is empty — counts down 10→0 then goes to LandingPage
   useEffect(() => {
