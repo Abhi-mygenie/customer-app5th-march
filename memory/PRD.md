@@ -65,6 +65,7 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 | CR-2026-09-08-001 | `MenuItem.jsx` no-image ADD button missing `isChannelAllowed` guard | P3 | MEDIUM | **INTAKE ✅ — awaiting Planning approval** |
 | BUG-2026-09-08-001 | `response is not defined` crash on 422 in `handlePlaceOrder` | **P0** | CRITICAL | **IMPLEMENTATION COMPLETE — awaiting QA** |
 | BUG-2026-09-10-001 | Logo/image upload broken — replace Emergent object storage with local disk | P1 | MEDIUM | **QA PASS ✅ — 2026-09-10 — awaiting owner smoke** |
+| INV-2026-09-10-001 | Razorpay script missing from index.html — payment TypeError at ReviewOrder:1139 | **P0** | CRITICAL | **FIX APPLIED ON POD ⚠️ NOT PUSHED TO GITHUB — owner must push before next deploy** |
 
 ## Active Investigations (session — not yet filed as separate INV docs)
 
