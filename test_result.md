@@ -154,33 +154,73 @@ backend:
         comment: "Upload endpoint correctly requires restaurant admin authentication via get_restaurant_user dependency. Admin login tested with credentials owner@fivestar.com / Qplazm@10. Returns valid JWT token. Upload without auth returns HTTP 401 as expected."
 
 frontend:
-  - task: "Not tested - backend only"
-    implemented: false
-    working: "NA"
-    file: "N/A"
+  - task: "Admin Settings page logo upload"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/admin/AdminSettingsPage.jsx"
     stuck_count: 0
-    priority: "low"
+    priority: "high"
     needs_retesting: false
     status_history:
-      - working: "NA"
+      - working: true
         agent: "testing"
-        comment: "Frontend testing not performed as per testing agent instructions. Only backend API endpoints were tested."
+        comment: "TC-1 PASS: Logo upload tested on /admin/settings page. Upload button found and functional. File uploaded successfully via POST /api/upload/image (HTTP 200). Logo URL field populated correctly with https://react-app-deploy-10.preview.emergentagent.com/api/upload/image/7a89326f7639430d88be6f669a098dc0.png. Image preview rendered successfully (red test image visible). No Emergent storage errors detected."
+
+  - task: "Admin Branding page background image upload"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/admin/AdminBrandingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TC-2 PASS: Background image upload tested on /admin/branding page. Successfully navigated via sidebar. Found 2 upload buttons (desktop and mobile background). Uploaded background image successfully via POST /api/upload/image (HTTP 200). Background URL field populated correctly. Image preview rendered successfully (blue test image visible). No Emergent storage errors detected."
+
+  - task: "Verify original Emergent storage error is gone"
+    implemented: true
+    working: true
+    file: "N/A"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TC-3 PASS: Original bug completely resolved. ZERO network errors detected during testing. NO calls to integrations.emergentagent.com. All upload API calls went to local endpoint /api/upload/image. No 'Storage upload failed' error messages. No 'Bad Request' errors. No 'integrations.emergentagent.com' errors. The Emergent object storage has been completely replaced with local disk storage."
+
+  - task: "Verify uploaded images render correctly"
+    implemented: true
+    working: true
+    file: "N/A"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "TC-4 PASS: Both uploaded images rendered correctly in preview areas. Logo preview shows uploaded red test image. Background preview shows uploaded blue test image. Images are immediately accessible via GET /api/upload/image/{filename} and render properly in the UI."
 
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 1
-  run_ui: false
+  test_sequence: 2
+  run_ui: true
 
 test_plan:
   current_focus:
     - "Image upload endpoint with admin authentication"
     - "Image serving endpoint"
     - "Local disk storage implementation"
+    - "Admin Settings page logo upload"
+    - "Admin Branding page background image upload"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
-    message: "BUG-2026-09-10-001 image upload fix has been successfully tested. All 8 test cases passed. The Emergent object storage has been completely replaced with local disk I/O. Files are stored in /app/backend/uploads/ and served correctly. Authentication is working properly. No storage-related errors in recent logs. The fix is production-ready."
+    message: "BUG-2026-09-10-001 image upload fix has been successfully tested. All 8 backend test cases passed. The Emergent object storage has been completely replaced with local disk I/O. Files are stored in /app/backend/uploads/ and served correctly. Authentication is working properly. No storage-related errors in recent logs. The fix is production-ready."
+  - agent: "testing"
+    message: "BUG-2026-09-10-001 COMPLETE END-TO-END TESTING SUCCESSFUL. All 4 frontend test cases (TC-1 through TC-4) passed. Tested on /admin/settings and /admin/branding pages. Upload functionality working correctly. Logo and background image uploads successful. All API calls to /api/upload/image returned HTTP 200. Images render correctly in preview areas. CRITICAL: ZERO Emergent storage errors detected. NO calls to integrations.emergentagent.com. Original bug 'Storage upload failed: 400 Client Error: Bad Request for url: https://integrations.emergentagent.com/objstore/api/v1/storage/init' is completely resolved. The fix is production-ready and verified working in the live environment."
