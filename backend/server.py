@@ -44,47 +44,7 @@ if not JWT_SECRET:
     raise ValueError("CRITICAL: JWT_SECRET environment variable must be set")
 JWT_ALGORITHM = "HS256"
 
-# Object storage (Emergent)
-import requests as _requests
-STORAGE_BASE = (os.environ.get("INTEGRATION_PROXY_URL") or "").strip() or "https://integrations.emergentagent.com"
-STORAGE_URL = STORAGE_BASE.rstrip("/") + "/objstore/api/v1/storage"
-EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
-_storage_key = None
-
-def _init_storage(force: bool = False):
-    global _storage_key
-    if _storage_key and not force:
-        return _storage_key
-    resp = _requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_LLM_KEY}, timeout=30)
-    resp.raise_for_status()
-    _storage_key = resp.json()["storage_key"]
-    return _storage_key
-
-def _put_object(path: str, data: bytes, content_type: str) -> dict:
-    key = _init_storage()
-    resp = _requests.put(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key, "Content-Type": content_type},
-        data=data, timeout=120
-    )
-    resp.raise_for_status()
-    return resp.json()
-
-def _get_object(path: str):
-    key = _init_storage()
-    resp = _requests.get(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key}, timeout=60
-    )
-    if resp.status_code == 404:
-        try:
-            _init_storage(force=True)
-            key = _storage_key
-            resp = _requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
-        except Exception:
-            pass
-    resp.raise_for_status()
-    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
+# BUG-2026-09-10-001: Emergent object storage removed — local disk used instead.
 
 # MyGenie POS API base URL (DFA-002 fix: no fallback, fail fast)
 MYGENIE_API_URL = os.environ.get("MYGENIE_API_URL")
@@ -1420,14 +1380,14 @@ ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
 MIME_MAP = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
             "gif": "image/gif", "webp": "image/webp", "svg": "image/svg+xml"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
-APP_NAME = "customer-app"
 
 @upload_router.post("/image")
 async def upload_image(
     file: UploadFile = File(...),
     user: dict = Depends(get_restaurant_user)
 ):
-    """Upload an image file (restaurant admin only). Max 5MB."""
+    """Upload an image file to local disk (restaurant admin only). Max 5MB."""
+    # BUG-2026-09-10-001: local disk replaces Emergent object storage
     ext = Path(file.filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"File type {ext} not allowed. Use: {', '.join(ALLOWED_EXTENSIONS)}")
@@ -1437,28 +1397,28 @@ async def upload_image(
         raise HTTPException(status_code=400, detail="File too large. Max 5MB.")
 
     filename = f"{uuid.uuid4().hex}{ext}"
-    storage_path = f"{APP_NAME}/uploads/{filename}"
-    content_type = MIME_MAP.get(ext.lstrip("."), "application/octet-stream")
+    uploads_dir = ROOT_DIR / "uploads"
+    uploads_dir.mkdir(exist_ok=True)
 
     try:
-        result = _put_object(storage_path, contents, content_type)
+        (uploads_dir / filename).write_bytes(contents)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Storage upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
 
     url = f"/api/upload/image/{filename}"
     return {"success": True, "url": url, "filename": filename}
 
 @upload_router.get("/image/{filename}")
 async def serve_upload(filename: str):
-    """Serve an uploaded image from object storage."""
-    ext = Path(filename).suffix.lower().lstrip(".")
-    storage_path = f"{APP_NAME}/uploads/{filename}"
-    try:
-        data, content_type = _get_object(storage_path)
-    except Exception:
+    """Serve an uploaded image from local disk."""
+    # BUG-2026-09-10-001: local disk replaces Emergent object storage
+    file_path = ROOT_DIR / "uploads" / filename
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="Image not found")
+    ext = Path(filename).suffix.lower().lstrip(".")
+    content_type = MIME_MAP.get(ext, "application/octet-stream")
     from fastapi.responses import Response
-    return Response(content=data, media_type=content_type)
+    return Response(content=file_path.read_bytes(), media_type=content_type)
 
 # ============================================
 # Legacy Routes (Keep existing functionality)
@@ -1864,8 +1824,6 @@ async def shutdown_db_client():
 
 @app.on_event("startup")
 async def startup_event():
-    try:
-        _init_storage()
-        logger.info("Object storage initialized successfully")
-    except Exception as e:
-        logger.warning(f"Object storage init failed at startup (will retry on first use): {e}")
+    # BUG-2026-09-10-001: ensure uploads dir exists on startup
+    (ROOT_DIR / "uploads").mkdir(exist_ok=True)
+    logger.info("Uploads directory ready")

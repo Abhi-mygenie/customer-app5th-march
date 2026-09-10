@@ -101,3 +101,86 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Test the image upload fix for BUG-2026-09-10-001. The Emergent object storage layer was replaced with local disk I/O in /app/backend/server.py. Files are now stored in /app/backend/uploads/ and served via the same endpoint."
+
+backend:
+  - task: "Image upload endpoint with admin authentication"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py (lines 1384-1409)"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/upload/image endpoint tested successfully. Requires Bearer token authentication. Returns HTTP 200 with JSON response containing success, url, and filename fields. Files are saved to /app/backend/uploads/ with UUID-based filenames. Correctly rejects requests without auth (401). Max file size 5MB enforced. Allowed extensions: .png, .jpg, .jpeg, .gif, .webp, .svg."
+
+  - task: "Image serving endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py (lines 1411-1421)"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/upload/image/{filename} endpoint tested successfully. Serves files from /app/backend/uploads/ with correct Content-Type headers (image/png, image/jpeg, etc.). Returns HTTP 200 for existing files and HTTP 404 for nonexistent files. No authentication required for serving (public access)."
+
+  - task: "Local disk storage implementation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py (lines 1825-1829)"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Uploads directory is created on startup via @app.on_event('startup') handler. Directory exists at /app/backend/uploads/. Startup logs show 'Uploads directory ready' message. No 'Object storage init failed' errors in recent logs. Old Emergent storage code has been completely removed from server.py."
+
+  - task: "Authentication and authorization"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py (lines 354-358)"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Upload endpoint correctly requires restaurant admin authentication via get_restaurant_user dependency. Admin login tested with credentials owner@fivestar.com / Qplazm@10. Returns valid JWT token. Upload without auth returns HTTP 401 as expected."
+
+frontend:
+  - task: "Not tested - backend only"
+    implemented: false
+    working: "NA"
+    file: "N/A"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Frontend testing not performed as per testing agent instructions. Only backend API endpoints were tested."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Image upload endpoint with admin authentication"
+    - "Image serving endpoint"
+    - "Local disk storage implementation"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "BUG-2026-09-10-001 image upload fix has been successfully tested. All 8 test cases passed. The Emergent object storage has been completely replaced with local disk I/O. Files are stored in /app/backend/uploads/ and served correctly. Authentication is working properly. No storage-related errors in recent logs. The fix is production-ready."
