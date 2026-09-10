@@ -64,7 +64,7 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 | CR-2026-09-07-001 | Inventory stock-out control — FE three-layer defence | P1 | HIGH | **QA CLOSED ✅ — 2026-09-08** |
 | CR-2026-09-08-001 | `MenuItem.jsx` no-image ADD button missing `isChannelAllowed` guard | P3 | MEDIUM | **INTAKE ✅ — awaiting Planning approval** |
 | BUG-2026-09-08-001 | `response is not defined` crash on 422 in `handlePlaceOrder` | **P0** | CRITICAL | **IMPLEMENTATION COMPLETE — awaiting QA** |
-| BUG-2026-09-10-001 | Logo/image upload broken — replace Emergent object storage with local disk + StaticFiles | P1 | MEDIUM | **INTAKE COMPLETE ✅ — awaiting Planning** |
+| BUG-2026-09-10-001 | Logo/image upload broken — replace Emergent object storage with local disk | P1 | MEDIUM | **PLAN COMPLETE ✅ — awaiting owner approval to implement** |
 
 ## Active Investigations (session — not yet filed as separate INV docs)
 
