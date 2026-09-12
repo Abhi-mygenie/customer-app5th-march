@@ -91,6 +91,13 @@ webpackConfig.devServer = (devServerConfig) => {
       };
     }
   }
+  if ('https' in devServerConfig) {
+    const httpsOpt = devServerConfig.https;
+    delete devServerConfig.https;
+    if (httpsOpt && !devServerConfig.server) {
+      devServerConfig.server = httpsOpt === true ? 'https' : { type: 'https', options: httpsOpt };
+    }
+  }
   if ('onAfterSetupMiddleware' in devServerConfig) {
     const legacyAfter = devServerConfig.onAfterSetupMiddleware;
     delete devServerConfig.onAfterSetupMiddleware;
