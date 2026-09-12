@@ -57,6 +57,12 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 
 ---
 
+## Architecture Correction Track (2026-06) — PAUSED, awaiting next agent
+- Handover: `/app/memory/SESSION_HANDOVER_2026-06-ARCHITECTURE-TRACK.md` (read first)
+- Readiness summary: `/app/memory/master_outlet/PRE_MODULE_ARCHITECTURE_READINESS.md`
+- Master Outlet architecture (paused until architecture decision): `/app/memory/master_outlet/ARCHITECTURE_REEVALUATION.md` + team HTML
+- Owner instruction: correct the architecture first; next agent re-investigates and proposes next step.
+
 ## Active Change Requests
 
 | CR ID | Title | Severity | Risk | Status |
