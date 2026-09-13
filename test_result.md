@@ -153,6 +153,18 @@ backend:
         agent: "testing"
         comment: "Upload endpoint correctly requires restaurant admin authentication via get_restaurant_user dependency. Admin login tested with credentials owner@fivestar.com / Qplazm@10. Returns valid JWT token. Upload without auth returns HTTP 401 as expected."
 
+  - task: "CR-2026-09-12-005 Phase 1: Pytest suite implementation and verification"
+    implemented: true
+    working: true
+    file: "/app/backend/tests/"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "QA verification completed for CR-2026-09-12-005 Phase 1. All 8 checks PASSED: ✅ Check 1: Full test suite runs (22 passed, 0 failed, xdist workers gw0/gw1 visible). ✅ Check 2: Contract tests only (14 passed, 0 failed). ✅ Check 3: Smoke tests only (8 passed, 0 failed) - test_smoke_otp_echo_present, test_smoke_admin_login_jwt, test_smoke_config_put_get_round_trip all PASSED. ✅ Check 4: Snapshot files exist with .json extension, 0 dynamic fields found (no updated_at, created_at, _id, token, otp_for_testing). ✅ Check 5: Scope lock maintained - no modifications to backend/server.py or frontend/src/**. ✅ Check 6: Backend healthy (healthz returns ok:true, mongo:up, supervisor shows RUNNING). ✅ Check 7: requirements.txt appended correctly (last 2 lines: syrupy==6.0.0, pytest-asyncio==1.4.0). ✅ Check 8: CR marker CR-2026-09-12-005 present in all 13 test files. Test suite covers 14 API contract snapshot tests and 8 behavioural smoke tests using sync httpx.Client against http://localhost:8001. Admin credentials verified: owner@18march.com / Qplazm@10 / restaurant_id=478. All tests use pytest markers (contract/smoke) and run in parallel via pytest-xdist. Snapshot files stored in backend/tests/contracts/__snapshots__/. No app source files modified - test implementation is additive only."
+
 frontend:
   - task: "Admin Settings page logo upload"
     implemented: true
@@ -205,7 +217,7 @@ frontend:
 metadata:
   created_by: "testing_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: true
 
 test_plan:
@@ -224,3 +236,5 @@ agent_communication:
     message: "BUG-2026-09-10-001 image upload fix has been successfully tested. All 8 backend test cases passed. The Emergent object storage has been completely replaced with local disk I/O. Files are stored in /app/backend/uploads/ and served correctly. Authentication is working properly. No storage-related errors in recent logs. The fix is production-ready."
   - agent: "testing"
     message: "BUG-2026-09-10-001 COMPLETE END-TO-END TESTING SUCCESSFUL. All 4 frontend test cases (TC-1 through TC-4) passed. Tested on /admin/settings and /admin/branding pages. Upload functionality working correctly. Logo and background image uploads successful. All API calls to /api/upload/image returned HTTP 200. Images render correctly in preview areas. CRITICAL: ZERO Emergent storage errors detected. NO calls to integrations.emergentagent.com. Original bug 'Storage upload failed: 400 Client Error: Bad Request for url: https://integrations.emergentagent.com/objstore/api/v1/storage/init' is completely resolved. The fix is production-ready and verified working in the live environment."
+  - agent: "testing"
+    message: "CR-2026-09-12-005 Phase 1 QA VERIFICATION COMPLETE. All 8 checks PASSED with zero findings. Pytest suite successfully implemented at /app/backend/tests/ with 22 tests total (14 contract snapshots + 8 smoke flows). Test execution confirmed: full suite passes in 7.74s with xdist parallel workers, contract-only passes (14/14), smoke-only passes (8/8) including the OTP echo tripwire test. Snapshot integrity verified: all .json files present with zero dynamic fields. Scope lock maintained: no backend/server.py or frontend/src/** modifications. Backend remains healthy post-testing. Dependencies correctly appended to requirements.txt. CR marker present in all test files. Test suite is production-ready for Phase 2 CI integration (CR-2026-09-12-015). Admin credentials verified: owner@18march.com / Qplazm@10 / restaurant_id=478. No blockers, no major findings, no minor findings."
