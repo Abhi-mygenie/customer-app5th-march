@@ -117,7 +117,7 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 Wave 1 formally split into Wave 1a (3 unblocked CRs, IA gates all closed, proceed to IMPLEMENTATION_PLAN) and Wave 1b→Wave 2 (3 blocked CRs, owner-side prerequisites outstanding).
 
 **Wave 1a — IMPLEMENTATION PLANS WRITTEN 2026-09-13 (IP phase open):**
-- CR-2026-09-12-005 P1 (pytest + snapshots) — IA APPROVED, proceed to IMPLEMENTATION_PLAN
+- CR-2026-09-12-005 P1 (pytest + snapshots) — **IMPLEMENTED 2026-09-13** · 22/22 tests PASS · QA-pending
 - CR-2026-07-03-007 F-07 (env housekeeping) — IA APPROVED, proceed to IMPLEMENTATION_PLAN
 - CR-2026-09-12-004 (CORS + rate-limit + middleware) — IA APPROVED, proceed to IMPLEMENTATION_PLAN
 - Build order: CR-005 P1 → CR-007 F-07 → CR-004
