@@ -79,12 +79,14 @@ Owner answered all questions in the same Planning session; the CR-007 F-07 IA ga
 ```text
 Planning complete: CR-2026-07-03-007 F-07 · Stage: Impact Analysis · Risk: LOW
 Impact Analysis: APPROVED BY OWNER 2026-09-12 · Owner literal: "Q-F07-A a / Q-F07-B all defaults"
+Wave 1a IA Gate: ✅ CLOSED 2026-09-13 (wave-split decision recorded)
+Wave assignment: WAVE 1a — unblocked, proceed to IMPLEMENTATION_PLAN
 Files WILL change: 4 new (2 .env.example, .gitignore edit, ROTATION_CHECKLIST.md) + 1 orphan line deletion in live backend/.env (D-007-4 step 3 (a))
 Files WILL NOT touch: source code, .emergent/*, live .env values (except the 1-line orphan delete)
 Owner decisions: ALL FROZEN (D-007-1..4 + Q-F07-A/B + A-1..5)
 Adjacent: CR-2026-07-03-007 F-06 (rotation task) unchanged — sibling scope in same CR
 New CR spun off: CR-2026-09-12-016 (dead-code deletion — Wave 3) — owner drives Role 1 to file it
-Docs updated: this file, README.md (row flipped to APPROVED), OWNER_DECISIONS_2026-09-12.md, PRD.md
+Docs updated: this file, README.md, OWNER_DECISIONS_2026-09-12.md, EXECUTION_PLAN.md v1.1, PRD.md
 Next: Owner-driven Planning session for IMPLEMENTATION_PLAN drafting (still no code).
 GATE DISCIPLINE: no plan written, no code, all assumptions surfaced.
 ```

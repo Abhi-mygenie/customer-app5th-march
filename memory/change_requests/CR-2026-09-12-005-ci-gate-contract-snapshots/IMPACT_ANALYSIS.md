@@ -266,20 +266,19 @@ Historical record only. All four assumptions were resolved on 2026-09-12 and the
 ```text
 Planning complete: CR-2026-09-12-005 (Phase 1 — local pytest + snapshot harness)
 Stage: Impact Analysis — ✅ APPROVED BY OWNER 2026-09-12
+Wave 1a IA Gate: ✅ CLOSED 2026-09-13 (wave-split decision recorded)
 Owner approval literal: "approved document this and close gate 2 session"
 Code reality: NONE (backend/tests/ empty; no CI workflow; deps partial — pytest+httpx+jsonschema present, syrupy missing)
 Risk: MEDIUM (concurs with intake)
 Files WILL change: 12 new + 1 modified (backend/requirements.txt — append only)
 Files WILL NOT touch: backend/server.py, all frontend src, all .env, .emergent/*, hotspot files (per Alpha v0.1 Part C), .github/* (deferred to Phase 2)
 Owner decisions: ALL FROZEN (D-05-1..10 + Q1..Q4 + Assumptions 1..4)
-Scope adjustments vs original intake:
-  + Added 13th contract endpoint (GET /api/config/9999 → defaults-in-code path, per Q2)
-  + Split into Phase 1 (this CR) + Phase 2 (CR-2026-09-12-015 — registered via Role 1 same day)
+Wave assignment: WAVE 1a — unblocked, proceed to IMPLEMENTATION_PLAN
 Downstream consumers: CR-006 (Wave 2 backend split) — primary; CR-003, CR-004, all future refactors gated by these snapshots
-Docs updated: IMPACT_ANALYSIS.md (this file), OWNER_DECISIONS_2026-09-12.md, change_requests/README.md, PRD.md
+Docs updated: IMPACT_ANALYSIS.md (this file), OWNER_DECISIONS_2026-09-12.md, EXECUTION_PLAN.md v1.1, change_requests/README.md, PRD.md
 GATE 2 CLOSED — Impact Analysis stage complete.
-Next role/gate: Owner assigns Role 2 again in a follow-up session for IMPLEMENTATION_PLAN drafting; then owner "go" gates entry to Role 3 (Implementation).
-NO CODE WRITTEN. NO IMPLEMENTATION_PLAN WRITTEN. Awaiting next owner-driven gate.
+Next role/gate: Owner assigns Role 2 for IMPLEMENTATION_PLAN drafting; then owner "go" gates entry to Role 3 (Implementation).
+NO CODE WRITTEN. NO IMPLEMENTATION_PLAN WRITTEN YET. Awaiting next owner-driven gate.
 ```
 
 ---

@@ -4,6 +4,13 @@
 **Date:** 2026-09-12 · **Parent:** CR-2026-09-12-001 (Wave 1)
 **Severity:** P0 · **Risk:** CRITICAL (auth logic, `server.py` CRITICAL hotspot per Alpha v0.1 Part C)
 
+> **⏸ STATUS UPDATE — 2026-09-13: DEFERRED TO WAVE 2**
+> Owner decision (2026-09-13): Wave 1 split — this CR is Wave 1b → **Wave 2**.
+> **Why it cannot proceed:** Removing `otp_for_testing` from the response without a working SMS path would break all customer logins immediately in production. CR-2026-09-12-017 (CRM SMS) must close first.
+> CR-017 is itself blocked on owner-side regulatory prerequisites (DLT registration, CRM API contract, SMS template).
+> **No further Planning or Implementation on this CR until CR-017 is CLOSED.**
+> See `OWNER_DECISIONS_2026-09-12.md` addendum 2026-09-13.
+
 ## 1. Item registered
 
 INTAKE_DOC.md present. GAP-003 mapped 1:1.

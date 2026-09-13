@@ -1,6 +1,6 @@
 # EXECUTION PLAN — Architecture Correction Programme (CR-2026-09-12-001)
 
-Version 1.0 · 2026-09-12 · Status: OWNER DECISIONS RECORDED, awaiting role assignment for Point 1
+Version 1.1 · 2026-09-13 · Wave 1 split into Wave 1a (unblocked) + Wave 1b→Wave 2 (blocked). See `OWNER_DECISIONS_2026-09-12.md` addendum 2026-09-13.
 Process: Alpha v0.1 gates. **Every point below is a separate session with an owner-assigned role.** Nothing is coded without its own Planning → owner approval.
 
 Legend — ROLE = role owner assigns for that point · IN = what must exist before it starts · OUT = artefacts produced · DONE WHEN = exit gate · OWNER = what only the owner does.
@@ -18,26 +18,43 @@ Legend — ROLE = role owner assigns for that point · IN = what must exist befo
 - **DONE WHEN:** every item is CLOSED, DEFERRED (owner rationale) or has a registered bug-fix child.
 - **OWNER:** three inputs listed in `OWNER_DECISIONS_2026-09-12.md`.
 
-## POINT 2 — Plan Wave 1 (security + safety net) · CR-003, CR-004, CR-005, CR-007 F-07
+## POINT 2 — Plan Wave 1a (security + safety net) · CR-005 P1, CR-007 F-07, CR-004
 
-**Plain English:** Write the exact, file-by-file plan for the four approved safety items. No code yet.
+**Plain English:** Write the exact, file-by-file implementation plan for the three unblocked, IA-approved items. No code yet.
+
+> **Wave 1 split — 2026-09-13:** Wave 1 is formally split into Wave 1a (3 unblocked CRs, proceed now) and Wave 1b (3 blocked CRs, deferred to Wave 2). See `OWNER_DECISIONS_2026-09-12.md` addendum.
 
 - **ROLE:** Planning (Role 2).
-- **IN:** Point 1 closed. Owner decisions 1, 2, 4, 5, 11 (recorded).
+- **IN:** Point 1 closed. Wave 1a IA gates ALL CLOSED (2026-09-12/13). Owner decisions 1, 2, 4, 5, 11 recorded.
 - **Must be designed and shown to owner before coding:**
-  - CR-004: dynamic CORS allow-list (from restaurant hostnames), rate-limit thresholds, security headers list.
-  - CR-003: OTP DB collection (this is a **schema addition → owner approval per decision 4**), attempt policy, SMS provider choice + key request, server-side test mode.
-  - CR-005: which API endpoints are snapshotted, test restaurant IDs on UAT DB, GitHub workflow.
-  - CR-007 F-07: `.env.example` contents (keys only, no values), dead-key deletion list, rotation checklist.
-- **OUT:** `IMPACT_ANALYSIS.md` + `IMPLEMENTATION_PLAN.md` per CR, each stating *files WILL change / WILL NOT touch* and a verification matrix.
-- **DONE WHEN:** owner approves each plan ("go").
+  - CR-005 P1: snapshot bucket, seed strategy, pytest.ini, requirements.txt append, test README.
+  - CR-007 F-07: `.env.example` contents (keys only, no values), orphan-key deletion, .gitignore allow-line, rotation checklist placeholder names.
+  - CR-004: hybrid static+regex CORS env keys, slowapi configuration, 5 security headers, request-id middleware, 500 handler envelope.
+- **OUT:** `IMPLEMENTATION_PLAN.md` per CR, each stating *files WILL change / WILL NOT touch* and a verification matrix.
+- **DONE WHEN:** owner approves each plan ("go") — one plan at a time in build order.
+- **Build order:** CR-005 P1 → CR-007 F-07 → CR-004
 
-## POINT 3 — Build Wave 1 · same four CRs
+## POINT 2b — Wave 1b (DEFERRED → Wave 2) · CR-017, CR-003, CR-015
 
-- **ROLE:** Implementation (Role 3), one CR at a time, in order CR-005 → CR-007 F-07 → CR-003 → CR-004 (safety net first so the security fixes are covered by it).
+> **These three CRs are NOT part of Wave 1a. They move to Wave 2 and open only when their owner-side blockers clear.**
+
+| CR | Blocker | Who unblocks |
+|---|---|---|
+| CR-2026-09-12-015 (GitHub Actions CI) | Git repo write access + 6 GitHub secrets | Owner |
+| CR-2026-09-12-017 (CRM SMS for OTP) | CRM API contract + DLT registration + SMS template + sender ID + UAT phones | Owner + MyGenie ops |
+| CR-2026-09-12-003 (OTP echo removal) | CR-017 must close first | Depends on CR-017 |
+
+When blockers clear: owner assigns Role 2 (Planning) for each CR individually in dependency order (CR-017 → CR-003 → CR-015).
+
+## POINT 3 — Build Wave 1a · CR-005 P1, CR-007 F-07, CR-004
+
+- **ROLE:** Implementation (Role 3), one CR at a time, in build order:
+  1. **CR-005 P1** — pytest + snapshot harness (safety net first, so CR-004 security changes are snapshot-covered)
+  2. **CR-007 F-07** — env housekeeping (adds .env.example keys for CR-004's new vars)
+  3. **CR-004** — CORS lockdown + rate-limit + middleware (snapshots already exist as regression gate)
 - **OUT:** code with `// CR-2026-09-12-00X` markers, `QA_HANDOVER.md` per CR.
 - **Then:** QA (Role 4) per CR → owner smoke on UAT → CLOSED.
-- **DONE WHEN:** all four CLOSED; CI green on `main`; contract snapshots committed.
+- **DONE WHEN:** all three CLOSED; `pytest -m "contract or smoke"` green locally; snapshots committed.
 
 ## POINT 4 — Plan + build the backend split (Wave 2) · CR-2026-09-12-006, INV-2026-09-12-001
 

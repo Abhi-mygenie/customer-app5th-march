@@ -76,13 +76,16 @@ All 8 blocking decisions + 7 assumptions locked in one Planning session.
 ```text
 Planning complete: CR-2026-09-12-004 · Stage: Impact Analysis
 Impact Analysis: ✅ APPROVED BY OWNER 2026-09-12
+Wave 1a IA Gate: ✅ CLOSED 2026-09-13 (wave-split decision recorded)
+Wave assignment: WAVE 1a — unblocked, proceed to IMPLEMENTATION_PLAN
 Owner literal: "as suggested above for this CR" (approving CR-004 IA closure per prior message)
 Role: Planning (Role 2)
 Risk: CRITICAL (unchanged from intake — CORS + rate-limit misconfigs = full CORS bypass or lockout)
 Files WILL change (when unblocked): 5
 Files WILL NOT touch: all FE src, all hotspot files, .emergent/*
 All 8 D-004-* + 7 A-N decisions locked in.
-Wave 1 IA phase: **100% CLOSED** — 6/6 IAs frozen; 3 APPROVED (CR-005 P1, CR-007 F-07, CR-004); 1 complete-and-blocked-on-prereqs (CR-015); 1 intake-done (CR-017); 1 partially-frozen-and-blocked-on-prereq (CR-003).
+Wave 1a IA phase: ✅ 100% CLOSED — 3/3 Wave 1a IAs approved and IA gates closed 2026-09-13.
+Wave 1b (CR-015, CR-017, CR-003): DEFERRED TO WAVE 2 — owner-side blockers; see OWNER_DECISIONS addendum 2026-09-13.
 Next role/gate: Owner-driven Planning session (Role 2 again) for IMPLEMENTATION_PLAN drafting; then owner "go" gates entry to Role 3 (Implementation).
 GATE DISCIPLINE: no plan, no code.
 ```

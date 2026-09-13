@@ -113,7 +113,25 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 
 **Session handover for next agent:** `/app/memory/SESSION_HANDOVER_WAVE_1_CLOSURE_2026-09-12.md` — mandatory read; 10-section roadmap covering priority queue, blockers, gate rules, code truth, and Wave 1 success criteria.
 
-**Wave 1 IA phase — CLOSED 2026-09-12.** All 6 Wave-1 items have Impact Analyses on disk:
+**Wave 1 split — 2026-09-13 (Planning Role 2 session):**
+Wave 1 formally split into Wave 1a (3 unblocked CRs, IA gates all closed, proceed to IMPLEMENTATION_PLAN) and Wave 1b→Wave 2 (3 blocked CRs, owner-side prerequisites outstanding).
+
+**Wave 1a — IA gates ALL CLOSED 2026-09-13:**
+- CR-2026-09-12-005 P1 (pytest + snapshots) — IA APPROVED, proceed to IMPLEMENTATION_PLAN
+- CR-2026-07-03-007 F-07 (env housekeeping) — IA APPROVED, proceed to IMPLEMENTATION_PLAN
+- CR-2026-09-12-004 (CORS + rate-limit + middleware) — IA APPROVED, proceed to IMPLEMENTATION_PLAN
+- Build order: CR-005 P1 → CR-007 F-07 → CR-004
+
+**Wave 1b → deferred to Wave 2:**
+- CR-2026-09-12-015 (GitHub Actions CI): blocked on git access + 6 GitHub secrets
+- CR-2026-09-12-017 (CRM SMS): blocked on CRM API contract + DLT registration + SMS template + sender ID + UAT phones
+- CR-2026-09-12-003 (OTP echo removal): blocked on CR-017 closing first
+
+**Docs updated this session:** OWNER_DECISIONS_2026-09-12.md (addendum), EXECUTION_PLAN.md (v1.1), all 6 Wave 1 CR IA/INTAKE docs, README.md, PRD.md (this section), SESSION_HANDOVER_2026-09-13.md (new).
+
+**Next gate open:** Wave 1a IMPLEMENTATION_PLAN phase. Owner assigns Role 2 for IMPLEMENTATION_PLAN drafting for each Wave 1a CR (in build order). No code until each IMPLEMENTATION_PLAN has owner "go".
+
+**Wave 1 · IA phase — CLOSED 2026-09-12.** All 6 Wave-1 items have Impact Analyses on disk:
 - CR-005 P1: APPROVED (Gate 2 CLOSED)
 - CR-015: complete (blocked on git access + secrets)
 - CR-007 F-07: APPROVED (Gate 2 CLOSED)

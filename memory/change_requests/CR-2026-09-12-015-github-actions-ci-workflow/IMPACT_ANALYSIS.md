@@ -3,6 +3,15 @@
 **Role:** Planning (Role 2) · Stage: Impact Analysis
 **Date:** 2026-09-12 · **Parent:** CR-2026-09-12-001 (Wave 1) · **Sibling:** CR-2026-09-12-005 Phase 1
 
+> **⏸ STATUS UPDATE — 2026-09-13: DEFERRED TO WAVE 2**
+> Owner decision (2026-09-13): Wave 1 split into Wave 1a (unblocked) and Wave 1b→Wave 2 (blocked).
+> This CR is Wave 1b → **Wave 2**. It is blocked on owner-side prerequisites:
+> 1. Git repo write access (or "Save to GitHub" push readiness)
+> 2. 6 GitHub Actions secrets added: `MONGO_URL`, `DB_NAME`, `JWT_SECRET`, `MYGENIE_API_URL`, `MYGENIE_POS_LOGIN_PHONE`, `MYGENIE_POS_LOGIN_PASSWORD`
+> 3. CR-2026-09-12-005 Phase 1 must be CLOSED first
+> **No Planning or Implementation activity until owner clears these prerequisites and re-opens this CR.**
+> See `OWNER_DECISIONS_2026-09-12.md` addendum 2026-09-13.
+
 ## 1. Item registered
 
 - INTAKE_DOC.md present ✅ · Registry row updated ✅ · Sequenced after CR-005 Phase 1 CLOSED

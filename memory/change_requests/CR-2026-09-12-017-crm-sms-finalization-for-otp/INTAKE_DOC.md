@@ -11,7 +11,7 @@
 | **Reported By** | Owner directive during CR-003 Planning (2026-09-12): *"E — Reorder Wave 1: finish CRM as its own CR first, then CR-003"* — surfaced because owner stated CRM is "half-baked" but production is live and CR-003 cannot remove the OTP echo without a working SMS path |
 | **Severity** | **P0** — unblocks P0 CR-003 security fix; production login currently relies on the OTP echo (security bug) |
 | **Risk** | **HIGH** (new production integration; touches customer-login user experience via preparation for CR-003; SMS deliverability depends on carrier + template compliance; DLT regulatory risk in India) |
-| **Status** | 📝 REGISTERED (Role 1 INTAKE done); **NEXT ROLE: Planning (Role 2) — pending owner assignment** |
+| **Status** | 🔒 **DEFERRED TO WAVE 2** (2026-09-13) — was Wave 1b; owner-side blockers not cleared. See §7 for full prereq list. No Planning activity until owner supplies all §7 items. |
 | **Parent** | CR-2026-09-12-001 (Wave 1) |
 | **Blocks** | CR-2026-09-12-003 (OTP echo removal) — CR-003 cannot ship until this CR closes |
 | **Blast radius** | MEDIUM (single backend HTTP integration + potential CRM-side changes owned by another team) |

@@ -63,13 +63,39 @@ Role 2 (Planning) session on 2026-09-12 produced `CR-2026-09-12-005-.../IMPACT_A
 | Q4 | File Phase 2 CR intake now? | (a) Yes but not in this Planning gate — owner will invoke Role 1 (INTAKE) in a follow-up gate |
 | Split | Phase 1 (this CR) vs Phase 2 (future CR) | Phase 1: local pytest + snapshot harness. Phase 2: `.github/workflows/ci.yml` filed as separate CR when git access is available. |
 
+## Owner decision addendum — 2026-09-13 (Wave 1 split)
+
+**Owner directive (2026-09-13):** CR-015, CR-017, and CR-003 are blocked (owner-side infrastructure and regulatory dependencies). Owner confirmed these are Wave 2 material. Wave 1 is formally split:
+
+- **Wave 1a** — 3 unblocked, IA-approved CRs; proceed to IMPLEMENTATION_PLAN immediately: CR-2026-09-12-005 P1, CR-2026-07-03-007 F-07, CR-2026-09-12-004
+- **Wave 1b → deferred to Wave 2** — 3 blocked CRs: CR-2026-09-12-015 (needs git access + 6 GitHub secrets), CR-2026-09-12-017 (needs CRM contract + DLT registration + SMS template), CR-2026-09-12-003 (blocked on CR-017 closing first)
+
+**Blockers in plain English:**
+
+| CR | Blocker type | What owner must supply |
+|---|---|---|
+| CR-015 (GitHub Actions CI) | Infrastructure | Git repo write access + 6 GitHub Actions secrets |
+| CR-017 (CRM SMS for OTP) | Regulatory / Business | CRM API contract, DLT registration, SMS template, sender ID, UAT phones |
+| CR-003 (OTP echo removal) | Depends on CR-017 | CR-017 must close first — removing echo without SMS = production login outage |
+
+**Build order updated:**
+```
+Wave 1a: CR-005 P1 → CR-007 F-07 → CR-004   (all unblocked; proceed now)
+Wave 2:  CR-017 → CR-003 → CR-015            (when blockers clear — owner drives)
+```
+
+---
+
 ## Gate status after these decisions
 
 | Gate | Status |
 |---|---|
 | Wave 0 (CR-2026-09-12-002 QA backlog) | ✅ **CLOSED — 10/10 items PASS + 4/4 notes CLOSED, 2026-09-12.** See `CR-2026-09-12-002-.../QA_SUMMARY.md` + `NOTES_CLOSURE_2026-09-12.md`. |
-| Wave 1 · CR-2026-09-12-005 (Phase 1) | ✅ **IMPACT ANALYSIS APPROVED 2026-09-12** — Gate 2 CLOSED. Owner literal: *"approved document this and close gate 2 session"*. Next session (owner-driven): Planning writes IMPLEMENTATION_PLAN. |
-| Wave 1 · CR-2026-09-12-005 (Phase 2 — GitHub Actions) | 🔒 **DEFERRED — filed as CR-2026-09-12-015 via Role 1 (INTAKE) 2026-09-12**. See `CR-2026-09-12-015-.../INTAKE_DOC.md`. Blocked on: git access + 6 repo secrets + CR-005 Phase 1 close. |
-| Wave 1 · CR-2026-09-12-004 (CORS + rate-limit + middleware) | ✅ **IMPACT ANALYSIS APPROVED 2026-09-12** — Gate 2 CLOSED. Owner literal: *"as suggested above for this CR"*. Next: Planning writes IMPLEMENTATION_PLAN in a future owner-driven session. |
+| Wave 1 · CR-2026-09-12-005 P1 (snapshots) | ✅ **Wave 1a · IA APPROVED 2026-09-12 · IA GATE CLOSED 2026-09-13** — next: IMPLEMENTATION_PLAN |
+| Wave 1 · CR-2026-07-03-007 F-07 (env housekeeping) | ✅ **Wave 1a · IA APPROVED 2026-09-12 · IA GATE CLOSED 2026-09-13** — next: IMPLEMENTATION_PLAN |
+| Wave 1 · CR-2026-09-12-004 (CORS + rate-limit) | ✅ **Wave 1a · IA APPROVED 2026-09-12 · IA GATE CLOSED 2026-09-13** — next: IMPLEMENTATION_PLAN |
+| Wave 1b → Wave 2 · CR-2026-09-12-015 (CI workflow) | 🔒 **DEFERRED TO WAVE 2** — blocked on git access + 6 GitHub secrets (owner-side) |
+| Wave 1b → Wave 2 · CR-2026-09-12-017 (CRM SMS) | 🔒 **DEFERRED TO WAVE 2** — blocked on CRM contract + DLT status + SMS template (owner-side) |
+| Wave 1b → Wave 2 · CR-2026-09-12-003 (OTP echo) | 🔒 **DEFERRED TO WAVE 2** — blocked on CR-017 closing first |
 | Wave 2–5, Phase B | Sequencing approved; each still needs its own Planning → owner approval → Implementation gate |
 | CR-2026-08-03-001 | Owner re-read pending |
