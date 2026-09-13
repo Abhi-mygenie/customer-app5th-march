@@ -19,6 +19,16 @@
 
 Common theme: **the current production deploy is wired to development artifacts.**
 
+### Scope addition 2026-09-12 (Role 1, under CR-2026-09-12-001 Wave 1)
+
+| Sub-ID | Item | Evidence |
+|---|---|---|
+| F-07a | Add `backend/.env.example` + `frontend/.env.example` (GAP-015). Reuse parked patches `memory/v2/phase3_backend_env_example.patch`, `phase3_frontend_env_example.patch`, `phase3_gitignore_allow_examples.patch`. | No `.env.example` in either dir (2026-09-12) |
+| F-07b | Delete dead keys from `frontend/.env`: `REACT_APP_LOGIN_PHONE`, `REACT_APP_LOGIN_PASSWORD` (zero references in `frontend/src` since CR-000) and `MYGENIE_POS_LOGIN_PHONE`, `MYGENIE_POS_LOGIN_PASSWORD` (POS creds do not belong in the frontend env at all; backend already owns them). | `grep -r REACT_APP_LOGIN frontend/src` = 0 |
+| F-07c | Owner confirmation checklist for G0.1/G0.2 (Mongo + POS password rotation actually performed). | `v2/PHASE0_OWNER_DECISIONS.md` says YES; no evidence in repo |
+
+Risk unchanged (LOW — env/docs only). Planning for F-07 may proceed together with F-05/F-06.
+
 ---
 
 ## 2. F-05 — Rebuild deployed bundle with correct backend URL

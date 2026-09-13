@@ -60,6 +60,38 @@ with status `⚰️ TOMBSTONE`, pointing at the successor ID. Do not delete or r
 | [CR-2026-07-04-003](./CR-2026-07-04-003-cr004-residual-scope/CR.md) | CR-004 residual scope (empty-state on menu-load timeout + 5 AdminConfig CRUD timeout swaps) | 📝 REGISTERED (Role 1 done) | P2 | 3-5 FE (menu component + AdminConfigContext) | 2.5–3 hrs | approve D-01..D-04 or wait for user-pain report |
 | [CR-2026-07-04-004](./CR-2026-07-04-004-client-telemetry/CR.md) | Client telemetry to Mongo (POST fetch-timeout + React ErrorBoundary events, 30-day TTL, admin read endpoint) | 📝 REGISTERED (Role 1 done) | P2 | 2 BE endpoints + 1 Mongo collection + ~15 LOC FE | ~4 hrs | approve D-01..D-06 (retention, rate-limit, hashing) |
 
+## Architecture Correction Programme (registered 2026-09-12 — Role 1 INTAKE)
+
+Umbrella + children. Owner request: split `server.py`, fix high/critical bugs, remove hardcoding, prepare for multi-brand; MySQL as Phase B.
+**Owner decisions (12) recorded 2026-09-12** → `CR-2026-09-12-001/OWNER_DECISIONS_2026-09-12.md`. Numbered plan → `CR-2026-09-12-001/EXECUTION_PLAN.md`.
+Gate status: Wave 0 APPROVED TO START (owner assigns QA role) · Wave 1 APPROVED FOR PLANNING after Wave 0 · Waves 2–5 + Phase B sequencing approved, each needs own Planning gate · CR-2026-08-03-001 owner re-read pending.
+
+| ID | Title | Status | Priority / Risk | Wave | Owner action needed |
+|---|---|---|---|---|---|
+| [CR-2026-09-12-001](./CR-2026-09-12-001-architecture-correction-programme/INTAKE_DOC.md) | **Architecture Correction Programme (umbrella)** | 📝 REGISTERED — owner decisions RECORDED 2026-09-12 | P0 / CRITICAL | — | assign role for Point 1 |
+| [CR-2026-09-12-002](./CR-2026-09-12-002-qa-backlog-closure/QA_SUMMARY.md) | QA backlog closure — 10 IMPLEMENTED/QA-pending items | ✅ **CLOSED 2026-09-12 — 10/10 PASS** (owner inputs supplied; 4 non-blocking NOTEs filed) | P1 / LOW | 0 | none — Wave 1 Planning may now open |
+| [CR-2026-09-12-003](./CR-2026-09-12-003-otp-echo-removal-persistent-otp-store/IMPACT_ANALYSIS.md) | Remove OTP echo + persistent throttled OTP store + SMS provider (GAP-003) | 🔒 **BLOCKED 2026-09-12** — IA partially frozen (Q1=P, Q2-gate confirmed, Q2-choice=E, D-003-3..6 locked); D-003-7 + A-1..A-7 deferred to next Planning gate. Wave 1 REORDERED — needs prereq **CR-2026-09-12-017 (CRM SMS finalization)** filed by owner via Role 1. | **P0 / CRITICAL** | 1 | file CR-017 via Role 1 → drive CR-017 to CLOSED → re-open CR-003 Planning |
+| [CR-2026-09-12-004](./CR-2026-09-12-004-cors-lockdown-rate-limit-middleware/IMPACT_ANALYSIS.md) | CORS **hybrid static+regex allow-list** + auth rate-limit (IP+phone) + middleware stack (GAP-005/004) | ✅ **IMPACT ANALYSIS APPROVED 2026-09-12** — Gate 2 CLOSED. All 8 D-004-* + 7 A-N decisions locked. Awaiting next Planning session for IMPLEMENTATION_PLAN. | **P0 / CRITICAL** | 1 | none — owner drives next session |
+| [CR-2026-09-12-005](./CR-2026-09-12-005-ci-gate-contract-snapshots/IMPACT_ANALYSIS.md) | CI gate + API contract snapshots + smoke tests on UAT Mongo (GAP-009) | ✅ **IMPACT ANALYSIS APPROVED BY OWNER 2026-09-12** — Gate 2 closed. Awaiting next owner-driven session for IMPLEMENTATION_PLAN drafting. | P1 / MEDIUM | 1 (Phase 1) | none — owner drives next session |
+| CR-2026-07-03-007 (F-07) | `.env.example` + purge dead FE env keys + rotation checklist — **folded into CR-007** | ✅ **IMPACT ANALYSIS APPROVED 2026-09-12** — all decisions frozen (D-007-1..4 + Q-F07-A/B + A-1..5); orphan `GOOGLE_MAPS_API_KEY` deletion bundled into F-07; new CR-2026-09-12-016 (dead-code deletion, Wave 3) to be filed by owner via Role 1. Awaiting next session for IMPLEMENTATION_PLAN. | P1 / LOW | 1 | none — owner drives next session |
+| [CR-2026-09-12-006](./CR-2026-09-12-006-backend-modular-split/INTAKE_DOC.md) | Backend modular split + delete dead `/api/docs/*` (GAP-013/018) | 📝 REGISTERED (Role 1 done) | P1 / CRITICAL | 2 | none until CR-005 CLOSED |
+| [INV-2026-09-12-001](./INV-2026-09-12-001-legacy-customer-routes-usage-trace/INTAKE_DOC.md) | Legacy `customer/*` routes + `AdminSettings.jsx` usage trace (GAP-020) | 📝 REGISTERED (Role 1 done) | — | 2 | none |
+| [CR-2026-09-12-007](./CR-2026-09-12-007-fe-api-client-and-session-facade/INTAKE_DOC.md) | FE API-client facade + `session.js` storage facade (GAP-014/011) | 📝 REGISTERED (Role 1 done) | P1 / CRITICAL | 3 | NEW-2, NEW-3 |
+| [CR-2026-09-12-008](./CR-2026-09-12-008-fe-route-guard/INTAKE_DOC.md) | FE `ProtectedRoute` / `RoleGuard` (GAP-006) | 📝 REGISTERED (Role 1 done) | P1 / HIGH | 3 | NEW-2 |
+| CR-2026-08-03-001 | 716 hardcoding → config flags — **adopted into programme** | 📋 PLANNED (plan complete) — owner re-reading | P1 / HIGH | 3 | read CR.md + IMPLEMENTATION_PLAN.md, then "go" |
+| [CR-2026-09-12-009](./CR-2026-09-12-009-remove-default-rid-posid-countrycode-hardcoding/INTAKE_DOC.md) | Remove `478` default → "Restaurant not found" page, `pos_id`, `+91` hardcoding | 📝 REGISTERED (D-478 = remove) | P2 / MEDIUM | 3 | none |
+| [CR-2026-09-12-010](./CR-2026-09-12-010-config-defaults-single-source-of-truth/INTAKE_DOC.md) | Config defaults master → **DB record, admin-editable, versioned** (GAP-008) | 📝 REGISTERED (G0.7 = DB) | P1 / HIGH | 3 | approve `config_defaults` schema at Planning |
+| [CR-2026-09-12-011](./CR-2026-09-12-011-multi-brand-tenant-readiness/INTAKE_DOC.md) | Multi-brand tenant readiness (`resolveTenant`, `get_tenant()`, namespaced storage) | 📝 REGISTERED (Role 1 done) | P1 / HIGH | 4 | none until CR-006/007 CLOSED |
+| CR-2026-07-03-011 | Full POS proxy (BFF) — **re-sequenced into programme Wave 4**, phased, money/credential calls first (NEW-3) | 📝 REGISTERED | P1 | 4 | none until CR-007 CLOSED |
+| [CR-2026-09-12-012](./CR-2026-09-12-012-thick-page-decomposition-revieworder/INTAKE_DOC.md) | Thick-page decomposition — `ReviewOrder.jsx` | 📝 REGISTERED (Role 1 done) | P2 / CRITICAL | 5 | none until CR-005/007 CLOSED |
+| [CR-2026-09-12-013](./CR-2026-09-12-013-thick-page-decomposition-landing-delivery-ordersuccess/INTAKE_DOC.md) | Thick-page decomposition — Landing / DeliveryAddress / OrderSuccess / legacy AdminSettings | 📝 REGISTERED (Role 1 done) | P2 / HIGH | 5 | none until CR-012 |
+| [CR-2026-09-12-014](./CR-2026-09-12-014-phase-b-mysql-migration/INTAKE_DOC.md) | **Phase B — MySQL migration** (INTAKE ONLY) | 📝 REGISTERED — Planning BLOCKED | P2 / CRITICAL | B | D-B1 at Planning time |
+| [CR-2026-09-12-015](./CR-2026-09-12-015-github-actions-ci-workflow/IMPACT_ANALYSIS.md) | **GitHub Actions CI workflow** — Phase 2 of the CR-005 split; enforces pytest + snapshots on every PR/push/cron | 📋 **IMPACT ANALYSIS COMPLETE 2026-09-12** — no new owner decisions (all pre-frozen with CR-005); BLOCKED on git access + 6 repo secrets + CR-005 P1 close | P1 / LOW-MEDIUM | 1 (Phase 2) | grant git access, add 6 secrets after CR-005 P1 closes |
+| [CR-2026-09-12-017](./CR-2026-09-12-017-crm-sms-finalization-for-otp/INTAKE_DOC.md) | **CRM SMS finalization for OTP** — prereq for CR-003 (Wave 1 reorder 2026-09-12) | 📝 REGISTERED 2026-09-12 (Role 1 done) — **NEXT ROLE: Planning (Role 2) — pending owner to supply CRM contract + DLT status per §7** | **P0 / HIGH** | 1 (new) | supply CRM contract, DLT status, template, sender ID, UAT phones (§7) |
+
+Dependencies: `002 → {003,004,005,007(F-07)} → 006 → {007,008,009,010, CR-2026-08-03-001} → 011 → (Master Outlet ∥ 012 → 013) → 014`.
+Superseded reference: `/app/memory/ARCHITECTURE_PLAN_2026-06_PHASE_A.md` (pre-intake proposal).
+
 ## ID convention (per operating prompt §ID Format line 1364 + repo precedent)
 
 > **See the `## ID Scheme` section above** for the authoritative arbitration between
@@ -117,6 +149,7 @@ CR-009 ── depends on CR-003 (shipped) — just needs ops wiring
 | CR-2026-07-04-002 | ✅ | ✅ | — | — |
 | CR-2026-07-04-003 | ✅ | ✅ | — | — |
 | CR-2026-07-04-004 | ✅ | ✅ | — | — |
+| CR-2026-09-12-001 … 014, INV-2026-09-12-001 | ✅ (15 items) | — (INTAKE_DOC carries CR content) | — | — |
 
 ## What this registry is NOT
 
