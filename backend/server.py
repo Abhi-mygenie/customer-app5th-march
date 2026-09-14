@@ -16,6 +16,11 @@ import secrets
 import jwt
 import shutil
 import asyncio
+# CR-2026-09-12-004: rate-limit + security-header imports
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+import re
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -61,8 +66,22 @@ POS_LOGIN_PASSWORD = os.environ.get("MYGENIE_POS_LOGIN_PASSWORD")
 if not POS_LOGIN_PASSWORD:
     raise ValueError("CRITICAL: MYGENIE_POS_LOGIN_PASSWORD environment variable must be set")
 
+# CR-2026-09-12-004: CORS fail-fast — refuse to start if wildcard+credentials combo
+_cors_origins_raw = os.environ.get('CORS_ORIGINS', '*')
+if '*' in _cors_origins_raw.split(',') and True:  # allow_credentials is always True below
+    raise ValueError(
+        "CRITICAL: CORS_ORIGINS='*' is not allowed when allow_credentials=True. "
+        "Set CORS_ORIGINS to explicit origin(s) in backend/.env."
+    )
+
+# CR-2026-09-12-004: rate limiter (in-memory, single-worker)
+limiter = Limiter(key_func=get_remote_address)
+
 # Create the main app
 app = FastAPI(title="Customer App API")
+# CR-2026-09-12-004: attach limiter state and rate-limit exception handler
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Create routers
 api_router = APIRouter(prefix="/api")
@@ -435,14 +454,15 @@ async def refresh_pos_token(email: str, password: str) -> Optional[str]:
 # ============================================
 
 @auth_router.post("/send-otp")
-async def send_otp(request: OTPRequest):
+@limiter.limit("10/minute")  # CR-2026-09-12-004: rate-limit
+async def send_otp(request: Request, body: OTPRequest):
     """Send OTP to phone number - scoped by restaurant context"""
-    phone = request.phone.strip()
+    phone = body.phone.strip()
     
     # Build user_id for restaurant-scoped lookup
-    if request.restaurant_id:
-        pos_id = request.pos_id or "0001"
-        user_id = f"pos_{pos_id}_restaurant_{request.restaurant_id}"
+    if body.restaurant_id:
+        pos_id = body.pos_id or "0001"
+        user_id = f"pos_{pos_id}_restaurant_{body.restaurant_id}"
         
         # Check if customer exists for this restaurant
         customer = await db.customers.find_one({
@@ -500,20 +520,21 @@ async def check_customer(request: CheckCustomerRequest):
     return {"exists": False, "customer": None}
 
 @auth_router.post("/login", response_model=LoginResponse)
-async def unified_login(request: LoginRequest):
+@limiter.limit("5/minute")  # CR-2026-09-12-004: rate-limit
+async def unified_login(request: Request, body: LoginRequest):
     """
     Unified login - checks customers first (scoped by restaurant), then restaurant users
     Supports both OTP (for customers) and password (for restaurant admins)
     """
-    identifier = request.phone_or_email.strip().lower()
+    identifier = body.phone_or_email.strip().lower()
     
     # Build user_id for restaurant-scoped customer lookup
     customer = None
     user_id = None
     
-    if request.restaurant_id:
-        pos_id = request.pos_id or "0001"
-        user_id = f"pos_{pos_id}_restaurant_{request.restaurant_id}"
+    if body.restaurant_id:
+        pos_id = body.pos_id or "0001"
+        user_id = f"pos_{pos_id}_restaurant_{body.restaurant_id}"
         
         # Step 1: Check customers collection (scoped by restaurant)
         customer = await db.customers.find_one({
@@ -533,15 +554,15 @@ async def unified_login(request: LoginRequest):
     
     if customer:
         # Customer found - verify via OTP or password
-        if request.otp:
+        if body.otp:
             phone = customer.get("phone")
-            if not verify_otp(phone, request.otp):
+            if not verify_otp(phone, body.otp):
                 raise HTTPException(status_code=401, detail="Invalid or expired OTP")
-        elif request.password:
+        elif body.password:
             password_hash = customer.get("password_hash")
             if not password_hash:
                 raise HTTPException(status_code=401, detail="No password set. Please use OTP to login.")
-            if not verify_password(request.password, password_hash):
+            if not verify_password(body.password, password_hash):
                 raise HTTPException(status_code=401, detail="Invalid password")
         else:
             raise HTTPException(status_code=400, detail="Password or OTP required for login")
@@ -563,10 +584,10 @@ async def unified_login(request: LoginRequest):
                 "has_password": bool(customer.get("password_hash"))
             },
             restaurant_context={
-                "restaurant_id": request.restaurant_id,
-                "pos_id": request.pos_id or "0001",
+                "restaurant_id": body.restaurant_id,
+                "pos_id": body.pos_id or "0001",
                 "user_id": user_id
-            } if request.restaurant_id else None
+            } if body.restaurant_id else None
         )
     
     # Step 2: Check users collection (restaurant admins)
@@ -579,20 +600,20 @@ async def unified_login(request: LoginRequest):
     
     if user:
         # Restaurant user found - verify password
-        if not request.password:
+        if not body.password:
             raise HTTPException(status_code=400, detail="Password required for restaurant login")
         
         password_hash = user.get("password_hash")
         if not password_hash:
             raise HTTPException(status_code=401, detail="Password not set for this account")
         
-        if not verify_password(request.password, password_hash):
+        if not verify_password(body.password, password_hash):
             raise HTTPException(status_code=401, detail="Invalid password")
         
         # Refresh POS token on every login
         # This ensures pos_token is always fresh for POS API calls (QR, etc.)
         user_email = user.get("email", identifier)
-        pos_token = await refresh_pos_token(user_email, request.password)
+        pos_token = await refresh_pos_token(user_email, body.password)
         if not pos_token:
             logging.warning(f"[Auth] Could not get POS token for {user_email}")
         
@@ -696,13 +717,14 @@ async def set_password(request: SetPasswordRequest):
         }
 
 @auth_router.post("/verify-password")
-async def verify_customer_password(request: VerifyPasswordRequest):
+@limiter.limit("5/minute")  # CR-2026-09-12-004: rate-limit
+async def verify_customer_password(request: Request, body: VerifyPasswordRequest):
     """Verify password for returning customer login"""
     import bcrypt
     
-    phone = request.phone.strip()
-    pos_id = request.pos_id or "0001"
-    user_id = f"pos_{pos_id}_restaurant_{request.restaurant_id}"
+    phone = body.phone.strip()
+    pos_id = body.pos_id or "0001"
+    user_id = f"pos_{pos_id}_restaurant_{body.restaurant_id}"
     
     normalized_phone = phone
     if phone.startswith('+91'):
@@ -724,7 +746,7 @@ async def verify_customer_password(request: VerifyPasswordRequest):
     if not password_hash:
         raise HTTPException(status_code=400, detail="No password set for this account")
     
-    if not bcrypt.checkpw(request.password.encode('utf-8'), password_hash.encode('utf-8')):
+    if not bcrypt.checkpw(body.password.encode('utf-8'), password_hash.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Invalid password")
     
     token = create_token(customer["id"], "customer")
@@ -741,22 +763,23 @@ async def verify_customer_password(request: VerifyPasswordRequest):
     }
 
 @auth_router.post("/reset-password")
-async def reset_password(request: ResetPasswordRequest):
+@limiter.limit("3/minute")  # CR-2026-09-12-004: rate-limit
+async def reset_password(request: Request, body: ResetPasswordRequest):
     """Reset password via OTP verification"""
     import bcrypt
     
-    if request.new_password != request.confirm_password:
+    if body.new_password != body.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
-    if len(request.new_password) < 6:
+    if len(body.new_password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
-    phone = request.phone.strip()
+    phone = body.phone.strip()
     
-    if not verify_otp(phone, request.otp):
+    if not verify_otp(phone, body.otp):
         raise HTTPException(status_code=401, detail="Invalid or expired OTP")
     
-    pos_id = request.pos_id or "0001"
-    user_id = f"pos_{pos_id}_restaurant_{request.restaurant_id}"
+    pos_id = body.pos_id or "0001"
+    user_id = f"pos_{pos_id}_restaurant_{body.restaurant_id}"
     
     normalized_phone = phone
     if phone.startswith('+91'):
@@ -764,7 +787,7 @@ async def reset_password(request: ResetPasswordRequest):
     elif phone.startswith('91') and len(phone) > 10:
         normalized_phone = phone[2:]
     
-    password_hash = bcrypt.hashpw(request.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    password_hash = bcrypt.hashpw(body.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     result = await db.customers.update_one(
         {"$or": [{"phone": phone, "user_id": user_id}, {"phone": normalized_phone, "user_id": user_id}]},
@@ -827,6 +850,7 @@ async def get_customer_orders(
 # CR-2026-07-03-000: Proxy endpoint so the frontend does not need to bundle POS creds.
 # The frontend calls this instead of the POS /auth/login directly.
 @api_router.post("/pos/auth-token")
+@limiter.limit("5/minute")  # CR-2026-09-12-004: rate-limit
 async def get_pos_auth_token(request: Request):
     """Issue a short-lived POS auth token.
 
@@ -1800,13 +1824,46 @@ async def get_test_cases():
     content = file_path.read_text()
     return PlainTextResponse(content, media_type="text/plain; charset=utf-8")
 
+# CR-2026-09-12-004: security headers + request-id middleware
+@app.middleware("http")
+async def security_and_request_id_middleware(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    response = await call_next(request)
+    # Security headers (D-004-5)
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(self), microphone=(), camera=()"
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+# CR-2026-09-12-004: global 500 handler (D-004-6)
+@app.exception_handler(Exception)
+async def global_500_handler(request: Request, exc: Exception):
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    logger.error(f"Unhandled exception [request_id={request_id}]: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "type": type(exc).__name__,
+                "message": "An unexpected error occurred."
+            },
+            "request_id": request_id
+        }
+    )
+
 app.include_router(api_router)
 
-# CORS Middleware
+# CR-2026-09-12-004: CORS hybrid allow-list (D-004-1 — static list + optional regex)
+_cors_origins = [o.strip() for o in os.environ.get('CORS_ORIGINS', '').split(',') if o.strip()]
+_cors_origin_regex = os.environ.get('CORS_ORIGIN_REGEX', None) or None
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=_cors_origins,
+    allow_origin_regex=_cors_origin_regex,
     allow_methods=["*"],
     allow_headers=["*"],
 )

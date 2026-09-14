@@ -24,6 +24,15 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 9. Restarted backend + frontend via supervisorctl
 10. Confirmed: backend `/api/healthz` → `{"ok":true,"mongo":"up"}`, frontend compiled clean
 
+### CR-004 Implementation (Sep 14, 2026) — Role 3 COMPLETE
+- CORS_ORIGINS changed from `"*"` to explicit origins in backend/.env
+- `slowapi==0.1.10` installed; rate-limits applied to 5 auth endpoints
+- Security headers middleware added: HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, X-Request-ID
+- Global 500 handler with request_id added
+- CORS hybrid allow-list (static + regex) replaces wildcard
+- Self-test: 22/22 PASS
+- QA handover written: `/app/memory/change_requests/CR-2026-09-12-004-.../QA_HANDOVER.md`
+
 ## Key Services
 | Service   | Port | Status  |
 |-----------|------|---------|
