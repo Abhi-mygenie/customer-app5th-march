@@ -66,3 +66,10 @@ Blast radius: LARGE
 Docs updated: this file; README.md
 Next: Planning (after CR-005 CLOSED)
 ```
+
+## Addendum 2026-09-15 — SHARED-DB GUARD + Option A re-scope
+
+- **Fact:** MongoDB is **shared with CRM** (INV-2026-09-15-001 §10, verified). `db.orders` is CRM's POS-ingest collection; `customer_app_config` is served by both backends.
+- **Rule:** this CR may **delete routes/modules only**. It must **not** drop, rename, or re-index any collection. Any collection change → separate CR with **owner + CRM approval**.
+- **Option A (owner D-A):** `/api/customer/*` routes (profile/orders/points/wallet/coupons/update-profile) are retirement candidates — CRM `/scan/*` serves that data. Deletion still waits for **INV-2026-09-15-002 OWNERSHIP_MAP** sign-off. `/api/status` external-caller question (INV-2026-09-12-001) remains open.
+- INV-2026-09-12-001's "can be deleted outright" wording is **withdrawn**; use the ownership map instead.

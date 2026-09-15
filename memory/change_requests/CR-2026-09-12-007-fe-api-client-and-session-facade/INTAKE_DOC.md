@@ -52,3 +52,12 @@ Blast radius: LARGE
 Docs updated: this file; README.md
 Next: Planning (after NEW-2, NEW-3; after CR-005 CLOSED)
 ```
+
+## Addendum 2026-09-15 — scope fold-ins from INV-2026-09-15-001 (owner OD-4 = yes, after plan approval)
+
+| Gap | Change | Files | Note |
+|---|---|---|---|
+| **G8** | Remove dead per-restaurant `x-api-key` mechanism: `REACT_APP_CRM_API_KEY` JSON map, `getApiKeyForRestaurant`, `x-api-key` header in `crmFetch` (CRM ignores it on all `/scan/*`). Purge key from `.env.example` + rotation checklist. | `crmService.js:15-55,107-115`, `frontend/.env.example` | Security hygiene — secret shipped in bundle for nothing |
+| **G6** | JWT helper reads claim **`restaurant_id`** (`pos_0001_restaurant_{rid}`), not `user_id` — two copies: `crmService.js:38-49`, `AuthContext.jsx:13-24`. Belongs in the session facade. | as listed | AuthContext = CRITICAL hotspot → full gate, regression on login/scope-switch/legacy-token migration |
+
+Owner approval to **implement** still required at Planning gate (OD-4 "yes after approval").

@@ -60,3 +60,8 @@ Blast radius: TOTAL
 Docs updated: this file; README.md
 Next: HOLD — Planning opens when CR-2026-09-12-006 is CLOSED
 ```
+
+## Addendum 2026-09-15 — SHARED-DB GUARD
+
+- MongoDB is **shared with CRM** (INV-2026-09-15-001 §10). A Customer-App-only MySQL migration would **split customer data** from CRM and break Option A (owner D-A). 
+- **Planning for this CR is blocked** until INV-2026-09-15-002 OWNERSHIP_MAP exists and the owner + CRM jointly decide the database strategy. Risk stays **CRITICAL**; requires CRM co-ownership of any migration.
