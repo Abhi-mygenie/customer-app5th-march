@@ -99,7 +99,8 @@ const AdminVisibilityPage = () => {
         </div>
       </div>
 
-      {/* Skip OTP / Password-Setup Screen — CR-2026-05-30-001 Item 1 */}
+      {/* OTP-DEFERRED: CR-2026-09-14-001 — skipOtp admin toggles hidden until SMS is live.
+          skipOtp* flags still stored in DB and applied at runtime via crmSkipOtp frictionless path.
       <div className="admin-section" data-testid="admin-section-skip-otp">
         <h2 className="admin-section-title">Skip OTP / Password Setup</h2>
         <p className="admin-section-description">
@@ -115,6 +116,7 @@ const AdminVisibilityPage = () => {
           <ToggleSwitch field="skipOtpRoomOrders" label="Skip OTP for Room Orders" />
         </div>
       </div>
+      */}
 
       {/* Order Access Policy — CR-2026-05-30-002 */}
       <div className="admin-section" data-testid="admin-section-order-access">

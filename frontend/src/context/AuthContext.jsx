@@ -210,33 +210,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('restaurant_context');
   };
 
-  // sendOTP kept for backward compat (if anything still calls it)
-  const sendOTP = async (phone, restaurantContext = null) => {
-    const body = { phone };
-    if (restaurantContext) {
-      body.restaurant_id = restaurantContext.restaurant_id;
-      body.pos_id = restaurantContext.pos_id || "0001";
-    }
-    
-    const response = await fetchWithTimeout(`${API_URL}/api/auth/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }, DEFAULT_WRITE_TIMEOUT_MS); // CR-2026-07-03-004 — 15 s write timeout
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      logger.error('auth', 'Non-JSON response:', text);
-      throw new Error('Server is temporarily unavailable. Please try again.');
-    }
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.detail || 'Failed to send OTP');
-    }
-    return data;
-  };
+  // OTP-DEFERRED: CR-2026-09-14-001 — sendOTP disabled (backend /api/auth/send-otp commented out)
+  // const sendOTP = async (phone, restaurantContext = null) => { ... fetchWithTimeout .../api/auth/send-otp ... };
 
   const value = {
     user,
@@ -249,7 +224,8 @@ export const AuthProvider = ({ children }) => {
     isCustomer: userType === 'customer',
     isRestaurant: userType === 'restaurant',
     setRestaurantScope,
-    sendOTP,
+    // OTP-DEFERRED: CR-2026-09-14-001 — sendOTP removed from context value
+    // sendOTP,
     login,
     setAuth,
     setCrmAuth,

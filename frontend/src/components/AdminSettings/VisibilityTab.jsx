@@ -119,23 +119,13 @@ const VisibilityTab = ({ ToggleRow, restaurantFlags = {} }) => {
         </div>
       )}
 
-      {/* Auth & OTP */}
+      {/* OTP-DEFERRED: CR-2026-09-14-001 — otpRequired* legacy flags hidden from admin UI
       {activeSubTab === 'auth' && (
         <div className="content-panel" data-testid="panel-auth">
-          <h3 className="section-title">
-            <IoKeyOutline className="section-icon" />
-            Authentication & OTP
-          </h3>
-          <p className="section-description">Configure OTP verification requirements per order type</p>
-          <div className="toggle-list">
-            <ToggleRow field="otpRequiredDineIn" label="OTP Required for Dine-In Orders" />
-            <ToggleRow field="otpRequiredTakeaway" label="OTP Required for Takeaway Orders" />
-            <ToggleRow field="otpRequiredDineInWithTable" label="OTP Required for Dine-In with Table Number" />
-            <ToggleRow field="otpRequiredWalkIn" label="OTP Required for Walk-In Dine Orders" />
-            <ToggleRow field="otpRequiredRoomOrders" label="OTP Required for Room Orders" />
-          </div>
+          ...5 otpRequired* ToggleRow items...
         </div>
       )}
+      */}
     </div>
   );
 };

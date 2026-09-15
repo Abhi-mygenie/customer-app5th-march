@@ -17,24 +17,18 @@ TEST_PHONE  = os.environ.get("TEST_PHONE",         "9579504871")
 TEST_RID    = os.environ.get("TEST_RESTAURANT_ID", "478")
 
 
-@pytest.mark.smoke
-def test_smoke_otp_echo_present(http_client):
-    """Smoke 1: POST /api/auth/send-otp returns otp_for_testing.
-
-    NOTE: This test WILL FAIL after CR-003 removes the echo.
-    That is the designed signal. Regenerate or remove this test then.
-    """
-    resp = http_client.post("/api/auth/send-otp", json={
-        "phone": TEST_PHONE,
-        "restaurant_id": TEST_RID,
-    })
-    assert resp.status_code == 200, f"send-otp failed: {resp.text}"
-    data = resp.json()
-    assert "otp_for_testing" in data, (
-        "otp_for_testing missing — CR-003 has removed the echo OR phone not registered. "
-        "If CR-003 is shipped, update/remove this test."
-    )
-    assert len(str(data["otp_for_testing"])) >= 4, "OTP value looks too short"
+# OTP-DEFERRED: CR-2026-09-14-001 — /api/auth/send-otp endpoint commented out.
+# Restore and update this test when CR-003 Parts B+C are implemented.
+# @pytest.mark.smoke
+# def test_smoke_otp_echo_present(http_client):
+#     """Smoke 1: POST /api/auth/send-otp returns otp_for_testing.
+#     NOTE: Restore when CR-003 ships and backend OTP endpoint is re-enabled.
+#     """
+#     resp = http_client.post("/api/auth/send-otp", json={"phone": TEST_PHONE, "restaurant_id": TEST_RID})
+#     assert resp.status_code == 200
+#     data = resp.json()
+#     assert "otp_for_testing" in data
+#     assert len(str(data["otp_for_testing"])) >= 4
 
 
 @pytest.mark.smoke

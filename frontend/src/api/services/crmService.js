@@ -288,33 +288,17 @@ const stripPhonePrefix = (phone) => {
  * v2 path: POST /scan/auth/request-otp — body { phone, restaurant_id }
  *          response normalized to v1 shape so PasswordSetup.jsx is unaffected.
  */
-export const crmSendOtp = async (phone, userId, countryCode = '91') => {
+// OTP-DEFERRED: CR-2026-09-14-001 — CRM SMS not in production. Restore when live.
+export const crmSendOtp = async (_phone, _userId, _countryCode = '91') => {
+  throw new Error('OTP-DEFERRED: crmSendOtp disabled — CR-2026-09-14-001');
+  /* original body preserved as comment:
   if (isV2()) {
-    const restaurantId = getRestaurantIdFromUserId(userId);
-    const data = await crmFetch('/scan/auth/request-otp', {
-      method: 'POST',
-      body: JSON.stringify({
-        phone: stripPhonePrefix(phone),
-        restaurant_id: restaurantId,
-      }),
-      userId, // used by crmFetch to resolve restaurant -> x-api-key
-    });
-    return {
-      success: true,
-      message: 'OTP sent',
-      expires_in_minutes: data?.expires_in_seconds
-        ? Math.ceil(data.expires_in_seconds / 60)
-        : 10,
-      debug_otp: data?.dev_otp,
-      phone: data?.phone,
-    };
+    const restaurantId = getRestaurantIdFromUserId(_userId);
+    const data = await crmFetch('/scan/auth/request-otp', { method: 'POST', body: JSON.stringify({ phone: stripPhonePrefix(_phone), restaurant_id: restaurantId }), userId: _userId });
+    return { success: true, message: 'OTP sent', expires_in_minutes: data?.expires_in_seconds ? Math.ceil(data.expires_in_seconds / 60) : 10, debug_otp: data?.dev_otp, phone: data?.phone };
   }
-
-  // v1 — unchanged
-  return crmFetch('/customer/send-otp', {
-    method: 'POST',
-    body: JSON.stringify({ phone: stripPhonePrefix(phone), user_id: userId, country_code: countryCode }),
-  });
+  return crmFetch('/customer/send-otp', { method: 'POST', body: JSON.stringify({ phone: stripPhonePrefix(_phone), user_id: _userId, country_code: _countryCode }) });
+  */
 };
 
 /**
@@ -325,35 +309,13 @@ export const crmSendOtp = async (phone, userId, countryCode = '91') => {
  * v2 path: POST /scan/auth/verify-otp — returns { token, customer_id, is_new_customer, phone }
  *          Synthesized to v1 shape. v2 has no `customer.name` here — caller falls back to displayName.
  */
-export const crmVerifyOtp = async (phone, otp, userId, countryCode = '91') => {
-  if (isV2()) {
-    const restaurantId = getRestaurantIdFromUserId(userId);
-    const data = await crmFetch('/scan/auth/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({
-        phone: stripPhonePrefix(phone),
-        otp,
-        restaurant_id: restaurantId,
-      }),
-      userId,
-    });
-    return {
-      success: true,
-      token: data?.token,
-      customer: {
-        id: data?.customer_id,
-        phone: data?.phone,
-        name: '',
-      },
-      is_new_customer: data?.is_new_customer,
-    };
-  }
-
-  // v1 — unchanged
-  return crmFetch('/customer/verify-otp', {
-    method: 'POST',
-    body: JSON.stringify({ phone: stripPhonePrefix(phone), otp, user_id: userId, country_code: countryCode }),
-  });
+// OTP-DEFERRED: CR-2026-09-14-001 — CRM SMS not in production. Restore when live.
+export const crmVerifyOtp = async (_phone, _otp, _userId, _countryCode = '91') => {
+  throw new Error('OTP-DEFERRED: crmVerifyOtp disabled — CR-2026-09-14-001');
+  /* original body preserved as comment:
+  if (isV2()) { ... crmFetch('/scan/auth/verify-otp', ...) ... }
+  return crmFetch('/customer/verify-otp', { method: 'POST', body: JSON.stringify({ phone: stripPhonePrefix(_phone), otp: _otp, user_id: _userId, country_code: _countryCode }) });
+  */
 };
 
 /**
@@ -392,14 +354,10 @@ export const crmSkipOtp = async (phone, userId) => {
  * Deliberate Phase-1 hold (decision 3d). Tracked as UX-GAP-02.
  * Calls continue to hit v1 URL regardless of flag — same (broken) behavior as today.
  */
-export const crmForgotPassword = async (phone, userId, countryCode = '91') => {
-  if (isV2()) {
-    console.warn('[CRM] Forgot Password is not in v2 contract. Falling back to v1 path (expected 404 from CRM). Tracked as UX-GAP-02.');
-  }
-  return crmFetch('/customer/forgot-password', {
-    method: 'POST',
-    body: JSON.stringify({ phone: stripPhonePrefix(phone), user_id: userId, country_code: countryCode }),
-  });
+// OTP-DEFERRED: CR-2026-09-14-001 — CRM v1 forgot-password 404 on v2. Restore when CRM adds v2 endpoint (UX-GAP-02).
+export const crmForgotPassword = async (_phone, _userId, _countryCode = '91') => {
+  throw new Error('OTP-DEFERRED: crmForgotPassword disabled — CR-2026-09-14-001');
+  /* original body: crmFetch('/customer/forgot-password', { method: 'POST', ... }) */
 };
 
 /**
@@ -410,14 +368,10 @@ export const crmForgotPassword = async (phone, userId, countryCode = '91') => {
  * Deliberate Phase-1 hold (decision 3d). Tracked as UX-GAP-02.
  * Calls continue to hit v1 URL regardless of flag — same (broken) behavior as today.
  */
-export const crmResetPassword = async (phone, otp, userId, newPassword) => {
-  if (isV2()) {
-    console.warn('[CRM] Reset Password is not in v2 contract. Falling back to v1 path (expected 404 from CRM). Tracked as UX-GAP-02.');
-  }
-  return crmFetch('/customer/reset-password', {
-    method: 'POST',
-    body: JSON.stringify({ phone: stripPhonePrefix(phone), otp, user_id: userId, new_password: newPassword }),
-  });
+// OTP-DEFERRED: CR-2026-09-14-001 — CRM v1 reset-password 404 on v2. Restore when CRM adds v2 endpoint (UX-GAP-02).
+export const crmResetPassword = async (_phone, _otp, _userId, _newPassword) => {
+  throw new Error('OTP-DEFERRED: crmResetPassword disabled — CR-2026-09-14-001');
+  /* original body: crmFetch('/customer/reset-password', { method: 'POST', ... }) */
 };
 
 // ============================================
