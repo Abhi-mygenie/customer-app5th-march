@@ -83,3 +83,16 @@ Blast radius: SMALL–MEDIUM (2 FE files)
 Docs updated: this file, ../README.md, ../../PRD.md, ../../control/OWNER_DECISIONS_2026-09-15.md
 Next: Planning (Impact Analysis + Implementation Plan)
 ```
+
+## 8. Addendum 2026-09-15 — CRM INV-018 (order linkage) inputs
+
+Source: `../INV-2026-09-15-001-profile-data-crm-v2-contract-gap/crm_reply/INV_018_ORDER_LINKAGE_GAPS.md`
+
+| Fact from CRM | Effect on this CR |
+|---|---|
+| CRM matches customers by **exact phone string**, no normalisation (GAP-14). A `skip-otp` phone in a different format than POS sent → CRM creates a *new empty customer* → `/scan/orders` returns 0, no error. | **Acceptance criterion 6 (new):** the UAT test customer's phone must be stored in CRM in the same 10-digit form POS sends. If Orders tab is empty for a known customer, check for a duplicate customer record **before** calling it a bug. |
+| Canonical form agreed by CRM: **10-digit national, digits only**. | **Code truth (verified):** our path already does this for Indian numbers — `react-phone-number-input` gives E.164 → `crmService.stripPhonePrefix` strips `+91` when 12 digits → 10-digit. No change needed here for +91. |
+| UAT tenant **689** has **6,357 unlinked orders** (3rd highest). | Expect many customers on 689 to legitimately see "No orders yet". Test with a customer known to have linked orders (Planning to identify one via CRM, no PII in docs). |
+| 93% of unlinked orders have **no phone from POS** (DATA-A) — POS/cashier issue. | Out of scope; OD-5 stands. "Empty list is valid" acceptance criterion unchanged. |
+
+**New gap surfaced on our side (registered separately, OUT of this CR):** non-Indian numbers — `transformers/helpers.js:245-258 extractPhoneNumber` does `replace(/^\+\d+/, '')` which deletes the **entire** number for any non-`+91` prefix (POS receives `cust_phone: ""` → order can never link), while `crmService.stripPhonePrefix` sends `<cc><number>` without `+` to CRM. See **CR-2026-09-15-003**.
