@@ -89,9 +89,9 @@ Waiting on: git repo write access + 6 GitHub Actions secrets from owner.
 6. CR-006: backend modular split planning (Role 2)
 
 ### P3 — OTP (when feature turned on)
-7. CR-003 Part A: delete `otp_for_testing` (1-line, Role 3)
+7. **CR-2026-09-14-001** (Wave 2): Comment out broken OTP SMS path with `OTP-DEFERRED` markup — 8 files, P2/LOW risk, comment-out only (reversible). Supersedes CR-003 Part A.
 8. Fix UX-GAP-02: CRM team to add v2 forgot/reset-password endpoints
-9. CR-003 Parts B+C: persistent OTP store + attempt cap
+9. CR-003 Parts B+C: persistent OTP store + attempt cap (when SMS is live)
 
 ## Key Artefacts
 | Artefact | Path |
