@@ -76,3 +76,4 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 - Artifact to send to CRM team: `memory/change_requests/INV-2026-09-15-001-profile-data-crm-v2-contract-gap/CRM_CONTRACT_VERIFICATION_REQUEST.md` (Profile data + OTP routes).
 - Next: CRM reply → Planning role → new CR for v2 branches (owner approval required before any code).
 - INV-2026-09-12-001 "delete outright" wording withdrawn pending owner decision.
+- 2026-09-15 CRM reply (INV-017) validated: `/scan/orders`, `/scan/loyalty`, `/scan/points/history`, `/scan/wallet/history` live-confirmed. Report: `CRM_REPLY_VALIDATION.md` — 4 CRM discrepancies (D1 403→401, D2 openapi.json missing, D3 env unknown, D4 `total` semantics), 10 app gaps (G1–G10; G7 skip-otp silently logs in password customers, G8 x-api-key dead, G10 duplicate config source CRM `/scan/config` vs our `/api/config`). Owner decisions OD-1..OD-6 pending before Planning.
