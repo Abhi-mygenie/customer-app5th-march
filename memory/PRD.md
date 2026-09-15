@@ -67,3 +67,12 @@ Deploy the existing React frontend repo directly into `/app` and run it as-is, w
 - No code edits made — repo deployed as-is
 - Only configuration (.env) adjusted: CORS_ORIGINS set to explicit URLs (required by server.py validation)
 - Platform overlay packages (`@emergentbase/overlay`, `@emergentbase/visual-edits`) not in repo's package.json — overlay system degrades gracefully, app functions normally
+
+
+## Investigations (read-only, no code)
+### INV-2026-09-15-001 — Profile Orders/Points/Wallet 404 on CRM v2 (2026-09-15)
+- Root cause (HIGH confidence): `crmService.js` `crmGetOrders/crmGetPoints/crmGetWallet` still call CRM v1 `/customer/me/*`; CRM v2 returns 404. Header profile via `/scan/auth/me` is alive.
+- Live probes captured; `/scan/orders` exists (contract unknown); no v2 points/wallet route found; no v2 forgot/reset-password.
+- Artifact to send to CRM team: `memory/change_requests/INV-2026-09-15-001-profile-data-crm-v2-contract-gap/CRM_CONTRACT_VERIFICATION_REQUEST.md` (Profile data + OTP routes).
+- Next: CRM reply → Planning role → new CR for v2 branches (owner approval required before any code).
+- INV-2026-09-12-001 "delete outright" wording withdrawn pending owner decision.
