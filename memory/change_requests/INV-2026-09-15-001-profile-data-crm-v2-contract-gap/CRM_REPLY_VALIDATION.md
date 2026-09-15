@@ -89,13 +89,34 @@ Not gaps (already aligned): `Profile.jsx:253` already reads `item.item_name`; `:
 
 Gate sequence respected — **no Planning/Implementation yet**. Next role: **PLANNING (Role 2)** on a new CR *"crmService v2 branches for orders / points / wallet + Profile field mapping"* (Risk **HIGH**, API contract), **but only after** OD-1 (environment + UAT rid) is answered, because the plan's verification matrix needs real responses. OD-2…OD-6 can be answered in parallel or split into separate items.
 
-```text
-Investigation complete: INV-2026-09-15-001 (CRM reply validation)
+## 8. Addendum 2026-09-15 (owner reply + OpenAPI received)
+
+| Item | Status |
+|---|---|
+| D2 | ✅ `INV_017_openapi_scan_v2.json` received (26 operations / 21 paths, 14 schemas) — archived in `crm_reply/`. **Limitation:** all 14 schemas are *request* models; every `200` response schema is `{}` (untyped). Response field types remain prose-only (contract §2–§4). Planning must capture real UAT responses for the verification matrix. |
+| D3 | ✅ Owner: `crm.mygenie.online` = **UAT**. Production CRM URL still unknown → `REACT_APP_CRM_URL` for prod is an open deployment item (add to release checklist). |
+| D1, D4 | ⏳ Owner obtaining clarification from CRM. |
+| New finding (from OpenAPI) | CRM also serves `GET/PUT /scan/config/{rid}` (`AppConfigUpdate` schema ≈ the same ~70 keys as our `RestaurantConfigContext` / backend `/api/config`), `GET/PUT /scan/menu/dietary-tags/{rid}` (≈ our `/api/dietary-tags`), `/scan/call-waiter`, `/scan/request-bill`, `/scan/feedback`. → **G10 is broader than wallet gating: CRM holds a parallel copy of the whole restaurant app-config + dietary-tags surface.** Strengthens the case for a dedicated INV. |
+
+## 9. Proposed next steps per gap (gate-compliant — nothing starts without owner approval + registered ID)
+
+| Gap(s) | Next role | Proposed item | Risk | Blocked by |
+|---|---|---|---|---|
+| G1 G2 G3 G4 (+G5 if OD-2 = "ours") | **INTAKE → PLANNING** | **CR-A** "Profile v2 adapter: `crmGetOrders/Points/Wallet` → `/scan/*`, points sign/`bonus` mapping, `order_type` normalisation, drop `skip`, wallet-tab gating" — files: `crmService.js`, `Profile.jsx` | HIGH (API contract) | UAT `restaurant_id` via secure channel (to capture real responses in Planning); OD-2 |
+| G7 | **OWNER DECISION → INTAKE** | **CR-B** skip-otp password bypass. OD-3=A (accept): P3 cleanup of dead 409/429 branches. OD-3=B: CRM P-4 + FE keeps 409 → password-setup route. Touches `LandingPage.jsx` + `crmSkipOtpRetry.js` | CRITICAL (auth) | OD-3 |
+| G8 | **INTAKE** (fold) | Add to **CR-2026-09-12-007** (env purge/API-client facade): remove `REACT_APP_CRM_API_KEY` map + `x-api-key` header logic | MEDIUM | OD-4 |
+| G6 | **INTAKE** (fold) | Add to **CR-2026-09-12-007** (session facade): `getRestaurantIdFromToken` read `restaurant_id` claim (both copies) — AuthContext is a CRITICAL hotspot, so not a Fast Lane | HIGH | none |
+| G10 (+ new finding) | **INTAKE → INVESTIGATION** | **INV-2026-09-15-002** "Config source of truth: CRM `/scan/config` + `/scan/menu/dietary-tags` vs our `/api/config` + `/api/dietary-tags` — who writes, who reads, drift" → feeds CR-2026-09-12-010 / BUG-002 | — (read-only) | OD-6 |
+| G9 | **OWNER AWARENESS** | No Customer-App item. Optional POS-ingest item outside this repo | — | OD-5 |
+| D3 prod URL | **DEPLOYMENT checklist** | Add "prod `REACT_APP_CRM_URL` confirmed" to release checklist | — | owner |
+
+**Recommended order:** OD-2/OD-3/OD-4/OD-6 answered → one INTAKE session registers CR-A, CR-B, INV-002 and the two fold-ins → PLANNING for CR-A first (highest customer value, lowest dependency).
+
 Root cause: CONFIRMED — FE partial v2 migration; CRM /scan/* endpoints exist and are live
 Classification: FE (CONFIG/CONTRACT) + 1 architectural finding (duplicate config source, G10)
 Confidence: HIGH
 Steps used: 9/10
 Evidence: CRM_REPLY_VALIDATION.md §2–§4 (live probes + code refs)
-Recommendation: Owner decisions OD-1..OD-6 → Planning (Role 2) for new CR; CRM to deliver D1–D4
+Recommendation: Owner decisions OD-2..OD-6 → INTAKE (Role 1) registers CR-A, CR-B, INV-2026-09-15-002 + 2 fold-ins into CR-007 → PLANNING CR-A first (see §9)
 Report: memory/change_requests/INV-2026-09-15-001-profile-data-crm-v2-contract-gap/CRM_REPLY_VALIDATION.md
 ```
