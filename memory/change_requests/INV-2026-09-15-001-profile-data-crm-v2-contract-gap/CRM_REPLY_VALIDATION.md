@@ -117,6 +117,25 @@ Classification: FE (CONFIG/CONTRACT) + 1 architectural finding (duplicate config
 Confidence: HIGH
 Steps used: 9/10
 Evidence: CRM_REPLY_VALIDATION.md §2–§4 (live probes + code refs)
-Recommendation: Owner decisions OD-2..OD-6 → INTAKE (Role 1) registers CR-A, CR-B, INV-2026-09-15-002 + 2 fold-ins into CR-007 → PLANNING CR-A first (see §9)
+Recommendation: Owner decisions OD-3..OD-7 → INTAKE (Role 1) registers CR-A, CR-B, INV-2026-09-15-002 + 2 fold-ins into CR-007 → PLANNING CR-A first (see §9, §10)
+Steps used: 10/10 (budget reached — extension needed for further probing)
 Report: memory/change_requests/INV-2026-09-15-001-profile-data-crm-v2-contract-gap/CRM_REPLY_VALIDATION.md
 ```
+
+## 10. Owner fact 2026-09-15 — **CRM and Customer App share the same MongoDB**
+
+**Verified (read-only):** `GET <our backend>/api/config/478` vs `GET https://crm.mygenie.online/api/scan/config/478` → 105/105 keys identical, 0 value differences, same `updated_at` (`…05:50:24.597682+00:00`). Our backend reads `db.customer_app_config` (`server.py:1054,1211`). This is **one document served by two services**, not two copies.
+
+**Consequences (carry into every item in §9):**
+
+| # | Consequence | Affects |
+|---|---|---|
+| S1 | **G10 reclassified**: not "duplicate data" but **two writers / two default-maps on one collection**. Drift risk is *schema & defaults* (our `PUT /api/config` + `RestaurantConfigContext` defaults vs CRM `PUT /scan/config` + `AppConfigUpdate`), not data divergence. INV-2026-09-15-002 scope = ownership of writes + defaults, plus `dietary_tags`. | INV-002, CR-2026-09-12-010 |
+| S2 | **OD-2 is moot**: `showWallet` is one flag. CR-A gates the wallet tab on our existing `RestaurantConfigContext.showWallet`. | CR-A |
+| S3 | **Data-destructive items are now cross-team CRITICAL**: any collection drop/rename/migration from our side hits CRM live. INV-2026-09-12-001's "drop `orders` / `status_checks`" feed into **CR-2026-09-12-014 (MySQL migration)** and **CR-2026-09-12-006** must be re-scoped — `db.orders` is CRM's POS-ingest collection (CRM GAP-10). "Route dead in our FE" ≠ "collection unused". **Owner + CRM approval required before any schema/collection change.** | CR-006, CR-014, INV-2026-09-12-001 |
+| S4 | Backend `/api/customer/*` routes read the same customer/orders/points data CRM serves via `/scan/*` — redundant *readers*, not orphans. Deleting routes carries no data risk; still a CR-006 owner decision. | CR-006 |
+| S5 | Two auth systems issue JWTs over the same customer records (our `JWT_SECRET`, CRM HS256). Whether secrets/claims are shared is **unknown** — add to INV-002. Relates to BUG-001. | INV-002 |
+| S6 | Addendum §2 "Database" was stale → updated to "shared with CRM" (Alpha v0.1a). §13 Q1/Q2 remain open. | control doc |
+| S7 | Release checklist: prod `MONGO_URL`/`DB_NAME` must be **CRM's production DB** — a separate DB would silently split customer data. Prod CRM URL + prod DB identity are one decision. | Deployment |
+
+Open decisions: **OD-3, OD-4, OD-5, OD-6** + new **OD-7**: who owns *writes* to `customer_app_config` (our admin UI vs CRM admin)?

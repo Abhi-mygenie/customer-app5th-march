@@ -988,7 +988,7 @@ A release is ready only when:
 | **Frontend Forms** | react-hook-form ^7.56.2 + Zod ^3.24.4 | |
 | **Backend Framework** | FastAPI | ^0.110.1 |
 | **Backend Server** | Uvicorn | ^0.25.0 |
-| **Database** | MongoDB (remote) | Motor ^3.3.1 (async driver) |
+| **Database** | MongoDB (remote) — **SHARED WITH MyGenie CRM** (owner fact 2026-09-15, verified: same `customer_app_config` document served by both `/api/config/{rid}` and CRM `/scan/config/{rid}`). Any collection/schema change is cross-team CRITICAL. | Motor ^3.3.1 (async driver) |
 | **Auth Method** | JWT (PyJWT + python-jose) + bcrypt + passlib | Dual auth: backend JWT for admin, CRM token for customer (restaurant-scoped) |
 | **Realtime / Socket** | None detected | WebSocket library in requirements but no active WS endpoints in server.py |
 | **Hosting / Deployment** | Emergent platform (Docker) | Base image: `fastapi_react_mongo_shadcn_base_image_cloud_arm:release-14052026-2`. Supervisor process manager. Nginx reverse proxy. |
@@ -1579,6 +1579,7 @@ No Fast Lane is allowed for these areas.
 | Version | Date | Changes |
 |---|---|---|
 | Alpha v0.1 | 2026-06-17 | First single-file MyGenie Customer App Agent Operating System compiled from generic prompt + project-specific addendum. |
+| Alpha v0.1a | 2026-09-15 | Fact added (§2 Database): MongoDB is **shared with CRM**. Source: owner statement + INV-2026-09-15-001 §10 verification. No other change. |
 
 ---
 
