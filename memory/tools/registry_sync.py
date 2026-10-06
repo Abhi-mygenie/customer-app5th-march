@@ -641,6 +641,15 @@ def push(views):
             "valueInputOption": "RAW", "data": data[start:start + 100]})
     print(f"Pushed {len(TABS) - 1} tabs (Change Log handled separately).")
 
+    # Fix 2: Write Change Log header if the tab is empty (newly created or blank)
+    cl_check = api("GET", token, f"{sheet_id}/values/{a1('Change Log')}!A1", )
+    if not cl_check.get("values"):
+        api("POST", token, f"{sheet_id}/values:batchUpdate", json={
+            "valueInputOption": "RAW",
+            "data": [{"range": f"{a1('Change Log')}!A1",
+                      "values": views["Change Log"]}]})
+        print("Change Log header row written.")
+
     requests_body = []
     for tab in TABS:
         if tab not in existing:
@@ -667,6 +676,14 @@ def push(views):
     stale = [t for t in existing if t not in TABS]
     for tab in stale:
         requests_body.append({"deleteSheet": {"sheetId": existing[tab]}})
+
+    # Fix 1: Enforce contract §2 tab order — set index 0..9 for all 10 tabs
+    for idx, tab in enumerate(TABS):
+        if tab in existing:
+            requests_body.append({"updateSheetProperties": {
+                "properties": {"sheetId": existing[tab], "index": idx},
+                "fields": "index"}})
+
     api("POST", token, f"{sheet_id}:batchUpdate", json={"requests": requests_body})
     if stale:
         print(f"Removed non-generated tabs: {stale}")
