@@ -584,7 +584,10 @@
   priority: null
   risk: null
   owner_action: null
-  blocked_on: []
+  blocked_on:
+  - party: POS
+    ref: POS data backfill for restaurant 716 required before shipping
+    since: '2026-10-03'
   sprint: null
   files: null
   artefacts: CR, INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN
@@ -698,7 +701,10 @@
   priority: null
   risk: null
   owner_action: null
-  blocked_on: []
+  blocked_on:
+  - party: OWNER
+    ref: Confirm OTP works on real device; decide whether OTP feature is turned on
+    since: '2026-09-12'
   sprint: null
   files: null
   artefacts: INTAKE, IMPACT_ANALYSIS
@@ -926,7 +932,10 @@
   priority: null
   risk: null
   owner_action: null
-  blocked_on: []
+  blocked_on:
+  - party: OWNER
+    ref: Git access + 6 repo secrets + dependency close outstanding (Sprint Wave 2)
+    since: '2026-09-12'
   sprint: null
   files: null
   artefacts: INTAKE, IMPACT_ANALYSIS
@@ -1614,7 +1623,10 @@
   priority: null
   risk: null
   owner_action: null
-  blocked_on: []
+  blocked_on:
+  - party: OWNER
+    ref: Deletion wording withdrawn pending owner decision
+    since: '2026-09-12'
   sprint: null
   files: null
   artefacts: INTAKE

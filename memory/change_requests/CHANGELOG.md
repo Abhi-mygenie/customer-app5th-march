@@ -191,3 +191,10 @@ Append-only. One entry per observed field change, newest section last.
 ## 2026-10-06 12:31 UTC
 
 - No changes since the last generation.
+
+## 2026-10-06 12:40 UTC
+
+- `CR-2026-08-03-001` · `blocked_on` · [] → [{'party': 'POS', 'ref': 'POS data backfill for restaurant 716 required before shipping', 'since': '2026-10-03'}] · generator · 2026-10-06 12:40 UTC
+- `CR-2026-09-12-003` · `blocked_on` · [] → [{'party': 'OWNER', 'ref': 'Confirm OTP works on real device; decide whether OTP feature is turned on', 'since': '2026-09-12'}] · generator · 2026-10-06 12:40 UTC
+- `CR-2026-09-12-015` · `blocked_on` · [] → [{'party': 'OWNER', 'ref': 'Git access + 6 repo secrets + dependency close outstanding (Sprint Wave 2)', 'since': '2026-09-12'}] · generator · 2026-10-06 12:40 UTC
+- `INV-2026-09-12-001` · `blocked_on` · [] → [{'party': 'OWNER', 'ref': 'Deletion wording withdrawn pending owner decision', 'since': '2026-09-12'}] · generator · 2026-10-06 12:40 UTC
