@@ -33,3 +33,10 @@ Owner rulings for BUG: D1=a (no `policy-disabled` events) · D4=b (caps 200 bloc
 
 ## 5. Added late in session
 - New mandatory artefact **SMOKE_BRIEF** (md + pdf) after every QA PASS — control prompt §9 and Role 8 step 1 updated on owner instruction. Generator: `memory/tools/smoke_brief.py` (needs `pip install markdown`; uses google-chrome headless). `BUG-2026-10-06-001/SMOKE_BRIEF.pdf` is the first one — send it to the smoke tester.
+
+## 6. Later in session — CR-2026-10-03-003 shipped to SMOKE
+- Gate 3 accepted → implemented (crmService `crmSubmitFeedback`, FeedbackPage rewrite incl. `setRestaurantScope` restore + sign-in card, server.py feedback block deleted, new smoke test, contract test updated + snapshot removed) → QA PASS 11/11 (`iteration_2.json`) → `SMOKE_BRIEF.pdf`.
+- Deviation: `crmGetOrders` uses v1 `/customer/me/orders` → 404 on v2 CRM; `order_id` omitted until **CR-2026-09-15-001**. Not fixed here.
+- Owner to send: `SMOKE_BRIEF.pdf` (tester), `CRM_NOTE_FEEDBACK_PURGE.md` (CRM, D3=a), `inbox/OUTBOUND_DRAFT_CRM_QUESTIONS_2026-10-07.md` (CRM).
+- New intakes this session: CR-2026-10-07-001 (feedback guests, blocked on CRM CR-096), CR-2026-10-07-002 (permanent OTP deletion). Registry 89.
+- QA observation for a possible intake: `/review-order` logs `[AUTH] CRITICAL: REACT_APP_BACKEND_URL is not set` ×2 + loyalty JSON parse error (pre-existing).

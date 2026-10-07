@@ -1135,18 +1135,18 @@
   type: CR
   title: BUG (data integrity) — feedback written into CRM's `feedback` collection in our own schema, unreadable
     by anyone; migrate to `POST /scan/feedback`
-  status: QA
-  status_note: 'QA 2026-10-07: Role 3 complete (E1–E4 + contract test update + setRestaurantScope restore; self-test 9/12 PASS, T2 partial = CR-2026-09-15-001, T4/T6 → QA). PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. CRM token path shipped; anonymous/hybrid path
+  status: SMOKE
+  status_note: 'SMOKE 2026-10-07: Role 4 QA PASS 11/11 (QA_REPORT.md, test_reports/iteration_2.json); owner smoke pending. Role 3 complete (E1–E4 + contract test update + setRestaurantScope restore; self-test 9/12 PASS, T2 partial = CR-2026-09-15-001, T4/T6 → QA). PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. CRM token path shipped; anonymous/hybrid path
     (CR-096) re-probed → still 403. Recommend ship token-only now (D2a).'
   priority: P1
   risk: CRITICAL
-  owner_action: 'After QA PASS: send CRM_NOTE_FEEDBACK_PURGE.md to CRM (D3=a); run SMOKE_BRIEF'
+  owner_action: 'Send SMOKE_BRIEF.pdf to tester; send CRM_NOTE_FEEDBACK_PURGE.md to CRM (D3=a). On "Smoke PASS CR-2026-10-03-003" → CLOSED'
   blocked_on: []
   sprint: null
   files: frontend/src/api/services/crmService.js:403-413 · frontend/src/pages/FeedbackPage.jsx · frontend/src/pages/FeedbackPage.css
     · backend/server.py:1293-1297 (deleted block + marker) · backend/tests/smoke/test_cr_2026_10_03_003.py (new)
     · backend/tests/contracts/test_public_config.py (test_config_feedback_478 → route gone)
-  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN, SELF_TEST, QA_HANDOVER, CRM_NOTE
+  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN, SELF_TEST, QA_HANDOVER, CRM_NOTE, QA_REPORT, SMOKE_BRIEF
   registered: '2026-10-03'
   last_updated: '2026-10-07'
   related: []
