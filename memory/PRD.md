@@ -38,6 +38,19 @@
 - REACT_APP_IMAGE_BASE_URL, REACT_APP_CRM_URL, REACT_APP_GOOGLE_MAPS_API_KEY: set
 - REACT_APP_LOGIN_PHONE/PASSWORD: set
 
+## Session log
+- 2026-10-06 (s1): deploy from GitHub, env fixes
+- 2026-10-06 (s2): CR-2026-10-04-006 Role 3 — registry_sync.py rewritten, 87 items pushed to Google Sheet
+- 2026-10-06 (s3): CR-2026-10-04-006 Role 4 QA PASS 22/22; Role 2 planning (chat only, no artefacts yet) for BUG-2026-10-06-001 + CR-2026-10-03-003; CRM `POST /scan/feedback` validated (token=200, anonymous=403); INV-2026-10-03-001 remediation advice. Handover: `SESSION_HANDOVER_2026-10-06_PLANNING_TIER1.md`
+
+## Governance
+- Strict role gates per `control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md`. No app code until owner says `Role 3 approved for <ID>`.
+- Registry of record: `change_requests/index.yml` → mirrored to Google Sheet via `tools/registry_sync.py`.
+
 ## Backlog / Next
+- Write IMPACT_ANALYSIS.md + IMPLEMENTATION_PLAN.md for BUG-2026-10-06-001 and CR-2026-10-03-003; get Gate 2; then Role 3 (P0)
+- Owner decisions D1–D3 (see handover §5)
+- Tier 2 owner rulings: CR-2026-10-06-001, CR-2026-10-06-002, CR-2026-10-04-005
+- INV-2026-10-03-001: DevOps/CRM key rotation + UAT PII purge (operational)
+- D-A2 OAuth consent publish; P7–P10 Band b; P12 ROLE 13 prompt edit
 - Supply production env values when ready (CORS_ORIGINS for custom domain)
-- Run end-to-end tests on QR scan → menu → cart → order flow
