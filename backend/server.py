@@ -1655,17 +1655,21 @@ async def update_dietary_tags(
 # ============================================
 
 class NonQrBlockEvent(BaseModel):
-    """Client-side diagnostic event fired when a non-QR order is blocked."""
+    """Client-side diagnostic event for a non-QR policy decision (block or allow)."""
     restaurant_id: str
     checkpoint: str  # 'landing' | 'add_to_cart' | 'place_order'
     scanned_room_or_table: Optional[str] = None  # 'table' | 'room' | 'walkin' | None
     final_table_id: Optional[str] = "0"
     is_edit_mode: bool = False
     is_authenticated: bool = False
+    # BUG-2026-10-06-001: allow-path events carry the policy reason
+    decision: Optional[str] = Field(default=None, max_length=40)
+    allowed: bool = False
 
 
 NON_QR_BLOCKS_COLLECTION = "non_qr_blocks"
-NON_QR_BLOCKS_PER_RID_LIMIT = 200
+NON_QR_BLOCKS_PER_RID_LIMIT = 200   # allowed == False (incl. legacy docs without the field)
+NON_QR_ALLOWS_PER_RID_LIMIT = 1000  # BUG-2026-10-06-001 D4(b): separate bucket for allow events
 _NON_QR_INDEX_READY = False
 
 
@@ -1702,6 +1706,8 @@ async def non_qr_block(event: NonQrBlockEvent, request: Request):
         "final_table_id": event.final_table_id or "0",
         "is_edit_mode": bool(event.is_edit_mode),
         "is_authenticated": bool(event.is_authenticated),
+        "decision": event.decision,
+        "allowed": bool(event.allowed),  # BUG-2026-10-06-001
         "client_ip": client_ip,
         "user_agent": request.headers.get("user-agent"),
         "referer": request.headers.get("referer"),
@@ -1711,15 +1717,20 @@ async def non_qr_block(event: NonQrBlockEvent, request: Request):
     try:
         await db[NON_QR_BLOCKS_COLLECTION].insert_one(doc)
 
-        # Rolling cap: keep newest 200 per restaurant_id.
-        count = await db[NON_QR_BLOCKS_COLLECTION].count_documents(
-            {"restaurant_id": doc["restaurant_id"]}
+        # BUG-2026-10-06-001 D4(b): cap each bucket separately so allow events
+        # cannot evict block history. Legacy docs (no `allowed`) count as blocks.
+        bucket_filter = (
+            {"restaurant_id": doc["restaurant_id"], "allowed": True}
+            if doc["allowed"]
+            else {"restaurant_id": doc["restaurant_id"], "allowed": {"$ne": True}}
         )
-        if count > NON_QR_BLOCKS_PER_RID_LIMIT:
-            excess = count - NON_QR_BLOCKS_PER_RID_LIMIT
+        limit = NON_QR_ALLOWS_PER_RID_LIMIT if doc["allowed"] else NON_QR_BLOCKS_PER_RID_LIMIT
+        count = await db[NON_QR_BLOCKS_COLLECTION].count_documents(bucket_filter)
+        if count > limit:
+            excess = count - limit
             cursor = (
                 db[NON_QR_BLOCKS_COLLECTION]
-                .find({"restaurant_id": doc["restaurant_id"]}, {"_id": 1})
+                .find(bucket_filter, {"_id": 1})
                 .sort("ts", 1)
                 .limit(excess)
             )

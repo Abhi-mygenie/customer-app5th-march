@@ -60,8 +60,9 @@
 - id: BUG-2026-10-06-001
   type: BUG
   title: Non-QR policy telemetry records blocks but never bypasses, so an unenforced order is invisible
-  status: PLANNING
-  status_note: 'PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. Found rolling cap (200/rid) interaction — new D4.
+  status: QA
+  status_note: 'QA 2026-10-07: Role 3 complete (E1–E6 applied, 6 files, self-test 11/16 PASS, 5 deferred to QA — see SELF_TEST.md,
+    QA_HANDOVER.md). PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. Found rolling cap (200/rid) interaction — new D4.
     Filed 2026-10-06 (Role 1) on owner instruction. postNonQrBlock sits inside `if (policy.block)`
     at all 3 checkpoints, so the 4 real bypass reasons (valid-qr incl. every walk-in, rid-716-carveout,
     edit-mode, non-dinein-mode) are never recorded — the allow path console.logs the decision to the customer''s
@@ -69,16 +70,13 @@
     CR-2026-10-06-001 cannot be sized. Adjudicated contract status: INTAKE.'
   priority: P1
   risk: LOW
-  owner_action: 'Gate 2 ACCEPTED 2026-10-07 (D1=a, D4=b, D5=b, D6=yes). IMPLEMENTATION_PLAN.md written. Awaiting Gate 3
-    phrase "Role 3 approved for BUG-2026-10-06-001"'
-  blocked_on:
-  - party: OWNER
-    ref: Gate 3 approval (Role 3 assignment) pending
-    since: '2026-10-07'
+  owner_action: 'Gate 3 ACCEPTED 2026-10-07 ("Gate 3 accepted for BUG-2026-10-06-001"). Code complete. Next: Role 4 QA, then
+    owner smoke (3 steps in QA_HANDOVER.md)'
+  blocked_on: []
   sprint: null
-  files: frontend/src/pages/LandingPage.jsx:527-547 · frontend/src/pages/MenuItems.jsx:490-498 · frontend/src/pages/ReviewOrder.jsx:901-910
-    · frontend/src/utils/orderAccessPolicy.js:76-83 (payload builder only) · backend/server.py:1657-1665,1697-1727
-  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN
+  files: frontend/src/utils/orderAccessPolicy.js:76-87 · frontend/src/pages/LandingPage.jsx:527-546 · frontend/src/pages/MenuItems.jsx:19,38,479-502
+    · frontend/src/pages/ReviewOrder.jsx:900-915 · backend/server.py:1657-1670,1700-1735 · backend/tests/smoke/test_bug_2026_10_06_001.py (new)
+  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN, SELF_TEST, QA_HANDOVER
   registered: '2026-10-06'
   last_updated: '2026-10-07'
   related:
@@ -86,7 +84,7 @@
   - CR-2026-10-06-002
   - CR-2026-05-30-002
   - CR-2026-07-04-004
-  code_markers: false
+  code_markers: true
   money_path: null
   closed: null
   notes: null

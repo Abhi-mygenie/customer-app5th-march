@@ -898,14 +898,18 @@ const ReviewOrder = () => {
         },
         { allowNonQrOrders }
       );
-      if (policy.block) {
-        clearCart();
+      // BUG-2026-10-06-001: record the decision on both paths when enforced.
+      if (allowNonQrOrders === false) {
         postNonQrBlock(
           buildNonQrBlockPayload(
             { restaurantId, scannedRoomOrTable, scannedTableId, isEditMode, isAuthenticated },
-            'place_order'
+            'place_order',
+            policy
           )
         );
+      }
+      if (policy.block) {
+        clearCart();
         setShowNonQrBlockModal(true);
         return;
       }

@@ -17,6 +17,7 @@ import { useScannedTable } from '../hooks/useScannedTable';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext'; // BUG-2026-10-06-001 D6
 import { getAllergenIcon } from '../utils/allergenIcons';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { isRestaurantOpen, isItemAvailable, isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability'; // CR-2026-06-17-003 APP-11 | CR-2026-08-06-001
@@ -35,6 +36,7 @@ const MenuItems = () => {
   const { showFooter: configShowFooter, showPromotionsOnMenu: configShowPromotionsOnMenu, showCategories: configShowCategories, showMenuFab: configShowMenuFab, fetchConfig, logoUrl: configLogoUrl, phone: configPhone, banners: configBanners, restaurantShifts, restaurantOpen, menuOrder, categoryTimings, itemTimings, channelOverrides, allowNonQrOrders,
     deliveryShifts, takeawayShifts, dineInShifts, roomShifts, walkinShifts,
   } = useRestaurantConfig(); // CR-2026-08-06-001: channel shift fields added
+  const { isAuthenticated } = useAuth(); // BUG-2026-10-06-001 D6
   const [stationName, setStationName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -487,19 +489,23 @@ const MenuItems = () => {
       },
       { allowNonQrOrders }
     );
+    // BUG-2026-10-06-001: record allow + block when enforced; D6 adds isAuthenticated.
+    if (allowNonQrOrders === false) {
+      postNonQrBlock(
+        buildNonQrBlockPayload(
+          { restaurantId, scannedRoomOrTable, scannedTableId, isEditMode, isAuthenticated },
+          'add_to_cart',
+          policy
+        )
+      );
+    }
     if (!policy.block) return false;
     clearCart();
-    postNonQrBlock(
-      buildNonQrBlockPayload(
-        { restaurantId, scannedRoomOrTable, scannedTableId, isEditMode },
-        'add_to_cart'
-      )
-    );
     setShowNonQrBlockModal(true);
     return true;
   }, [
     cartItems, restaurantId, isScanned, scannedTableId, scannedRoomOrTable,
-    scannedOrderType, isEditMode, allowNonQrOrders, clearCart,
+    scannedOrderType, isEditMode, allowNonQrOrders, clearCart, isAuthenticated,
   ]);
 
   /**

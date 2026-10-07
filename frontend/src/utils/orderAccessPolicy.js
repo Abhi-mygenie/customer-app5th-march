@@ -72,11 +72,15 @@ export const shouldBlockNonQrOrder = (ctx, config) => {
  * Build the telemetry payload (used by the diagnostics POST).
  * Kept here so the policy module owns the shape of the diagnostic record.
  */
-export const buildNonQrBlockPayload = (ctx, checkpoint) => ({
+// BUG-2026-10-06-001: payload carries the policy decision so allow-path events
+// are distinguishable from blocks. `policy` is optional for back-compat.
+export const buildNonQrBlockPayload = (ctx, checkpoint, policy) => ({
   restaurant_id: String(ctx?.restaurantId || ''),
   checkpoint, // 'landing' | 'add_to_cart' | 'place_order'
   scanned_room_or_table: ctx?.scannedRoomOrTable || null,
   final_table_id: ctx?.scannedTableId ? String(ctx.scannedTableId) : '0',
   is_edit_mode: ctx?.isEditMode === true,
   is_authenticated: ctx?.isAuthenticated === true,
+  decision: policy?.reason ?? null,
+  allowed: policy ? policy.block === false : false,
 });

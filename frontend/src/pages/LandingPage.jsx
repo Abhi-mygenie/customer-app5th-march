@@ -522,27 +522,24 @@ const LandingPage = () => {
         },
         { allowNonQrOrders }
       );
-      // Debug — visible in browser console. Helps diagnose why a block
-      // didn't fire (e.g. stale config cache, stale sessionStorage scan).
-      // Remove or gate behind a flag once stable.
-      console.log('[CR-002 C1] policy decision', {
-        policy,
-        allowNonQrOrders,
-        restaurantId,
-        isScanned,
-        scannedTableId,
-        scannedRoomOrTable,
-        scannedOrderType,
-        isEditMode,
+      // BUG-2026-10-06-001: gated behind the logger (prod-silent unless debug:order)
+      logger.order('[CR-002 C1] policy decision', {
+        policy, allowNonQrOrders, restaurantId, isScanned,
+        scannedTableId, scannedRoomOrTable, scannedOrderType, isEditMode,
       });
-      if (policy.block) {
-        clearCart();
+      // BUG-2026-10-06-001: record the decision on BOTH paths when the policy
+      // is enforced (allowNonQrOrders === false). Never when the switch is on (D1).
+      if (allowNonQrOrders === false) {
         postNonQrBlock(
           buildNonQrBlockPayload(
             { restaurantId, scannedRoomOrTable, scannedTableId, isEditMode, isAuthenticated },
-            'landing'
+            'landing',
+            policy
           )
         );
+      }
+      if (policy.block) {
+        clearCart();
         setShowNonQrBlockModal(true);
         return;
       }
