@@ -60,22 +60,24 @@
 - id: BUG-2026-10-06-001
   type: BUG
   title: Non-QR policy telemetry records blocks but never bypasses, so an unenforced order is invisible
-  status: INTAKE
-  status_note: 'Filed 2026-10-06 (Role 1) on owner instruction. postNonQrBlock sits inside `if (policy.block)`
+  status: PLANNING
+  status_note: 'PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. Found rolling cap (200/rid) interaction — new D4.
+    Filed 2026-10-06 (Role 1) on owner instruction. postNonQrBlock sits inside `if (policy.block)`
     at all 3 checkpoints, so the 4 real bypass reasons (valid-qr incl. every walk-in, rid-716-carveout,
     edit-mode, non-dinein-mode) are never recorded — the allow path console.logs the decision to the customer''s
     own browser instead. Endpoint, collection and index already exist and need no change. This is why
     CR-2026-10-06-001 cannot be sized. Adjudicated contract status: INTAKE.'
   priority: P1
   risk: LOW
-  owner_action: none required to start — needs no A/B/C/D ruling, unlike CR-2026-10-06-001
-  blocked_on: []
+  owner_action: 'Gate 2: accept IMPACT_ANALYSIS; rule D1 (log policy-disabled? rec no), D4 (rolling-cap strategy — allow
+    events will evict blocks; rec separate caps), D5 (minimal admin GET summary? rec yes), D6 (fold C2 isAuthenticated? rec yes)'
+  blocked_on: [OWNER]
   sprint: null
-  files: frontend/src/pages/LandingPage.jsx:538/527 · frontend/src/pages/MenuItems.jsx:489 · frontend/src/pages/ReviewOrder.jsx:901
-    · frontend/src/utils/orderAccessPolicy.js:37-69 (backend/server.py:1687 unchanged)
-  artefacts: INTAKE
+  files: frontend/src/pages/LandingPage.jsx:527-547 · frontend/src/pages/MenuItems.jsx:490-498 · frontend/src/pages/ReviewOrder.jsx:901-910
+    · frontend/src/utils/orderAccessPolicy.js:76-83 (payload builder only) · backend/server.py:1657-1665,1697-1727
+  artefacts: INTAKE, IMPACT_ANALYSIS
   registered: '2026-10-06'
-  last_updated: null
+  last_updated: '2026-10-07'
   related:
   - CR-2026-10-06-001
   - CR-2026-10-06-002
@@ -1133,17 +1135,21 @@
   type: CR
   title: BUG (data integrity) — feedback written into CRM's `feedback` collection in our own schema, unreadable
     by anyone; migrate to `POST /scan/feedback`
-  status: INTAKE
-  status_note: null
-  priority: null
-  risk: null
-  owner_action: null
-  blocked_on: []
+  status: PLANNING
+  status_note: 'PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. CRM token path shipped; anonymous/hybrid path
+    (CR-096) re-probed → still 403. Recommend ship token-only now (D2a).'
+  priority: P1
+  risk: CRITICAL
+  owner_action: 'Gate 2: accept IMPACT_ANALYSIS; rule D2 (anonymous diners — rec a: token-only + honest sign-in), D3 (ask
+    CRM to purge foreign docs — rec yes), D7 (order_id — rec omit), D8 (remove Name/Email — rec yes), D9 (delete read route
+    here — rec yes); optionally ratify risk MEDIUM as a change'
+  blocked_on: [OWNER]
   sprint: null
-  files: null
-  artefacts: INTAKE
+  files: frontend/src/api/services/crmService.js (add crmSubmitFeedback) · frontend/src/pages/FeedbackPage.jsx:34 · backend/server.py:1293-1324
+    (delete FeedbackCreate + POST/GET /config/feedback)
+  artefacts: INTAKE, IMPACT_ANALYSIS
   registered: '2026-10-03'
-  last_updated: null
+  last_updated: '2026-10-07'
   related: []
   code_markers: false
   money_path: null
