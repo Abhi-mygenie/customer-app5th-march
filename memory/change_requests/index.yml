@@ -70,12 +70,12 @@
     CR-2026-10-06-001 cannot be sized. Adjudicated contract status: INTAKE.'
   priority: P1
   risk: LOW
-  owner_action: 'Owner smoke (Role 8): 3 steps in QA_HANDOVER.md §Owner smoke. On PASS → CLOSED'
+  owner_action: 'Owner smoke (Role 8): send SMOKE_BRIEF.pdf to tester; reply "Smoke PASS/FAIL BUG-2026-10-06-001". On PASS → CLOSED'
   blocked_on: []
   sprint: null
   files: frontend/src/utils/orderAccessPolicy.js:76-87 · frontend/src/pages/LandingPage.jsx:527-546 · frontend/src/pages/MenuItems.jsx:19,38,479-502
     · frontend/src/pages/ReviewOrder.jsx:900-915 · backend/server.py:1657-1670,1700-1735 · backend/tests/smoke/test_bug_2026_10_06_001.py (new)
-  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN, SELF_TEST, QA_HANDOVER, QA_REPORT
+  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN, SELF_TEST, QA_HANDOVER, QA_REPORT, SMOKE_BRIEF
   registered: '2026-10-06'
   last_updated: '2026-10-07'
   related:

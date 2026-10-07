@@ -30,3 +30,6 @@ Owner rulings for BUG: D1=a (no `policy-disabled` events) · D4=b (caps 200 bloc
 3. Forward `REMEDIATION_ADVICE.md` to DevOps/CRM? Rotation of `dp_live_` is the urgent step.
 4. Run `registry_sync.py sync --dry-run` now?
 5. CR-2026-10-04-006 sheet smoke still unconfirmed (carried from previous handover).
+
+## 5. Added late in session
+- New mandatory artefact **SMOKE_BRIEF** (md + pdf) after every QA PASS — control prompt §9 and Role 8 step 1 updated on owner instruction. Generator: `memory/tools/smoke_brief.py` (needs `pip install markdown`; uses google-chrome headless). `BUG-2026-10-06-001/SMOKE_BRIEF.pdf` is the first one — send it to the smoke tester.

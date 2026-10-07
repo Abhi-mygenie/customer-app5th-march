@@ -580,7 +580,7 @@ Use when owner/user acceptance testing is needed.
 
 Do:
 
-1. Prepare owner-friendly test steps.
+1. Prepare owner-friendly test steps — as `SMOKE_BRIEF.md` + `.pdf` in the item folder (see §9; `python3 memory/tools/smoke_brief.py <path>.md`). Single PDF per item, sendable as-is to the tester.
 2. Present each item.
 3. Capture PASS/FAIL.
 4. Record owner feedback verbatim.
@@ -725,6 +725,7 @@ Default artifact names. Project addendum may override paths.
 | IMPLEMENTATION_PLAN | Exact implementation steps and verification matrix |
 | QA_HANDOVER | What QA should test |
 | QA_REPORT | QA execution result |
+| SMOKE_BRIEF | Owner-ruled 2026-10-07: **mandatory after every BUG/CR QA PASS**. Plain-English brief for the person doing the smoke test — what it is, what was wrong, what changed, what must not have changed, numbered steps with expected results and PASS/FAIL boxes. Written as `SMOKE_BRIEF.md` and rendered to `SMOKE_BRIEF.pdf` in the item folder via `memory/tools/smoke_brief.py`. Item cannot move QA → SMOKE without it |
 | BUG_FIX_REPORT | Root cause and fix details |
 | INVESTIGATION_REPORT | Hypotheses, evidence, root cause |
 | REGRESSION_REPORT | Cross-feature verification |
