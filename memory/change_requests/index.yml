@@ -1038,13 +1038,13 @@
   type: CR
   title: Remove dead skip-otp 409/429/Retry-After branches (OD-3 accept)
   status: INTAKE
-  status_note: null
+  status_note: 'RE-SCOPED 2026-10-08 after CRM reply: 409 fallback target (/password-setup) disappears with CR-2026-10-08-001 → delete 409 branch; 429 + Retry-After becomes REAL (CRM-089 abuse limiter) → KEEP and surface wait time. Fold into CR-2026-10-08-001 Step 1 or run right after it.'
   priority: null
   risk: null
-  owner_action: null
+  owner_action: 'confirm fold into CR-2026-10-08-001 Step 1 (rec) or keep separate'
   blocked_on: []
   sprint: null
-  files: null
+  files: frontend/src/api/services/crmSkipOtpRetry.js · frontend/src/pages/LandingPage.jsx:434-503
   artefacts: INTAKE
   registered: '2026-09-15'
   last_updated: null
@@ -1072,7 +1072,7 @@
   code_markers: false
   money_path: null
   closed: null
-  notes: null
+  notes: 'CRM reply 2026-10-08: CRM owns normalisation (CR-085, before 27 Oct). Our residual = send phone digits + country_code separately on lookup/skip-otp/feedback; L6 India-only needs owner re-ruling (contract v2). Re-open after CR-085.'
 - id: CR-2026-09-15-004
   type: CR
   title: Remove admin login direct read of CRM `users`. Direction D (POS direct). P0 projection sub-item.
@@ -1162,10 +1162,13 @@
   status_note: null
   priority: null
   risk: null
-  owner_action: null
-  blocked_on: []
+  owner_action: 'Planning may start against the frozen lookup contract (CRM reply 2026-10-08); Role 3 waits for CR-093 2xx on preview (w/c 13 Oct)'
+  blocked_on:
+  - party: CRM
+    ref: CR-093 POST /scan/auth/lookup — target w/c 13 Oct 2026 (contract frozen 2026-10-08)
+    since: '2026-10-08'
   sprint: null
-  files: null
+  files: backend/server.py:494 (check-customer) · frontend/src/pages/LandingPage.jsx:601-616 · frontend/src/api/services/crmService.js
   artefacts: INTAKE
   registered: '2026-10-03'
   last_updated: null
@@ -1173,7 +1176,7 @@
   code_markers: false
   money_path: null
   closed: null
-  notes: null
+  notes: 'lookup contract: {phone digits, country_code "+91" opt, restaurant_id} → {success,message,data:{exists,name|null}}; 200 exists:false; 400/429+Retry-After; oldest dup wins. Send phone digits + country_code separately.'
 - id: CR-2026-10-03-005
   type: CR
   title: BUG (customer-visible) — Call Waiter / Pay Bill buttons are silent no-ops in the live UI
@@ -1776,7 +1779,7 @@
   owner_action: none until CRM wave log shows CR-096 CONFIRMED; then re-probe and open Planning
   blocked_on:
   - party: CRM
-    ref: CR-096 feedback hybrid intake (Wave 3)
+    ref: CR-096 feedback hybrid intake (Wave 3) — target w/c 27 Oct 2026 (depends on CRM CR-085); body must send phone digits + country_code
     since: '2026-10-07'
   - party: INTERNAL
     ref: CR-2026-10-03-003 must be CLOSED first (same page)
@@ -1799,7 +1802,7 @@
     CR-2026-09-14-001; confirm to CRM (CR-084) on exit
   status: INTAKE
   status_note: 'Registered 2026-10-07 (Role 1) on owner instruction after CRM Wave-1 log: request-otp/verify-otp → 404
-    (CR-084), OTP delivery never to be built (CR-090). skipOtp* live flags explicitly OUT of scope (owner asking CRM first).'
+    (CR-084), OTP delivery never to be built (CR-090). skipOtp* live flags OUT of scope — now handled by CR-2026-10-08-001 (CRM ruled 2026-10-08: retire them).'
   priority: P2
   risk: LOW
   owner_action: 'say "Planning for CR-2026-10-07-002" to start; D1 at planning (delete admin auth sub-tab shell? rec yes)'
@@ -1818,3 +1821,32 @@
   money_path: null
   closed: null
   notes: 'Process risk HIGH: server.py + AuthContext.jsx + PasswordSetup.jsx are hotspots → §5.1 + §5.2 regression. Source: memory/inbox/WAVE_CHANGE_LOG_…2026-10-07.md'
+- id: CR-2026-10-08-001
+  type: CR
+  title: 'Single diner identity path = skip-otp: remove /password-setup, retire skipOtp* flags, landing = phone → (lookup)
+    → skip-otp → token (CRM rulings a/b 2026-10-08; CRM CR-098 deletes register/login w/c 13 Oct 2026)'
+  status: INTAKE
+  status_note: 'Registered 2026-10-08 (Role 1). HARD DEADLINE w/c 13 Oct: PasswordSetup.jsx:122/:149 call register/login →
+    404 → restaurants with skipOtp* off (478) cannot sign in. Two-step scope proposed: Step 1 minimal before 13 Oct, Step 2
+    cleanup after CR-098 CONFIRMED.'
+  priority: P1
+  risk: HIGH
+  owner_action: 'say "Planning for CR-2026-10-08-001"; D1 two-step? D2 drop skipOtp* DB fields? D3 delivery with token only?'
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/LandingPage.jsx:631-700 · frontend/src/pages/PasswordSetup.jsx · frontend/src/utils/otpPolicy.js
+    · frontend/src/api/services/crmSkipOtpRetry.js · frontend/src/api/services/crmService.js (crmRegister/crmLogin/crmSkipOtp)
+    · frontend/src/context/RestaurantConfigContext.jsx · frontend/src/context/AdminConfigContext.jsx
+    · frontend/src/pages/admin/AdminVisibilityPage.jsx · frontend/src/App.js · backend/server.py:261-266,1158
+  artefacts: INTAKE
+  registered: '2026-10-08'
+  last_updated: null
+  related:
+  - CR-2026-10-07-002
+  - CR-2026-09-15-002
+  - CR-2026-10-03-004
+  - CR-2026-09-14-001
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'Source: memory/inbox/CRM_REPLY_IDENTITY_RULINGS_2026-10-08.md · impact: memory/inbox/IMPACT_OF_CRM_REPLY_2026-10-08.md'
