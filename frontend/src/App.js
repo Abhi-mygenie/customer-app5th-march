@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
@@ -17,11 +17,18 @@ import OrderSuccess from './pages/OrderSuccess';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import AdminSettings from './pages/AdminSettings';
-import PasswordSetup from './pages/PasswordSetup';
+// CR-2026-10-08-001 Step 1: PasswordSetup unreachable from routing; deleted in Step 2
+// import PasswordSetup from './pages/PasswordSetup';
 import DeliveryAddress from './pages/DeliveryAddress';
 import ScrollToTop from './components/ScrollToTop/scrollToTop';
 import FaviconRouteReset from './components/FaviconRouteReset/FaviconRouteReset';
 import DocumentTitleManager from './components/DocumentTitleManager/DocumentTitleManager';
+
+// CR-2026-10-08-001 Step 1: redirect old /password-setup links to restaurant landing
+const PasswordSetupRedirect = () => {
+  const { restaurantId } = useParams();
+  return <Navigate to={`/${restaurantId}`} replace />;
+};
 
 // Admin Layout and Pages (Web optimized)
 import AdminLayout from './layouts/AdminLayout';
@@ -82,7 +89,7 @@ function App() {
               {/* Legacy admin route - redirect to new layout */}
               <Route path="/admin/settings" element={<Navigate to="/admin/settings" replace />} />
               
-              <Route path="/:restaurantId/password-setup" element={<PasswordSetup />} />
+              <Route path="/:restaurantId/password-setup" element={<PasswordSetupRedirect />} />
               <Route path="/:restaurantId/delivery-address" element={<DeliveryAddress />} />
               
               {/* Most specific routes first - Station routes with restaurant ID */}

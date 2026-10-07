@@ -14,7 +14,7 @@ import { isDineInOrRoom, showsDineInActions, hasAssignedTable, isTakeawayOrDeliv
 import { isItemAllowedForChannel, getChannelLabel } from '../utils/channelEligibility';
 import { isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability'; // CR-2026-08-06-001
 import { getAuthToken } from '../utils/authToken';
-import { pickOtpFlag, shouldShowOtpPage } from '../utils/otpPolicy';
+// CR-2026-10-08-001 Step 1: otpPolicy gate removed — skip-otp is always called
 import { crmSkipOtpWithRetry } from '../api/services/crmSkipOtpRetry';
 import { buildUserId } from '../api/services/crmService';
 import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAccessPolicy';
@@ -40,7 +40,7 @@ const LandingPage = () => {
   const { restaurantId } = useRestaurantId();
   const { isAuthenticated, setRestaurantScope, setCrmAuth } = useAuth();
   const { startEditOrder, clearCart, cartItems, removeFromCart, isEditMode } = useCart();
-  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl, skipOtpDineIn, skipOtpTakeaway, skipOtpDineInWithTable, skipOtpWalkIn, skipOtpRoomOrders, skipOtpDelivery, allowNonQrOrders,
+  const { fetchConfig, showCallWaiter: configShowCallWaiter, showPayBill: configShowPayBill, showLandingCallWaiter: configShowLandingCallWaiter, showLandingPayBill: configShowLandingPayBill, showFooter: configShowFooter, showLogo: configShowLogo, showWelcomeText: configShowWelcomeText, showDescription: configShowDescription, showSocialIcons: configShowSocialIcons, showTableNumber: configShowTableNumber, showPoweredBy: configShowPoweredBy, showLandingCustomerCapture: configShowLandingCustomerCapture, showHamburgerMenu: configShowHamburgerMenu, showLoginButton: configShowLoginButton, logoUrl: configLogoUrl, backgroundImageUrl: configBackgroundImageUrl, mobileBackgroundImageUrl: configMobileBackgroundImageUrl, primaryColor: configPrimaryColor, buttonTextColor: configButtonTextColor, welcomeMessage: configWelcomeMessage, tagline: configTagline, banners: configBanners, instagramUrl: configInstagramUrl, facebookUrl: configFacebookUrl, twitterUrl: configTwitterUrl, youtubeUrl: configYoutubeUrl, whatsappNumber: configWhatsappNumber, phone: configPhone, browseMenuButtonText, mandatoryCustomerName, mandatoryCustomerPhone, poweredByText, poweredByLogoUrl, allowNonQrOrders,
     deliveryShifts, takeawayShifts, restaurantShifts, restaurantOpen,
   } = useRestaurantConfig(); // CR-2026-08-06-001: channel shift fields added
 
@@ -435,15 +435,16 @@ const LandingPage = () => {
   // explicitly `false`. Mirrors PasswordSetup.handleSkip + navigateToMenu so
   // the user lands on the same destination as a successful OTP login.
   // Failure semantics:
-  //   - 409   → fall through to /password-setup (the one allowed exception, Q1=b)
+  //   - 409   → CR-2026-10-08-001 Step 1: degrade to guest (password path removed, CRM CR-098)
   //   - 4xx   → toast error, stay on landing
+  //   - 429 exhausted → CR-2026-09-15-002: wait-time toast, stay on landing
   //   - else  → degraded guest mode (proceed to menu without CRM token, D=b)
   const silentSkipOtpAndNavigate = async ({ phone, name, data, restaurantId: rid, orderMode }) => {
     const userId = buildUserId(rid);
-    const navigateAfterSkip = () => {
-      if (orderMode === 'delivery' && !isAuthenticated) {
-        // setCrmAuth happens before this in success path; for guest fallback,
-        // delivery still requires explicit login → keep current UX.
+    // CR-2026-10-08-001 Step 1: hasJustAuthenticated added (D3) — isAuthenticated is stale
+    // at call time (React state not flushed yet); pass token result to unblock delivery.
+    const navigateAfterSkip = ({ hasJustAuthenticated = false } = {}) => {
+      if (orderMode === 'delivery' && !hasJustAuthenticated && !isAuthenticated) {
         toast.error('Please login to use delivery');
         return;
       }
@@ -468,23 +469,17 @@ const LandingPage = () => {
       // (cust_name, cust_phone) carry the captured identity.
       const guestData = { name, phone, restaurantId: rid };
       localStorage.setItem('guestCustomer', JSON.stringify(guestData));
-      navigateAfterSkip();
+      navigateAfterSkip({ hasJustAuthenticated: !!result?.token });
     } catch (err) {
       const status = err?.status;
       if (status === 409) {
-        // Phone is locked to OTP — must use password-setup (Q1=b)
-        logger.order('[crmSkipOtp] 409 — falling through to password-setup');
-        navigate(`/${rid}/password-setup`, {
-          state: {
-            phone,
-            name,
-            restaurantId: rid,
-            customerExists: !!data?.exists,
-            hasPassword: data?.customer?.has_password || false,
-            customerName: data?.customer?.name || '',
-            orderMode,
-          },
-        });
+        // CR-2026-10-08-001 Step 1: password path removed (CRM CR-098).
+        // Degrade to guest so diner can still order (D4).
+        logger.order('[crmSkipOtp] 409 — password path removed, degrading to guest');
+        const guestData = { name, phone, restaurantId: rid };
+        localStorage.setItem('guestCustomer', JSON.stringify(guestData));
+        toast('Continuing as guest');
+        navigateAfterSkip({ hasJustAuthenticated: false });
         return;
       }
       if (status === 400 || status === 401 || status === 403 || status === 404 || status === 422) {
@@ -493,12 +488,22 @@ const LandingPage = () => {
         toast.error(err?.message || 'Could not continue. Please try again.');
         return;
       }
-      // Retries exhausted, transport error, 5xx, 429 etc → degraded guest (D=b)
+      if (status === 429) {
+        // CR-2026-09-15-002 (folded): 429 exhausted — show wait time, stay on landing
+        const waitSecs = err?.retryAfterMs ? Math.ceil(err.retryAfterMs / 1000) : 0;
+        const msg = waitSecs > 0
+          ? `Too many attempts. Please try again in ${waitSecs} seconds.`
+          : 'Too many attempts. Please try again shortly.';
+        logger.order(`[crmSkipOtp] 429 exhausted — staying on landing (retryAfterMs=${err?.retryAfterMs})`);
+        toast.error(msg);
+        return;
+      }
+      // Retries exhausted, transport error, 5xx → degraded guest (D=b)
       logger.order(`[crmSkipOtp] retries exhausted (status=${status || 'network'}) — degrading to guest`);
       const guestData = { name, phone, restaurantId: rid };
       localStorage.setItem('guestCustomer', JSON.stringify(guestData));
       toast('Continuing as guest');
-      navigateAfterSkip();
+      navigateAfterSkip({ hasJustAuthenticated: false });
     }
   };
 
@@ -627,85 +632,29 @@ const LandingPage = () => {
           setIsCheckingCustomer(false);
         }
           
-        // CR-2026-05-30-001 Item 1: gate the password-setup navigation.
-        // If the matching skipOtp* flag is explicitly `true`, skip the
-        // /password-setup screen and silently call crmSkipOtp to attach
-        // CRM identity, then go straight to menu.
-        //
-        // selectedMode default is 'takeaway' (L148 useState init), which is a
-        // UI-only state for the OrderModeSelector (only shown when the QR
-        // carries orderType=takeaway|delivery i.e. isTakeawayDeliveryMode).
-        // For a no-QR / dine-in landing we MUST NOT thread that UI default
-        // into pickOtpFlag — doing so causes the gate to evaluate
-        // `skipOtpTakeaway` instead of `skipOtpDineIn`, breaking Item 1.
-        const otpFlagName = pickOtpFlag({
-          selectedMode: isTakeawayDeliveryMode ? selectedMode : undefined,
-          scannedOrderType,
-          scannedRoomOrTable,
-          scannedTableId,
-        });
-        const otpConfigSnapshot = {
-          skipOtpDineIn,
-          skipOtpTakeaway,
-          skipOtpDineInWithTable,
-          skipOtpWalkIn,
-          skipOtpRoomOrders,
-          skipOtpDelivery,
-        };
-        const mustShowOtpPage = shouldShowOtpPage(otpFlagName, otpConfigSnapshot);
-
+        // CR-2026-10-08-001 Step 1: skipOtp* gate removed — skip-otp is always the identity path.
+        // CRM CR-098 deleted register/login; password page is unreachable. All diners go through
+        // silentSkipOtpAndNavigate regardless of per-restaurant skipOtp* config flags.
         if (data.exists) {
-          // Auto-populate name from lookup
           const customerName = data.customer?.name || '';
           if (customerName && !capturedName.trim()) {
             setCapturedName(customerName);
           }
-          if (mustShowOtpPage) {
-            // Navigate to password setup (today's path — unchanged)
-            navigate(`/${actualRestaurantId}/password-setup`, {
-              state: {
-                phone: capturedPhone,
-                name: capturedName || customerName,
-                restaurantId: actualRestaurantId,
-                customerExists: true,
-                hasPassword: data.customer?.has_password || false,
-                customerName: customerName,
-                orderMode: selectedMode,
-              },
-            });
-          } else {
-            await silentSkipOtpAndNavigate({
-              phone: capturedPhone,
-              name: capturedName || customerName,
-              data,
-              restaurantId: actualRestaurantId,
-              orderMode: selectedMode,
-            });
-          }
+          await silentSkipOtpAndNavigate({
+            phone: capturedPhone,
+            name: capturedName || customerName,
+            data,
+            restaurantId: actualRestaurantId,
+            orderMode: selectedMode,
+          });
         } else {
-          // New customer
-          if (mustShowOtpPage) {
-            // New customer → password setup (today's path — unchanged)
-            navigate(`/${actualRestaurantId}/password-setup`, {
-              state: {
-                phone: capturedPhone,
-                name: capturedName,
-                restaurantId: actualRestaurantId,
-                customerExists: false,
-                hasPassword: false,
-                customerName: '',
-                orderMode: selectedMode,
-              },
-            });
-          } else {
-            await silentSkipOtpAndNavigate({
-              phone: capturedPhone,
-              name: capturedName,
-              data: { exists: false, customer: null },
-              restaurantId: actualRestaurantId,
-              orderMode: selectedMode,
-            });
-          }
+          await silentSkipOtpAndNavigate({
+            phone: capturedPhone,
+            name: capturedName,
+            data: { exists: false, customer: null },
+            restaurantId: actualRestaurantId,
+            orderMode: selectedMode,
+          });
         }
         return;
       }

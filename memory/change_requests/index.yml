@@ -1037,15 +1037,16 @@
 - id: CR-2026-09-15-002
   type: CR
   title: Remove dead skip-otp 409/429/Retry-After branches (OD-3 accept)
-  status: INTAKE
-  status_note: 'RE-SCOPED 2026-10-08 after CRM reply: 409 fallback target (/password-setup) disappears with CR-2026-10-08-001 → delete 409 branch; 429 + Retry-After becomes REAL (CRM-089 abuse limiter) → KEEP and surface wait time. Fold into CR-2026-10-08-001 Step 1 or run right after it.'
+  status: CLOSED
+  status_note: 'CLOSED 2026-10-08 — folded into CR-2026-10-08-001 Step 1 (E5 + E6). 409 branch replaced with
+    guest-degrade; 429 exhausted surfaces Retry-After wait-time toast in LandingPage.jsx.'
   priority: null
   risk: null
-  owner_action: 'confirm fold into CR-2026-10-08-001 Step 1 (rec) or keep separate'
+  owner_action: null
   blocked_on: []
   sprint: null
-  files: frontend/src/api/services/crmSkipOtpRetry.js · frontend/src/pages/LandingPage.jsx:434-503
-  artefacts: INTAKE
+  files: frontend/src/pages/LandingPage.jsx:434-503
+  artefacts: CLOSED-FOLDED
   registered: '2026-09-15'
   last_updated: null
   related: []
@@ -1825,28 +1826,26 @@
   type: CR
   title: 'Single diner identity path = skip-otp: remove /password-setup, retire skipOtp* flags, landing = phone → (lookup)
     → skip-otp → token (CRM rulings a/b 2026-10-08; CRM CR-098 deletes register/login w/c 13 Oct 2026)'
-  status: INTAKE
-  status_note: 'Registered 2026-10-08 (Role 1). HARD DEADLINE w/c 13 Oct: PasswordSetup.jsx:122/:149 call register/login →
-    404 → restaurants with skipOtp* off (478) cannot sign in. Two-step scope proposed: Step 1 minimal before 13 Oct, Step 2
-    cleanup after CR-098 CONFIRMED.'
+  status: IMPLEMENTATION
+  status_note: 'Step 1 implemented 2026-10-08 (Role 3). E1-E8d applied: gate removed LandingPage.jsx, 409→guest,
+    429→wait-toast, D3 delivery fix, /:rid/password-setup redirects. Build clean. Self-test 7/7 PASS.
+    CR-2026-09-15-002 folded (closed). Step 2 (delete PasswordSetup, otpPolicy, crmRegister/crmLogin, retire skipOtp*
+    from server.py/contexts) blocked on CRM CR-098 CONFIRMED.'
   priority: P1
   risk: HIGH
-  owner_action: 'say "Planning for CR-2026-10-08-001"; D1 two-step? D2 drop skipOtp* DB fields? D3 delivery with token only?'
+  owner_action: 'QA + smoke; say "Smoke PASS CR-2026-10-08-001" to close Step 1'
   blocked_on: []
   sprint: null
-  files: frontend/src/pages/LandingPage.jsx:631-700 · frontend/src/pages/PasswordSetup.jsx · frontend/src/utils/otpPolicy.js
-    · frontend/src/api/services/crmSkipOtpRetry.js · frontend/src/api/services/crmService.js (crmRegister/crmLogin/crmSkipOtp)
-    · frontend/src/context/RestaurantConfigContext.jsx · frontend/src/context/AdminConfigContext.jsx
-    · frontend/src/pages/admin/AdminVisibilityPage.jsx · frontend/src/App.js · backend/server.py:261-266,1158
-  artefacts: INTAKE
+  files: frontend/src/pages/LandingPage.jsx · frontend/src/App.js
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-08'
-  last_updated: null
+  last_updated: '2026-10-08'
   related:
   - CR-2026-10-07-002
   - CR-2026-09-15-002
   - CR-2026-10-03-004
   - CR-2026-09-14-001
-  code_markers: false
+  code_markers: true
   money_path: null
   closed: null
   notes: 'Source: memory/inbox/CRM_REPLY_IDENTITY_RULINGS_2026-10-08.md · impact: memory/inbox/IMPACT_OF_CRM_REPLY_2026-10-08.md'
