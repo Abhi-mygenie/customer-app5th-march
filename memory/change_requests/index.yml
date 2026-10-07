@@ -1140,17 +1140,16 @@
     (CR-096) re-probed → still 403. Recommend ship token-only now (D2a).'
   priority: P1
   risk: CRITICAL
-  owner_action: 'Gate 2 rulings 2026-10-07 complete: D2=a (token-only + honest sign-in), D3=a (ask CRM to purge stray rows),
-    D7=b/i (auto-attach newest order via crmGetOrders), D8=yes (UI reviewed OK), D9=here. Owner holding at Gate 2 — say "Gate 2
-    accepted for CR-2026-10-03-003" to unlock Implementation Plan'
+  owner_action: 'Gate 2 ACCEPTED 2026-10-07 (D2=a, D3=a, D7=b/i, D8=yes, D9=here). IMPLEMENTATION_PLAN.md written; P1 flagged
+    (Sign-in CTA → landing page, /login is admin-only). Awaiting "Gate 3 accepted for CR-2026-10-03-003"'
   blocked_on:
   - party: OWNER
-    ref: Gate 2 acceptance pending (sequenced after BUG-2026-10-06-001)
+    ref: Gate 3 approval pending
     since: '2026-10-07'
   sprint: null
-  files: frontend/src/api/services/crmService.js (add crmSubmitFeedback) · frontend/src/pages/FeedbackPage.jsx:34 · backend/server.py:1293-1324
-    (delete FeedbackCreate + POST/GET /config/feedback)
-  artefacts: INTAKE, IMPACT_ANALYSIS
+  files: frontend/src/api/services/crmService.js (add crmSubmitFeedback) · frontend/src/pages/FeedbackPage.jsx · backend/server.py:1293-1324
+    (delete FeedbackCreate + POST/GET /config/feedback) · backend/tests/smoke/test_cr_2026_10_03_003.py (new)
+  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN
   registered: '2026-10-03'
   last_updated: '2026-10-07'
   related: []
