@@ -38,3 +38,4 @@
 - `registry_sync.py sync` NOT run this session (OAuth token may be expired; owner to confirm)
 - 2026-10-07 Gate 2 rulings recorded — BUG-001: D1=a, D4=b, D5=b, D6=yes · CR-003: D2=a, D3=a, D7=b/i, D8=yes, D9=here. Owner holding at Gate 2; Implementation Plans NOT written; registry sync deferred
 - 2026-10-07 Gate 2 ACCEPTED for BUG-2026-10-06-001 → IMPLEMENTATION_PLAN.md written (E1–E6, T1–T16). Gate 3 not open. CR-003 still at Gate 2
+- 2026-10-07 Gate 3 accepted → Role 3 applied E1–E6 (5 files + new smoke test, markers BUG-2026-10-06-001) → self-test 11/16 PASS (rest deferred) → Role 4 QA via testing agent **PASS 11/11** (`test_reports/iteration_1.json`). index.yml `SMOKE`; owner smoke pending. Handover: `SESSION_HANDOVER_2026-10-07.md`
