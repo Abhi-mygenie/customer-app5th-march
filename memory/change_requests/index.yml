@@ -69,14 +69,16 @@
     CR-2026-10-06-001 cannot be sized. Adjudicated contract status: INTAKE.'
   priority: P1
   risk: LOW
-  owner_action: 'Gate 2 rulings 2026-10-07: D1=a (no policy-disabled events), D4=b (caps 200 blocked / 1000 allowed), D5=b (no
-    read endpoint — defer to CR-2026-07-04-004), D6=yes. Owner holding at Gate 2 — say "Gate 2 accepted for BUG-2026-10-06-001"
-    to unlock Implementation Plan'
-  blocked_on: [OWNER]
+  owner_action: 'Gate 2 ACCEPTED 2026-10-07 (D1=a, D4=b, D5=b, D6=yes). IMPLEMENTATION_PLAN.md written. Awaiting Gate 3
+    phrase "Role 3 approved for BUG-2026-10-06-001"'
+  blocked_on:
+  - party: OWNER
+    ref: Gate 3 approval (Role 3 assignment) pending
+    since: '2026-10-07'
   sprint: null
   files: frontend/src/pages/LandingPage.jsx:527-547 · frontend/src/pages/MenuItems.jsx:490-498 · frontend/src/pages/ReviewOrder.jsx:901-910
     · frontend/src/utils/orderAccessPolicy.js:76-83 (payload builder only) · backend/server.py:1657-1665,1697-1727
-  artefacts: INTAKE, IMPACT_ANALYSIS
+  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN
   registered: '2026-10-06'
   last_updated: '2026-10-07'
   related:
@@ -1144,7 +1146,10 @@
   owner_action: 'Gate 2 rulings 2026-10-07 complete: D2=a (token-only + honest sign-in), D3=a (ask CRM to purge stray rows),
     D7=b/i (auto-attach newest order via crmGetOrders), D8=yes (UI reviewed OK), D9=here. Owner holding at Gate 2 — say "Gate 2
     accepted for CR-2026-10-03-003" to unlock Implementation Plan'
-  blocked_on: [OWNER]
+  blocked_on:
+  - party: OWNER
+    ref: Gate 2 acceptance pending (sequenced after BUG-2026-10-06-001)
+    since: '2026-10-07'
   sprint: null
   files: frontend/src/api/services/crmService.js (add crmSubmitFeedback) · frontend/src/pages/FeedbackPage.jsx:34 · backend/server.py:1293-1324
     (delete FeedbackCreate + POST/GET /config/feedback)
