@@ -152,3 +152,16 @@ Owner decisions: D1, D4, D5, D6
 Docs: this file · ../index.yml
 Next: Gate 2 (owner accepts) → Implementation Plan → Gate 3 phrase "Role 3 approved for BUG-2026-10-06-001"
 ```
+
+---
+
+## 9. Owner rulings — 2026-10-07 (recorded verbatim-equivalent)
+
+| ID | Ruling |
+|---|---|
+| D1 | **(a)** — do not log `policy-disabled`; events only where the rule is enforced (`allowNonQrOrders === false`) |
+| D4 | **(b)** — two buckets: cap 200 for `allowed:false`, cap 1 000 for `allowed:true`, per restaurant |
+| D5 | **(b)** — **no** read endpoint in this item; V8 verified by direct DB read; owner-facing summary deferred to CR-2026-07-04-004 |
+| D6 | **yes** — add `isAuthenticated` to the C2 payload context |
+
+Gate position after rulings: **Gate 2 decisions complete; owner has NOT said "Gate 2 accepted" and has asked to stay at gate.** Implementation Plan not to be written until instructed.

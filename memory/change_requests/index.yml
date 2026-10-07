@@ -69,8 +69,9 @@
     CR-2026-10-06-001 cannot be sized. Adjudicated contract status: INTAKE.'
   priority: P1
   risk: LOW
-  owner_action: 'Gate 2: accept IMPACT_ANALYSIS; rule D1 (log policy-disabled? rec no), D4 (rolling-cap strategy — allow
-    events will evict blocks; rec separate caps), D5 (minimal admin GET summary? rec yes), D6 (fold C2 isAuthenticated? rec yes)'
+  owner_action: 'Gate 2 rulings 2026-10-07: D1=a (no policy-disabled events), D4=b (caps 200 blocked / 1000 allowed), D5=b (no
+    read endpoint — defer to CR-2026-07-04-004), D6=yes. Owner holding at Gate 2 — say "Gate 2 accepted for BUG-2026-10-06-001"
+    to unlock Implementation Plan'
   blocked_on: [OWNER]
   sprint: null
   files: frontend/src/pages/LandingPage.jsx:527-547 · frontend/src/pages/MenuItems.jsx:490-498 · frontend/src/pages/ReviewOrder.jsx:901-910
@@ -1140,9 +1141,8 @@
     (CR-096) re-probed → still 403. Recommend ship token-only now (D2a).'
   priority: P1
   risk: CRITICAL
-  owner_action: 'Gate 2: accept IMPACT_ANALYSIS; rule D2 (anonymous diners — rec a: token-only + honest sign-in), D3 (ask
-    CRM to purge foreign docs — rec yes), D7 (order_id — rec omit), D8 (remove Name/Email — rec yes), D9 (delete read route
-    here — rec yes); optionally ratify risk MEDIUM as a change'
+  owner_action: 'Gate 2 rulings 2026-10-07: D2=a (token-only + honest sign-in), D7=b (auto-attach latest order — sub-ruling
+    D7-i/ii open), D8=yes, D9=here. OPEN: D3 walk-through requested. Owner holding at Gate 2'
   blocked_on: [OWNER]
   sprint: null
   files: frontend/src/api/services/crmService.js (add crmSubmitFeedback) · frontend/src/pages/FeedbackPage.jsx:34 · backend/server.py:1293-1324
