@@ -3,40 +3,59 @@ import { useNavigate } from 'react-router-dom';
 import { IoArrowBack, IoStarOutline, IoStar } from 'react-icons/io5';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
+import { useAuth } from '../context/AuthContext';
+import { crmSubmitFeedback, crmGetOrders } from '../api/services/crmService';
 import toast from 'react-hot-toast';
 import './FeedbackPage.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+// CR-2026-10-03-003: feedback goes to CRM POST /scan/feedback (contract §4c), not our backend.
 
 const FeedbackPage = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
   const config = useRestaurantConfig();
-  const [form, setForm] = useState({ name: '', email: '', rating: 0, message: '' });
+  const { crmToken, setRestaurantScope } = useAuth();
+  const [form, setForm] = useState({ rating: 0, message: '' });
   const [hoveredStar, setHoveredStar] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [latestOrderId, setLatestOrderId] = useState(null);
+  const [scopeReady, setScopeReady] = useState(false);
 
+  // CR-2026-10-03-003: restore the diner's CRM session for this restaurant (same pattern as LandingPage/ReviewOrder)
   useEffect(() => {
-    if (restaurantId) config.fetchConfig(restaurantId);
+    if (!restaurantId) return;
+    config.fetchConfig(restaurantId);
+    setScopeReady(false);
+    Promise.resolve(setRestaurantScope(restaurantId)).finally(() => setScopeReady(true));
   }, [restaurantId]);
+
+  // CR-2026-10-03-003 D7-i: attach the diner's newest order if CRM has one; failure is silent
+  useEffect(() => {
+    if (!crmToken) return;
+    let cancelled = false;
+    crmGetOrders(crmToken, 1)
+      .then((d) => { if (!cancelled) setLatestOrderId(d?.orders?.[0]?.id ?? null); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [crmToken]);
 
   const introText = config.feedbackIntroText || "We value your opinion! Share your dining experience with us.";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.rating || !form.message) {
-      toast.error('Please fill in name, rating, and message');
+    if (!form.rating || !form.message.trim()) {
+      toast.error('Please add a rating and a message');
       return;
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/api/config/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, restaurant_id: restaurantId }),
+      await crmSubmitFeedback(crmToken, {
+        rating: form.rating,
+        message: form.message.trim(),
+        orderId: latestOrderId,
+        restaurantId,
       });
-      if (!res.ok) throw new Error();
       setSubmitted(true);
       toast.success('Thank you for your feedback!');
     } catch {
@@ -57,7 +76,23 @@ const FeedbackPage = () => {
       </div>
 
       <div className="feedback-content">
-        {submitted ? (
+        {!scopeReady ? (
+          <p className="feedback-intro" data-testid="feedback-loading">Loading…</p>
+        ) : !crmToken ? (
+          // CR-2026-10-03-003 D2=a / D10=a: token-only until CRM CR-096 ships (CR-2026-10-07-001)
+          <div className="feedback-signin" data-testid="feedback-signin-required">
+            <p className="feedback-intro">
+              Feedback is available to signed-in diners. Sign in from the home page by entering your phone number.
+            </p>
+            <button
+              className="feedback-btn"
+              onClick={() => navigate(`/${restaurantId}`)}
+              data-testid="feedback-signin-btn"
+            >
+              Sign in
+            </button>
+          </div>
+        ) : submitted ? (
           <div className="feedback-success" data-testid="feedback-success">
             <div className="feedback-success-icon">&#10003;</div>
             <h2>Thank You!</h2>
@@ -71,30 +106,6 @@ const FeedbackPage = () => {
             <p className="feedback-intro">{introText}</p>
 
             <form onSubmit={handleSubmit} className="feedback-form" data-testid="feedback-form">
-              <div className="feedback-field">
-                <label className="feedback-label">Your Name *</label>
-                <input
-                  type="text"
-                  className="feedback-input"
-                  placeholder="John Doe"
-                  value={form.name}
-                  onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
-                  data-testid="feedback-name"
-                />
-              </div>
-
-              <div className="feedback-field">
-                <label className="feedback-label">Email (optional)</label>
-                <input
-                  type="email"
-                  className="feedback-input"
-                  placeholder="john@example.com"
-                  value={form.email}
-                  onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))}
-                  data-testid="feedback-email"
-                />
-              </div>
-
               <div className="feedback-field">
                 <label className="feedback-label">Rating *</label>
                 <div className="feedback-stars" data-testid="feedback-stars">

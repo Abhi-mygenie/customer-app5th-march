@@ -401,6 +401,18 @@ export const crmGetOrders = async (token, limit = 50, skip = 0) => {
 };
 
 /**
+ * CR-2026-10-03-003: submit diner feedback to CRM (token path; CRM CR-096).
+ * Body per contract §4c: { rating, message?, order_id? } + restaurant_id (short form).
+ * Response shape untyped (contract L7) — callers only need the 2xx.
+ */
+export const crmSubmitFeedback = async (token, { rating, message, orderId, restaurantId }) => {
+  const body = { rating, restaurant_id: String(restaurantId) };
+  if (message) body.message = message;
+  if (orderId) body.order_id = orderId;
+  return crmAuthFetch('/scan/feedback', token, { method: 'POST', body: JSON.stringify(body) });
+};
+
+/**
  * Get customer points balance + transaction history
  * Returns: { total_points, points_value, tier, expiring_soon, transactions: [...] }
  */

@@ -1291,37 +1291,10 @@ async def delete_banner(
     return {"success": True, "message": "Banner deleted"}
 
 # ============================================
-# Feedback Routes
+# Feedback Routes — removed
 # ============================================
-
-class FeedbackCreate(BaseModel):
-    restaurant_id: str
-    name: str
-    email: Optional[str] = None
-    rating: int = Field(ge=1, le=5)
-    message: str
-
-@config_router.post("/feedback")
-async def submit_feedback(feedback: FeedbackCreate):
-    doc = {
-        "id": str(uuid.uuid4()),
-        "restaurant_id": feedback.restaurant_id,
-        "name": feedback.name,
-        "email": feedback.email,
-        "rating": feedback.rating,
-        "message": feedback.message,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.feedback.insert_one(doc)
-    return {"success": True, "message": "Thank you for your feedback!"}
-
-@config_router.get("/feedback/{restaurant_id}")
-async def get_feedback(restaurant_id: str, user: dict = Depends(get_restaurant_user)):
-    feedbacks = await db.feedback.find(
-        {"restaurant_id": restaurant_id},
-        {"_id": 0}
-    ).sort("created_at", -1).limit(50).to_list(50)
-    return {"feedbacks": feedbacks}
+# CR-2026-10-03-003: feedback moved to CRM POST /scan/feedback (contract §4c, CRM CR-096).
+# Feedback model + POST /config/feedback + GET /config/feedback/{rid} deleted — zero callers.
 
 # ============================================
 # Custom Pages Routes

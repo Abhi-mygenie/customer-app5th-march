@@ -91,14 +91,13 @@ def test_customer_lookup_478(http_client, strip_dynamic, snapshot):
 
 
 @pytest.mark.contract
-def test_config_feedback_478(http_client, admin_jwt, strip_dynamic, snapshot):
-    """GET /api/config/feedback/478 — requires admin auth."""
+def test_config_feedback_478(http_client, admin_jwt):
+    """GET /api/config/feedback/478 — route removed by CR-2026-10-03-003 (feedback lives in CRM)."""
     resp = http_client.get(
         "/api/config/feedback/478",
         headers={"Authorization": f"Bearer {admin_jwt}"},
     )
-    assert resp.status_code == 200
-    assert snapshot == strip_dynamic(resp.json())
+    assert resp.status_code in (404, 405)
 
 
 @pytest.mark.contract

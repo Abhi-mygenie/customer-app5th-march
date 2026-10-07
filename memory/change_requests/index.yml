@@ -1110,7 +1110,7 @@
   code_markers: false
   money_path: null
   closed: null
-  notes: null
+  notes: 'GET /config/feedback/{rid} removed by CR-2026-10-03-003 (2026-10-07) — dead-route count 14 → 13.'
 - id: CR-2026-10-03-002
   type: CR
   title: BUG (security) — admin-auth `db.users` reads load CRM's `api_key`/`authkey_api_key`/`mygenie_token`;
@@ -1135,27 +1135,22 @@
   type: CR
   title: BUG (data integrity) — feedback written into CRM's `feedback` collection in our own schema, unreadable
     by anyone; migrate to `POST /scan/feedback`
-  status: PLANNING
-  status_note: 'PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. CRM token path shipped; anonymous/hybrid path
+  status: QA
+  status_note: 'QA 2026-10-07: Role 3 complete (E1–E4 + contract test update + setRestaurantScope restore; self-test 9/12 PASS, T2 partial = CR-2026-09-15-001, T4/T6 → QA). PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. CRM token path shipped; anonymous/hybrid path
     (CR-096) re-probed → still 403. Recommend ship token-only now (D2a).'
   priority: P1
   risk: CRITICAL
-  owner_action: 'Gate 2 ACCEPTED 2026-10-07 (D2=a, D3=a, D7=b/i, D8=yes, D9=here). IMPLEMENTATION_PLAN.md written; P1 flagged
-    (Sign-in CTA → landing page, /login is admin-only). GAP G1–G5 found: phone on home page yields a CRM token only on the
-    skipOtp/password-complete path → D10 RULED = a (2026-10-07): token-only now; guest gap → follow-up CR-2026-10-07-001
-    (blocked on CRM CR-096). Awaiting "Gate 3 accepted for CR-2026-10-03-003"'
-  blocked_on:
-  - party: OWNER
-    ref: Gate 3 approval pending
-    since: '2026-10-07'
+  owner_action: 'After QA PASS: send CRM_NOTE_FEEDBACK_PURGE.md to CRM (D3=a); run SMOKE_BRIEF'
+  blocked_on: []
   sprint: null
-  files: frontend/src/api/services/crmService.js (add crmSubmitFeedback) · frontend/src/pages/FeedbackPage.jsx · backend/server.py:1293-1324
-    (delete FeedbackCreate + POST/GET /config/feedback) · backend/tests/smoke/test_cr_2026_10_03_003.py (new)
-  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN
+  files: frontend/src/api/services/crmService.js:403-413 · frontend/src/pages/FeedbackPage.jsx · frontend/src/pages/FeedbackPage.css
+    · backend/server.py:1293-1297 (deleted block + marker) · backend/tests/smoke/test_cr_2026_10_03_003.py (new)
+    · backend/tests/contracts/test_public_config.py (test_config_feedback_478 → route gone)
+  artefacts: INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN, SELF_TEST, QA_HANDOVER, CRM_NOTE
   registered: '2026-10-03'
   last_updated: '2026-10-07'
   related: []
-  code_markers: false
+  code_markers: true
   money_path: null
   closed: null
   notes: null

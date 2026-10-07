@@ -73,7 +73,7 @@
   color: var(--text-primary);
 }
 
-.feedback-input, .feedback-textarea {
+.feedback-textarea {
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-container-md);
@@ -85,8 +85,14 @@
   transition: border-color var(--transition-fast);
 }
 
-.feedback-input:focus, .feedback-textarea:focus {
+.feedback-textarea:focus {
   border-color: var(--color-primary);
+}
+
+/* CR-2026-10-03-003: no-session state */
+.feedback-signin {
+  text-align: center;
+  padding: var(--spacing-xl) 0;
 }
 
 .feedback-textarea {
