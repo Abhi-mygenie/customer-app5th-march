@@ -240,4 +240,7 @@ Only G5 yields a token. With D2=a (token-only), G1–G4 diners see "Please sign 
 
 If (a): sign-in card copy must be honest for G1 — "Feedback is available to signed-in diners. Sign in from the home page by entering your phone number." and the CTA stays. Register follow-up `CR: feedback hybrid/no-token path (depends on CRM CR-096)` at INTAKE.
 
-**Plan status:** HOLD at Gate 3 pending D10.
+**Owner ruling 2026-10-07: D10 = (a).** Token-only ships as planned; sign-in card copy per the "If (a)" note above; follow-up registered as **CR-2026-10-07-001** (INTAKE, blocked on CRM CR-096).
+Context received same day: CRM Wave 1 (`inbox/WAVE_CHANGE_LOG_…2026-10-07.md`) deleted the OTP routes (CR-084) — no effect on this plan; `skip-otp`, `register`, `login` and token-gated `/scan/*` unchanged.
+
+**Plan status:** HOLD released — awaiting "Gate 3 accepted for CR-2026-10-03-003".

@@ -1142,7 +1142,8 @@
   risk: CRITICAL
   owner_action: 'Gate 2 ACCEPTED 2026-10-07 (D2=a, D3=a, D7=b/i, D8=yes, D9=here). IMPLEMENTATION_PLAN.md written; P1 flagged
     (Sign-in CTA → landing page, /login is admin-only). GAP G1–G5 found: phone on home page yields a CRM token only on the
-    skipOtp/password-complete path → D10 OPEN (rec: a now, hybrid follow-up when CRM CR-096 ships). HOLD at Gate 3'
+    skipOtp/password-complete path → D10 RULED = a (2026-10-07): token-only now; guest gap → follow-up CR-2026-10-07-001
+    (blocked on CRM CR-096). Awaiting "Gate 3 accepted for CR-2026-10-03-003"'
   blocked_on:
   - party: OWNER
     ref: Gate 3 approval pending
@@ -1768,3 +1769,32 @@
   money_path: null
   closed: null
   notes: null
+- id: CR-2026-10-07-001
+  type: CR
+  title: Feedback for diners without a CRM session — hybrid {phone, restaurant_id} path to POST /scan/feedback
+    (follow-up to CR-2026-10-03-003 D10=a; depends on CRM CR-096)
+  status: INTAKE
+  status_note: 'Registered 2026-10-07 (Role 1) on owner ruling D10=a. Closes gaps G1–G4 of CR-2026-10-03-003 §9.
+    CRM no-token POST /scan/feedback returns 403 today; CR-096 is CRM Wave 3.'
+  priority: P2
+  risk: MEDIUM
+  owner_action: none until CRM wave log shows CR-096 CONFIRMED; then re-probe and open Planning
+  blocked_on:
+  - party: CRM
+    ref: CR-096 feedback hybrid intake (Wave 3)
+    since: '2026-10-07'
+  - party: INTERNAL
+    ref: CR-2026-10-03-003 must be CLOSED first (same page)
+    since: '2026-10-07'
+  sprint: null
+  files: frontend/src/pages/FeedbackPage.jsx · frontend/src/api/services/crmService.js
+  artefacts: INTAKE
+  registered: '2026-10-07'
+  last_updated: null
+  related:
+  - CR-2026-10-03-003
+  - CR-2026-09-14-001
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'Source: memory/inbox/WAVE_CHANGE_LOG_FOR_SCAN_ORDER_AND_POS_AGENTS_2026-10-07.md'

@@ -531,3 +531,9 @@ change **#10**, and all statuses are written in one pass after it.
 **Audit after the pass:** 87 indexed · 87 folders · 0 orphans · 0 duplicates · 0 index rows missing
 from this README · **1** README-only row remaining — `CR-2026-07-03-006`, the intentional tombstone.
 The `INV-2026-08-06-001` ghost is gone.
+
+## Registered 2026-10-07 (Role 1)
+
+| ID | Title | Status | Priority / Risk | Blocked on |
+|---|---|---|---|---|
+| [CR-2026-10-07-001](./CR-2026-10-07-001-feedback-hybrid-no-token-path/INTAKE_DOC.md) | Feedback for diners without a CRM session — hybrid `{phone, restaurant_id}` path (follow-up to CR-2026-10-03-003 D10=a) | 📝 REGISTERED | P2 / MEDIUM | CRM CR-096 (Wave 3) · CR-2026-10-03-003 CLOSED |
