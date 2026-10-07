@@ -1013,7 +1013,7 @@
   code_markers: true
   money_path: null
   closed: null
-  notes: null
+  notes: 'Exit condition "restore when live" is void — CRM CR-090 (2026-10-08) will never build OTP. Superseded by CR-2026-10-07-002 (permanent deletion).'
 - id: CR-2026-09-15-001
   type: CR
   title: 'Profile → CRM v2 adapter: orders/points/wallet via `/scan/`, points sign mapping, `order_type`
@@ -1798,3 +1798,28 @@
   money_path: null
   closed: null
   notes: 'Source: memory/inbox/WAVE_CHANGE_LOG_FOR_SCAN_ORDER_AND_POS_AGENTS_2026-10-07.md'
+- id: CR-2026-10-07-002
+  type: CR
+  title: Permanently delete the OTP-DEFERRED code (31 markers, 8 files); retire the "restore when live" condition of
+    CR-2026-09-14-001; confirm to CRM (CR-084) on exit
+  status: INTAKE
+  status_note: 'Registered 2026-10-07 (Role 1) on owner instruction after CRM Wave-1 log: request-otp/verify-otp → 404
+    (CR-084), OTP delivery never to be built (CR-090). skipOtp* live flags explicitly OUT of scope (owner asking CRM first).'
+  priority: P2
+  risk: LOW
+  owner_action: 'say "Planning for CR-2026-10-07-002" to start; D1 at planning (delete admin auth sub-tab shell? rec yes)'
+  blocked_on: []
+  sprint: null
+  files: frontend/src/api/services/crmService.js:291-373 · frontend/src/pages/PasswordSetup.jsx · frontend/src/context/AuthContext.jsx:213,227
+    · frontend/src/components/AdminSettings/VisibilityTab.jsx:122 · frontend/src/pages/admin/AdminVisibilityPage.jsx:102
+    · backend/server.py:115,254,398,470,560,770,1158 · memory/control/CONTRACT_CUSTOMER_APP_CRM_v1.0.md:126
+  artefacts: INTAKE
+  registered: '2026-10-07'
+  last_updated: null
+  related:
+  - CR-2026-09-14-001
+  - CR-2026-10-07-001
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'Process risk HIGH: server.py + AuthContext.jsx + PasswordSetup.jsx are hotspots → §5.1 + §5.2 regression. Source: memory/inbox/WAVE_CHANGE_LOG_…2026-10-07.md'

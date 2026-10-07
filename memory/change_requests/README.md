@@ -537,3 +537,4 @@ The `INV-2026-08-06-001` ghost is gone.
 | ID | Title | Status | Priority / Risk | Blocked on |
 |---|---|---|---|---|
 | [CR-2026-10-07-001](./CR-2026-10-07-001-feedback-hybrid-no-token-path/INTAKE_DOC.md) | Feedback for diners without a CRM session — hybrid `{phone, restaurant_id}` path (follow-up to CR-2026-10-03-003 D10=a) | 📝 REGISTERED | P2 / MEDIUM | CRM CR-096 (Wave 3) · CR-2026-10-03-003 CLOSED |
+| [CR-2026-10-07-002](./CR-2026-10-07-002-otp-permanent-deletion/INTAKE_DOC.md) | Permanently delete the OTP-DEFERRED code (31 markers / 8 files); retire "restore when live" of CR-2026-09-14-001; confirm to CRM CR-084 on exit. `skipOtp*` live flags **out of scope** (CRM validation first) | 📝 REGISTERED | P2 / LOW logic · HIGH process (hotspots) | none to start |
