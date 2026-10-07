@@ -1141,8 +1141,9 @@
     (CR-096) re-probed → still 403. Recommend ship token-only now (D2a).'
   priority: P1
   risk: CRITICAL
-  owner_action: 'Gate 2 rulings 2026-10-07: D2=a (token-only + honest sign-in), D7=b (auto-attach latest order — sub-ruling
-    D7-i/ii open), D8=yes, D9=here. OPEN: D3 walk-through requested. Owner holding at Gate 2'
+  owner_action: 'Gate 2 rulings 2026-10-07 complete: D2=a (token-only + honest sign-in), D3=a (ask CRM to purge stray rows),
+    D7=b/i (auto-attach newest order via crmGetOrders), D8=yes (UI reviewed OK), D9=here. Owner holding at Gate 2 — say "Gate 2
+    accepted for CR-2026-10-03-003" to unlock Implementation Plan'
   blocked_on: [OWNER]
   sprint: null
   files: frontend/src/api/services/crmService.js (add crmSubmitFeedback) · frontend/src/pages/FeedbackPage.jsx:34 · backend/server.py:1293-1324

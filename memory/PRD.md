@@ -36,3 +36,4 @@
 - INV-2026-10-03-001 → `REMEDIATION_ADVICE.md` written (rotate → restrict → re-seed scrubbed → policy). Registrar to set `blocked_on: [INFRA, CRM]`
 - Gate position: both Tier-1 items at **Gate 2 (owner acceptance of Impact Analysis)**. Implementation Plan not yet written. Nothing coded until "Role 3 approved for <ID>"
 - `registry_sync.py sync` NOT run this session (OAuth token may be expired; owner to confirm)
+- 2026-10-07 Gate 2 rulings recorded — BUG-001: D1=a, D4=b, D5=b, D6=yes · CR-003: D2=a, D3=a, D7=b/i, D8=yes, D9=here. Owner holding at Gate 2; Implementation Plans NOT written; registry sync deferred

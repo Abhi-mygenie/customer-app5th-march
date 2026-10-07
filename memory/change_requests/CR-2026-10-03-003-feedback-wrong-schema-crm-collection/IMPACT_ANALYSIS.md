@@ -154,11 +154,11 @@ Next: Gate 2 (owner accepts) → Implementation Plan → Gate 3 phrase "Role 3 a
 | ID | Ruling |
 |---|---|
 | D2 | **(a)** — ship token-only now; no token → honest "Please sign in to leave feedback" |
-| D3 | **Owner asked for a walk-through** — pending (explained in chat: after the fix we use CRM's API; the question is about the old rows our backend wrote directly into CRM's DB collection before the fix) |
-| D7 | **(b)** — auto-attach the diner's most recent order. **Planning note:** no "last order id" is persisted today (`OrderSuccess.jsx:149` reads it from router state only). Two ways, needs a sub-ruling: **D7-i** call `crmGetOrders(token, 1)` on the feedback page and use the newest order (no new storage key, one extra CRM read, order must be in CRM); **D7-ii** persist `last_order_<rid>` in storage at order success (new storage key → HIGH per addendum Part C, touches `OrderSuccess.jsx` hotspot). Recommendation: **D7-i** |
-| D8 | **yes** — remove Name/Email; owner asked to see the UI (screenshots shown in chat; before/after described) |
+| D3 | **(a)** — ask CRM team to purge/convert the stray rows our backend wrote into their `feedback` collection; we do not touch it. Raise as a CRM data task alongside this CR |
+| D7 | **(b)** — auto-attach the diner's most recent order. **Planning note:** no "last order id" is persisted today (`OrderSuccess.jsx:149` reads it from router state only). Two ways, needs a sub-ruling: **D7-i** call `crmGetOrders(token, 1)` on the feedback page and use the newest order (no new storage key, one extra CRM read, order must be in CRM); **D7-ii** persist `last_order_<rid>` in storage at order success (new storage key → HIGH per addendum Part C, touches `OrderSuccess.jsx` hotspot). **Ruling: D7-i** — fetch newest order via `crmGetOrders(token, 1)` on page open; `order_id` omitted if none |
+| D8 | **yes** — remove Name/Email. UI reviewed by owner in chat (before/after + not-logged-in state) — **OK** |
 | D9 | **here** — delete `GET /config/feedback/{rid}` in this CR; CR-2026-10-03-001 count → 13 |
 
 Environment observation (not part of this CR): `REACT_APP_BACKEND_URL` is commented out in `frontend/.env`, so `FeedbackPage.jsx:9` resolves `API_URL` to `undefined` and today's submit posts to `undefined/api/config/feedback` in this preview — feedback is already failing here. Irrelevant after the fix (page will call CRM via `crmService`, which uses `REACT_APP_CRM_URL`).
 
-Gate position after rulings: **D3 walk-through and D7 sub-ruling open; owner asked to stay at gate.** Implementation Plan not to be written until instructed.
+Gate position after rulings: **all decisions D2, D3, D7(i), D8, D9 ruled. Owner holding at Gate 2 — Implementation Plan not to be written until "Gate 2 accepted for CR-2026-10-03-003".**
