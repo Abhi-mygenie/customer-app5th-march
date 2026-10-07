@@ -210,3 +210,34 @@ Owner decisions: none open · P1 flagged (Sign-in CTA goes to landing page, sinc
 Docs: this file · IMPACT_ANALYSIS.md · ../index.yml
 Next: Gate 3 — "Gate 3 accepted for CR-2026-10-03-003"
 ```
+
+---
+
+## 9. GAP found after Gate 2 (owner question 2026-10-07) — D10 open, plan on HOLD until ruled
+
+**Owner asked:** "at home page we have them enter phone — that is treated as login, right?" **Answer: only sometimes.** Verified in `LandingPage.jsx:575-700` and `:434-503`:
+
+| # | Diner path on the home page | CRM token afterwards? |
+|---|---|---|
+| G1 | Dine-in at a restaurant with `showLandingCustomerCapture` **off** — **no phone box is shown at all** | **No** — and the Sign-in CTA would send them to a page with nothing to sign in with |
+| G2 | Phone box shown but **optional** (`mandatoryCustomerPhone:false`, e.g. 478) and the diner leaves it blank | **No** |
+| G3 | Phone entered, `skipOtp*` flag **false** (478 today) → `/password-setup`; diner taps back / abandons | **No** |
+| G4 | Phone entered, lookup or CRM fails → "Continuing as guest" (`localStorage.guestCustomer`, phone kept) | **No** (phone known) |
+| G5 | Phone entered, `skipOtp*` **true** → silent `crmSkipOtp` succeeds; or diner completes password-setup; or logs in via Login button | **Yes** |
+
+Only G5 yields a token. With D2=a (token-only), G1–G4 diners see "Please sign in" and — for G1 — have no route to do so. UAT data today: 13 configs, `feedbackEnabled` at **1** (478: capture on, phone optional, skipOtp off → G2/G3 are live there).
+
+**Options for D10**
+
+| | Option | Scope | Trade-off |
+|---|---|---|---|
+| a | **Ship token-only now (D2=a as planned), accept G1–G4 see the sign-in card**; fast-follow with (c) when CRM CR-096 (hybrid, no-token) ships | 0 extra | Honest, stops the bad write today; feedback unavailable to guests meanwhile |
+| b | Sign-in CTA becomes smart: if `guestCustomer.phone` exists (G4) call `crmSkipOtp` from the feedback page to obtain a token, then submit; G1–G3 still see the card | +1 helper call | Reuses the exact landing flow; `skip-otp` may create a customer — same as landing does today, but from a new page (owner must accept) |
+| c | **Hybrid per CRM contract §4c (CR-096)**: no token → send `{phone, restaurant_id, rating, message}`; phone from `guestCustomer` or a single phone input on the feedback page; CRM links to existing customer or stores unlinked, **never creates** | +phone input | The designed end-state; **blocked** — CRM returns 403 today; needs CRM's firm date |
+| d | Hold the whole CR until CR-096 ships, then do (c) in one go | 0 now | Leaves the wrong-collection write live for an unknown period |
+
+**Recommendation: (a) now → (c) as a registered follow-up CR the day CR-096 lands.** Rejected (b): it moves customer-creation behaviour onto a second page for a partial gain (G4 only). Rejected (d): keeps a CRITICAL-area defect open.
+
+If (a): sign-in card copy must be honest for G1 — "Feedback is available to signed-in diners. Sign in from the home page by entering your phone number." and the CTA stays. Register follow-up `CR: feedback hybrid/no-token path (depends on CRM CR-096)` at INTAKE.
+
+**Plan status:** HOLD at Gate 3 pending D10.
