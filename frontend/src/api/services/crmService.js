@@ -394,9 +394,14 @@ export const crmGetProfile = async (token) => {
 
 /**
  * Get customer order history
- * Returns: { total_orders, orders: [...] }
+ * v1: GET /customer/me/orders  v2: GET /scan/orders (skip not supported in v2)
+ * Returns: { orders: [...], total: N }
  */
 export const crmGetOrders = async (token, limit = 50, skip = 0) => {
+  // CR-2026-09-15-001: v1 path → 404 on CRM v2
+  if (isV2()) {
+    return crmAuthFetch(`/scan/orders?limit=${limit}`, token, { method: 'GET' });
+  }
   return crmAuthFetch(`/customer/me/orders?limit=${limit}&skip=${skip}`, token, { method: 'GET' });
 };
 
@@ -414,17 +419,44 @@ export const crmSubmitFeedback = async (token, { rating, message, orderId, resta
 
 /**
  * Get customer points balance + transaction history
- * Returns: { total_points, points_value, tier, expiring_soon, transactions: [...] }
+ * v1: GET /customer/me/points
+ * v2: GET /scan/loyalty (balance/tier) + GET /scan/points/history (ledger) — parallel
+ * Returns: { total_points, tier, transactions: [...] }
  */
 export const crmGetPoints = async (token, limit = 50) => {
+  // CR-2026-09-15-001: v1 path → 404; v2 splits balance and history across two endpoints
+  if (isV2()) {
+    const [loyalty, history] = await Promise.all([
+      crmAuthFetch('/scan/loyalty', token, { method: 'GET' }),
+      crmAuthFetch(`/scan/points/history?limit=${limit}`, token, { method: 'GET' }),
+    ]);
+    return {
+      total_points: loyalty?.total_points ?? 0,
+      tier: loyalty?.tier ?? 'Bronze',
+      transactions: history?.transactions ?? [],
+    };
+  }
   return crmAuthFetch(`/customer/me/points?limit=${limit}`, token, { method: 'GET' });
 };
 
 /**
  * Get customer wallet balance + transaction history
- * Returns: { wallet_balance, total_received, total_used, transactions: [...] }
+ * v1: GET /customer/me/wallet
+ * v2: GET /scan/loyalty (wallet_balance) + GET /scan/wallet/history (ledger) — parallel
+ * Returns: { wallet_balance, transactions: [...] }
  */
 export const crmGetWallet = async (token, limit = 50) => {
+  // CR-2026-09-15-001: v1 path → 404; v2 splits balance and history across two endpoints
+  if (isV2()) {
+    const [loyalty, history] = await Promise.all([
+      crmAuthFetch('/scan/loyalty', token, { method: 'GET' }),
+      crmAuthFetch(`/scan/wallet/history?limit=${limit}`, token, { method: 'GET' }),
+    ]);
+    return {
+      wallet_balance: loyalty?.wallet_balance ?? 0,
+      transactions: history?.transactions ?? [],
+    };
+  }
   return crmAuthFetch(`/customer/me/wallet?limit=${limit}`, token, { method: 'GET' });
 };
 

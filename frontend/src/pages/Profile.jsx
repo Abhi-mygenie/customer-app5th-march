@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { crmGetOrders, crmGetPoints, crmGetWallet } from '../api/services/crmService';
 import { IoArrowBack, IoPersonOutline, IoWalletOutline, IoReceiptOutline, IoSettingsOutline, IoLogOutOutline, IoGiftOutline } from 'react-icons/io5';
 import { MdStars } from 'react-icons/md';
@@ -11,6 +12,8 @@ const Profile = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, token, isCustomer, isRestaurant, logout } = useAuth();
+  // CR-2026-09-15-001: wallet tab visibility gate (G5)
+  const { showWallet } = useRestaurantConfig();
   
   // Get tab from URL query param or default to 'profile'
   const tabFromUrl = searchParams.get('tab');
@@ -19,6 +22,8 @@ const Profile = () => {
   const [points, setPoints] = useState([]);
   const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
   const [loading, setLoading] = useState(false);
+  // CR-2026-09-15-001 D4: total order count from v2 response
+  const [ordersTotal, setOrdersTotal] = useState(0);
 
   useEffect(() => {
     if (!token) {
@@ -54,8 +59,9 @@ const Profile = () => {
     setLoading(true);
     try {
       const data = await crmGetOrders(token);
-      // CRM returns { total_orders, orders: [...] }
+      // CR-2026-09-15-001: CRM v2 returns { orders: [...], total: N }
       setOrders(data.orders || []);
+      setOrdersTotal(data.total || 0);
     } catch (error) {
       toast.error('Failed to load orders');
     } finally {
@@ -115,6 +121,20 @@ const Profile = () => {
       case 'silver': return '#C0C0C0';
       default: return '#CD7F32';
     }
+  };
+
+  // CR-2026-09-15-001 G2: points credit/debit classification
+  const isPointsCredit = (type) => ['earn', 'bonus'].includes(type);
+  const POINTS_TYPE_LABELS = {
+    earn: 'Earned', bonus: 'Bonus reward', redeem: 'Redeemed', expired: 'Expired',
+  };
+
+  // CR-2026-09-15-001 G4: raw CRM order_type → display label
+  const ORDER_TYPE_LABELS = {
+    dinein: 'Dine-in', dine_in: 'Dine-in',
+    takeaway: 'Takeaway', take_away: 'Takeaway',
+    delivery: 'Delivery',
+    walkin: 'In-store', WalkIn: 'In-store', in_store: 'In-store', pos: 'In-store',
   };
 
   if (!user || !isCustomer) {
@@ -188,12 +208,15 @@ const Profile = () => {
         >
           <IoGiftOutline /> Points
         </button>
-        <button 
-          className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`}
-          onClick={() => setActiveTab('wallet')}
-        >
-          <IoWalletOutline /> Wallet
-        </button>
+        {/* CR-2026-09-15-001 G5: wallet tab shown only when config enables it */}
+        {showWallet && (
+          <button 
+            className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`}
+            onClick={() => setActiveTab('wallet')}
+          >
+            <IoWalletOutline /> Wallet
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}
@@ -235,7 +258,14 @@ const Profile = () => {
                 <p>No orders yet</p>
               </div>
             ) : (
-              orders.map((order) => (
+              <>
+                {ordersTotal > orders.length && (
+                  <div className="orders-count">
+                    {/* CR-2026-09-15-001 D4 */}
+                    Showing {orders.length} of {ordersTotal} orders
+                  </div>
+                )}
+                {orders.map((order) => (
                 <div key={order.id} className="order-card">
                   <div className="order-header">
                     <span className="order-date">
@@ -244,7 +274,10 @@ const Profile = () => {
                     <span className="order-amount">₹{order.order_amount}</span>
                   </div>
                   <div className="order-details">
-                    <span className="order-type">{order.order_type || 'Order'}</span>
+                    <span className="order-type">
+                      {/* CR-2026-09-15-001 G4 */}
+                      {ORDER_TYPE_LABELS[order.order_type] || order.order_type || 'Order'}
+                    </span>
                     <span className="order-points">+{order.points_earned} pts</span>
                   </div>
                   {order.items && order.items.length > 0 && (
@@ -258,7 +291,8 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-              ))
+              ))}
+              </>
             )}
           </div>
         )}
@@ -277,7 +311,8 @@ const Profile = () => {
               points.map((tx) => (
                 <div key={tx.id} className="transaction-card">
                   <div className="tx-icon" data-type={tx.transaction_type}>
-                    {tx.transaction_type === 'earn' ? '+' : '-'}
+                    {/* CR-2026-09-15-001 G2 */}
+                    {isPointsCredit(tx.transaction_type) ? '+' : '-'}
                   </div>
                   <div className="tx-details">
                     <span className="tx-description">{tx.description}</span>
@@ -285,8 +320,8 @@ const Profile = () => {
                       {new Date(tx.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className={`tx-amount ${tx.transaction_type === 'earn' ? 'positive' : 'negative'}`}>
-                    {tx.transaction_type === 'earn' ? '+' : '-'}{tx.points} pts
+                  <div className={`tx-amount ${isPointsCredit(tx.transaction_type) ? 'positive' : 'negative'}`}>
+                    {isPointsCredit(tx.transaction_type) ? '+' : '-'}{tx.points} pts
                   </div>
                 </div>
               ))
@@ -295,7 +330,7 @@ const Profile = () => {
         )}
 
         {/* Wallet Tab */}
-        {activeTab === 'wallet' && (
+        {activeTab === 'wallet' && showWallet && (
           <div className="wallet-section">
             <div className="wallet-balance-card">
               <IoWalletOutline className="wallet-icon" />

@@ -1018,19 +1018,21 @@
   type: CR
   title: 'Profile → CRM v2 adapter: orders/points/wallet via `/scan/`, points sign mapping, `order_type`
     labels, wallet-tab gating (G1–G5)'
-  status: INTAKE
-  status_note: null
-  priority: null
-  risk: null
-  owner_action: null
+  status: IMPLEMENTATION
+  status_note: 'Implemented 2026-10-08 (Role 3). E1–E13 applied: crmGetOrders/Points/Wallet v2 branches,
+    isPointsCredit fix, ORDER_TYPE_LABELS, showWallet gate, ordersTotal D4. Build clean. ST1–ST6 PASS.
+    Option A for wallet transaction_type (unconfirmed — empty probe).'
+  priority: P1
+  risk: HIGH
+  owner_action: 'QA + smoke; say "Smoke PASS CR-2026-09-15-001" to close'
   blocked_on: []
   sprint: null
-  files: null
-  artefacts: INTAKE
+  files: frontend/src/api/services/crmService.js · frontend/src/pages/Profile.jsx
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-09-15'
-  last_updated: null
+  last_updated: '2026-10-08'
   related: []
-  code_markers: false
+  code_markers: true
   money_path: null
   closed: null
   notes: null
