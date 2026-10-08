@@ -222,7 +222,7 @@ CRM contract confirms: send 10-digit national digits only (no `+`, no `91`). `st
 |---|---|
 | `frontend/src/api/services/crmService.js` | Add `crmLookupCustomer` function (~15 lines) |
 | `frontend/src/pages/LandingPage.jsx` | Replace 2 `fetchWithTimeout` blocks with `crmLookupCustomer` calls; add import |
-| `backend/server.py` | Delete `POST /auth/check-customer` route + `CheckCustomerRequest` model |
+| `backend/server.py` | Delete `POST /auth/check-customer` route + `CheckCustomerRequest` model (D2 confirmed) |
 
 ---
 
@@ -258,8 +258,8 @@ No Fast Lane. Part C CRITICAL — owner approval required before Gate 3.
 
 | D | Question | Recommendation |
 |---|---|---|
-| D1 | Proceed with normalisation adapter in `crmLookupCustomer` (return `{ exists, customer: { name } }`) rather than updating LandingPage to read the new flat shape? | Yes — adapter isolates LandingPage from CRM contract changes |
-| D2 | Delete `POST /api/auth/check-customer` from backend immediately, or deprecate it first? | Delete immediately — no other consumers, and leaving it would keep a direct DB read alive |
+| D1 | Proceed with normalisation adapter in `crmLookupCustomer` (return `{ exists, customer: { name } }`) rather than updating LandingPage to read the new flat shape? | **Option A confirmed** — adapter wraps response; LandingPage reads unchanged |
+| D2 | Delete `POST /api/auth/check-customer` from backend immediately, or deprecate it first? | **Delete confirmed** — 0 other consumers; direct DB read closed immediately |
 
 ---
 
