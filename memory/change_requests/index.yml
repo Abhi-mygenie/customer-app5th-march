@@ -1860,20 +1860,18 @@
   type: CR
   title: 'Customer App side of CRM CR-095 — confirm zero callers of the 4 orphan `/scan/config` + `/scan/menu/dietary-tags`
     routes, rule on the sequencing gate (CA-2/CA-8), verify after CRM removes them, countersign ownership-map §4d'
-  status: INTAKE
-  status_note: 'Registered 2026-10-09 (Role 1). Code reality: 0 callers in frontend/backend/tests; UAT customer_app_config
-    13 docs all short-form rid, dietary_tags_mapping 0 docs. No app code change expected. Owner decisions D1 (gate), D2
-    (verification depth), D3 (§4d signing authority) open for Planning.'
+  status: PLANNING
+  status_note: 'IA + IP written 2026-10-09 (Role 2). D1 RULED (i): CRM released from 4-step gate. D2 default (a); D3 open before §4d countersign. Gate 3 not open.'
   priority: P2
   risk: LOW
-  owner_action: 'Say "Planning for CR-2026-10-09-001"; answer D1 (release CRM from 4-step gate vs hold)'
+  owner_action: 'Say "Gate 3 accepted for CR-2026-10-09-001" → Phase 1 (confirmation note to CRM); answer D3'
   blocked_on:
   - party: CRM
     ref: CR-095 implementation (route deletion) — gates acceptance items 2-5 only
     since: '2026-10-09'
   sprint: null
   files: null
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-09'
   last_updated: '2026-10-09'
   related:
