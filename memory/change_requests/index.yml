@@ -1860,18 +1860,18 @@
   type: CR
   title: 'Customer App side of CRM CR-095 — confirm zero callers of the 4 orphan `/scan/config` + `/scan/menu/dietary-tags`
     routes, rule on the sequencing gate (CA-2/CA-8), verify after CRM removes them, countersign ownership-map §4d'
-  status: PLANNING
-  status_note: 'IA + IP written 2026-10-09 (Role 2). D1 RULED (i): CRM released from 4-step gate. D2 default (a); D3 open before §4d countersign. Gate 3 not open.'
+  status: IMPLEMENTATION
+  status_note: 'Gate 3 accepted 2026-10-09. Phase 1 done (Role 3): pre-flight 0 callers, baseline 13/0 docs, CONFIRMATION_NOTE_TO_CRM.md drafted (CA-2/4/5/8 in one). Owner to send. Phase 2 (E3-E5 verification) blocked on CRM shipping CR-095. Phase 3 (§4d) needs D3.'
   priority: P2
   risk: LOW
-  owner_action: 'Say "Gate 3 accepted for CR-2026-10-09-001" → Phase 1 (confirmation note to CRM); answer D3'
+  owner_action: 'Send CONFIRMATION_NOTE_TO_CRM.md to CRM; answer D3; say "CRM shipped CR-095" to trigger Phase 2'
   blocked_on:
   - party: CRM
-    ref: CR-095 implementation (route deletion) — gates acceptance items 2-5 only
+    ref: CR-095 ship confirmation — gates Phase 2 (E3-E5) + Phase 3 (§4d)
     since: '2026-10-09'
   sprint: null
   files: null
-  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · CONFIRMATION_NOTE_TO_CRM
   registered: '2026-10-09'
   last_updated: '2026-10-09'
   related:
