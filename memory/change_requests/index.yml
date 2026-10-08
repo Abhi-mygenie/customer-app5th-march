@@ -1099,7 +1099,7 @@
   type: CR
   title: Delete the 14 dead CRM-table call sites in `server.py` (legacy customer API shim)
   status: PLANNING
-  status_note: 'IA + IP written 2026-10-09 (Role 2); D1/D2/D3 all RULED (a) by owner 2026-10-09. Gate 3 NOT open — owner held it. Must land before CR-2026-09-15-004.'
+  status_note: 'IA + IP written 2026-10-09 (Role 2); D1/D2/D3 all RULED (a) by owner 2026-10-09. Appendix A line-level edit map pinned (md5 2aea049a…, 1741 lines, bottom-up order). Gate 3 NOT open — owner held it. Must land before CR-2026-09-15-004.'
   priority: P3
   risk: HIGH
   owner_action: 'Say "Gate 3 accepted for CR-2026-10-03-001" when ready — all decisions already ruled'

@@ -97,3 +97,32 @@ Owner decisions: D1 (a) · D2 (a) · D3 (a) — RULED 2026-10-09
 Docs: memory/change_requests/CR-2026-10-03-001-delete-dead-crm-table-call-sites/IMPLEMENTATION_PLAN.md
 Next: "Gate 3 accepted for CR-2026-10-03-001" → Role 3  (Gate 3 NOT yet open — owner explicitly held it 2026-10-09)
 ```
+
+---
+
+## Appendix A — Line-level edit map (pinned 2026-10-09)
+
+Pinned to `backend/server.py` **1,741 lines · md5 `2aea049a46a0a794b18f0071d8ed3183`**. Role 3 pre-flight: `md5sum backend/server.py` — if it differs, re-derive ranges by the function names in the table before editing. Apply **bottom-up** so earlier ranges stay valid.
+
+| ID | Lines (inclusive) | First line → last line (verbatim anchors) | Action | Net |
+|---|---|---|---|---|
+| E11 | 1590 | `api_router.include_router(customer_router)` | delete line | −1 |
+| E10d | 909–930 | `@customer_router.put("/profile")` → blank after `return {"success": True, "user": updated}` | delete | −22 |
+| E10c | 891–908 | `@customer_router.get("/coupons")` → blank after `return {"coupons": coupons}` | delete | −18 |
+| E10b | 871–890 | `@customer_router.get("/wallet")` → blank after `}` | delete | −20 |
+| E10a | 847–870 | `@customer_router.get("/points", response_model=List[PointsTransaction])` → blank after `) for t in transactions]` | delete | −24 |
+| E9 | 670–717 | `# ============================================` / `# Customer Routes` header → blank after `) for o in orders]` (covers `get_customer_profile` 674–692 + `get_customer_orders` 694–716) | delete | −48 |
+| E8b | 624–669 | `@auth_router.post("/verify-password")` → blank after closing `}` of return | delete | −46 |
+| E8a | 553–623 | `@auth_router.post("/set-password")` → blank after closing `}` of else-return | delete | −71 |
+| E7 | 434–497 | docstring L434–437 → **replace** with `"""Restaurant admin login (password)."""`; L438 `identifier = …` **keep**; L439–497 (`# Build user_id …` through blank after customer `return LoginResponse(…)`) **delete**; L498 `# Step 2: Check users collection` → `# Step 1: …`; L542 `# Step 3: Not found in either collection` → `# Step 2: Not found` | replace/delete | ≈ −61 |
+| E6 | 357–360 | `    if user_type == "customer":` / `        user = await db.customers.find_one(...)` / `    else:` / `        user = await db.users.find_one(..., USERS_AUTH_PROJECTION)  # CR-2026-10-03-002` → single line `    user = await db.users.find_one({"id": user_id}, USERS_AUTH_PROJECTION)  # CR-2026-10-03-002` | replace 4→1 | −3 |
+| E5 | 276–297 | `class SetPasswordRequest(BaseModel):` → blank after `pos_id: Optional[str] = "0001"` of `ResetPasswordRequest` (covers 276–282, 284–288, 290–296 + separators) | delete | −22 |
+| E4 | 113–144 | `class CustomerProfile(BaseModel):` → blank after `balance_after: int = 0` (covers 113–125, 127–134, 136–143 + separators; L145 `class AppConfigUpdate` stays) | delete | −32 |
+| E3 | 107, 111 | L107 `user_type: str  # "customer" or "restaurant"` → `user_type: str  # "restaurant"`; L111 `restaurant_context: Optional[dict] = None  # Restaurant info for customer` delete | edit + delete | −1 |
+| E2 | 102–103 | `restaurant_id: Optional[str] = None  # From POS API response (e.g., "698")` / `pos_id: Optional[str] = "0001"  # Default MyGenie, …` | delete | −2 |
+| E1 | 89 | `customer_router = APIRouter(prefix="/customer", tags=["Customer"])` | delete line | −1 |
+
+**Expected result:** ≈ 1,741 − 372 ≈ **1,369 lines**. Post-edit static checks (E12 `test_static_no_dead_touches`) are the authority, not the arithmetic.
+
+**Untouched anchors that must still be present verbatim after the edit** (Role 3 greps each):
+`def verify_password(` · `async def refresh_pos_token(` · `@auth_router.get("/me")` · `@api_router.post("/pos/auth-token")` · `@api_router.get("/table-config")` · `@config_router.get("/{restaurant_id}")` · `@api_router.get("/loyalty-settings/{restaurant_id}")` · `@api_router.get("/customer-lookup/{restaurant_id}")` · `USERS_AUTH_PROJECTION` · `USERS_LOGIN_PROJECTION` · `api_router.include_router(auth_router)` · `api_router.include_router(config_router)`
