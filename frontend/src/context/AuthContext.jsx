@@ -210,9 +210,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('restaurant_context');
   };
 
-  // OTP-DEFERRED: CR-2026-09-14-001 — sendOTP disabled (backend /api/auth/send-otp commented out)
-  // const sendOTP = async (phone, restaurantContext = null) => { ... fetchWithTimeout .../api/auth/send-otp ... };
-
   const value = {
     user,
     userType,
@@ -224,8 +221,6 @@ export const AuthProvider = ({ children }) => {
     isCustomer: userType === 'customer',
     isRestaurant: userType === 'restaurant',
     setRestaurantScope,
-    // OTP-DEFERRED: CR-2026-09-14-001 — sendOTP removed from context value
-    // sendOTP,
     login,
     setAuth,
     setCrmAuth,

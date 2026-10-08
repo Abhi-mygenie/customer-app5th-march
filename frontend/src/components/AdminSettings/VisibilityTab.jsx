@@ -119,13 +119,6 @@ const VisibilityTab = ({ ToggleRow, restaurantFlags = {} }) => {
         </div>
       )}
 
-      {/* OTP-DEFERRED: CR-2026-09-14-001 — otpRequired* legacy flags hidden from admin UI
-      {activeSubTab === 'auth' && (
-        <div className="content-panel" data-testid="panel-auth">
-          ...5 otpRequired* ToggleRow items...
-        </div>
-      )}
-      */}
     </div>
   );
 };

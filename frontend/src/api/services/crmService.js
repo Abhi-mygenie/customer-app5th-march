@@ -280,43 +280,9 @@ const stripPhonePrefix = (phone) => {
   return bare;
 };
 
-/**
- * Send OTP to customer phone
- * Returns: { success, message, expires_in_minutes, debug_otp? }
- *
- * v1 path: POST /customer/send-otp  — body { phone, user_id, country_code }
- * v2 path: POST /scan/auth/request-otp — body { phone, restaurant_id }
- *          response normalized to v1 shape so PasswordSetup.jsx is unaffected.
- */
-// OTP-DEFERRED: CR-2026-09-14-001 — CRM SMS not in production. Restore when live.
-export const crmSendOtp = async (_phone, _userId, _countryCode = '91') => {
-  throw new Error('OTP-DEFERRED: crmSendOtp disabled — CR-2026-09-14-001');
-  /* original body preserved as comment:
-  if (isV2()) {
-    const restaurantId = getRestaurantIdFromUserId(_userId);
-    const data = await crmFetch('/scan/auth/request-otp', { method: 'POST', body: JSON.stringify({ phone: stripPhonePrefix(_phone), restaurant_id: restaurantId }), userId: _userId });
-    return { success: true, message: 'OTP sent', expires_in_minutes: data?.expires_in_seconds ? Math.ceil(data.expires_in_seconds / 60) : 10, debug_otp: data?.dev_otp, phone: data?.phone };
-  }
-  return crmFetch('/customer/send-otp', { method: 'POST', body: JSON.stringify({ phone: stripPhonePrefix(_phone), user_id: _userId, country_code: _countryCode }) });
-  */
-};
-
-/**
- * Verify OTP and get token + profile
- * Returns: { success, token, customer, is_new_customer? }
- *
- * v1 path: POST /customer/verify-otp — returns { token, customer: { name, phone, addresses, ... } }
- * v2 path: POST /scan/auth/verify-otp — returns { token, customer_id, is_new_customer, phone }
- *          Synthesized to v1 shape. v2 has no `customer.name` here — caller falls back to displayName.
- */
-// OTP-DEFERRED: CR-2026-09-14-001 — CRM SMS not in production. Restore when live.
-export const crmVerifyOtp = async (_phone, _otp, _userId, _countryCode = '91') => {
-  throw new Error('OTP-DEFERRED: crmVerifyOtp disabled — CR-2026-09-14-001');
-  /* original body preserved as comment:
-  if (isV2()) { ... crmFetch('/scan/auth/verify-otp', ...) ... }
-  return crmFetch('/customer/verify-otp', { method: 'POST', body: JSON.stringify({ phone: stripPhonePrefix(_phone), otp: _otp, user_id: _userId, country_code: _countryCode }) });
-  */
-};
+// ============================================
+// Skip-OTP and Lookup — no auth required
+// ============================================
 
 /**
  * Skip-OTP frictionless login (v2 only — added post-Phase-1 for UX-GAP-01)
@@ -367,34 +333,6 @@ export const crmLookupCustomer = async (phone, restaurantId) => {
     exists: data?.exists ?? false,
     customer: data?.exists ? { name: data.name || '' } : null,
   };
-};
-
-/**
- * Send OTP for password reset
- * Returns: { success, message, expires_in_minutes }
- *
- * HELD ON v1 — v2 contract has no /forgot-password endpoint (per SCAN_AND_ORDER_API_v2.md).
- * Deliberate Phase-1 hold (decision 3d). Tracked as UX-GAP-02.
- * Calls continue to hit v1 URL regardless of flag — same (broken) behavior as today.
- */
-// OTP-DEFERRED: CR-2026-09-14-001 — CRM v1 forgot-password 404 on v2. Restore when CRM adds v2 endpoint (UX-GAP-02).
-export const crmForgotPassword = async (_phone, _userId, _countryCode = '91') => {
-  throw new Error('OTP-DEFERRED: crmForgotPassword disabled — CR-2026-09-14-001');
-  /* original body: crmFetch('/customer/forgot-password', { method: 'POST', ... }) */
-};
-
-/**
- * Reset password with OTP verification
- * Returns: { success, message }
- *
- * HELD ON v1 — v2 contract has no /reset-password endpoint (per SCAN_AND_ORDER_API_v2.md).
- * Deliberate Phase-1 hold (decision 3d). Tracked as UX-GAP-02.
- * Calls continue to hit v1 URL regardless of flag — same (broken) behavior as today.
- */
-// OTP-DEFERRED: CR-2026-09-14-001 — CRM v1 reset-password 404 on v2. Restore when CRM adds v2 endpoint (UX-GAP-02).
-export const crmResetPassword = async (_phone, _otp, _userId, _newPassword) => {
-  throw new Error('OTP-DEFERRED: crmResetPassword disabled — CR-2026-09-14-001');
-  /* original body: crmFetch('/customer/reset-password', { method: 'POST', ... }) */
 };
 
 // ============================================

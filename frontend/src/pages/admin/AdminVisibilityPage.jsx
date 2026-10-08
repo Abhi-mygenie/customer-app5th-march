@@ -99,25 +99,6 @@ const AdminVisibilityPage = () => {
         </div>
       </div>
 
-      {/* OTP-DEFERRED: CR-2026-09-14-001 — skipOtp admin toggles hidden until SMS is live.
-          skipOtp* flags still stored in DB and applied at runtime via crmSkipOtp frictionless path.
-      <div className="admin-section" data-testid="admin-section-skip-otp">
-        <h2 className="admin-section-title">Skip OTP / Password Setup</h2>
-        <p className="admin-section-description">
-          When ON, customers for the matching order type skip the password / OTP screen entirely
-          and go straight to the menu (CRM identity is attached silently). Default OFF.
-        </p>
-        <div className="admin-toggle-grid">
-          <ToggleSwitch field="skipOtpDineIn" label="Skip OTP for Dine-In Orders" />
-          <ToggleSwitch field="skipOtpTakeaway" label="Skip OTP for Takeaway Orders" />
-          <ToggleSwitch field="skipOtpDelivery" label="Skip OTP for Delivery Orders" />
-          <ToggleSwitch field="skipOtpDineInWithTable" label="Skip OTP for Dine-In with Table Number" />
-          <ToggleSwitch field="skipOtpWalkIn" label="Skip OTP for Walk-In Dine Orders" />
-          <ToggleSwitch field="skipOtpRoomOrders" label="Skip OTP for Room Orders" />
-        </div>
-      </div>
-      */}
-
       {/* Order Access Policy — CR-2026-05-30-002 */}
       <div className="admin-section" data-testid="admin-section-order-access">
         <h2 className="admin-section-title">Order Access Policy</h2>

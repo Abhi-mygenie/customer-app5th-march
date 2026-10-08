@@ -99,8 +99,6 @@ diagnostics_router = APIRouter(prefix="/diagnostics", tags=["Diagnostics"])
 class LoginRequest(BaseModel):
     phone_or_email: str
     password: Optional[str] = None
-    # OTP-DEFERRED: CR-2026-09-14-001
-    # otp: Optional[str] = None
     restaurant_id: Optional[str] = None  # From POS API response (e.g., "698")
     pos_id: Optional[str] = "0001"  # Default MyGenie, can be "petpooja", "ezzo", etc.
 
@@ -111,12 +109,6 @@ class LoginResponse(BaseModel):
     pos_token: Optional[str] = None  # POS API token for admin operations (QR, etc.)
     user: dict
     restaurant_context: Optional[dict] = None  # Restaurant info for customer
-
-# OTP-DEFERRED: CR-2026-09-14-001 — CRM SMS not in production
-# class OTPRequest(BaseModel):
-#     phone: str
-#     restaurant_id: Optional[str] = None  # For scoped OTP sending
-#     pos_id: Optional[str] = "0001"
 
 class CustomerProfile(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -246,12 +238,6 @@ class AppConfigUpdate(BaseModel):
     # Customer Capture - Mandatory fields
     mandatoryCustomerName: Optional[bool] = None
     mandatoryCustomerPhone: Optional[bool] = None
-    # OTP-DEFERRED: CR-2026-09-14-001 — otpRequired* legacy flags removed from model
-    # otpRequiredDineIn: Optional[bool] = None
-    # otpRequiredTakeaway: Optional[bool] = None
-    # otpRequiredDineInWithTable: Optional[bool] = None
-    # otpRequiredWalkIn: Optional[bool] = None
-    # otpRequiredRoomOrders: Optional[bool] = None
     # Skip OTP / Password-Setup screen (CR-2026-05-30-001 Item 1)
     skipOtpDineIn: Optional[bool] = None
     skipOtpTakeaway: Optional[bool] = None
@@ -390,26 +376,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     import bcrypt
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
-# OTP-DEFERRED: CR-2026-09-14-001 — in-memory OTP store disabled (CRM SMS not in production)
-# otp_store = {}
-#
-# def generate_otp(phone: str) -> str:
-#     otp = str(secrets.randbelow(900000) + 100000)
-#     otp_store[phone] = {"otp": otp, "expires": datetime.now(timezone.utc).timestamp() + 300}
-#     return otp
-#
-# def verify_otp(phone: str, otp: str) -> bool:
-#     stored = otp_store.get(phone)
-#     if not stored:
-#         return False
-#     if datetime.now(timezone.utc).timestamp() > stored["expires"]:
-#         del otp_store[phone]
-#         return False
-#     if stored["otp"] == otp:
-#         del otp_store[phone]
-#         return True
-#     return False
-
 # ============================================
 # POS Token Refresh Helper
 # ============================================
@@ -462,27 +428,6 @@ async def refresh_pos_token(email: str, password: str) -> Optional[str]:
 # Auth Routes
 # ============================================
 
-# OTP-DEFERRED: CR-2026-09-14-001 — /api/auth/send-otp disabled (CRM SMS not in production)
-# Uncomment when CRM production SMS is confirmed live.
-# @auth_router.post("/send-otp")
-# @limiter.limit("10/minute")
-# async def send_otp(request: Request, body: OTPRequest):
-#     """Send OTP to phone number - scoped by restaurant context"""
-#     phone = body.phone.strip()
-#     if body.restaurant_id:
-#         pos_id = body.pos_id or "0001"
-#         user_id = f"pos_{pos_id}_restaurant_{body.restaurant_id}"
-#         customer = await db.customers.find_one({"phone": phone, "user_id": user_id}, {"_id": 0})
-#     else:
-#         customer = await db.customers.find_one({"phone": phone}, {"_id": 0})
-#     if not customer:
-#         user = await db.users.find_one({"phone": phone}, {"_id": 0})
-#         if not user:
-#             raise HTTPException(status_code=404, detail="Phone number not registered for this restaurant")
-#     otp = generate_otp(phone)
-#     logging.info(f"OTP for {phone}: {otp}")
-#     return {"success": True, "message": "OTP sent successfully", "otp_for_testing": otp}
-
 @auth_router.post("/login", response_model=LoginResponse)
 @limiter.limit("5/minute")  # CR-2026-09-12-004: rate-limit
 async def unified_login(request: Request, body: LoginRequest):
@@ -518,12 +463,6 @@ async def unified_login(request: Request, body: LoginRequest):
     
     if customer:
         # Customer found - verify via password
-        # OTP-DEFERRED: CR-2026-09-14-001 — OTP branch removed (CRM SMS not in production)
-        # if body.otp:
-        #     phone = customer.get("phone")
-        #     if not verify_otp(phone, body.otp):
-        #         raise HTTPException(status_code=401, detail="Invalid or expired OTP")
-        # elif body.password:
         if body.password:
             password_hash = customer.get("password_hash")
             if not password_hash:
@@ -727,34 +666,6 @@ async def verify_customer_password(request: Request, body: VerifyPasswordRequest
             "total_points": customer.get("total_points", 0)
         }
     }
-
-# OTP-DEFERRED: CR-2026-09-14-001 — /api/auth/reset-password disabled (requires OTP store)
-# Uncomment when CRM production SMS + persistent OTP store (CR-003 Parts B+C) are live.
-# @auth_router.post("/reset-password")
-# @limiter.limit("3/minute")
-# async def reset_password(request: Request, body: ResetPasswordRequest):
-#     """Reset password via OTP verification"""
-#     import bcrypt
-#     if body.new_password != body.confirm_password:
-#         raise HTTPException(status_code=400, detail="Passwords do not match")
-#     if len(body.new_password) < 6:
-#         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
-#     phone = body.phone.strip()
-#     if not verify_otp(phone, body.otp):
-#         raise HTTPException(status_code=401, detail="Invalid or expired OTP")
-#     pos_id = body.pos_id or "0001"
-#     user_id = f"pos_{pos_id}_restaurant_{body.restaurant_id}"
-#     normalized_phone = phone
-#     if phone.startswith('+91'): normalized_phone = phone[3:]
-#     elif phone.startswith('91') and len(phone) > 10: normalized_phone = phone[2:]
-#     password_hash = bcrypt.hashpw(body.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-#     result = await db.customers.update_one(
-#         {"$or": [{"phone": phone, "user_id": user_id}, {"phone": normalized_phone, "user_id": user_id}]},
-#         {"$set": {"password_hash": password_hash, "updated_at": datetime.now(timezone.utc).isoformat()}}
-#     )
-#     if result.modified_count == 0:
-#         raise HTTPException(status_code=404, detail="Customer not found")
-#     return {"success": True, "message": "Password reset successfully"}
 
 # ============================================
 # Customer Routes
@@ -1116,12 +1027,6 @@ async def get_app_config(restaurant_id: str):
             # Customer Capture - Mandatory fields
             "mandatoryCustomerName": False,
             "mandatoryCustomerPhone": False,
-            # OTP-DEFERRED: CR-2026-09-14-001 — otpRequired* removed from defaults
-            # "otpRequiredDineIn": False,
-            # "otpRequiredTakeaway": False,
-            # "otpRequiredDineInWithTable": False,
-            # "otpRequiredWalkIn": False,
-            # "otpRequiredRoomOrders": False,
             # Restaurant Operating Shifts
             "restaurantShifts": [{"start": "06:00", "end": "03:00"}],
             # Restaurant Open master toggle (default open)

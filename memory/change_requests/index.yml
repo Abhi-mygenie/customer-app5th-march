@@ -1805,20 +1805,23 @@
   type: CR
   title: Permanently delete the OTP-DEFERRED code (31 markers, 8 files); retire the "restore when live" condition of
     CR-2026-09-14-001; confirm to CRM (CR-084) on exit
-  status: INTAKE
-  status_note: 'Registered 2026-10-07 (Role 1) on owner instruction after CRM Wave-1 log: request-otp/verify-otp → 404
-    (CR-084), OTP delivery never to be built (CR-090). skipOtp* live flags OUT of scope — now handled by CR-2026-10-08-001 (CRM ruled 2026-10-08: retire them).'
+  status: IMPLEMENTATION
+  status_note: 'Implemented 2026-10-08 (Role 3). All 26 edits applied: crmSendOtp/crmVerifyOtp/crmForgotPassword/crmResetPassword
+    deleted from crmService.js; 10 OTP blocks deleted from PasswordSetup.jsx; sendOTP deleted from AuthContext.jsx;
+    admin sections deleted from AdminVisibilityPage.jsx + VisibilityTab.jsx; 8 server.py sections deleted.
+    ST1-ST4 PASS (0 OTP-DEFERRED markers). Build clean 29s. Backend RUNNING.
+    CRM_CONFIRMATION_NOTE.md written for owner to send (CR-084 closure).'
   priority: P2
   risk: LOW
-  owner_action: 'say "Planning for CR-2026-10-07-002" to start; D1 at planning (delete admin auth sub-tab shell? rec yes)'
+  owner_action: 'QA + smoke; send CRM_CONFIRMATION_NOTE.md to CRM; say "Smoke PASS CR-2026-10-07-002" to close'
   blocked_on: []
   sprint: null
-  files: frontend/src/api/services/crmService.js:291-373 · frontend/src/pages/PasswordSetup.jsx · frontend/src/context/AuthContext.jsx:213,227
-    · frontend/src/components/AdminSettings/VisibilityTab.jsx:122 · frontend/src/pages/admin/AdminVisibilityPage.jsx:102
-    · backend/server.py:115,254,398,470,560,770,1158 · memory/control/CONTRACT_CUSTOMER_APP_CRM_v1.0.md:126
-  artefacts: INTAKE
+  files: frontend/src/api/services/crmService.js · frontend/src/pages/PasswordSetup.jsx · frontend/src/context/AuthContext.jsx
+    · frontend/src/components/AdminSettings/VisibilityTab.jsx · frontend/src/pages/admin/AdminVisibilityPage.jsx
+    · backend/server.py
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-07'
-  last_updated: null
+  last_updated: '2026-10-08'
   related:
   - CR-2026-09-14-001
   - CR-2026-10-07-001

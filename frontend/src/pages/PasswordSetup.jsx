@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-// OTP-DEFERRED: CR-2026-09-14-001 — crmForgotPassword, crmResetPassword, crmSendOtp, crmVerifyOtp disabled
-import { crmRegister, crmLogin, /* crmForgotPassword, crmResetPassword, crmSendOtp, crmVerifyOtp, */ crmSkipOtp, buildUserId } from '../api/services/crmService';
+// CR-2026-10-07-002: OTP functions removed from crmService; import cleaned
+import { crmRegister, crmLogin, crmSkipOtp, buildUserId } from '../api/services/crmService';
 import { IoEyeOutline, IoEyeOffOutline, IoArrowBack } from 'react-icons/io5';
 import './PasswordSetup.css';
 
@@ -30,20 +30,6 @@ const PasswordSetup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // OTP-DEFERRED: CR-2026-09-14-001 — forgot-password + OTP-login states disabled
-  // const [forgotMode, setForgotMode] = useState(false);
-  // const [otp, setOtp] = useState('');
-  // const [otpSent, setOtpSent] = useState(false);
-  // const [sendingOtp, setSendingOtp] = useState(false);
-  // const [devOtp, setDevOtp] = useState('');
-  // const [otpDigits, setOtpDigits] = useState('');
-  // const [otpLoginSent, setOtpLoginSent] = useState(false);
-  // const [otpLoginSending, setOtpLoginSending] = useState(false);
-  // const [otpLoginDevOtp, setOtpLoginDevOtp] = useState('');
-  // const [resendTimer, setResendTimer] = useState(0);
-  // const resendIntervalRef = useRef(null);
-
-  // OTP-DEFERRED: authMethod simplified — 'choose'/'otp' removed (password/set-password only)
   const [authMethod, setAuthMethod] = useState('password'); // 'password' | 'set-password'
 
   const displayName = customerName || name || '';
@@ -82,10 +68,6 @@ const PasswordSetup = () => {
     }
   };
 
-  // OTP-DEFERRED: CR-2026-09-14-001 — resend timer disabled
-  // const startResendTimer = useCallback(() => { ... }, []);
-  // useEffect(() => { return () => { if (resendIntervalRef.current) clearInterval(resendIntervalRef.current); }; }, []);
-
   // UX-GAP-01: Direct-to-password routing
   // Skip the intermediate "choose" screen when we already know what the user needs.
   // - Existing customer WITH password → jump to password login
@@ -99,11 +81,6 @@ const PasswordSetup = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // OTP-DEFERRED: CR-2026-09-14-001 — OTP login handlers disabled
-  // const handleLoginSendOtp = useCallback(async () => { ... crmSendOtp ... }, [...]);
-  // const handleLoginVerifyOtp = async () => { ... crmVerifyOtp ... };
-  // const handleResendOtp = async () => { ... handleLoginSendOtp ... };
 
   // Set password (new customer or existing without password) → CRM /customer/register
   const handleSetPassword = async () => {
@@ -162,13 +139,6 @@ const PasswordSetup = () => {
       setIsLoading(false);
     }
   };
-
-  // OTP-DEFERRED: CR-2026-09-14-001 — forgot-password handlers disabled (already dead code)
-  // const handleSendOtp = async () => { ... crmForgotPassword ... };
-  // const handleResetPassword = async () => { ... crmResetPassword ... };
-
-  // OTP-DEFERRED: CR-2026-09-14-001 — forgotMode render block disabled (setForgotMode never called)
-  // if (forgotMode) { return ( ... Reset Password UI ... ); }
 
   // Set password — only for NEW customers (not in our DB at all)
   // Existing customers without password get OTP chooser below
@@ -237,10 +207,6 @@ const PasswordSetup = () => {
   // Mask phone for display: +919579504871 → +91 •••••04871
   const maskedPhone = phone ? phone.replace(/(\+\d{2})(\d+)(\d{5})/, '$1 •••••$3') : '';
 
-  // Login with existing password — now with OTP / Password method selection
-  // OTP-DEFERRED: CR-2026-09-14-001 — 'choose' state removed (showed OTP as primary button)
-  // if (authMethod === 'choose') { return ( ... Login with OTP / Login with Password ... ); }
-
   // State A2: authMethod = 'set-password' (existing customer without password, chose to set one)
   if (authMethod === 'set-password') {
     return (
@@ -303,9 +269,6 @@ const PasswordSetup = () => {
             {isLoading ? 'Saving...' : 'Save & Continue'}
           </button>
 
-          {/* OTP-DEFERRED: CR-2026-09-14-001 — "Use OTP instead" disabled */}
-          {/* <button className="password-forgot-link" onClick={() => { setAuthMethod('choose'); setError(''); setPassword(''); setConfirmPassword(''); }} data-testid="switch-to-otp-from-set">Use OTP instead</button> */}
-
           <button className="password-skip-link" onClick={handleSkip} data-testid="skip-password-btn">
             Skip for now
           </button>
@@ -313,10 +276,6 @@ const PasswordSetup = () => {
       </div>
     );
   }
-
-
-  // OTP-DEFERRED: CR-2026-09-14-001 — OTP entry screen disabled
-  // if (authMethod === 'otp') { return ( ... Enter 6-digit OTP ... ); }
 
   // State C: authMethod = 'password' (existing password flow — mostly unchanged)
   return (
@@ -370,13 +329,9 @@ const PasswordSetup = () => {
           >
             Forgot password?
           </button>
-          {/* OTP-DEFERRED: CR-2026-09-14-001 — "Use OTP instead" disabled */}
-          {/* <button className="password-forgot-link" onClick={() => { setAuthMethod('choose'); setError(''); setPassword(''); }} data-testid="switch-to-otp-btn">Use OTP instead</button> */}
-        </div>
-
-        <button className="password-skip-link" onClick={handleSkip} data-testid="skip-login-btn">
-          Skip for now
-        </button>
+          <button className="password-skip-link" onClick={handleSkip} data-testid="skip-login-btn">
+            Skip for now
+          </button>
       </div>
     </div>
   );
