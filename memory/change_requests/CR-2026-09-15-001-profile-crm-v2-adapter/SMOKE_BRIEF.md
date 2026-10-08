@@ -4,18 +4,25 @@
 
 ## What this is about
 
-The **Profile page** (tap the hamburger menu → Profile after signing in) has three tabs — **Orders**, **Points**, and **Wallet**. These tabs were broken: they showed "Failed to load" errors and empty lists for every customer.
+The **Profile page** (tap ☰ → Profile after signing in) has four tabs — Profile, Orders, Points, and Wallet. The last three were completely broken for every diner: tapping **Orders**, **Points**, or **Wallet** showed a "Failed to load" error and an empty list instead of real data.
 
-## What was wrong
+The cause was simple: the app was requesting data from old CRM addresses (API routes) that no longer exist. The CRM had moved to new addresses, and the app had not been updated to match.
 
-The app was calling old CRM routes to fetch this data. Those routes no longer exist — they return a "Not Found" error. So every time a diner opened their Orders or Points history, they saw an error instead of their data.
+## What the fix covers
 
-## What the change does
+**1. Orders tab now works**
+Fetches from the correct CRM route. Order type codes are mapped to readable labels — "Dine-in" instead of the raw `dinein`, "Takeaway" instead of `takeaway`, and so on.
 
-- **Orders tab** now loads from the correct CRM route and shows the diner's order history with readable type labels ("Dine-in" instead of the raw code "dinein").
-- **Points tab** now loads correctly. A fix was also applied: "Bonus reward" transactions (like first-visit bonuses) now correctly show a `+` sign — previously they incorrectly showed `−`.
-- **Wallet tab** now loads from the correct CRM route. It also only appears when the restaurant has the Wallet feature switched on in admin settings (it is off by default).
-- The header card (name, tier badge, points total, wallet balance) is unchanged — it was already working.
+**2. Points tab now works**
+Fetches from the correct CRM route. A sign bug was also fixed: "Bonus reward" transactions (e.g. a first-visit welcome bonus) were incorrectly showing a `−` (negative) sign. They now correctly show `+`.
+
+**3. Wallet tab now works**
+Fetches from the correct CRM route. The tab now also only appears when the restaurant has the Wallet feature switched **on** in admin settings — it was always visible before, even when the feature was off.
+
+**4. "Showing N of M orders" count**
+If a diner has more than 50 orders on record, a small line tells them the list is not complete — e.g. "Showing 50 of 120 orders".
+
+The header card (name, tier badge, total points, wallet balance summary) was already working and is completely unchanged.
 
 > **What must NOT have changed:** signing in, browsing the menu, placing an order, feedback — everything outside the Profile page behaves exactly as before.
 
