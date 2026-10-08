@@ -301,6 +301,7 @@ export const crmSkipOtp = async (phone, userId) => {
     body: JSON.stringify({
       phone: stripPhonePrefix(phone),
       restaurant_id: restaurantId,
+      country_code: '+91', // CR-085-A: send separately for canonical matching
     }),
     userId, // used by crmFetch to resolve restaurant -> x-api-key
   });
@@ -327,6 +328,7 @@ export const crmLookupCustomer = async (phone, restaurantId) => {
     body: JSON.stringify({
       phone: stripPhonePrefix(phone),
       restaurant_id: String(restaurantId),
+      country_code: '+91', // CR-085-A: send separately for canonical matching
     }),
   });
   return {
