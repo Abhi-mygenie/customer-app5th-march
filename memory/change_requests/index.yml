@@ -1856,3 +1856,33 @@
   money_path: null
   closed: null
   notes: 'Source: memory/inbox/CRM_REPLY_IDENTITY_RULINGS_2026-10-08.md · impact: memory/inbox/IMPACT_OF_CRM_REPLY_2026-10-08.md'
+- id: CR-2026-10-09-001
+  type: CR
+  title: 'Customer App side of CRM CR-095 — confirm zero callers of the 4 orphan `/scan/config` + `/scan/menu/dietary-tags`
+    routes, rule on the sequencing gate (CA-2/CA-8), verify after CRM removes them, countersign ownership-map §4d'
+  status: INTAKE
+  status_note: 'Registered 2026-10-09 (Role 1). Code reality: 0 callers in frontend/backend/tests; UAT customer_app_config
+    13 docs all short-form rid, dietary_tags_mapping 0 docs. No app code change expected. Owner decisions D1 (gate), D2
+    (verification depth), D3 (§4d signing authority) open for Planning.'
+  priority: P2
+  risk: LOW
+  owner_action: 'Say "Planning for CR-2026-10-09-001"; answer D1 (release CRM from 4-step gate vs hold)'
+  blocked_on:
+  - party: CRM
+    ref: CR-095 implementation (route deletion) — gates acceptance items 2-5 only
+    since: '2026-10-09'
+  sprint: null
+  files: null
+  artefacts: INTAKE
+  registered: '2026-10-09'
+  last_updated: '2026-10-09'
+  related:
+  - CR-2026-10-03-004
+  - CR-2026-10-03-001
+  - CR-2026-09-15-004
+  - INV-2026-09-15-002
+  - INV-2026-09-15-003
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'Source: memory/inbox/CRM_REPLY_VALIDATIONS_ACCEPTED_CR102_2026-10-09.md (CA-2 + CA-8 bounce-backs). Contract §4d already CRM-signed 2026-10-03.'
