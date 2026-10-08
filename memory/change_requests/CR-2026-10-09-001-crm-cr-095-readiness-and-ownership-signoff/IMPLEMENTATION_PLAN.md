@@ -54,13 +54,14 @@ Count `customer_app_config` and `dietary_tags_mapping` on UAT; compare with the 
 
 ---
 
-## Phase 3 — Countersign §4d (after Phase 2 PASS; needs D3)
+## Phase 3 — Countersign §4d (after Phase 2 PASS) — **D3 RULED 2026-10-09: owner signs personally**
 
 ### E7 — `OWNERSHIP_MAP.md` (INV-2026-09-15-002 folder)
 - Row `customer_app_config` (line 36): status `⚠️ CONTESTED → OURS by OD-7` → `✅ OURS EXCLUSIVE — CRM routes removed (CR-095, <date>)`; note column: drop "CRM must lock/remove…".
 - Row `dietary_tags_mapping` (line 38): `⚠️ CONTESTED → PENDING Q4` → `✅ OURS EXCLUSIVE — CRM routes removed (CR-095, <date>)`.
 - Section "Sign-off": **add one line above the table**, not a signature in it:
-  `§4d (CR-095 — 4 orphan routes removed): Customer App ✅ <date> (per D3) · CRM ✅ 2026-10-03 (CONTRACT_v1.0_CRM_SIGNOFF §4d)`
+  `§4d (CR-095 — 4 orphan routes removed): Customer App ✅ <owner initials, date> · CRM ✅ 2026-10-03 (CONTRACT_v1.0_CRM_SIGNOFF §4d)`
+  E1 prepares the row edits and the line with `<owner initials, date>` left blank; **owner fills it in** (D3). E1 does not mark the row on the owner's behalf.
 - **Do not** change the `Status: DRAFT — NOT signed` header. The map freeze still waits on POS + owner F3.
 
 ### E8 — Registry close
@@ -103,7 +104,7 @@ Code reality: NONE
 Risk: LOW
 Files WILL change: memory only (CR folder · index.yml · PRD.md · OWNERSHIP_MAP.md §4d)
 Files WILL NOT touch: frontend/* · backend/*
-Owner decisions: D1 ruled (i) · D2 default (a) · D3 needed before E7
+Owner decisions: D1 ruled (i) · D2 default (a) · D3 ruled — owner signs
 Docs: memory/change_requests/CR-2026-10-09-001-crm-cr-095-readiness-and-ownership-signoff/IMPLEMENTATION_PLAN.md
 Next: "Gate 3 accepted for CR-2026-10-09-001" → Role 3 runs Phase 1 (E1–E2) and drafts the CRM message
 ```

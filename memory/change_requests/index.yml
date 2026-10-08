@@ -1861,10 +1861,10 @@
   title: 'Customer App side of CRM CR-095 — confirm zero callers of the 4 orphan `/scan/config` + `/scan/menu/dietary-tags`
     routes, rule on the sequencing gate (CA-2/CA-8), verify after CRM removes them, countersign ownership-map §4d'
   status: IMPLEMENTATION
-  status_note: 'Gate 3 accepted 2026-10-09. Phase 1 done (Role 3): pre-flight 0 callers, baseline 13/0 docs, CONFIRMATION_NOTE_TO_CRM.md drafted (CA-2/4/5/8 in one). Owner to send. Phase 2 (E3-E5 verification) blocked on CRM shipping CR-095. Phase 3 (§4d) needs D3.'
+  status_note: 'Gate 3 accepted 2026-10-09. Phase 1 done (Role 3): pre-flight 0 callers, baseline 13/0 docs, CONFIRMATION_NOTE_TO_CRM.md drafted (CA-2/4/5/8 in one). Owner to send. Phase 2 (E3-E5 verification) blocked on CRM shipping CR-095. Phase 3 (§4d): D3 RULED — owner signs the row personally; E1 prepares the text, does not mark it.'
   priority: P2
   risk: LOW
-  owner_action: 'Send CONFIRMATION_NOTE_TO_CRM.md to CRM; answer D3; say "CRM shipped CR-095" to trigger Phase 2'
+  owner_action: 'Send CONFIRMATION_NOTE_TO_CRM.md to CRM; say "CRM shipped CR-095" to trigger Phase 2; sign §4d row yourself after Phase 2 PASS'
   blocked_on:
   - party: CRM
     ref: CR-095 ship confirmation — gates Phase 2 (E3-E5) + Phase 3 (§4d)
