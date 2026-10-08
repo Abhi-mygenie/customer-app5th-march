@@ -2,6 +2,7 @@
 ## Delete the dead CRM-table call sites in `server.py` (legacy customer API shim)
 
 **Written by:** Role 2 — Planning Agent · **Date:** 2026-10-09 · **Risk:** HIGH by file (Part C hotspot `backend/server.py`) · **Priority:** P3 · **No Fast Lane**
+**Owner rulings 2026-10-09:** D1 = (a) delete outright · D2 = (a) trim login models · D3 = (a) backend-only, `AuthContext.login()` → CR-2026-09-15-004
 **Code reality re-verified today** on the live `server.py` (1,741 lines) — intake line numbers from 3 Oct are stale and replaced below.
 
 ---
@@ -87,11 +88,11 @@ Nothing a diner or admin does today passes through any ✂ block.
 
 ## 8. Owner decisions
 
-| ID | Decision | Options | Recommendation |
+| ID | Decision | Options | Ruling (2026-10-09) |
 |---|---|---|---|
-| **D1** | Delete outright vs quarantine with `# CR-2026-10-03-001:` markers | (a) delete · (b) quarantine | **(a)** — precedent CR-2026-10-07-002: quarantine produced 31 dead markers that needed a second CR to remove |
-| **D2** | Trim `LoginRequest.restaurant_id/pos_id` and `LoginResponse.restaurant_context` (only the dead branch used them) | (a) trim · (b) leave | **(a)** — Pydantic ignores extra fields, so `Login.jsx` is unaffected either way |
-| **D3** | Frontend dead `AuthContext.login()` (L146–~200) | (a) leave, fold into CR-2026-09-15-004 which already owns `AuthContext.jsx` · (b) widen this CR to frontend | **(a)** — keep this CR backend-only as intaken |
+| **D1** | Delete outright vs quarantine with `# CR-2026-10-03-001:` markers | (a) delete · (b) quarantine | **RULED (a) delete** — precedent CR-2026-10-07-002: quarantine produced 31 dead markers that needed a second CR to remove |
+| **D2** | Trim `LoginRequest.restaurant_id/pos_id` and `LoginResponse.restaurant_context` (only the dead branch used them) | (a) trim · (b) leave | **RULED (a) trim** — Pydantic ignores extra fields, so `Login.jsx` is unaffected either way |
+| **D3** | Frontend dead `AuthContext.login()` (L146–~200) | (a) leave, fold into CR-2026-09-15-004 which already owns `AuthContext.jsx` · (b) widen this CR to frontend | **RULED (a) leave** — keep this CR backend-only as intaken; deletion folded into CR-2026-09-15-004 scope |
 
 ```text
 Planning complete: CR-2026-10-03-001
@@ -100,7 +101,7 @@ Code reality: FULL (removal only) — 13 touches / 9 routes+branches verified by
 Risk: HIGH by file (Part C hotspot), LOW by behaviour
 Files WILL change: backend/server.py · backend/tests/smoke/test_cr_2026_10_03_001.py (new)
 Files WILL NOT touch: frontend/* · .env · customer-lookup · loyalty-settings · db.users reads · contract snapshots
-Owner decisions: D1 delete-vs-quarantine · D2 trim login models · D3 AuthContext.login scope
+Owner decisions: D1 (a) delete · D2 (a) trim · D3 (a) backend-only — ALL RULED 2026-10-09
 Docs: memory/change_requests/CR-2026-10-03-001-delete-dead-crm-table-call-sites/IMPACT_ANALYSIS.md
 Next: Implementation Plan (same session)
 ```

@@ -2,7 +2,7 @@
 ## Delete the dead CRM-table call sites in `server.py`
 
 **Written by:** Role 2 — Planning Agent · **Date:** 2026-10-09 · **Risk:** HIGH by file · **No Fast Lane — owner Gate 3 required**
-**Assumes D1 (a) delete · D2 (a) trim · D3 (a) backend-only.** If the owner rules otherwise, E5/E6 change as noted.
+**Owner rulings 2026-10-09: D1 = (a) delete · D2 = (a) trim · D3 = (a) backend-only.** The alternative branches below are retained for the record only; they do not apply.
 Role 3 locates every edit by **function / class name**, never by line number.
 
 ---
@@ -93,7 +93,7 @@ Code reality: FULL — removal only, 11 named edits + 1 new smoke test
 Risk: HIGH by file (Part C hotspot) · LOW by behaviour · rollback = git checkout one file
 Files WILL change: backend/server.py · backend/tests/smoke/test_cr_2026_10_03_001.py (new)
 Files WILL NOT touch: frontend/* · .env · customer-lookup · loyalty-settings · db.users reads · contract snapshots
-Owner decisions: D1 (delete rec) · D2 (trim rec) · D3 (backend-only rec)
+Owner decisions: D1 (a) · D2 (a) · D3 (a) — RULED 2026-10-09
 Docs: memory/change_requests/CR-2026-10-03-001-delete-dead-crm-table-call-sites/IMPLEMENTATION_PLAN.md
-Next: "Gate 3 accepted for CR-2026-10-03-001" (+ D1/D2/D3 if not default) → Role 3
+Next: "Gate 3 accepted for CR-2026-10-03-001" → Role 3  (Gate 3 NOT yet open — owner explicitly held it 2026-10-09)
 ```
