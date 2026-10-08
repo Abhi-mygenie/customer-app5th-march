@@ -347,6 +347,29 @@ export const crmSkipOtp = async (phone, userId) => {
 };
 
 /**
+ * CR-2026-10-03-004 Part A: Pre-login customer lookup via CRM.
+ * Replaces POST /api/auth/check-customer (which read db.customers directly).
+ *
+ * v2 path: POST /scan/auth/lookup — body { phone (digits only), restaurant_id }
+ * Response normalised to { exists, customer: { name } | null } (D1=adapter)
+ * so LandingPage call sites require no changes to their reads.
+ * No auth token required — lookup is a public endpoint.
+ */
+export const crmLookupCustomer = async (phone, restaurantId) => {
+  const data = await crmFetch('/scan/auth/lookup', {
+    method: 'POST',
+    body: JSON.stringify({
+      phone: stripPhonePrefix(phone),
+      restaurant_id: String(restaurantId),
+    }),
+  });
+  return {
+    exists: data?.exists ?? false,
+    customer: data?.exists ? { name: data.name || '' } : null,
+  };
+};
+
+/**
  * Send OTP for password reset
  * Returns: { success, message, expires_in_minutes }
  *

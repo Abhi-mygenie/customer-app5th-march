@@ -1161,25 +1161,27 @@
   type: CR
   title: 'Pre-login reads → CRM API: `check-customer` → `/scan/auth/lookup`, `loyalty-settings` → `/scan/loyalty-rules/{rid}`,
     retire `customer-lookup` (F2 = a)'
-  status: INTAKE
-  status_note: null
-  priority: null
-  risk: null
-  owner_action: 'Planning may start against the frozen lookup contract (CRM reply 2026-10-08); Role 3 waits for CR-093 2xx on preview (w/c 13 Oct)'
+  status: IMPLEMENTATION
+  status_note: 'Part A implemented 2026-10-08 (Role 3). E1–E6 applied: crmLookupCustomer added to
+    crmService.js, both LandingPage call sites swapped, backend check-customer route + CheckCustomerRequest
+    model deleted. Backend RUNNING, build clean, ST1–ST6 PASS. Parts B/C blocked on CRM CR-094 (loyalty-rules).'
+  priority: P1
+  risk: CRITICAL
+  owner_action: 'QA + smoke Part A; Parts B/C await CRM CR-094'
   blocked_on:
   - party: CRM
-    ref: CR-093 POST /scan/auth/lookup — target w/c 13 Oct 2026 (contract frozen 2026-10-08)
+    ref: CR-094 GET /scan/loyalty-rules/{rid} — Parts B/C only; Part A complete
     since: '2026-10-08'
   sprint: null
-  files: backend/server.py:494 (check-customer) · frontend/src/pages/LandingPage.jsx:601-616 · frontend/src/api/services/crmService.js
-  artefacts: INTAKE
+  files: frontend/src/api/services/crmService.js · frontend/src/pages/LandingPage.jsx · backend/server.py
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-03'
-  last_updated: null
+  last_updated: '2026-10-08'
   related: []
-  code_markers: false
+  code_markers: true
   money_path: null
   closed: null
-  notes: 'lookup contract: {phone digits, country_code "+91" opt, restaurant_id} → {success,message,data:{exists,name|null}}; 200 exists:false; 400/429+Retry-After; oldest dup wins. Send phone digits + country_code separately.'
+  notes: 'Part A done. Parts B (loyalty-rules swap in ReviewOrder) + C (customer-lookup retirement) blocked on CRM CR-094.'
 - id: CR-2026-10-03-005
   type: CR
   title: BUG (customer-visible) — Call Waiter / Pay Bill buttons are silent no-ops in the live UI

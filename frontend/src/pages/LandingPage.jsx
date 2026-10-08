@@ -16,7 +16,7 @@ import { isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability
 import { getAuthToken } from '../utils/authToken';
 // CR-2026-10-08-001 Step 1: otpPolicy gate removed — skip-otp is always called
 import { crmSkipOtpWithRetry } from '../api/services/crmSkipOtpRetry';
-import { buildUserId } from '../api/services/crmService';
+import { buildUserId, crmLookupCustomer } from '../api/services/crmService';
 import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAccessPolicy';
 import { postNonQrBlock } from '../api/services/diagnosticsService';
 import NonQrBlockModal from '../components/NonQrBlockModal';
@@ -82,17 +82,8 @@ const LandingPage = () => {
     lookupTimerRef.current = setTimeout(async () => {
       setIsAutoLooking(true);
       try {
-        const API_URL = process.env.REACT_APP_BACKEND_URL || '';
-        const res = await fetchWithTimeout(`${API_URL}/api/auth/check-customer`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone: capturedPhone,
-            restaurant_id: String(restaurantId),
-            pos_id: '0001',
-          }),
-        }); // CR-2026-02-XX-001 — 8 s read
-        const data = await res.json();
+        // CR-2026-10-03-004 Part A: CRM lookup replaces backend check-customer
+        const data = await crmLookupCustomer(capturedPhone, restaurantId);
         lastLookedUpPhone.current = capturedPhone;
         setCustomerLookup({ ...data, phone: capturedPhone });
 
@@ -605,17 +596,8 @@ const LandingPage = () => {
         if (!data) {
           setIsCheckingCustomer(true);
           try {
-            const API_URL = process.env.REACT_APP_BACKEND_URL || '';
-            const res = await fetchWithTimeout(`${API_URL}/api/auth/check-customer`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                phone: capturedPhone,
-                restaurant_id: String(restaurantId),
-                pos_id: '0001',
-              }),
-            }); // CR-2026-02-XX-001 — 8 s read
-            data = await res.json();
+            // CR-2026-10-03-004 Part A: CRM lookup replaces backend check-customer
+            data = await crmLookupCustomer(capturedPhone, restaurantId);
           } catch (err) {
             logger.error('order', 'Customer lookup failed:', err);
             // On error, save as guest and go to menu

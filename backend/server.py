@@ -118,11 +118,6 @@ class LoginResponse(BaseModel):
 #     restaurant_id: Optional[str] = None  # For scoped OTP sending
 #     pos_id: Optional[str] = "0001"
 
-class CheckCustomerRequest(BaseModel):
-    phone: str
-    restaurant_id: str
-    pos_id: Optional[str] = "0001"
-
 class CustomerProfile(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
@@ -487,40 +482,6 @@ async def refresh_pos_token(email: str, password: str) -> Optional[str]:
 #     otp = generate_otp(phone)
 #     logging.info(f"OTP for {phone}: {otp}")
 #     return {"success": True, "message": "OTP sent successfully", "otp_for_testing": otp}
-
-@auth_router.post("/check-customer")
-async def check_customer(request: CheckCustomerRequest):
-    """Check if customer exists for this restaurant - used for landing page capture flow"""
-    phone = request.phone.strip()
-    pos_id = request.pos_id or "0001"
-    user_id = f"pos_{pos_id}_restaurant_{request.restaurant_id}"
-    
-    # Normalize phone - remove +91 prefix if present for matching
-    normalized_phone = phone
-    if phone.startswith('+91'):
-        normalized_phone = phone[3:]  # Remove +91
-    elif phone.startswith('91') and len(phone) > 10:
-        normalized_phone = phone[2:]  # Remove 91
-    
-    # Check if customer exists for this restaurant (try both formats)
-    customer = await db.customers.find_one({
-        "$or": [
-            {"phone": phone, "user_id": user_id},
-            {"phone": normalized_phone, "user_id": user_id}
-        ]
-    }, {"_id": 0, "name": 1, "phone": 1, "id": 1, "password_hash": 1})
-    
-    if customer:
-        return {
-            "exists": True,
-            "customer": {
-                "name": customer.get("name", ""),
-                "phone": customer.get("phone", ""),
-                "has_password": bool(customer.get("password_hash"))
-            }
-        }
-    
-    return {"exists": False, "customer": None}
 
 @auth_router.post("/login", response_model=LoginResponse)
 @limiter.limit("5/minute")  # CR-2026-09-12-004: rate-limit
