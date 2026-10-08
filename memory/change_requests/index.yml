@@ -1098,15 +1098,15 @@
 - id: CR-2026-10-03-001
   type: CR
   title: Delete the 14 dead CRM-table call sites in `server.py` (legacy customer API shim)
-  status: PLANNING
-  status_note: 'IA + IP written 2026-10-09 (Role 2); D1/D2/D3 all RULED (a) by owner 2026-10-09. Appendix A line-level edit map pinned (md5 2aea049a…, 1741 lines, bottom-up order). Gate 3 NOT open — owner held it. Must land before CR-2026-09-15-004.'
+  status: SMOKE
+  status_note: 'Gate 3 accepted 2026-10-09; Role 3 executed E1-E12 bottom-up (server.py 1741→1367, -378/+5). Self-test 12/12 · 31/31 smoke · 14/14 contract. Testing agent iteration_8: 28/28 + 61/61 regression, retest_needed=false. QA_HANDOVER + SMOKE_BRIEF(.pdf) written. Awaiting owner smoke.'
   priority: P3
   risk: HIGH
-  owner_action: 'Say "Gate 3 accepted for CR-2026-10-03-001" when ready — all decisions already ruled'
+  owner_action: 'Run SMOKE_BRIEF (3 steps) → reply "Smoke PASS CR-2026-10-03-001"'
   blocked_on: []
   sprint: null
-  files: backend/server.py · backend/tests/smoke/test_cr_2026_10_03_001.py (new)
-  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  files: backend/server.py (E1-E11) · backend/tests/smoke/test_cr_2026_10_03_001.py (new) · backend/tests/smoke/test_cr_2026_10_03_001_extras.py (new, testing agent)
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER · SMOKE_BRIEF · SMOKE_BRIEF.pdf · test_reports/iteration_8.json
   registered: '2026-10-03'
   last_updated: '2026-10-09'
   related:

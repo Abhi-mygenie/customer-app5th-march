@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CR_DIR = ROOT / "memory" / "change_requests"
 ORDER = [
     "BUG-2026-10-06-001", "CR-2026-10-03-003", "CR-2026-10-08-001",
-    "CR-2026-09-15-001", "CR-2026-10-03-004", "CR-2026-10-07-002",
+    "CR-2026-09-15-001", "CR-2026-10-03-004", "CR-2026-10-07-002", "CR-2026-10-03-001",
 ]
 CSS = """
 @page { size: A4; margin: 18mm 16mm; }
