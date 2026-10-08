@@ -86,7 +86,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Create routers
 api_router = APIRouter(prefix="/api")
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
-customer_router = APIRouter(prefix="/customer", tags=["Customer"])
 config_router = APIRouter(prefix="/config", tags=["Configuration"])
 upload_router = APIRouter(prefix="/upload", tags=["Upload"])
 dietary_router = APIRouter(prefix="/dietary-tags", tags=["Dietary Tags"])
@@ -99,48 +98,13 @@ diagnostics_router = APIRouter(prefix="/diagnostics", tags=["Diagnostics"])
 class LoginRequest(BaseModel):
     phone_or_email: str
     password: Optional[str] = None
-    restaurant_id: Optional[str] = None  # From POS API response (e.g., "698")
-    pos_id: Optional[str] = "0001"  # Default MyGenie, can be "petpooja", "ezzo", etc.
 
 class LoginResponse(BaseModel):
     success: bool
-    user_type: str  # "customer" or "restaurant"
+    user_type: str  # "restaurant"
     token: str
     pos_token: Optional[str] = None  # POS API token for admin operations (QR, etc.)
     user: dict
-    restaurant_context: Optional[dict] = None  # Restaurant info for customer
-
-class CustomerProfile(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    name: str
-    phone: str
-    email: Optional[str] = None
-    total_points: int = 0
-    wallet_balance: float = 0.0
-    tier: str = "Bronze"
-    total_visits: int = 0
-    total_spent: float = 0.0
-    allergies: Optional[List[str]] = None
-    diet_preference: Optional[str] = None
-
-class OrderSummary(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    order_amount: float
-    points_earned: int = 0
-    created_at: str
-    order_type: Optional[str] = None
-    items: Optional[List[dict]] = None
-
-class PointsTransaction(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    points: int
-    transaction_type: str
-    description: str
-    created_at: str
-    balance_after: int = 0
 
 class AppConfigUpdate(BaseModel):
     # Landing Page Visibility
@@ -273,28 +237,6 @@ class AppConfigUpdate(BaseModel):
     # Notification Popups (FEAT-003)
     notificationPopups: Optional[List[dict]] = None  # [{enabled, showOn, delaySeconds, content:{title,message,...}, style:{position,type}}]
 
-class SetPasswordRequest(BaseModel):
-    phone: str
-    password: str
-    confirm_password: str
-    restaurant_id: str
-    pos_id: Optional[str] = "0001"
-    name: Optional[str] = None
-
-class VerifyPasswordRequest(BaseModel):
-    phone: str
-    password: str
-    restaurant_id: str
-    pos_id: Optional[str] = "0001"
-
-class ResetPasswordRequest(BaseModel):
-    phone: str
-    new_password: str
-    confirm_password: str
-    otp: str
-    restaurant_id: str
-    pos_id: Optional[str] = "0001"
-
 class BannerCreate(BaseModel):
     bannerImage: str
     bannerTitle: str
@@ -354,10 +296,7 @@ async def get_current_user(authorization: str = Header(None)):
     user_id = payload.get("user_id")
     user_type = payload.get("user_type")
     
-    if user_type == "customer":
-        user = await db.customers.find_one({"id": user_id}, {"_id": 0})
-    else:
-        user = await db.users.find_one({"id": user_id}, USERS_AUTH_PROJECTION)  # CR-2026-10-03-002
+    user = await db.users.find_one({"id": user_id}, USERS_AUTH_PROJECTION)  # CR-2026-10-03-002
     
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -431,71 +370,9 @@ async def refresh_pos_token(email: str, password: str) -> Optional[str]:
 @auth_router.post("/login", response_model=LoginResponse)
 @limiter.limit("5/minute")  # CR-2026-09-12-004: rate-limit
 async def unified_login(request: Request, body: LoginRequest):
-    """
-    Unified login - checks customers first (scoped by restaurant), then restaurant users
-    Supports both OTP (for customers) and password (for restaurant admins)
-    """
+    """Restaurant admin login (password)."""
     identifier = body.phone_or_email.strip().lower()
-    
-    # Build user_id for restaurant-scoped customer lookup
-    customer = None
-    user_id = None
-    
-    if body.restaurant_id:
-        pos_id = body.pos_id or "0001"
-        user_id = f"pos_{pos_id}_restaurant_{body.restaurant_id}"
-        
-        # Step 1: Check customers collection (scoped by restaurant)
-        customer = await db.customers.find_one({
-            "$or": [
-                {"phone": identifier, "user_id": user_id},
-                {"email": identifier, "user_id": user_id}
-            ]
-        }, {"_id": 0})
-    else:
-        # Fallback: check by phone/email only (legacy or admin login)
-        customer = await db.customers.find_one({
-            "$or": [
-                {"phone": identifier},
-                {"email": identifier}
-            ]
-        }, {"_id": 0})
-    
-    if customer:
-        # Customer found - verify via password
-        if body.password:
-            password_hash = customer.get("password_hash")
-            if not password_hash:
-                raise HTTPException(status_code=401, detail="No password set.")
-            if not verify_password(body.password, password_hash):
-                raise HTTPException(status_code=401, detail="Invalid password")
-        else:
-            raise HTTPException(status_code=400, detail="Password required for login")
-        
-        token = create_token(customer["id"], "customer")
-        return LoginResponse(
-            success=True,
-            user_type="customer",
-            token=token,
-            user={
-                "id": customer["id"],
-                "name": customer.get("name", ""),
-                "phone": customer.get("phone", ""),
-                "email": customer.get("email"),
-                "tier": customer.get("tier", "Bronze"),
-                "total_points": customer.get("total_points", 0),
-                "wallet_balance": customer.get("wallet_balance", 0.0),
-                "user_id": customer.get("user_id", ""),
-                "has_password": bool(customer.get("password_hash"))
-            },
-            restaurant_context={
-                "restaurant_id": body.restaurant_id,
-                "pos_id": body.pos_id or "0001",
-                "user_id": user_id
-            } if body.restaurant_id else None
-        )
-    
-    # Step 2: Check users collection (restaurant admins)
+    # Step 1: Check users collection (restaurant admins)
     user = await db.users.find_one({
         "$or": [
             {"email": identifier},
@@ -539,7 +416,7 @@ async def unified_login(request: Request, body: LoginRequest):
             }
         )
     
-    # Step 3: Not found in either collection
+    # Step 2: Not found
     raise HTTPException(status_code=404, detail="Account not found. Please contact restaurant.")
 
 @auth_router.get("/me")
@@ -549,171 +426,6 @@ async def get_me(user: dict = Depends(get_current_user)):
         "user_type": user.get("user_type"),
         "user": user
     }
-
-@auth_router.post("/set-password")
-async def set_password(request: SetPasswordRequest):
-    """Set password for a customer (new or existing without password)"""
-    import bcrypt
-    
-    if request.password != request.confirm_password:
-        raise HTTPException(status_code=400, detail="Passwords do not match")
-    if len(request.password) < 6:
-        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
-    
-    phone = request.phone.strip()
-    pos_id = request.pos_id or "0001"
-    user_id = f"pos_{pos_id}_restaurant_{request.restaurant_id}"
-    
-    # Normalize phone
-    normalized_phone = phone
-    if phone.startswith('+91'):
-        normalized_phone = phone[3:]
-    elif phone.startswith('91') and len(phone) > 10:
-        normalized_phone = phone[2:]
-    
-    # Find customer
-    customer = await db.customers.find_one({
-        "$or": [
-            {"phone": phone, "user_id": user_id},
-            {"phone": normalized_phone, "user_id": user_id}
-        ]
-    }, {"_id": 0})
-    
-    password_hash = bcrypt.hashpw(request.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
-    if customer:
-        # Update existing customer with password
-        await db.customers.update_one(
-            {"id": customer["id"]},
-            {"$set": {"password_hash": password_hash, "updated_at": datetime.now(timezone.utc).isoformat()}}
-        )
-        token = create_token(customer["id"], "customer")
-        return {
-            "success": True,
-            "message": "Password set successfully",
-            "token": token,
-            "customer": {"id": customer["id"], "name": customer.get("name", ""), "phone": customer.get("phone", "")}
-        }
-    else:
-        # Create new customer
-        customer_id = f"cust-{request.restaurant_id}-{uuid.uuid4().hex[:8]}"
-        new_customer = {
-            "id": customer_id,
-            "user_id": user_id,
-            "name": request.name or "",
-            "phone": normalized_phone,
-            "country_code": "+91",
-            "email": "",
-            "tier": "Bronze",
-            "total_points": 0,
-            "wallet_balance": 0,
-            "total_visits": 0,
-            "total_spent": 0.0,
-            "password_hash": password_hash,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }
-        await db.customers.insert_one(new_customer)
-        token = create_token(customer_id, "customer")
-        return {
-            "success": True,
-            "message": "Account created with password",
-            "token": token,
-            "customer": {"id": customer_id, "name": request.name or "", "phone": normalized_phone}
-        }
-
-@auth_router.post("/verify-password")
-@limiter.limit("5/minute")  # CR-2026-09-12-004: rate-limit
-async def verify_customer_password(request: Request, body: VerifyPasswordRequest):
-    """Verify password for returning customer login"""
-    import bcrypt
-    
-    phone = body.phone.strip()
-    pos_id = body.pos_id or "0001"
-    user_id = f"pos_{pos_id}_restaurant_{body.restaurant_id}"
-    
-    normalized_phone = phone
-    if phone.startswith('+91'):
-        normalized_phone = phone[3:]
-    elif phone.startswith('91') and len(phone) > 10:
-        normalized_phone = phone[2:]
-    
-    customer = await db.customers.find_one({
-        "$or": [
-            {"phone": phone, "user_id": user_id},
-            {"phone": normalized_phone, "user_id": user_id}
-        ]
-    }, {"_id": 0})
-    
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    
-    password_hash = customer.get("password_hash")
-    if not password_hash:
-        raise HTTPException(status_code=400, detail="No password set for this account")
-    
-    if not bcrypt.checkpw(body.password.encode('utf-8'), password_hash.encode('utf-8')):
-        raise HTTPException(status_code=401, detail="Invalid password")
-    
-    token = create_token(customer["id"], "customer")
-    return {
-        "success": True,
-        "token": token,
-        "customer": {
-            "id": customer["id"],
-            "name": customer.get("name", ""),
-            "phone": customer.get("phone", ""),
-            "tier": customer.get("tier", "Bronze"),
-            "total_points": customer.get("total_points", 0)
-        }
-    }
-
-# ============================================
-# Customer Routes
-# ============================================
-
-@customer_router.get("/profile", response_model=CustomerProfile)
-async def get_customer_profile(user: dict = Depends(get_current_user)):
-    """Get customer profile"""
-    if user.get("user_type") != "customer":
-        raise HTTPException(status_code=403, detail="Customer access only")
-    
-    return CustomerProfile(
-        id=user["id"],
-        name=user.get("name", ""),
-        phone=user.get("phone", ""),
-        email=user.get("email"),
-        total_points=user.get("total_points", 0),
-        wallet_balance=user.get("wallet_balance", 0.0),
-        tier=user.get("tier", "Bronze"),
-        total_visits=user.get("total_visits", 0),
-        total_spent=user.get("total_spent", 0.0),
-        allergies=user.get("allergies"),
-        diet_preference=user.get("diet_preference")
-    )
-
-@customer_router.get("/orders", response_model=List[OrderSummary])
-async def get_customer_orders(
-    limit: int = 20,
-    skip: int = 0,
-    user: dict = Depends(get_current_user)
-):
-    """Get customer order history"""
-    if user.get("user_type") != "customer":
-        raise HTTPException(status_code=403, detail="Customer access only")
-    
-    orders = await db.orders.find(
-        {"customer_id": user["id"]},
-        {"_id": 0}
-    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
-    
-    return [OrderSummary(
-        id=o["id"],
-        order_amount=o.get("order_amount", 0),
-        points_earned=o.get("points_earned", 0),
-        created_at=o.get("created_at", ""),
-        order_type=o.get("order_type"),
-        items=o.get("items", [])
-    ) for o in orders]
 
 # CR-2026-07-03-000: Proxy endpoint so the frontend does not need to bundle POS creds.
 # The frontend calls this instead of the POS /auth/login directly.
@@ -843,90 +555,6 @@ async def get_table_config(
 
     except httpx.RequestError as e:
         raise HTTPException(status_code=503, detail=f"POS API unavailable: {str(e)}")
-
-@customer_router.get("/points", response_model=List[PointsTransaction])
-async def get_customer_points(
-    limit: int = 50,
-    skip: int = 0,
-    user: dict = Depends(get_current_user)
-):
-    """Get customer points transaction history"""
-    if user.get("user_type") != "customer":
-        raise HTTPException(status_code=403, detail="Customer access only")
-    
-    transactions = await db.points_transactions.find(
-        {"customer_id": user["id"]},
-        {"_id": 0}
-    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
-    
-    return [PointsTransaction(
-        id=t["id"],
-        points=t.get("points", 0),
-        transaction_type=t.get("transaction_type", ""),
-        description=t.get("description", ""),
-        created_at=t.get("created_at", ""),
-        balance_after=t.get("balance_after", 0)
-    ) for t in transactions]
-
-@customer_router.get("/wallet")
-async def get_customer_wallet(
-    limit: int = 50,
-    skip: int = 0,
-    user: dict = Depends(get_current_user)
-):
-    """Get customer wallet transaction history"""
-    if user.get("user_type") != "customer":
-        raise HTTPException(status_code=403, detail="Customer access only")
-    
-    transactions = await db.wallet_transactions.find(
-        {"customer_id": user["id"]},
-        {"_id": 0}
-    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
-    
-    return {
-        "balance": user.get("wallet_balance", 0.0),
-        "transactions": transactions
-    }
-
-@customer_router.get("/coupons")
-async def get_customer_coupons(user: dict = Depends(get_current_user)):
-    """Get available coupons for customer"""
-    if user.get("user_type") != "customer":
-        raise HTTPException(status_code=403, detail="Customer access only")
-    
-    now = datetime.now(timezone.utc).isoformat()
-    
-    # Get coupons that are active and within date range
-    coupons = await db.coupons.find({
-        "user_id": user.get("user_id"),  # Restaurant's coupons
-        "is_active": True,
-        "start_date": {"$lte": now},
-        "end_date": {"$gte": now}
-    }, {"_id": 0}).to_list(100)
-    
-    return {"coupons": coupons}
-
-@customer_router.put("/profile")
-async def update_customer_profile(
-    updates: dict,
-    user: dict = Depends(get_current_user)
-):
-    """Update customer profile (limited fields)"""
-    if user.get("user_type") != "customer":
-        raise HTTPException(status_code=403, detail="Customer access only")
-    
-    # Only allow certain fields to be updated
-    allowed_fields = {"name", "email", "allergies", "diet_preference", "preferred_dining_type"}
-    filtered = {k: v for k, v in updates.items() if k in allowed_fields and v is not None}
-    
-    if not filtered:
-        raise HTTPException(status_code=400, detail="No valid fields to update")
-    
-    filtered["updated_at"] = datetime.now(timezone.utc).isoformat()
-    await db.customers.update_one({"id": user["id"]}, {"$set": filtered})
-    
-    updated = await db.customers.find_one({"id": user["id"]}, {"_id": 0})
-    return {"success": True, "user": updated}
 
 # ============================================
 # Config Routes (Admin)
@@ -1587,7 +1215,6 @@ async def non_qr_block(event: NonQrBlockEvent, request: Request):
 # ============================================
 
 api_router.include_router(auth_router)
-api_router.include_router(customer_router)
 api_router.include_router(config_router)
 api_router.include_router(upload_router)
 api_router.include_router(air_bnb_router)  # Add air-bnb router
