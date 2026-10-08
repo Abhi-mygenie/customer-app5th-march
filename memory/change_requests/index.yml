@@ -1098,18 +1098,23 @@
 - id: CR-2026-10-03-001
   type: CR
   title: Delete the 14 dead CRM-table call sites in `server.py` (legacy customer API shim)
-  status: INTAKE
-  status_note: null
-  priority: null
-  risk: null
-  owner_action: null
+  status: PLANNING
+  status_note: 'IA + IP written 2026-10-09 (Role 2). Code reality re-verified on live server.py: 13 touches / 9 routes+branches, 0 FE callers; ResetPasswordRequest found as extra orphan. Gate 3 not open.'
+  priority: P3
+  risk: HIGH
+  owner_action: 'Say "Gate 3 accepted for CR-2026-10-03-001"; rule D1 delete-vs-quarantine (rec delete), D2 trim login models (rec yes), D3 AuthContext.login stays with CR-2026-09-15-004 (rec)'
   blocked_on: []
   sprint: null
-  files: null
-  artefacts: INTAKE
+  files: backend/server.py · backend/tests/smoke/test_cr_2026_10_03_001.py (new)
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-03'
-  last_updated: null
-  related: []
+  last_updated: '2026-10-09'
+  related:
+  - CR-2026-09-15-004
+  - CR-2026-10-03-004
+  - CR-2026-10-03-002
+  - CR-2026-09-12-006
+  - INV-2026-09-15-003
   code_markers: false
   money_path: null
   closed: null
