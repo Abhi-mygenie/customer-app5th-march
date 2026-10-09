@@ -10,6 +10,9 @@
 - Backend: FastAPI + Motor/MongoDB (port 8001)
 - Database: Remote MongoDB at 52.66.232.149:27017/mygenie
 
+## Session Log (latest first)
+- 2026-10-09: CR-2026-10-03-004 Parts B+C shipped (loyalty-rules CRM swap, customer-lookup retired, G1/G3 gaps fixed). Contract v1.0 frozen both sides (CA-1 countersigned). §4d ownership map signed. CR-095/094/096 closed with CRM. 7 items at owner smoke.
+
 ## What's Implemented
 - Full repo cloned from `6oct` branch into `/app` as-is (no code edits)
 - Backend env configured: MONGO_URL, DB_NAME, JWT_SECRET, CORS_ORIGINS, MYGENIE_API_URL, GOOGLE_MAPS_API_KEY
