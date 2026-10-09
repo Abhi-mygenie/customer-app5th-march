@@ -374,10 +374,8 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       table_id: String(orderData.tableId || orderData.tableNumber || ''),
       air_bnb_id: '',
       cart,
-      coupon_discount_amount: 0,
-      coupon_discount_title: null,
-      distance: 1,
-      cust_name: orderData.customerName || '',
+      coupon_discount_amount: orderData.couponDiscount || 0, // CR-2026-10-09-002
+      coupon_discount_title: orderData.couponTitle || null,  // CR-2026-10-09-002
       cust_phone: custPhone || orderData.customerPhone || '',
       schedule_at: null,
       order_amount: Math.ceil(orderData.totalToPay || 0),

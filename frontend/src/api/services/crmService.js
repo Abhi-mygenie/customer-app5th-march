@@ -373,6 +373,28 @@ export const crmGetMaxRedeemable = async (token, billAmount) => {
   });
 };
 
+/**
+ * CR-2026-10-09-002: Validate a coupon code against the diner's order total before placement.
+ * Read-only — does NOT record usage (usage recorded when POS processes the order).
+ *
+ * v2 path: POST /scan/coupons/validate — body { code, order_total, channel, items }
+ * Auth: customer Bearer token required. D3=(a): send subtotal (pre-discount cart) as order_total.
+ * HTTP always 200 — check data.valid for outcome.
+ * §4 DB whitespace bug: always trim code before sending.
+ * Rate limit: 10/min IP → caller must handle 429.
+ */
+export const crmValidateCoupon = async (token, code, orderTotal, channel = 'dine_in') => {
+  return crmAuthFetch('/scan/coupons/validate', token, {
+    method: 'POST',
+    body: JSON.stringify({
+      code: code.trim(),
+      order_total: orderTotal,
+      channel,
+      items: [],
+    }),
+  });
+};
+
 // ============================================
 // Profile — CRM token required
 // ============================================

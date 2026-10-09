@@ -38,14 +38,15 @@ import { isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability
 import { postNonQrBlock } from '../api/services/diagnosticsService';
 import NonQrBlockModal from '../components/NonQrBlockModal';
 import './ReviewOrder.css';
-import { crmGetLoyaltyRules, crmGetMaxRedeemable } from '../api/services/crmService'; // CR-2026-10-03-004 Part B · CR-2026-10-09-003
+import { crmGetLoyaltyRules, crmGetMaxRedeemable, crmValidateCoupon } from '../api/services/crmService'; // CR-2026-10-03-004 Part B · CR-2026-10-09-003 · CR-2026-10-09-002
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
 
-const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay }) => ({
+const buildBillSummary = ({ itemTotal, pointsDiscount, pointsToRedeem, couponDiscount = 0, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay }) => ({
   itemTotal,
   pointsDiscount,
   pointsRedeemed: pointsToRedeem,
+  couponDiscount, // CR-2026-10-09-002
   serviceCharge,
   subtotal: finalSubtotal,
   subtotalBeforeServiceCharge: subtotalAfterDiscount,
@@ -184,6 +185,13 @@ const ReviewOrder = () => {
   const [roomOrTable, setRoomOrTable] = useState(null); // 'room' | 'table' | null
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [couponCode, setCouponCode] = useState('');
+  // CR-2026-10-09-002: coupon validation state
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedCouponCode, setAppliedCouponCode] = useState('');
+  const [appliedCouponTitle, setAppliedCouponTitle] = useState('');
+  const [couponStackable, setCouponStackable] = useState(true);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
   
   // Payment method selection state (FEAT-001)
   const [paymentMethod, setPaymentMethod] = useState('cod'); // 'online' | 'cod' — default COD, user switches to online if Razorpay configured
@@ -376,6 +384,12 @@ const ReviewOrder = () => {
       // Clear order details
       setSpecialInstructions('');
       setCouponCode('');
+      // CR-2026-10-09-002: clear coupon state on restaurant change
+      setCouponDiscount(0);
+      setAppliedCouponCode('');
+      setAppliedCouponTitle('');
+      setCouponStackable(true);
+      setCouponError('');
       
       // Clear loyalty/points state
       setLoyaltySettings(null);
@@ -637,7 +651,8 @@ const ReviewOrder = () => {
   const itemTotal = previousSubtotal + subtotal;
   
   // Subtotal after discounts (this is the base for tax calculation)
-  const subtotalAfterDiscount = Math.max(0, itemTotal - pointsDiscount);
+  // CR-2026-10-09-002: coupon and loyalty are both pre-tax; both subtract before tax recalculates
+  const subtotalAfterDiscount = Math.max(0, itemTotal - pointsDiscount - couponDiscount);
   
   // Recalculate tax on discounted amount (proportional reduction)
   const discountRatio = itemTotal > 0 ? subtotalAfterDiscount / itemTotal : 1;
@@ -850,6 +865,11 @@ const ReviewOrder = () => {
   // Handle loyalty points redemption
   // CR-2026-10-09-003: replaced client-side G3 cap calculation with CRM server-authoritative max-redeemable
   const handleUsePoints = () => {
+    // CR-2026-10-09-002 D2=(a): block if active coupon is not stackable with loyalty
+    if (appliedCouponCode && !couponStackable) {
+      toast.error('Remove coupon first to use points');
+      return;
+    }
     if (!maxRedeemable?.ok) return;
     setPointsToRedeem(maxRedeemable.max_points_redeemable);
     setPointsDiscount(maxRedeemable.max_discount_value);
@@ -861,6 +881,54 @@ const ReviewOrder = () => {
     setPointsToRedeem(0);
     setPointsDiscount(0);
     setIsUsingPoints(false);
+  };
+
+  // CR-2026-10-09-002: coupon validation and application
+  const handleApplyCoupon = async () => {
+    if (!isAuthenticated || !crmToken) { toast.error('Sign in first to apply coupons'); return; }
+    if (!couponCode.trim() || isEditMode) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
+      const data = await crmValidateCoupon(crmToken, couponCode, subtotal, channel);
+      if (data?.valid) {
+        setCouponDiscount(data.computed_discount);
+        setAppliedCouponCode(data.code);
+        setAppliedCouponTitle(data.title || data.code);
+        const stackable = data.stackable_with_loyalty !== false;
+        setCouponStackable(stackable);
+        // D2=(a): non-stackable coupon auto-removes loyalty points
+        if (!stackable && isUsingPoints) {
+          handleRemovePoints();
+          toast('Coupon applied — loyalty points removed (cannot stack)');
+        } else {
+          toast.success(`Coupon applied — ₹${data.computed_discount.toFixed(0)} off`);
+        }
+      } else {
+        const errorMap = {
+          INVALID_CODE: 'Invalid coupon code',
+          EXPIRED: 'This coupon has expired',
+          PER_USER_LIMIT: "You've already used this coupon the maximum number of times",
+          NOT_APPLICABLE: 'This coupon is not available for your order type',
+        };
+        const msg = data?.error?.detail || errorMap[data?.error?.code] || 'Coupon not valid';
+        setCouponError(msg);
+      }
+    } catch (err) {
+      const msg = err?.status === 429 ? 'Too many attempts. Please try again shortly.' : 'Could not validate coupon. Please try again.';
+      toast.error(msg);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponDiscount(0);
+    setAppliedCouponCode('');
+    setAppliedCouponTitle('');
+    setCouponStackable(true);
+    setCouponError('');
   };
 
   // Handle place order
@@ -1073,7 +1141,7 @@ const ReviewOrder = () => {
         throw new Error(razorpayOrder.message || 'Failed to create Razorpay order');
       }
 
-      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay });
+      const billSummary = buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, couponDiscount, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay });
 
       const options = {
         key: razorpayOrder.key || restaurant.razorpay.razorpay_key,
@@ -1350,6 +1418,8 @@ const ReviewOrder = () => {
           tableNumber: finalTableId,
           specialInstructions,
           couponCode,
+          couponDiscount,                  // CR-2026-10-09-002
+          couponTitle: appliedCouponTitle, // CR-2026-10-09-002
           restaurantId,
           subtotal,
           totalToPay: roundedTotal,
@@ -1417,7 +1487,7 @@ const ReviewOrder = () => {
             isEditedOrder: isEditMode,
             items: buildOrderItems(cartItems),
             previousItems: buildPreviousItems(previousOrderItems, isEditMode),
-            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay })
+            billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, couponDiscount, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay })
           }
         }
       });
@@ -1590,7 +1660,7 @@ const ReviewOrder = () => {
                 isEditedOrder: isEditMode,
                 items: buildOrderItems(cartItems),
                 previousItems: buildPreviousItems(previousOrderItems, isEditMode),
-                billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay })
+                billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, couponDiscount, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay })
               }
             }
           });
@@ -1831,21 +1901,57 @@ const ReviewOrder = () => {
               )}
 
               {/* Coupon Code - inline */}
+              {/* CR-2026-10-09-002: wired to CRM POST /scan/coupons/validate */}
               {showCoupon && (
-                <div className="price-row price-row-input">
-                  <div className="price-input-group">
-                    <span className="price-input-icon">🏷️</span>
-                    <input
-                      type="text"
-                      className="price-inline-input"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      placeholder="Enter coupon code"
-                      data-testid="coupon-input"
-                    />
+                appliedCouponCode ? (
+                  <div className="price-row price-row-input price-row-discount" data-testid="coupon-applied-row">
+                    <div className="price-input-group">
+                      <span className="price-input-icon">🏷️</span>
+                      <span className="price-loyalty-text price-loyalty-applied" data-testid="coupon-applied-label">
+                        {appliedCouponCode} — ₹{couponDiscount.toFixed(0)} off
+                      </span>
+                    </div>
+                    <button
+                      className="price-inline-btn price-inline-btn-remove"
+                      data-testid="coupon-remove-button"
+                      onClick={handleRemoveCoupon}
+                    >
+                      Remove
+                    </button>
                   </div>
-                  <button className="price-inline-btn" data-testid="apply-coupon-btn">Apply</button>
-                </div>
+                ) : (
+                  <div className="price-row price-row-input" style={{ flexDirection: 'column', gap: 4 }}>
+                    <div style={{ display: 'flex', width: '100%', gap: 8, alignItems: 'center' }}>
+                      <div className="price-input-group" style={{ flex: 1 }}>
+                        <span className="price-input-icon">🏷️</span>
+                        <input
+                          type="text"
+                          className="price-inline-input"
+                          value={couponCode}
+                          onChange={(e) => { setCouponCode(e.target.value); setCouponError(''); }}
+                          placeholder="Enter coupon code"
+                          data-testid="coupon-input"
+                          disabled={couponLoading || isEditMode}
+                        />
+                      </div>
+                      <button
+                        className="price-inline-btn"
+                        data-testid="apply-coupon-btn"
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading || !couponCode.trim() || isEditMode || !isAuthenticated}
+                        style={(couponLoading || !couponCode.trim() || isEditMode || !isAuthenticated)
+                          ? { background: '#F3F4F6', color: '#9CA3AF' } : {}}
+                      >
+                        {couponLoading ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <span style={{ fontSize: '11px', color: '#EF4444', paddingLeft: 18 }} data-testid="coupon-error-text">
+                        {couponError}
+                      </span>
+                    )}
+                  </div>
+                )
               )}
 
               {/* Loyalty Points - inline */}
