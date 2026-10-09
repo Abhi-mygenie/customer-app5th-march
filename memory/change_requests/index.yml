@@ -1169,14 +1169,11 @@
   status: IMPLEMENTATION
   status_note: 'Part A implemented 2026-10-08 (Role 3). E1–E6 applied: crmLookupCustomer added to
     crmService.js, both LandingPage call sites swapped, backend check-customer route + CheckCustomerRequest
-    model deleted. Backend RUNNING, build clean, ST1–ST6 PASS. Parts B/C blocked on CRM CR-094 (loyalty-rules).'
+    model deleted. Backend RUNNING, build clean, ST1–ST6 PASS. Parts B/C blocked on CRM CR-094 (loyalty-rules). | 2026-10-09: CR-094 LIVE on preview (33 keys, per-tier redemption) → Parts B+C UNBLOCKED. Gaps G1-G7 for planning in inbox/VALIDATION_OF_CRM_CR094_CR096_NOTE_2026-10-09.md.'
   priority: P1
   risk: CRITICAL
   owner_action: 'QA + smoke Part A; Parts B/C await CRM CR-094'
-  blocked_on:
-  - party: CRM
-    ref: CR-094 GET /scan/loyalty-rules/{rid} — Parts B/C only; Part A complete
-    since: '2026-10-08'
+  blocked_on: []
   sprint: null
   files: frontend/src/api/services/crmService.js · frontend/src/pages/LandingPage.jsx · backend/server.py
   artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
@@ -1783,17 +1780,11 @@
     (follow-up to CR-2026-10-03-003 D10=a; depends on CRM CR-096)
   status: INTAKE
   status_note: 'Registered 2026-10-07 (Role 1) on owner ruling D10=a. Closes gaps G1–G4 of CR-2026-10-03-003 §9.
-    CRM no-token POST /scan/feedback returns 403 today; CR-096 is CRM Wave 3.'
+    CRM no-token POST /scan/feedback returns 403 today; CR-096 is CRM Wave 3. | 2026-10-09: CR-096 LIVE on preview (hybrid feedback, 6 cases verified) → UNBLOCKED. Plan after CR-2026-10-03-004 B+C.'
   priority: P2
   risk: MEDIUM
   owner_action: none until CRM wave log shows CR-096 CONFIRMED; then re-probe and open Planning
-  blocked_on:
-  - party: CRM
-    ref: CR-096 feedback hybrid intake (Wave 3) — target w/c 27 Oct 2026 (depends on CRM CR-085); body must send phone digits + country_code
-    since: '2026-10-07'
-  - party: INTERNAL
-    ref: CR-2026-10-03-003 must be CLOSED first (same page)
-    since: '2026-10-07'
+  blocked_on: []
   sprint: null
   files: frontend/src/pages/FeedbackPage.jsx · frontend/src/api/services/crmService.js
   artefacts: INTAKE
