@@ -1,6 +1,6 @@
 # SESSION HANDOVER — 2026-10-09 · CR-095 readiness registered, CR-2026-10-03-001 shipped, 7 items at owner smoke
 
-**Table-form twin of `SESSION_HANDOVER_2026-10-09_NARRATIVE.md` (which is authoritative — read that first). Supersedes 2026-10-08.**
+**DRAFT — superseded by `SESSION_HANDOVER_2026-10-09_FINAL.md`. Read that instead.**
 Next agent: read this → `memory/PRD.md` (last ~12 lines) → `memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md`. No role is active. Boot a role only on the owner's phrase.
 
 Owner language: English. Owner style: short imperative messages; wants plain-English explanations on request; **explicitly holds gates** ("don't jump gate") — never implement without the exact phrase `Gate 3 accepted for <ID>`.

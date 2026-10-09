@@ -1,6 +1,6 @@
 # SESSION HANDOVER — 2026-10-09 · narrative edition (rev 2 — includes CR-094/096 validation)
 
-**Authoritative. Supersedes `SESSION_HANDOVER_2026-10-09_CR095_REGISTERED_CR001_SHIPPED.md` (same day, same facts, that one is the table form; this one is the story form the owner asked for).**
+**DRAFT — superseded by `SESSION_HANDOVER_2026-10-09_FINAL.md`. Read that instead.**
 
 **Instruction to the next agent — read this first, then do exactly this on your first turn:**
 1. Tell the owner the story in §1 **in one flow**, in plain English, in order — "this happened, then this, then this". Do not summarise into bullet soup; keep the sequence.
