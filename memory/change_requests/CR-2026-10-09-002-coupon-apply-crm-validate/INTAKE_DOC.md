@@ -18,7 +18,7 @@
 | **Risk** | **CRITICAL** — `ReviewOrder.jsx` (highest-risk file, addendum §6.1). No Fast Lane. |
 | **Duplicate check** | DISTINCT — no existing CR covers coupon validate wiring |
 | **Blast radius** | MEDIUM — 2 frontend files, no auth/payment schema change |
-| **Blocked on** | Nothing. CRM CR-105 live. One POS question open (see §6) |
+| **Blocked on** | Nothing. CRM CR-105 live. D1/D2/D3 all resolved 2026-10-09 |
 | **Related** | CR-2026-10-09-003 (max-redeemable, same checkout area — sequence after this) |
 
 ---

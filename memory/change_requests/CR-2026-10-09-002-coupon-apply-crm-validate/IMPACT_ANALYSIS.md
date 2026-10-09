@@ -154,27 +154,25 @@ Input disappears. Row uses `.price-loyalty-applied` green text + ghost Remove bu
 
 ---
 
-## 8. Owner decisions — required before Gate 3
+## 8. Owner decisions — **RESOLVED 2026-10-09**
 
 ### D1 — G1 (POS payload) → **RESOLVED in this IA**
 `coupon_discount_amount` is a named field in the POS payload (hardcoded 0). `subtotalAfterDiscount` must subtract `couponDiscount` so the full chain (tax, finalSubtotal, totalToPay, order_amount) is correct. Same pattern as `pointsDiscount`. Coupons not applied in edit mode.
 
-### D2 — Stacking conflict UX: `stackable_with_loyalty: false`
+**Tax behaviour confirmed:** Discounts (loyalty + coupon) are pre-tax. Both reduce `subtotalAfterDiscount` first, then tax is recalculated proportionally on the reduced base via `discountRatio`. The single change `subtotalAfterDiscount = Math.max(0, itemTotal - pointsDiscount - couponDiscount)` at line 640 cascades correctly through the entire tax/total chain — no other lines need touching.
 
-| Option | Behaviour |
-|---|---|
-| **(a) Last-applied wins** | Applying coupon auto-removes loyalty points; applying points when coupon is active removes coupon |
-| **(b) Explicit conflict choice** | Show a conflict banner: "This coupon cannot be combined with loyalty points — use one" with [Use coupon] / [Use points] buttons |
+### D2 — Stacking conflict UX → **(a) confirmed 2026-10-09**
+**Last-applied wins**, driven by `stackable_with_loyalty` field in the CRM validate response.
+- `stackable_with_loyalty: false` + loyalty already applied → auto-call `handleRemovePoints()` + toast "Coupon applied — loyalty points removed (cannot stack)"
+- `stackable_with_loyalty: false` + coupon already active → `handleUsePoints` blocked + toast "Remove coupon first to use points"
+- `stackable_with_loyalty: true` → both discounts coexist, both subtract from `subtotalAfterDiscount`
 
-Recommendation: **(a)** — simpler, no extra UI state. Matches standard checkout behaviour.
+### D3 — `order_total` sent to `/scan/coupons/validate` → **(a) `subtotal` confirmed 2026-10-09**
+Send `subtotal` (original pre-discount cart value). CRM uses it to:
+1. Check minimum order threshold against the real cart value
+2. Compute percentage discounts against the gross cart
 
-### D3 — `order_total` sent to validate: `subtotal` (pre-discount cart) or `subtotalAfterDiscount`?
-
-When user has loyalty points applied AND enters a coupon, what `order_total` do we send to `/scan/coupons/validate`?
-- **(a) `subtotal`** — pre-discount cart value. POS and CRM both see the original cart, each discount is independent.
-- **(b) `subtotalAfterDiscount`** — post-loyalty total. Coupon applies on top of already-discounted amount.
-
-Recommendation: **(a) `subtotal`** — simpler, consistent with max-redeemable (which also uses `subtotal`). Coupon min_order_value check should be against the original cart.
+Rationale: This is a Scan & Order decision only — CRM accepts whatever we send. `subtotal` is consistent with `crmGetMaxRedeemable` (which also uses `subtotal`). Coupon applies to the cart the diner sees when they type the code, before any loyalty deduction they may or may not choose to use. After validation, both `pointsDiscount` and `couponDiscount` subtract from `subtotalAfterDiscount` together before tax.
 
 ---
 
@@ -231,7 +229,7 @@ Code reality: FULL — 8 touch points confirmed with exact lines
 Risk: CRITICAL
 Files WILL change: crmService.js · ReviewOrder.jsx · orderService.ts
 Files WILL NOT touch: AuthContext.jsx · CartContext.js · server.py · App.js · LoyaltyRewardsSection.jsx
-Owner decisions: D1=RESOLVED (subtotalAfterDiscount + coupon_discount_amount in payload) · D2 (stacking UX — rec: a) · D3 (order_total to validate — rec: a/subtotal)
-Docs: memory/change_requests/CR-2026-10-09-002-coupon-apply-crm-validate/IMPACT_ANALYSIS.md
-Next: D2 + D3 confirmed → Implementation Plan → "Gate 3 accepted for CR-2026-10-09-002"
+Owner decisions: D1=RESOLVED · D2=(a) last-applied wins, stackable_with_loyalty enforced · D3=(a) subtotal — ALL RESOLVED 2026-10-09
+Tax confirmed: coupon + loyalty are pre-tax discounts; both subtract from subtotalAfterDiscount before tax recalculates
+Status: AT GATE — awaiting "Gate 3 accepted for CR-2026-10-09-002"
 ```
