@@ -16,6 +16,7 @@ const LoyaltyRewardsSection = ({
   lookedUpCustomer,
   loyaltySettings,
   totalToPay,
+  projectedPointsEarned, // CR-2026-10-09-003 D2=(a): CRM server-authoritative earn preview; null = client-side fallback
 }) => {
   if (!configShowLoyaltyPoints || restaurant?.is_loyalty !== 'Yes') return null;
 
@@ -30,7 +31,10 @@ const LoyaltyRewardsSection = ({
     const billAmount = totalToPay;
     const minOrderValue = loyaltySettings.min_order_value || 100;
     const isEligible = billAmount >= minOrderValue;
-    const pointsToEarn = Math.round(billAmount * (earnPercent / 100));
+    const pointsToEarn = (projectedPointsEarned !== null && projectedPointsEarned !== undefined)
+      ? projectedPointsEarned
+      // CR-2026-10-09-003 D2=(a): CRM projected_points_earned is authoritative; client-side as fallback
+      : Math.round(billAmount * (earnPercent / 100));
     // CR-2026-10-03-004 Part B: G1 — per-tier redemption value; never fall back to flat redemption_value
     const tierKey = `${tier}_redemption_value`;
     const redemptionValue = loyaltySettings[tierKey] || loyaltySettings.bronze_redemption_value || 1.0;

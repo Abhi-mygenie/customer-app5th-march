@@ -356,6 +356,23 @@ export const crmGetLoyaltyRules = async (restaurantId) => {
   }
 };
 
+/**
+ * CR-2026-10-09-003: Server-side max loyalty redemption for a bill amount.
+ * Replaces client-side G3 cap calculation in handleUsePoints (ReviewOrder.jsx).
+ *
+ * v2 path: POST /scan/max-redeemable — body { bill_amount }
+ * Auth: customer Bearer token required.
+ * Returns: { ok, code, max_points_redeemable, max_discount_value, ratio_per_point,
+ *            available_points, min_redemption_points, loyalty_enabled, projected_points_earned }
+ * D3=(a): caller sets maxRedeemable=null on error → Use button disabled.
+ */
+export const crmGetMaxRedeemable = async (token, billAmount) => {
+  return crmAuthFetch('/scan/max-redeemable', token, {
+    method: 'POST',
+    body: JSON.stringify({ bill_amount: billAmount }),
+  });
+};
+
 // ============================================
 // Profile — CRM token required
 // ============================================

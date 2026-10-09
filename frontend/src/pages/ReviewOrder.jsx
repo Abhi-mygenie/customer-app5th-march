@@ -38,7 +38,7 @@ import { isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability
 import { postNonQrBlock } from '../api/services/diagnosticsService';
 import NonQrBlockModal from '../components/NonQrBlockModal';
 import './ReviewOrder.css';
-import { crmGetLoyaltyRules } from '../api/services/crmService'; // CR-2026-10-03-004 Part B
+import { crmGetLoyaltyRules, crmGetMaxRedeemable } from '../api/services/crmService'; // CR-2026-10-03-004 Part B · CR-2026-10-09-003
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
 
@@ -87,7 +87,7 @@ const buildPreviousItems = (previousOrderItems, isEditMode) => {
 const ReviewOrder = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
-  const { isAuthenticated, user, isCustomer, setRestaurantScope } = useAuth();
+  const { isAuthenticated, user, isCustomer, setRestaurantScope, crmToken } = useAuth();
   const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig, codEnabled, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery, payOnlineLabel, payAtCounterLabel, allowNonQrOrders, categoryTimings, itemTimings,
     deliveryShifts, takeawayShifts, dineInShifts, roomShifts, walkinShifts,
     restaurantShifts, restaurantOpen,
@@ -235,6 +235,10 @@ const ReviewOrder = () => {
 
   // Loyalty settings for points calculation
   const [loyaltySettings, setLoyaltySettings] = useState(null);
+
+  // CR-2026-10-09-003: CRM server-side max redemption state
+  const [maxRedeemable, setMaxRedeemable] = useState(null);
+  const [maxRedeemableLoading, setMaxRedeemableLoading] = useState(false);
 
   // Points redemption state
   const [isUsingPoints, setIsUsingPoints] = useState(false);
@@ -544,6 +548,33 @@ const ReviewOrder = () => {
 
   const totalItems = getTotalItems();
   const subtotal = getTotalPrice();
+
+  // CR-2026-10-09-003: CRM server-side redemption cap — D1=(b) re-call on subtotal change debounced 500ms
+  // NOTE: must be placed AFTER `subtotal` declaration to avoid TDZ ReferenceError
+  useEffect(() => {
+    if (!isAuthenticated || !crmToken) {
+      setMaxRedeemable(null);
+      return;
+    }
+    if (!subtotal || subtotal <= 0) {
+      setMaxRedeemable(null);
+      return;
+    }
+    setMaxRedeemableLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const result = await crmGetMaxRedeemable(crmToken, subtotal);
+        setMaxRedeemable(result);
+      } catch (err) {
+        // D3=(a): disable Use on failure — safer than over-redemption
+        logger.error('order', 'Failed to fetch max-redeemable:', err);
+        setMaxRedeemable(null);
+      } finally {
+        setMaxRedeemableLoading(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, crmToken, subtotal]);
   
   // Previous order subtotal (for edit mode)
   const previousSubtotal = isEditMode ? getPreviousOrderTotal() : 0;
@@ -817,34 +848,11 @@ const ReviewOrder = () => {
   };
 
   // Handle loyalty points redemption
-  // CR-2026-10-03-004 Part B: G1 per-tier redemption value; G3 CRM redemption caps enforced
+  // CR-2026-10-09-003: replaced client-side G3 cap calculation with CRM server-authoritative max-redeemable
   const handleUsePoints = () => {
-    const availablePoints = isAuthenticated ? (user?.total_points || 0) : (lookedUpCustomer?.total_points || 0);
-    const tier = (isAuthenticated ? user?.tier : lookedUpCustomer?.tier) || 'Bronze';
-    const tierKey = `${tier.toLowerCase()}_redemption_value`;
-    const redemptionValue = loyaltySettings?.[tierKey] || loyaltySettings?.bronze_redemption_value || 0;
-
-    if (!availablePoints || !redemptionValue) return;
-
-    // G3: CRM caps — each enforced independently; most restrictive wins
-    const minPoints = loyaltySettings?.min_redemption_points || 0;
-    if (availablePoints < minPoints) return; // below floor — cannot redeem
-
-    // Cap 1: can't exceed subtotal
-    let maxDiscount = subtotal;
-    // Cap 2: max_redemption_percent (% of subtotal)
-    const maxPct = loyaltySettings?.max_redemption_percent;
-    if (maxPct) maxDiscount = Math.min(maxDiscount, subtotal * (maxPct / 100));
-    // Cap 3: max_redemption_amount (absolute ₹ ceiling, e.g. ₹110 on restaurant 689)
-    const maxAmt = loyaltySettings?.max_redemption_amount;
-    if (maxAmt) maxDiscount = Math.min(maxDiscount, maxAmt);
-
-    const maxPointsToUse = Math.floor(maxDiscount / redemptionValue);
-    const pointsToUse = Math.min(availablePoints, maxPointsToUse);
-    const discount = pointsToUse * redemptionValue;
-
-    setPointsToRedeem(pointsToUse);
-    setPointsDiscount(discount);
+    if (!maxRedeemable?.ok) return;
+    setPointsToRedeem(maxRedeemable.max_points_redeemable);
+    setPointsDiscount(maxRedeemable.max_discount_value);
     setIsUsingPoints(true);
   };
 
@@ -1841,28 +1849,22 @@ const ReviewOrder = () => {
               )}
 
               {/* Loyalty Points - inline */}
+              {/* CR-2026-10-09-003: display driven by CRM max-redeemable response */}
               {showLoyalty && (
                 (() => {
-                  const pts = lookedUpCustomer?.found 
-                    ? (lookedUpCustomer?.total_points || 0) 
-                    : (isAuthenticated ? (user?.total_points || 0) : 0);
-                  // CR-2026-10-03-004 Part B: G1 per-tier redemption value
-                  const _tier = (isAuthenticated ? user?.tier : lookedUpCustomer?.tier) || 'Bronze';
-                  const rdv = loyaltySettings?.[`${_tier.toLowerCase()}_redemption_value`] || loyaltySettings?.bronze_redemption_value || 0;
-                  
-                  // If points are being used, show the applied discount
+                  // Applied state — unchanged
                   if (isUsingPoints && pointsToRedeem > 0) {
                     return (
-                      <div className="price-row price-row-input price-row-discount">
+                      <div className="price-row price-row-input price-row-discount" data-testid="loyalty-points-applied-row">
                         <div className="price-input-group">
                           <span className="price-input-icon">🎁</span>
-                          <span className="price-loyalty-text price-loyalty-applied">
+                          <span className="price-loyalty-text price-loyalty-applied" data-testid="loyalty-points-applied-label">
                             Using {pointsToRedeem} points (-₹{pointsDiscount.toFixed(0)})
                           </span>
                         </div>
-                        <button 
-                          className="price-inline-btn price-inline-btn-remove" 
-                          data-testid="remove-loyalty-btn"
+                        <button
+                          className="price-inline-btn price-inline-btn-remove"
+                          data-testid="loyalty-points-remove-button"
                           onClick={handleRemovePoints}
                         >
                           Remove
@@ -1870,21 +1872,70 @@ const ReviewOrder = () => {
                       </div>
                     );
                   }
-                  
-                  // Show available points with Use button
-                  return (
-                    <div className="price-row price-row-input">
-                      <div className="price-input-group">
-                        <span className="price-input-icon">🎁</span>
-                        <span className="price-loyalty-text">
-                          {pts} points{rdv ? ` (Worth ₹${(pts * rdv).toFixed(0)})` : ''}
-                        </span>
+
+                  // Loading skeleton — while CRM call in-flight
+                  if (maxRedeemableLoading) {
+                    return (
+                      <div className="price-row price-row-input" data-testid="loyalty-points-loading-skeleton">
+                        <div className="price-input-group" style={{ flex: 1 }}>
+                          <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#E5E7EB', marginRight: 8 }} />
+                          <div style={{ height: 13, width: 140, borderRadius: 6, background: '#E5E7EB' }} />
+                        </div>
+                        <div style={{ height: 24, width: 44, borderRadius: 9999, background: '#E5E7EB' }} />
                       </div>
-                      <button 
-                        className="price-inline-btn" 
-                        data-testid="redeem-loyalty-btn" 
-                        disabled={!pts}
+                    );
+                  }
+
+                  // Below minimum
+                  const isBelowMin = maxRedeemable && !maxRedeemable.ok && maxRedeemable.code === 'BELOW_MIN_REDEMPTION';
+                  if (isBelowMin) {
+                    return (
+                      <div className="price-row price-row-input" data-testid="loyalty-points-disabled-row">
+                        <div className="price-input-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <span className="price-input-icon" style={{ opacity: 0.4 }}>🎁</span>
+                            <span className="price-loyalty-text" style={{ color: '#9CA3AF' }} data-testid="loyalty-points-disabled-label">
+                              Points redemption
+                            </span>
+                          </div>
+                          <span style={{ fontSize: '10.5px', color: '#D97706', paddingLeft: 18 }} data-testid="loyalty-points-below-min-subtext">
+                            {(maxRedeemable.min_redemption_points - (maxRedeemable.available_points || 0)) > 0
+                              ? `Add ₹${maxRedeemable.min_redemption_points - (maxRedeemable.available_points || 0)} more to redeem`
+                              : 'Not enough points to redeem'}
+                          </span>
+                        </div>
+                        <button className="price-inline-btn" data-testid="loyalty-points-disabled-button" disabled style={{ background: '#F3F4F6', color: '#9CA3AF' }}>
+                          Use
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  // Normal redeemable state
+                  const canRedeem = maxRedeemable?.ok;
+                  return (
+                    <div className="price-row price-row-input" data-testid="loyalty-points-inline-row">
+                      <div className="price-input-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <span className="price-input-icon">🎁</span>
+                          <span className="price-loyalty-text" data-testid="loyalty-points-label">
+                            {canRedeem
+                              ? `Use up to ${maxRedeemable.max_points_redeemable} pts (₹${maxRedeemable.max_discount_value.toFixed(0)} off)`
+                              : 'Points redemption unavailable'}
+                          </span>
+                        </div>
+                        {canRedeem && maxRedeemable.available_points > 0 && (
+                          <span style={{ fontSize: '10.5px', color: '#888', paddingLeft: 18 }} data-testid="loyalty-points-balance-subtext">
+                            {maxRedeemable.available_points.toLocaleString()} pts available
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        className="price-inline-btn"
+                        data-testid="loyalty-points-use-button"
+                        disabled={!canRedeem}
                         onClick={handleUsePoints}
+                        style={!canRedeem ? { background: '#F3F4F6', color: '#9CA3AF' } : {}}
                       >
                         Use
                       </button>
@@ -1999,6 +2050,7 @@ const ReviewOrder = () => {
             lookedUpCustomer={lookedUpCustomer}
             loyaltySettings={loyaltySettings}
             totalToPay={totalToPay}
+            projectedPointsEarned={maxRedeemable?.projected_points_earned ?? null}
           />
         </div>
 
