@@ -193,6 +193,13 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem(crmTokenKey(restIdStr), newCrmToken);
       setCurrentRestaurantId(restIdStr);
     }
+    // BUG-FIX: skip-otp response only returns { id, phone, name } — no total_points/tier.
+    // Enrich asynchronously so ReviewOrder shows correct loyalty balance.
+    crmGetProfile(newCrmToken).then(fullProfile => {
+      if (fullProfile) setUser(fullProfile);
+    }).catch(() => {
+      // Silently fail — partial profile is acceptable fallback
+    });
   };
 
   const logout = () => {
