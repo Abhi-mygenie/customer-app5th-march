@@ -98,54 +98,46 @@ Currently: `Math.round(billAmount * (earnPercent / 100))`. CRM probe returns `pr
 
 ---
 
-## 5. Owner decisions — required before Gate 3
+## 5. Owner decisions — **RESOLVED 2026-10-09**
 
-### D1 — When does `crmGetMaxRedeemable` get called?
+### D1 — When does `crmGetMaxRedeemable` get called? → **(b) confirmed**
+Re-call whenever `subtotal` changes (debounced 500ms). Effect dependencies: `[isAuthenticated, crmToken, subtotal]`. Skip call if `!isAuthenticated || !crmToken`. Debounce prevents rapid-fire on fast item taps.
 
-CRM says "call this when the checkout screen opens." The question is whether to re-call on cart changes.
+### D2 — Replace earn preview with `projected_points_earned`? → **(a) confirmed**
+Use CRM's `projected_points_earned` from the max-redeemable response in LoyaltyRewardsSection Variant 1 (authenticated diner). For guests (Variant 3), keep bronze earn_percent calculation from loyalty-rules — CRM does not return projected_earned without a token.
+**Impact on scope:** `LoyaltyRewardsSection.jsx` is now IN scope. `maxRedeemable` (or just `projectedPointsEarned`) must be passed as a new prop. `pointsToEarn` calculation in Variant 1 replaced with `projectedPointsEarned` when available; client-side as fallback if null.
 
-| Option | Behaviour | Network calls | Recommendation |
-|---|---|---|---|
-| **(a)** On mount only | Call once when ReviewOrder mounts. If diner adds/removes items, max-redeemable is stale. | 1 call per page load | Simplest |
-| **(b) Re-call on `subtotal` change (debounced 500ms)** | Re-calls whenever cart total changes. Always up-to-date. | N calls (one per cart change) | **Recommended** |
-| **(c)** Re-call when Use tapped | Only calls at the moment of redemption attempt | 1 call per Use tap | Least overhead but diner sees stale "up to N pts" before tapping |
-
-Recommendation: **(b)** — subtotal changes are infrequent (item add/remove), 500ms debounce prevents rapid-fire. Diner always sees the correct max before tapping Use.
-
-### D2 — Replace earn preview with `projected_points_earned`?
-
-Probe result: CRM returns `projected_points_earned: 150` for bill:500/Gold tier. Client-side calculation: `500 × 10% (gold_earn_percent) = 50 pts`. Discrepancy: 3× difference.
-
-Possible explanations: CRM uses a different multiplier (points per rupee, not percent?), includes a base bonus, or the earn_percent in loyalty-rules is not what CRM uses for calculations.
-
-| Option | Effect |
-|---|---|
-| **(a) Replace with CRM value** | Shows 150 pts in earn preview — may confuse diners vs current 50 |
-| **(b) Keep client-side, ask CRM first** | No change to earn preview, ask CRM to clarify the formula |
-
-Recommendation: **(b)** — do not change the earn preview until CRM confirms the correct formula. The discrepancy must be understood before wiring it. Add as a follow-up edit once CRM replies.
-
-### D3 — Graceful failure: what if `crmGetMaxRedeemable` call fails?
-
-| Option | Behaviour |
-|---|---|
-| **(a) Disable Use button** | `maxRedeemable = null` → Use button disabled. Diner cannot redeem if CRM is briefly unavailable. |
-| **(b) Fall back to client-side caps** | On error, keep existing handleUsePoints logic from Part B. Maintains availability but adds code complexity. |
-
-Recommendation: **(a)** — simpler and safer. Over-redemption risk (diner redeems more than CRM allows) is greater than inconvenience of a brief disabled button. The diner can still place the order.
+### D3 — Graceful failure when CRM call fails? → **(a) confirmed**
+`maxRedeemable = null` on error → Use button disabled. Diner cannot redeem but can still order. No fallback to client-side caps.
 
 ---
 
-## 6. Files WILL change
+## 6. Files WILL change — updated after D2=yes
 
 | File | Changes |
 |---|---|
 | `frontend/src/api/services/crmService.js` | Add `crmGetMaxRedeemable(token, billAmount)` (~12 lines) |
-| `frontend/src/pages/ReviewOrder.jsx` | Add `crmToken` to useAuth destructure (T1); add `maxRedeemable` state (T2); add max-redeemable effect (T4); replace `handleUsePoints` (T4); update inline display (T5) |
+| `frontend/src/pages/ReviewOrder.jsx` | Add `crmToken` to useAuth destructure (T1); add `maxRedeemable` state (T2); add max-redeemable effect debounced on subtotal (T3); replace `handleUsePoints` (T4); update inline display (T5); pass `projectedPointsEarned` to LoyaltyRewardsSection (T6) |
+| `frontend/src/components/LoyaltyRewardsSection/LoyaltyRewardsSection.jsx` | Accept `projectedPointsEarned` prop; use it in Variant 1 earn preview when available (T7+T8) |
 
-## 7. Files WILL NOT touch (if D2=b)
+## 7. Files WILL NOT touch
 
-`LoyaltyRewardsSection.jsx` · `AuthContext.jsx` · `CartContext.js` · `server.py` · `App.js`
+`AuthContext.jsx` · `CartContext.js` · `server.py` · `App.js`
+
+---
+
+## 8. Full touch point list — revised
+
+| # | File | Lines | Change |
+|---|---|---|---|
+| T1 | `ReviewOrder.jsx:90` | `useAuth()` | Add `crmToken` to destructure |
+| T2 | `ReviewOrder.jsx:~230` | state | Add `maxRedeemable` state (null) |
+| T3 | `ReviewOrder.jsx` | after `fetchLoyaltyRules` effect | Add debounced max-redeemable effect on `[isAuthenticated, crmToken, subtotal]` |
+| T4 | `ReviewOrder.jsx:821–849` | `handleUsePoints` | Replace client-side cap logic with `maxRedeemable.max_points_redeemable` and `max_discount_value` |
+| T5 | `ReviewOrder.jsx:1843–1893` | inline display | Show max redeemable from CRM; disable Use if `!maxRedeemable?.ok`; show reason when BELOW_MIN_REDEMPTION |
+| T6 | `ReviewOrder.jsx:1994–2002` | LoyaltyRewardsSection call site | Add `projectedPointsEarned={maxRedeemable?.projected_points_earned || null}` prop |
+| T7 | `LoyaltyRewardsSection.jsx:11–18` | props | Add `projectedPointsEarned` to props |
+| T8 | `LoyaltyRewardsSection.jsx:33` | Variant 1 earn calc | Replace `Math.round(billAmount * earnPercent/100)` with `projectedPointsEarned \|\| Math.round(...)` |
 
 ---
 
@@ -181,11 +173,10 @@ No Fast Lane. CRITICAL file — owner Gate 3 required.
 ```
 Planning complete: CR-2026-10-09-003
 Stage: Impact Analysis
-Code reality: FULL — all touch points confirmed with exact line numbers
+Code reality: FULL — 8 exact touch points confirmed
 Risk: HIGH
-Files WILL change: crmService.js · ReviewOrder.jsx
-Files WILL NOT touch: LoyaltyRewardsSection.jsx · AuthContext.jsx · server.py · App.js
-Owner decisions: D1 (re-call trigger — rec: subtotal change debounced) · D2 (earn preview — rec: keep local, ask CRM) · D3 (failure mode — rec: disable Use)
-Docs: memory/change_requests/CR-2026-10-09-003-max-redeemable-server-side/IMPACT_ANALYSIS.md
-Next: D1/D2/D3 confirmed → Implementation Plan → "Gate 3 accepted for CR-2026-10-09-003"
+Files WILL change: crmService.js · ReviewOrder.jsx · LoyaltyRewardsSection.jsx (3 files)
+Files WILL NOT touch: AuthContext.jsx · CartContext.js · server.py · App.js
+Owner decisions: D1=(b) subtotal-debounced · D2=(a) use projected_points_earned · D3=(a) disable on failure — ALL RESOLVED 2026-10-09
+Status: AT GATE — awaiting "Gate 3 accepted for CR-2026-10-09-003"
 ```
