@@ -1938,10 +1938,10 @@
   title: Wire coupon Apply button to CRM POST /scan/coupons/validate — show discount
     preview before order (strip whitespace, handle INVALID_CODE/EXPIRED/MIN_ORDER_NOT_MET/PER_USER_LIMIT/NOT_APPLICABLE,
     coupon+loyalty stacking conflict, gate behind isAuthenticated)
-  status: INTAKE
-  status_note: CRM CR-105 live 2026-10-09. G1 (POS payload — does POS re-validate
-    or trust our discount number?) must be answered before planning. §4 whitespace
-    bug acknowledged — strip client-side, wait for CRM CR-085-B DB cleanup.
+  status: SMOKE
+  status_note: 'QA PASS iteration_15.json (10/10 verifiable, T4/T5 not tested — no
+    non-stackable coupon in preprod). Math verified: subtotalAfterDiscount = itemTotal
+    - pointsDiscount - couponDiscount, tax chain correct. SMOKE_BRIEF written 2026-10-09.'
   priority: P2
   risk: CRITICAL
   owner_action: answer G1 (POS payload question) then say "Planning for CR-2026-10-09-002"
@@ -1952,7 +1952,8 @@
     since: '2026-10-09'
   sprint: null
   files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER · QA_REPORT
+    · SMOKE_BRIEF · SMOKE_BRIEF.pdf
   registered: '2026-10-09'
   last_updated: '2026-10-09'
   related:
