@@ -1970,11 +1970,9 @@
   title: Replace client-side G3 redemption-cap calculation with CRM POST /scan/max-redeemable
     (server-authoritative, tier-aware — supersedes Part B handleUsePoints client-side
     caps)
-  status: INTAKE
-  status_note: 'CRM CR-107 live 2026-10-09. Two grey zones: G1 — re-call on cart subtotal
-    change (debounce?); G2 — projected_points_earned:150 for bill:500 Gold tier vs
-    expected 50 pts (10% earn) — ask CRM to clarify before wiring earn preview. Sequence
-    after CR-2026-10-09-002.'
+  status: SMOKE
+  status_note: QA PASS iteration_12.json (100%). SMOKE_BRIEF.md + PDF written 2026-10-09.
+    Added to SMOKE_BRIEFS_ALL_2026-10-09.pdf (item 8, 20 pages).
   priority: P2
   risk: HIGH
   owner_action: answer G1/G2 then say "Planning for CR-2026-10-09-003"
@@ -1982,7 +1980,8 @@
   sprint: null
   files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx
     · frontend/src/components/LoyaltyRewardsSection/LoyaltyRewardsSection.jsx
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER · SMOKE_BRIEF
+    · SMOKE_BRIEF.pdf
   registered: '2026-10-09'
   last_updated: '2026-10-09'
   related:
