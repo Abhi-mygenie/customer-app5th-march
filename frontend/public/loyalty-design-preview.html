@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CR-2026-10-09-003 · Loyalty Design Preview · Restaurant 689</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #F8F9FA;
+      padding: 20px 16px 48px;
+      max-width: 440px;
+      margin: 0 auto;
+      color: #1A1A1A;
+    }
+
+    /* ── Section labels ─────────────────────────────────── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #999;
+      margin: 28px 0 8px;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    /* ── Price breakdown card ───────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 14px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border-bottom: 1px solid #F0F0F0;
+      color: #1A1A1A;
+    }
+    .card-header svg { color: #E8632B; }
+
+    /* ── Price rows ─────────────────────────────────────── */
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      font-size: 12px;
+      border-bottom: 1px solid #F5F5F5;
+    }
+    .price-row:last-child { border-bottom: none; }
+    .price-label { color: #555; }
+    .price-value { font-weight: 600; color: #1A1A1A; }
+    .price-row.total {
+      padding: 10px 14px;
+      background: #FAFAFA;
+      border-top: 1.5px solid #E8E8E8;
+      border-bottom: none;
+    }
+    .price-row.total .price-label { font-size: 13px; font-weight: 700; color: #1A1A1A; }
+    .price-row.total .price-value { font-size: 14px; font-weight: 700; color: #E8632B; }
+    .price-row.sub { padding: 5px 14px 5px 22px; }
+    .price-row.sub .price-label { font-size: 11px; color: #888; }
+    .price-row.sub .price-value { font-size: 11px; color: #888; }
+
+    /* ── Loyalty inline row ─────────────────────────────── */
+    .loyalty-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 9px 14px;
+      border-bottom: 1px solid #F5F5F5;
+      gap: 8px;
+    }
+    .loyalty-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .loyalty-main {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1A1A1A;
+    }
+    .loyalty-main .icon { font-size: 13px; }
+    .loyalty-sub {
+      font-size: 10.5px;
+      color: #888;
+      padding-left: 18px;
+    }
+    .loyalty-sub.hint { color: #D97706; }
+
+    /* ── Buttons ────────────────────────────────────────── */
+    .btn {
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-primary {
+      background: #E8632B;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(232,99,43,0.25);
+    }
+    .btn-primary:hover { background: #D5521C; }
+    .btn-ghost {
+      background: #FFF3ED;
+      color: #E8632B;
+      border: 1px solid #FDCDBB;
+    }
+    .btn-disabled {
+      background: #F3F4F6;
+      color: #9CA3AF;
+      border: 1px solid #E5E7EB;
+      cursor: not-allowed;
+    }
+    .btn-remove {
+      background: transparent;
+      color: #E8632B;
+      border: 1px solid #FDCDBB;
+    }
+
+    /* ── Applied state ──────────────────────────────────── */
+    .loyalty-applied-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      border-bottom: 1px solid #F5F5F5;
+      background: #FDFAF8;
+    }
+    .applied-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #16A34A;
+    }
+    .applied-discount {
+      font-size: 12px;
+      font-weight: 700;
+      color: #16A34A;
+    }
+
+    /* ── Loading skeleton ───────────────────────────────── */
+    @keyframes shimmer {
+      0% { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+    .skeleton-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      border-bottom: 1px solid #F5F5F5;
+      gap: 8px;
+    }
+    .skel-icon { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+    .skel-text { height: 13px; width: 140px; }
+    .skel-btn { height: 24px; width: 44px; border-radius: 9999px; flex-shrink: 0; }
+
+    /* ── Earn preview ───────────────────────────────────── */
+    .earn-preview {
+      margin-top: 10px;
+      background: #FFF8F5;
+      border: 1px solid #FDCDBB;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .earn-icon { font-size: 20px; color: #E8632B; flex-shrink: 0; }
+    .earn-text-title { font-size: 13px; font-weight: 600; color: #1A1A1A; display: block; }
+    .earn-text-sub { font-size: 11.5px; font-weight: 600; color: #E8632B; display: block; margin-top: 2px; }
+
+    /* ── Divider ────────────────────────────────────────── */
+    .divider { height: 1px; background: #E8E8E8; margin: 6px 14px; }
+
+    /* ── Before/after tag ───────────────────────────────── */
+    .tag {
+      display: inline-block;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+    }
+    .tag-before { background: #FEE2E2; color: #B91C1C; }
+    .tag-after  { background: #DCFCE7; color: #15803D; }
+    .tag-new    { background: #EFF6FF; color: #1D4ED8; }
+
+    /* ── Compare row ────────────────────────────────────── */
+    .compare { display: flex; gap: 10px; }
+    .compare-col { flex: 1; }
+
+    /* ── Restaurant badge ───────────────────────────────── */
+    .rest-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #E8E8E8;
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 20px;
+      font-size: 12px;
+    }
+    .rest-name { font-weight: 700; color: #1A1A1A; }
+    .rest-meta { color: #888; font-size: 10.5px; }
+    .rest-dot { width: 8px; height: 8px; background: #E8632B; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- Restaurant context -->
+  <div class="rest-badge">
+    <div class="rest-dot"></div>
+    <div>
+      <div class="rest-name">Kunafa Mahal (r689)</div>
+      <div class="rest-meta">Saurav · Gold tier · 2,000 pts available · CR-2026-10-09-003 preview</div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- CHANGE 1A: Normal state (redeemable)            -->
+  <!-- ─────────────────────────────────────────────── -->
+  <p class="section-label">Change 1 — Loyalty row · State A: Normal (redeemable)</p>
+  <div class="tag tag-after">After CR-2026-10-09-003</div>
+  <div class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Price Breakdown
+    </div>
+    <div class="price-row">
+      <span class="price-label">Item Total</span>
+      <span class="price-value">₹500.00</span>
+    </div>
+
+    <!-- 🎁 Loyalty row — State A: Redeemable -->
+    <div class="loyalty-row" data-testid="loyalty-points-inline-row">
+      <div class="loyalty-left">
+        <div class="loyalty-main" data-testid="loyalty-points-label">
+          <span class="icon">🎁</span>
+          Use up to 36 pts (₹108 off)
+        </div>
+        <div class="loyalty-sub" data-testid="loyalty-points-balance-subtext">2,000 pts available</div>
+      </div>
+      <button class="btn btn-primary" data-testid="loyalty-points-use-button">Use</button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="price-row">
+      <span class="price-label">Subtotal</span>
+      <span class="price-value">₹500.00</span>
+    </div>
+    <div class="price-row sub">
+      <span class="price-label">CGST 2.5%</span>
+      <span class="price-value">₹12.50</span>
+    </div>
+    <div class="price-row sub">
+      <span class="price-label">SGST 2.5%</span>
+      <span class="price-value">₹12.50</span>
+    </div>
+    <div class="price-row total">
+      <span class="price-label">Grand Total</span>
+      <span class="price-value">₹525.00</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- CHANGE 1B: Applied state                        -->
+  <!-- ─────────────────────────────────────────────── -->
+  <p class="section-label" style="margin-top:24px">Change 1 — State B: Points applied</p>
+  <div class="tag tag-after">After Use tapped</div>
+  <div class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Price Breakdown
+    </div>
+    <div class="price-row">
+      <span class="price-label">Item Total</span>
+      <span class="price-value">₹500.00</span>
+    </div>
+
+    <!-- Applied row -->
+    <div class="loyalty-applied-row" data-testid="loyalty-points-applied-row">
+      <div class="applied-label" data-testid="loyalty-points-applied-label">
+        <span>🎁</span> Using 36 points (−₹108)
+      </div>
+      <button class="btn btn-remove" data-testid="loyalty-points-remove-button">Remove</button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="price-row">
+      <span class="price-label">Subtotal</span>
+      <span class="price-value">₹392.00</span>
+    </div>
+    <div class="price-row sub">
+      <span class="price-label">CGST 2.5%</span>
+      <span class="price-value">₹9.80</span>
+    </div>
+    <div class="price-row sub">
+      <span class="price-label">SGST 2.5%</span>
+      <span class="price-value">₹9.80</span>
+    </div>
+    <div class="price-row total">
+      <span class="price-label">Grand Total</span>
+      <span class="price-value">₹411.60</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- CHANGE 1C: Below minimum                        -->
+  <!-- ─────────────────────────────────────────────── -->
+  <p class="section-label" style="margin-top:24px">Change 1 — State C: Below minimum (₹36 order, min 100 pts threshold)</p>
+  <div class="tag tag-after">BELOW_MIN_REDEMPTION from CRM</div>
+  <div class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Price Breakdown
+    </div>
+    <div class="price-row">
+      <span class="price-label">Item Total</span>
+      <span class="price-value">₹36.00</span>
+    </div>
+
+    <!-- Disabled row -->
+    <div class="loyalty-row" data-testid="loyalty-points-disabled-row">
+      <div class="loyalty-left">
+        <div class="loyalty-main" data-testid="loyalty-points-disabled-label" style="color:#9CA3AF">
+          <span class="icon" style="opacity:0.4">🎁</span>
+          Points redemption
+        </div>
+        <div class="loyalty-sub hint" data-testid="loyalty-points-below-min-subtext">Add ₹64 more to redeem points</div>
+      </div>
+      <button class="btn btn-disabled" data-testid="loyalty-points-disabled-button" disabled>Use</button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="price-row">
+      <span class="price-label">Subtotal</span>
+      <span class="price-value">₹36.00</span>
+    </div>
+    <div class="price-row total">
+      <span class="price-label">Grand Total</span>
+      <span class="price-value">₹37.80</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- CHANGE 2: Loading skeleton                      -->
+  <!-- ─────────────────────────────────────────────── -->
+  <p class="section-label" style="margin-top:24px">Change 2 — Loading skeleton (while CRM call in-flight)</p>
+  <div class="tag tag-new">New state — ~300ms</div>
+  <div class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Price Breakdown
+    </div>
+    <div class="price-row">
+      <span class="price-label">Item Total</span>
+      <span class="price-value">₹500.00</span>
+    </div>
+
+    <!-- Skeleton row -->
+    <div class="skeleton-row" data-testid="loyalty-points-loading-skeleton">
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        <div class="skeleton skel-icon"></div>
+        <div class="skeleton skel-text"></div>
+      </div>
+      <div class="skeleton skel-btn"></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="price-row">
+      <span class="price-label">Subtotal</span>
+      <span class="price-value">₹500.00</span>
+    </div>
+    <div class="price-row total">
+      <span class="price-label">Grand Total</span>
+      <span class="price-value">₹525.00</span>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- CHANGE 3: Earn preview — Before vs After        -->
+  <!-- ─────────────────────────────────────────────── -->
+  <p class="section-label" style="margin-top:24px">Change 3 — Earn preview (LoyaltyRewardsSection)</p>
+  <div class="compare">
+    <div class="compare-col">
+      <div class="tag tag-before">Before</div>
+      <div class="earn-preview" data-testid="loyalty-rewards-earn-preview-before">
+        <div class="earn-icon">🎁</div>
+        <div>
+          <span class="earn-text-title" data-testid="loyalty-earn-points-title">You will earn 50 points on this order!</span>
+          <span class="earn-text-sub" data-testid="loyalty-earn-points-worth">Worth ₹150</span>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="tag tag-after">After</div>
+      <div class="earn-preview" data-testid="loyalty-rewards-earn-preview">
+        <div class="earn-icon">🎁</div>
+        <div>
+          <span class="earn-text-title" data-testid="loyalty-earn-points-title">You will earn 150 points on this order!</span>
+          <span class="earn-text-sub" data-testid="loyalty-earn-points-worth">Worth ₹450</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────── -->
+  <!-- COMBINED VIEW: Full checkout screen             -->
+  <!-- ─────────────────────────────────────────────── -->
+  <p class="section-label" style="margin-top:28px">Full view — Normal state with earn preview (r689, Gold, ₹500 order)</p>
+  <div class="tag tag-after">Final combined view</div>
+  <div class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Price Breakdown
+    </div>
+    <div class="price-row">
+      <span class="price-label">Item Total</span>
+      <span class="price-value">₹500.00</span>
+    </div>
+    <!-- Coupon row (no-op still, placeholder) -->
+    <div class="price-row" style="gap:8px">
+      <div style="display:flex;align-items:center;gap:6px;flex:1">
+        <span style="font-size:12px">🏷️</span>
+        <input style="font-size:11px;border:1px solid #E5E7EB;border-radius:6px;padding:4px 8px;flex:1;outline:none" placeholder="Enter coupon code" readonly />
+      </div>
+      <button class="btn" style="background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;font-size:11px;padding:4px 10px">Apply</button>
+    </div>
+    <!-- Loyalty row -->
+    <div class="loyalty-row">
+      <div class="loyalty-left">
+        <div class="loyalty-main">
+          <span class="icon">🎁</span>
+          Use up to 36 pts (₹108 off)
+        </div>
+        <div class="loyalty-sub">2,000 pts available</div>
+      </div>
+      <button class="btn btn-primary">Use</button>
+    </div>
+    <div class="divider"></div>
+    <div class="price-row">
+      <span class="price-label">Subtotal</span>
+      <span class="price-value">₹500.00</span>
+    </div>
+    <div class="price-row sub">
+      <span class="price-label">CGST 2.5%</span>
+      <span class="price-value">₹12.50</span>
+    </div>
+    <div class="price-row sub">
+      <span class="price-label">SGST 2.5%</span>
+      <span class="price-value">₹12.50</span>
+    </div>
+    <div class="price-row total">
+      <span class="price-label">Grand Total</span>
+      <span class="price-value">₹525.00</span>
+    </div>
+  </div>
+  <!-- Earn preview below card -->
+  <div class="earn-preview">
+    <div class="earn-icon">🎁</div>
+    <div>
+      <span class="earn-text-title">You will earn 150 points on this order!</span>
+      <span class="earn-text-sub">Worth ₹450 · Gold tier</span>
+    </div>
+  </div>
+
+</body>
+</html>
