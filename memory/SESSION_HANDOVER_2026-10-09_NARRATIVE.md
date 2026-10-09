@@ -1,4 +1,4 @@
-# SESSION HANDOVER — 2026-10-09 · narrative edition
+# SESSION HANDOVER — 2026-10-09 · narrative edition (rev 2 — includes CR-094/096 validation)
 
 **Authoritative. Supersedes `SESSION_HANDOVER_2026-10-09_CR095_REGISTERED_CR001_SHIPPED.md` (same day, same facts, that one is the table form; this one is the story form the owner asked for).**
 
@@ -33,7 +33,13 @@ Owner language: English. Owner style: short imperative messages ("option a", "do
 
 **Then housekeeping.** The owner asked whether the handover for the next agent was updated (it wasn't — the last was 10-08); the table-form handover was written. The owner asked whether the new smoke brief was in the consolidated PDF (it was — p. 15). The owner asked for CR-2026-10-03-001 in plain English; given.
 
-**Then the session ended on a discovery.** When the owner asked "what next CR", the agent re-probed CRM: **`GET /scan/loyalty-rules/478` now returns 200** with a full rules payload — CRM's **CR-094 has gone live**, a day earlier than promised. That unblocks CR-2026-10-03-004 Parts B+C (P1), which was the only thing stopping step 2 of the CRM sequence. The agent recommended it as the next CR, with CR-2026-09-15-004 as runner-up. The owner then asked for this handover. **No role is active.**
+**Then the session ended on a discovery.** When the owner asked "what next CR", the agent re-probed CRM: **`GET /scan/loyalty-rules/478` now returns 200** with a full rules payload — CRM's **CR-094 has gone live**, a day earlier than promised. That unblocks CR-2026-10-03-004 Parts B+C (P1), which was the only thing stopping step 2 of the CRM sequence. The agent recommended it as the next CR, with CR-2026-09-15-004 as runner-up. The owner asked for this handover (first version written here).
+
+**Then CRM's note arrived and confirmed the discovery.** The owner uploaded `CRM_TO_SCAN_ORDER_CR094_CR096_LIVE_PLEASE_VALIDATE_2026_10_09.md` (filed in `memory/inbox/`). It said two things were live on preview and asked us to validate: **CR-094** `GET /scan/loyalty-rules/{rid}` (public, 33 flat keys, per-tier redemption values) and **CR-096** `POST /scan/feedback` now accepting no-token submissions. The agent probed both read-only against `REACT_APP_CRM_URL`: **all 7 CRM probes plus 4 extra edge cases passed** — including the feedback token path with a fresh skip-otp token. One harmless deviation: no token *and* no `restaurant_id` → 422 where the contract says 400 (we always send rid). Findings in `memory/inbox/VALIDATION_OF_CRM_CR094_CR096_NOTE_2026-10-09.md`.
+
+**The honest headline was: endpoints validated, but our app consumes neither yet.** Review Order still reads loyalty rules through our own back-door route; the Feedback page still shows the sign-in card. Diffing CRM's 33 loyalty keys against what our UI actually reads exposed **real gaps (G1–G7)** that the B+C planning must absorb — the serious ones: **G1** we use a single `redemption_value` everywhere while CRM is per-tier (on 689 a Gold diner is shown ₹1/pt but entitled to ₹3/pt → under-rewarded); **G2** we gate the loyalty section on POS `is_loyalty` while CRM now sends `loyalty_enabled` → owner must pick the source of truth; **G3** we ignore `min_redemption_points` / `max_redemption_percent` / `max_redemption_amount` (689 caps at ₹110) → a diner can be shown a discount CRM will not honour. Also noted: our `POST /api/config/feedback` was already deleted 7 Oct, so CRM's "remove it" item is already done. The agent explained all of this in plain language on request, cleared `blocked_on` for CR-2026-10-03-004 and CR-2026-10-07-001 in the registry, and drafted a reply to CRM that reports the validation, dates the consumer wiring, and **repeats the CA-2/4/5/8 answers** — because CRM's §3 still listed them as open, which is simply because the owner has not yet sent this morning's `CONFIRMATION_NOTE_TO_CRM.md`.
+
+**The session closed with the owner asking which CRs are now unblocked** — three: CR-2026-10-03-004 Parts B+C (by CR-094), CR-2026-10-07-001 (by CR-096), CR-2026-09-15-004 (by our own CR-2026-10-03-001 landing). **No role is active.**
 
 ---
 
@@ -44,7 +50,7 @@ Owner language: English. Owner style: short imperative messages ("option a", "do
 | # | Item | What to do |
 |---|---|---|
 | 1 | **Smoke 7 items** | Open `memory/SMOKE_BRIEFS_ALL_2026-10-08.pdf` (16 pp). Items: BUG-2026-10-06-001 · CR-2026-10-03-003 · CR-2026-10-08-001 · CR-2026-09-15-001 · CR-2026-10-03-004 (Part A) · CR-2026-10-07-002 · CR-2026-10-03-001. Reply per item `Smoke PASS <ID>` or `Smoke FAIL <ID> — step N`. CRM holds formal closure of 098/093/089 on this |
-| 2 | **Send the CRM message** | `CR-2026-10-09-001-…/CONFIRMATION_NOTE_TO_CRM.md` — releases CR-095, answers CA-2/4/5/8 |
+| 2 | **Send the CRM reply** | The combined reply pasted in chat at session end (CR-094/096 validation + CA-2/4/5/8). It supersedes `CR-2026-10-09-001-…/CONFIRMATION_NOTE_TO_CRM.md` as the thing to send — same CA answers, plus the validation results |
 | 3 | **CA-1** | Countersign `CONTRACT_CUSTOMER_APP_CRM_v1.0 Part 1 §1–§6` |
 | 4 | Later: **sign §4d** on `OWNERSHIP_MAP.md` | Only after CR-095 Phase 2 PASS; agent prepares the text, owner writes initials/date (D3) |
 
@@ -54,13 +60,13 @@ Owner language: English. Owner style: short imperative messages ("option a", "do
 |---|---|---|
 | CR-2026-10-09-001 Phase 2–3 | CRM confirms CR-095 shipped | trigger phrase: **"CRM shipped CR-095"** |
 | CR-2026-10-08-001 Step 2 (delete `PasswordSetup.jsx`) | CR-098 in prod 1 week | ~w/c 20 Oct |
-| CR-2026-10-07-001 guest feedback | CRM CR-096 | ~27 Oct |
 
 ### Ready for the agent — no external dependency
 
 | Item | Status | Why it's ready |
 |---|---|---|
-| **CR-2026-10-03-004 Parts B+C** (P1) | IMPLEMENTATION (Part A shipped) | **CR-094 is live as of 10-09** (`/scan/loyalty-rules/478` → 200). Swap ReviewOrder's `GET /api/loyalty-settings/{rid}` → CRM `/scan/loyalty-rules/{rid}`, delete our route, retire `customer-lookup`. Takes dead-touch grep 1 → 0. Completes CRM-sequence step 2. **Caution:** CRM shape is `{success, data:{…}}` with per-tier redemption fields; ours is flat `{found, …}` — the mapping *is* the job. Re-probe against the frozen contract before planning |
+| **CR-2026-10-03-004 Parts B+C** (P1) | IMPLEMENTATION (Part A shipped) | **CR-094 is live as of 10-09** (`/scan/loyalty-rules/478` → 200). Swap ReviewOrder's `GET /api/loyalty-settings/{rid}` → CRM `/scan/loyalty-rules/{rid}`, delete our route, retire `customer-lookup`. Takes dead-touch grep 1 → 0. Completes CRM-sequence step 2. **Caution:** CRM shape is `{success, data:{…}}` with per-tier redemption fields; ours is flat `{found, …}` — the mapping *is* the job. Validated 10-09: endpoint PASS; gaps **G1–G7** recorded in `inbox/VALIDATION_OF_CRM_CR094_CR096_NOTE_2026-10-09.md` → they go straight into the IA. Owner decision needed on G2 (CRM `loyalty_enabled` vs POS `is_loyalty`) |
+| **CR-2026-10-07-001** (P2) | INTAKE | **CR-096 is live as of 10-09** (hybrid feedback, 6 cases verified). Remove the Feedback sign-in card, submit `{rating, restaurant_id, phone?}` without token, show linked/unlinked thank-you. Plan after B+C so the two customer-facing smokes can be bundled |
 | **CR-2026-09-15-004** | INTAKE | Admin login → POS instead of CRM `users`; now also deletes dead `AuthContext.login()`. Predecessor CR-2026-10-03-001 has landed. Touches auth → **call `integration_expert` before writing any auth code**. CRM-sequence step 3 |
 | Any `Smoke FAIL` | — | Boot Role 4/5 per control prompt on that item; it pre-empts everything above |
 
@@ -71,9 +77,10 @@ Owner language: English. Owner style: short imperative messages ("option a", "do
 1. **Owner smoke run** — seven items are coded, QA-passed and sitting idle; nothing closes until this happens, and CRM is waiting on it too. ~40 minutes total.
 2. **Send the CRM note** — one paste; releases CR-095 and clears all four bounce-backs.
 3. **Planning for CR-2026-10-03-004 Parts B+C** — newly unblocked, P1, half the paperwork exists, finishes step 2 and zeroes the boundary grep. Say `Planning for CR-2026-10-03-004 Parts B+C`.
-4. **Planning for CR-2026-09-15-004** — step 3, independent, larger; after B+C so the two don't collide in `server.py`.
-5. **On "CRM shipped CR-095"** — CR-2026-10-09-001 Phase 2 (verify) then prepare the §4d text for the owner.
-6. Everything else in the registry is older architecture backlog; raise only if the owner asks.
+4. **Planning for CR-2026-10-07-001** — small, same customer-facing area as B+C; bundle its smoke with B+C's.
+5. **Planning for CR-2026-09-15-004** — step 3, independent, larger; after the above so it doesn't collide in `server.py`. Auth → call `integration_expert` first.
+6. **On "CRM shipped CR-095"** — CR-2026-10-09-001 Phase 2 (verify) then prepare the §4d text for the owner.
+7. Everything else in the registry is older architecture backlog; raise only if the owner asks.
 
 ---
 
@@ -98,7 +105,7 @@ Owner language: English. Owner style: short imperative messages ("option a", "do
 - Control prompt: `memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md`
 - Registry: `memory/change_requests/index.yml` — **91 items**. Validate: `python3 -c "import yaml;yaml.safe_load(open('memory/change_requests/index.yml'))"`
 - This session's CR folders: `CR-2026-10-09-001-crm-cr-095-readiness-and-ownership-signoff/` (INTAKE, IA, IP, CONFIRMATION_NOTE_TO_CRM) · `CR-2026-10-03-001-delete-dead-crm-table-call-sites/` (INTAKE, IA, IP+Appendix A, QA_HANDOVER, SMOKE_BRIEF.md/.pdf)
-- Inbox: `memory/inbox/CRM_REPLY_VALIDATIONS_ACCEPTED_CR102_2026-10-09.md`
+- Inbox: `memory/inbox/CRM_REPLY_VALIDATIONS_ACCEPTED_CR102_2026-10-09.md` · `memory/inbox/CRM_TO_SCAN_ORDER_CR094_CR096_LIVE_PLEASE_VALIDATE_2026_10_09.md` · `memory/inbox/VALIDATION_OF_CRM_CR094_CR096_NOTE_2026-10-09.md` (G1–G7 gap table)
 - Consolidated smoke handout: `memory/SMOKE_BRIEFS_ALL_2026-10-08.pdf` · regenerate: `rm memory/SMOKE_BRIEFS_ALL_*.pdf && python3 memory/tools/smoke_briefs_all.py` (ORDER list inside the script; add new IDs there)
 - Test report: `test_reports/iteration_8.json` (CR-2026-10-03-001). 1–7 are earlier CRs
 - Tests: `pytest -m smoke -n 0 backend/tests/smoke/ -q` (47 incl. extras) · `pytest -m contract -n 0 backend/tests/contracts/ -q` (14)
