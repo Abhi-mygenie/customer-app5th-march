@@ -1,0 +1,152 @@
+{
+  "project_name": "MyGenie - QR Restaurant Ordering App",
+  "app_type": "mobile_web_app",
+  "target_viewport": "Mobile-first (~390px layout)",
+  "scope": "Review Order page (/review-order) - Exactly 3 UI changes (Loyalty Points Row, Loading Skeleton, Earn Preview Section)",
+
+  "colors": {
+    "primary": "#E8632B",
+    "primary_hover": "#D5521C",
+    "primary_light": "#FFF3ED",
+    "primary_border": "#FDCDBB",
+    "text_primary": "#1A1A1A",
+    "text_secondary": "#666666",
+    "text_muted": "#999999",
+    "border_light": "#E5E7EB",
+    "border_dashed": "#D1D5DB",
+    "bg_card": "#FFFFFF",
+    "bg_page": "#F8F9FA",
+    "disabled_bg": "#F3F4F6",
+    "disabled_text": "#9CA3AF",
+    "success_text": "#16A34A",
+    "warning_text": "#D97706",
+    "applied_badge_bg": "#ECFDF5",
+    "applied_badge_text": "#047857"
+  },
+
+  "typography": {
+    "font_family_body": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    "heading_sm": "text-sm font-semibold (14px/20px)",
+    "label_base": "text-xs font-medium (12px/16px)",
+    "value_bold": "text-xs font-semibold (12px/16px)",
+    "subtext": "text-[11px] font-normal (11px/14px)",
+    "earn_title": "text-sm font-semibold (14px/20px)",
+    "earn_subtitle": "text-xs font-medium (12px/16px)"
+  },
+
+  "visual_enhancers": {
+    "border_radius": {
+      "container": "rounded-xl (12px)",
+      "row_card": "rounded-lg (8px)",
+      "button": "rounded-full (9999px)",
+      "badge": "rounded-md (6px)"
+    },
+    "shadows": {
+      "card": "0 2px 8px rgba(0, 0, 0, 0.04)",
+      "button": "0 2px 4px rgba(232, 99, 43, 0.2)"
+    },
+    "skeleton": "animate-pulse bg-gray-200 rounded"
+  },
+
+  "three_ui_changes": {
+    "change_1_inline_loyalty_points_row": {
+      "location": "Inside ReviewOrderPriceBreakdown / Price Breakdown card, positioned directly between Coupon row and Subtotal row.",
+      "crm_api_context": "POST /scan/max-redeemable returns max_points_redeemable, max_discount_value, available_points, min_points_threshold.",
+      "states": {
+        "state_a_normal_redeemable": {
+          "description": "When server allows redeeming points up to max_points_redeemable cap.",
+          "copy": {
+            "main_label": "🎁 Use up to 36 pts (₹108 off)",
+            "balance_subtext": "2,000 pts available",
+            "button_text": "Use"
+          },
+          "button_style": "Enabled warm orange pill button (bg-[#E8632B] text-white hover:bg-[#D5521C] px-3 py-1 text-xs font-medium rounded-full transition-colors)",
+          "test_ids": {
+            "row_container": "data-testid=\"loyalty-points-inline-row\"",
+            "label_text": "data-testid=\"loyalty-points-label\"",
+            "subtext": "data-testid=\"loyalty-points-balance-subtext\"",
+            "use_button": "data-testid=\"loyalty-points-use-button\""
+          }
+        },
+        "state_b_after_use_tapped_applied": {
+          "description": "When user taps Use and loyalty discount is applied to the price breakdown.",
+          "copy": {
+            "main_label": "🎁 Using 36 points (−₹108)",
+            "discount_value": "−₹108.00",
+            "button_text": "Remove"
+          },
+          "button_style": "Outline/Ghost remove button (text-[#E8632B] hover:text-red-600 border border-[#FDCDBB] hover:border-red-200 px-3 py-1 text-xs font-medium rounded-full bg-orange-50/50 transition-colors)",
+          "test_ids": {
+            "row_container": "data-testid=\"loyalty-points-applied-row\"",
+            "label_text": "data-testid=\"loyalty-points-applied-label\"",
+            "remove_button": "data-testid=\"loyalty-points-remove-button\""
+          }
+        },
+        "state_c_not_available_below_min": {
+          "description": "When order subtotal or user balance is below CRM min redemption threshold.",
+          "copy": {
+            "main_label": "🎁 Use up to 0 pts (₹0 off)",
+            "balance_subtext": "2,000 pts available",
+            "subtext": "Add ₹64.00 more to redeem points",
+            "button_text": "Use"
+          },
+          "button_style": "Disabled greyed-out button (bg-gray-100 text-gray-400 border border-gray-200 px-3 py-1 text-xs font-medium rounded-full cursor-not-allowed)",
+          "test_ids": {
+            "row_container": "data-testid=\"loyalty-points-disabled-row\"",
+            "label_text": "data-testid=\"loyalty-points-disabled-label\"",
+            "subtext": "data-testid=\"loyalty-points-below-min-subtext\"",
+            "disabled_button": "data-testid=\"loyalty-points-disabled-button\""
+          }
+        }
+      }
+    },
+
+    "change_2_loading_state": {
+      "location": "Same row position in Price Breakdown during in-flight POST /scan/max-redeemable CRM API call (<300ms).",
+      "design_specification": "Skeleton shimmer row preventing layout shift and flash of stale data.",
+      "structure": {
+        "icon_skeleton": "w-4 h-4 bg-gray-200 rounded animate-pulse mr-2",
+        "text_skeleton": "h-4 w-40 bg-gray-200 rounded animate-pulse",
+        "button_skeleton": "h-6 w-12 bg-gray-200 rounded-full animate-pulse ml-auto"
+      },
+      "test_ids": {
+        "loading_container": "data-testid=\"loyalty-points-loading-skeleton\""
+      }
+    },
+
+    "change_3_earn_preview_section": {
+      "location": "LoyaltyRewardsSection located directly BELOW the price breakdown card on Review Order page.",
+      "crm_api_context": "CRM returns server-side authoritative projected_points_earned=150.",
+      "copy": {
+        "title": "You will earn 150 points on this order!",
+        "subtitle": "Worth ₹450"
+      },
+      "styling": {
+        "container": "bg-[#FFF8F5] border border-[#FDCDBB] rounded-xl p-3.5 flex items-center gap-3 shadow-xs mt-3",
+        "icon": "text-[#E8632B] text-xl flex-shrink-0",
+        "title_text": "text-sm font-semibold text-[#1A1A1A] block",
+        "subtitle_text": "text-xs font-medium text-[#E8632B] block mt-0.5"
+      },
+      "test_ids": {
+        "container": "data-testid=\"loyalty-rewards-earn-preview\"",
+        "earn_text": "data-testid=\"loyalty-earn-points-title\"",
+        "worth_text": "data-testid=\"loyalty-earn-points-worth\""
+      }
+    }
+  },
+
+  "instructions_to_main_agent": [
+    "Implement exactly the 3 specified UI changes on the Review Order page (/review-order) without altering other components or pages.",
+    "Ensure all 3 states of Change 1 (Normal, Applied, Below-Min) render smoothly based on CRM max-redeemable payload.",
+    "Use Change 2 Skeleton loader during in-flight POST /scan/max-redeemable API call to eliminate flash of stale content.",
+    "Update Change 3 LoyaltyRewardsSection to use authoritative projected_points_earned and worth amounts returned by CRM API.",
+    "Ensure every interactive and key informational element includes its designated data-testid attribute as defined in this specification."
+  ],
+
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": {
+    "color_discipline": "Maintain brand primary #E8632B for primary actions; avoid dark gradient overload or unauthorized color shifts.",
+    "layout": "Keep mobile-first narrow width (~390px) responsive layout with clean cards, clear dividers, and generous internal padding.",
+    "transitions": "Use explicit micro-interactions (hover, active, focus) with specific transition properties (avoid transition: all).",
+    "accessibility": "Ensure high contrast (APCA / WCAG AA min 4.5:1 for body, 3:1 for large text) and include data-testid on all key UI elements."
+  }
+}

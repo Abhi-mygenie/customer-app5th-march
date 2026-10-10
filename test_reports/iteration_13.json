@@ -1,0 +1,27 @@
+{
+  "summary": "Smoke PASS CR-2026-10-09-003 — All 5 smoke brief steps passed against live app at /689 (Kunafa Mahal) with phone 9035133228 (saurav, Gold, 2000 pts).",
+  "smoke_test_results": {
+    "step_1_land_and_autofill": "PASS — Phone 9035133228 entered, name 'saurav' auto-filled (visible in checkout Customer Details), Browse Menu navigated to menu page",
+    "step_2_add_item_checkout": "PASS — 'st edc' ₹10 added to cart, Review Order page loaded without crash at /689/review-order",
+    "step_3_loyalty_row_crm_cap": "PASS — Loyalty row shows 'Use up to 1 pts (₹3 off)' (new CRM cap format), subtext '2,000 pts available'. Old '2000 points (Worth ₹6000)' format NOT present.",
+    "step_4_use_and_remove": "PASS — Use button was enabled. Clicked Use → row changed to 'Using 1 points (-₹3)', Grand Total dropped from ₹11.00 to ₹8.00. Clicked Remove → total restored to ₹11.00.",
+    "step_5_earn_preview": "PASS — Earn section (data-testid=logged-in-user-info) shows 'Almost there! Add ₹190 more to earn points' (CRM-sourced figure)."
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "test_credentials": "Phone: 9035133228 (saurav, Gold, 2000 pts), Restaurant: 689 (Kunafa Mahal)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-2026-10-09-003 smoke fully verified. CRM max-redeemable returns 1pt=₹3 off for Gold diner on ₹10 order at restaurant 689. Use/Remove cycle works correctly. Earn section shows CRM data. No console errors or crashes.",
+  "overall": "Smoke PASS CR-2026-10-09-003"
+}
