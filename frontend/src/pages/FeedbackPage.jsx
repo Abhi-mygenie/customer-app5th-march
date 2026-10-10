@@ -21,6 +21,8 @@ const FeedbackPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [latestOrderId, setLatestOrderId] = useState(null);
   const [scopeReady, setScopeReady] = useState(false);
+  // CR-2026-10-07-001: guest phone for no-token feedback path
+  const [guestPhone, setGuestPhone] = useState('');
 
   // CR-2026-10-03-003: restore the diner's CRM session for this restaurant (same pattern as LandingPage/ReviewOrder)
   useEffect(() => {
@@ -40,6 +42,15 @@ const FeedbackPage = () => {
     return () => { cancelled = true; };
   }, [crmToken]);
 
+  // CR-2026-10-07-001: pre-fill phone from LandingPage capture (no-token path)
+  useEffect(() => {
+    if (crmToken) return;
+    try {
+      const guest = JSON.parse(localStorage.getItem('guestCustomer') || '{}');
+      if (guest.phone) setGuestPhone(guest.phone);
+    } catch {}
+  }, [crmToken]);
+
   const introText = config.feedbackIntroText || "We value your opinion! Share your dining experience with us.";
 
   const handleSubmit = async (e) => {
@@ -50,16 +61,23 @@ const FeedbackPage = () => {
     }
     setSubmitting(true);
     try {
+      // CR-2026-10-07-001: pass phone only on no-token path
       await crmSubmitFeedback(crmToken, {
         rating: form.rating,
         message: form.message.trim(),
         orderId: latestOrderId,
         restaurantId,
+        phone: !crmToken ? (guestPhone || undefined) : undefined,
       });
       setSubmitted(true);
       toast.success('Thank you for your feedback!');
-    } catch {
-      toast.error('Failed to submit. Please try again.');
+    } catch (err) {
+      // CR-2026-10-07-001: handle CRM rate limiter (10/min IP, 3/10min per phone)
+      if (err?.status === 429) {
+        toast.error('Too many attempts. Please try again shortly.');
+      } else {
+        toast.error('Failed to submit. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -78,20 +96,6 @@ const FeedbackPage = () => {
       <div className="feedback-content">
         {!scopeReady ? (
           <p className="feedback-intro" data-testid="feedback-loading">Loading…</p>
-        ) : !crmToken ? (
-          // CR-2026-10-03-003 D2=a / D10=a: token-only until CRM CR-096 ships (CR-2026-10-07-001)
-          <div className="feedback-signin" data-testid="feedback-signin-required">
-            <p className="feedback-intro">
-              Feedback is available to signed-in diners. Sign in from the home page by entering your phone number.
-            </p>
-            <button
-              className="feedback-btn"
-              onClick={() => navigate(`/${restaurantId}`)}
-              data-testid="feedback-signin-btn"
-            >
-              Sign in
-            </button>
-          </div>
         ) : submitted ? (
           <div className="feedback-success" data-testid="feedback-success">
             <div className="feedback-success-icon">&#10003;</div>
@@ -102,10 +106,29 @@ const FeedbackPage = () => {
             </button>
           </div>
         ) : (
+          // CR-2026-10-07-001: form shown for all diners (token + no-token); phone input conditional
           <>
             <p className="feedback-intro">{introText}</p>
 
             <form onSubmit={handleSubmit} className="feedback-form" data-testid="feedback-form">
+              {/* CR-2026-10-07-001: optional phone for no-token diners */}
+              {!crmToken && (
+                <div className="feedback-field" data-testid="feedback-guest-phone-field">
+                  <label className="feedback-label">Your phone (optional)</label>
+                  <input
+                    type="tel"
+                    className="feedback-phone-input"
+                    placeholder="e.g. 9876543210"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    data-testid="feedback-guest-phone"
+                  />
+                  <span style={{ fontSize: '12px', color: '#888', marginTop: 4, display: 'block' }}>
+                    Enter your number to link this feedback to your profile
+                  </span>
+                </div>
+              )}
+
               <div className="feedback-field">
                 <label className="feedback-label">Rating *</label>
                 <div className="feedback-stars" data-testid="feedback-stars">

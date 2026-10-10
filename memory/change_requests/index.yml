@@ -1825,11 +1825,9 @@
   title: Feedback for diners without a CRM session — hybrid {phone, restaurant_id}
     path to POST /scan/feedback (follow-up to CR-2026-10-03-003 D10=a; depends on
     CRM CR-096)
-  status: INTAKE
-  status_note: 'Registered 2026-10-07 (Role 1) on owner ruling D10=a. Closes gaps
-    G1–G4 of CR-2026-10-03-003 §9. CRM no-token POST /scan/feedback returns 403 today;
-    CR-096 is CRM Wave 3. | 2026-10-09: CR-096 LIVE on preview (hybrid feedback, 6
-    cases verified) → UNBLOCKED. Plan after CR-2026-10-03-004 B+C.'
+  status: SMOKE
+  status_note: QA PASS iteration_16.json (5/5 frontend, 60/60 backend). Sign-in card
+    removed. No-token path live. SMOKE_BRIEF written 2026-10-09.
   priority: P2
   risk: MEDIUM
   owner_action: none until CRM wave log shows CR-096 CONFIRMED; then re-probe and
@@ -1837,9 +1835,10 @@
   blocked_on: []
   sprint: null
   files: frontend/src/pages/FeedbackPage.jsx · frontend/src/api/services/crmService.js
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER · SMOKE_BRIEF
+    · SMOKE_BRIEF.pdf
   registered: '2026-10-07'
-  last_updated: null
+  last_updated: '2026-10-09'
   related:
   - CR-2026-10-03-003
   - CR-2026-09-14-001
