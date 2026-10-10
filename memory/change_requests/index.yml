@@ -1400,14 +1400,11 @@
   notes: null
 - id: CR-2026-10-06-001
   type: CR
-  title: Enforce the non-QR order block — walk-in QR is exempt and the table-status
-    check skips when table_id is '0'
+  title: Add allowWalkinOrders per-restaurant flag — close URL-manipulation bypass
+    (BP-2) for restaurants that want to block walk-in ordering. BP-1 not a bug (QSR/café
+    correct). BP-3 deferred to CR-2026-07-03-011.
   status: INTAKE
-  status_note: 'Owner rulings confirmed 2026-10-10: BP-1 not a bug (walk-in correct
-    for QSR/café). BP-2 scoped fix: add allowWalkinOrders flag (default true). BP-3
-    deferred to CR-2026-07-03-011. Key insight: QR codes are just URLs — walk-in cannot
-    be verified as real scan without signed one-time tokens. Table QR has indirect
-    POS validation; walk-in has none. Ready for Planning.'
+  status_note: INTAKE CLOSED 2026-10-10. All rulings locked. Ready for Planning.
   priority: P1
   risk: HIGH
   owner_action: Say Planning for CR-2026-10-06-001 when ready

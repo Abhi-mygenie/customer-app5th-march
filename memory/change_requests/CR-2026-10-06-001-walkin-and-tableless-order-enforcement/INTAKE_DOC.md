@@ -5,16 +5,17 @@
 | Field | Value |
 |-------|-------|
 | **CR ID** | CR-2026-10-06-001 |
-| **Title** | Enforce the non-QR order block: walk-in QR is an exempt scan type and the table-status check is skipped when `table_id === '0'` |
+| **Title** | Add `allowWalkinOrders` per-restaurant flag — close URL-manipulation bypass (BP-2) for restaurants that want to block walk-in ordering |
 | **Classification** | **CR** — fix CR for a documented investigation that never got one |
 | **Date Registered** | 2026-10-06 |
+| **Rulings locked** | 2026-10-10 |
 | **Reported By** | Owner, this session. Source finding: `INV-2026-06-17-001` (report written **2026-06-17**, no fix CR raised in the 3½ months since) |
 | **Intake by** | E1 (Role 1 — Intake, read-only) |
 | **Severity** | **P1** — orders are accepted that restaurant policy was configured to block |
-| **Risk** | **HIGH** — every candidate fix touches `orderAccessPolicy.js` and `ReviewOrder.jsx`, the order-placement path |
-| **Status** | 📝 REGISTERED (Role 1 done) — needs an owner ruling on option A/B/C/D, then Planning |
+| **Risk** | **HIGH** — touches `orderAccessPolicy.js` and `ReviewOrder.jsx`, the order-placement path |
+| **Status** | INTAKE CLOSED — rulings locked, ready for Planning |
 | **Parent** | `INV-2026-06-17-001-tableless-order-bypass` |
-| **Blast radius** | **LARGE** — any restaurant running `allowNonQrOrders: false`; originally reported at 698 (Cafe Flora) |
+| **Blast radius** | **MEDIUM** — only restaurants that explicitly set `allowWalkinOrders: false`; default is `true`, so QSR/café and all current restaurants are unaffected |
 
 ## 1. The reported symptom
 
