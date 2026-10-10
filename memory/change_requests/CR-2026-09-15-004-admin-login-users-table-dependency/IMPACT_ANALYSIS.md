@@ -2,19 +2,64 @@
 ## Remove admin login dependency on CRM `db.users` — switch to POS direct (Option D)
 
 **Written by:** Role 2 — Planning Agent
-**Date:** 2026-10-09
-**Based on:** INTAKE_DOC · server.py (lines 260–420, 490–515) · Login.jsx · AuthContext.jsx · existing `refresh_pos_token` function
+**Date:** 2026-10-09 (POS contract confirmed 2026-10-09 via curl)
+**Based on:** INTAKE_DOC · server.py (lines 260–420, 490–515) · Login.jsx · AuthContext.jsx · existing `refresh_pos_token` function · POS curl probes (owner@kunafamahal.com / r689)
 **Predecessor:** CR-2026-10-03-002 (projection on `db.users` reads — **SMOKE**) must be closed before this ships, or shipped together.
 
 ---
 
 ## ⚠️ MANDATORY BEFORE IMPLEMENTATION
 
-Per control prompt §3: **ANY auth change requires `integration_playbook_expert_v2` before Role 3 writes any code.** Call it with:
+Per control prompt §3: **ANY auth change requires `integration_playbook_expert_v2` before Role 3 writes any code.**
+Call it with:
 ```
-INTEGRATION: POS admin login — vendoremployee/login endpoint, response shape, profile endpoint
+INTEGRATION: POS admin login — vendoremployee/login + vendoremployee/profile endpoints, httpx usage
 ```
-Do not proceed to Gate 3 until the integration expert has confirmed the POS contract and any package requirements.
+Do not proceed to Gate 3 until the integration expert has confirmed and any package requirements are satisfied.
+
+---
+
+## POS contract — CONFIRMED 2026-10-09
+
+### Step 1 · `POST /api/v1/auth/vendoremployee/login`
+
+**Request:** `{ "email": "owner@kunafamahal.com", "password": "Qplazm@10" }`
+
+**Response (key fields):**
+```json
+{
+  "token": "f92oBkEW7uq...",          ← POS auth token (opaque string, not JWT — cannot decode)
+  "crm_token": "dp_live_vRqifi..."    ← restaurant's CRM API key (= mygenie_token)
+}
+```
+
+`restaurant_id` is **NOT** in the login response. This is why the profile call is required.
+
+**Note filed for POS team:** POS should include `restaurant_id` in the `/auth/vendoremployee/login` response in a future release. This would eliminate the second call. Until then, we call the profile endpoint.
+
+### Step 2 · `GET /api/v1/vendoremployee/profile`
+
+**Auth:** `Authorization: Bearer <token from step 1>`
+
+**Response (fields we use):**
+```json
+{
+  "emp_id": 3582,
+  "emp_email": "owner@kunafamahal.com",
+  "emp_f_name": "Owner",
+  "restaurants": [
+    {
+      "id": 689,
+      "name": "Kunafa Mahal",
+      "crm_token": "dp_live_vRqifi..."   ← same as login crm_token — this is mygenie_token
+    }
+  ]
+}
+```
+
+### Why the profile call is needed
+
+The login response gives us `token` and `crm_token` but no `restaurant_id`. Our backend needs `restaurant_id` for every admin operation (config save, route guards, etc.). The only way to get it is the profile endpoint. The call happens once at login — not on every request. All subsequent requests read everything from our JWT claims.
 
 ---
 
@@ -58,23 +103,32 @@ Authorization: Bearer <token>
 
 ---
 
-## 3. Target flow (Option D — POS direct)
+## 3. Target flow (Option D — POS direct, two-step) — CONFIRMED 2026-10-09
 
 ### Login (after change)
 ```
 POST /api/auth/login {phone_or_email, password}
-  → call POS /auth/vendoremployee/login {email: phone_or_email, password}
-  → extract from POS response: token, restaurant_id, user_id/employee_id, restaurant_name
-  → log WARNING if restaurants[] has > 1 entry (franchise guard, per intake)
-  → create_token_with_claims(user_id, "restaurant", restaurant_id, pos_id, restaurant_name, email)
-  → return {user_type, token, pos_token: POS_token, user: {id, restaurant_id, ...}}
+  → Step 1: POST POS /auth/vendoremployee/login {email, password}
+            ← {token: pos_token, crm_token: mygenie_token}
+  → Step 2: GET  POS /vendoremployee/profile (Bearer pos_token)
+            ← {emp_id, emp_email, restaurants[0].id, restaurants[0].name,
+               restaurants[0].crm_token (= mygenie_token)}
+  → log WARNING if len(restaurants) > 1  (franchise guard, CR-2026-10-03-006)
+  → create_token_with_claims(
+        user_id=str(emp_id),       user_type="restaurant",
+        restaurant_id=str(restaurants[0].id),
+        restaurant_name=restaurants[0].name,
+        email=emp_email,
+        mygenie_token=restaurants[0].crm_token  ← preserves T6 fallback
+    )
+  → return {user_type, token: our_jwt, pos_token, user: {id, restaurant_id, restaurant_name, email, pos_id}}
 ```
 
 ### Every admin request (after change)
 ```
-Authorization: Bearer <token>
-  → verify_token(token) → {user_id, user_type, restaurant_id, pos_id, ...} ← all in JWT
-  → return user dict from JWT claims    ← NO db.users read
+Authorization: Bearer <our_jwt>
+  → verify_token → {user_id, user_type, restaurant_id, restaurant_name, email, mygenie_token}
+  → return user dict from JWT claims — NO db.users read
 ```
 
 ---
@@ -124,16 +178,23 @@ If POS does NOT return profile data in the vendoremployee login response, a seco
 
 ---
 
-## 7. Owner decisions — required before Gate 3
+## 7. Owner decisions — **ALL RESOLVED 2026-10-09**
 
-### D1 — `get_table_config` mygenie_token fallback (T6)
-**(a)** Remove fallback in this CR — make X-POS-Token mandatory. Sessions before deploy break once; users re-login.
-**(b)** Leave fallback, defer to CR-2026-10-04-001. The 400 error is clear if it fires.
+### D1 — `get_table_config` mygenie_token fallback (T6) → **keep it, no code change**
 
-Recommendation: **(a)** — clean, and the fallback fires only in a narrow legacy window.
+`mygenie_token` is now sourced from `restaurants[0].crm_token` in the POS profile response and stored in our JWT claims. The fallback `user.get("mygenie_token")` in `get_table_config` continues to work because we populate that field in the JWT. No code change to `get_table_config` needed. CR-2026-10-04-001 deferred.
 
-### D2 — POS contract confirmation (P5 blocker)
-Must call `integration_playbook_expert_v2` before IP. Results feed T1 and T5 directly.
+### D2 — POS contract (P5 blocker) → **RESOLVED via curl**
+
+Two-step flow confirmed:
+1. `POST /auth/vendoremployee/login` → `pos_token` + `crm_token`
+2. `GET /vendoremployee/profile` → `emp_id`, `restaurant_id` (`restaurants[0].id`), `restaurant_name`, `mygenie_token` (`restaurants[0].crm_token`)
+
+**Decision: use the profile call for now.** Owner instruction 2026-10-09: "use profile API but note that POS should provide restaurant_id in the login response." Filed as POS improvement request (see above).
+
+### D3 — franchise guard → **one-liner warning, confirmed**
+
+`restaurants.length > 1` → log warning `"[Auth] restaurants[1..N] ignored — franchise not supported, see CR-2026-10-03-006"`. Single restaurant path is `restaurants[0]`. Probe confirmed restaurant 689 has `restaurants` with 1 entry.
 
 ---
 
@@ -178,12 +239,13 @@ Must call `integration_playbook_expert_v2` before IP. Results feed T1 and T5 dir
 
 ```
 Planning complete: CR-2026-09-15-004
-Stage: Impact Analysis
-Code reality: FULL — 7 touch points confirmed; P5 (POS contract) is the one missing piece
+Stage: Impact Analysis — updated 2026-10-09 with confirmed POS contract
+Code reality: FULL — 7 touch points confirmed; POS contract confirmed via curl
 Risk: CRITICAL
 Files WILL change: server.py (T1–T6) · AuthContext.jsx (T7)
 Files WILL NOT touch: Login.jsx · CartContext.js · ReviewOrder.jsx
-Owner decisions: D1 (mygenie_token fallback — rec: a, remove in this CR) · D2 (call integration_playbook_expert_v2 for POS contract before IP)
-MANDATORY: integration_playbook_expert_v2 must be called before Gate 3 / Role 3
-Status: AT GATE — D1 + D2 + integration expert required before Implementation Plan
+Owner decisions: D1=keep T6 fallback (mygenie_token in JWT) · D2=profile API now, POS to add rid to login later · D3=franchise warning one-liner — ALL RESOLVED 2026-10-09
+MANDATORY: integration_playbook_expert_v2 before Gate 3 / Role 3
+POS improvement filed: POS should return restaurant_id in /auth/vendoremployee/login response
+Status: AT GATE — call integration_playbook_expert_v2 → then Implementation Plan → Gate 3
 ```
