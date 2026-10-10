@@ -196,6 +196,10 @@ Two-step flow confirmed:
 
 `restaurants.length > 1` → log warning `"[Auth] restaurants[1..N] ignored — franchise not supported, see CR-2026-10-03-006"`. Single restaurant path is `restaurants[0]`. Probe confirmed restaurant 689 has `restaurants` with 1 entry.
 
+### D4 — old JWT backward compatibility → **forced re-login accepted**
+
+Old-format JWTs (pre-deploy, contain only `user_id` + `user_type`) will fail `get_current_user` with 401 because the new code reads `restaurant_id` from JWT claims — which old tokens don't have. Admins need to log out and log back in once after deploy. **Owner confirmed 2026-10-09: this is acceptable.** No backward-compatibility shim. Clean cutover.
+
 ---
 
 ## 8. Files WILL change
@@ -239,12 +243,17 @@ Two-step flow confirmed:
 
 ```
 Planning complete: CR-2026-09-15-004
-Stage: Impact Analysis — updated 2026-10-09 with confirmed POS contract
+Stage: Impact Analysis — updated 2026-10-09 with confirmed POS contract + all decisions
 Code reality: FULL — 7 touch points confirmed; POS contract confirmed via curl
 Risk: CRITICAL
 Files WILL change: server.py (T1–T6) · AuthContext.jsx (T7)
 Files WILL NOT touch: Login.jsx · CartContext.js · ReviewOrder.jsx
-Owner decisions: D1=keep T6 fallback (mygenie_token in JWT) · D2=profile API now, POS to add rid to login later · D3=franchise warning one-liner — ALL RESOLVED 2026-10-09
+Owner decisions:
+  D1=keep T6 fallback (mygenie_token in JWT from restaurants[0].crm_token)
+  D2=profile API now, POS to add rid to login later
+  D3=franchise warning one-liner
+  D4=forced re-login on deploy ACCEPTED (old JWTs lack new claims → 401 → re-login once)
+  — ALL RESOLVED 2026-10-09
 MANDATORY: integration_playbook_expert_v2 before Gate 3 / Role 3
 POS improvement filed: POS should return restaurant_id in /auth/vendoremployee/login response
 Status: AT GATE — call integration_playbook_expert_v2 → then Implementation Plan → Gate 3
