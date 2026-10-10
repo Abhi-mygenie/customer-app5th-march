@@ -257,11 +257,14 @@ class BannerUpdate(BaseModel):
 # Auth Helpers
 # ============================================
 
-def create_token(user_id: str, user_type: str) -> str:
+def create_token(user_id: str, user_type: str, **extra_claims) -> str:
+    # CR-2026-09-15-004: extra_claims carries restaurant_id, restaurant_name, email,
+    # pos_id, mygenie_token so get_current_user needs no db.users read.
     payload = {
         "user_id": user_id,
         "user_type": user_type,
-        "exp": datetime.now(timezone.utc).timestamp() + (24 * 60 * 60)  # 24 hours
+        "exp": datetime.now(timezone.utc).timestamp() + (24 * 60 * 60),  # 24 hours
+        **extra_claims
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -274,35 +277,32 @@ def verify_token(token: str) -> dict:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# CR-2026-10-03-002: `users` is CRM-owned and its documents carry CRM's own integration
-# secrets (`api_key`, `authkey_api_key`). Project to the fields we actually consume so
-# they never enter our process memory or the /api/auth/me response.
-# `mygenie_token` IS consumed (see get_table_config legacy fallback) so it stays —
-# removing it is a behaviour change, tracked separately.
-USERS_AUTH_PROJECTION = {
-    "_id": 0, "id": 1, "email": 1, "phone": 1, "restaurant_id": 1,
-    "pos_id": 1, "restaurant_name": 1, "pos_name": 1, "mygenie_token": 1,
-}
-USERS_LOGIN_PROJECTION = {**USERS_AUTH_PROJECTION, "password_hash": 1}
+# CR-2026-09-15-004: USERS_AUTH_PROJECTION and USERS_LOGIN_PROJECTION deleted —
+# db.users is no longer read. User data comes from POS profile → JWT claims.
 
 
 async def get_current_user(authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Authorization header required")
-    
     token = authorization.replace("Bearer ", "")
     payload = verify_token(token)
-    
-    user_id = payload.get("user_id")
+    # CR-2026-09-15-004: all user data from JWT claims — no db.users read.
+    # Old-format JWTs (pre-deploy, lacking restaurant_id) return 401 → forced re-login (D4).
     user_type = payload.get("user_type")
-    
-    user = await db.users.find_one({"id": user_id}, USERS_AUTH_PROJECTION)  # CR-2026-10-03-002
-    
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    user["user_type"] = user_type
-    return user
+    restaurant_id = payload.get("restaurant_id")
+    if not restaurant_id:
+        raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
+    return {
+        "id": payload.get("user_id"),
+        "user_type": user_type,
+        "restaurant_id": restaurant_id,
+        "restaurant_name": payload.get("restaurant_name", ""),
+        "email": payload.get("email", ""),
+        "phone": payload.get("phone", ""),
+        "pos_id": payload.get("pos_id", "0001"),
+        "pos_name": payload.get("pos_name", ""),
+        "mygenie_token": payload.get("mygenie_token"),
+    }
 
 async def get_restaurant_user(authorization: str = Header(None)):
     user = await get_current_user(authorization)
@@ -310,10 +310,7 @@ async def get_restaurant_user(authorization: str = Header(None)):
         raise HTTPException(status_code=403, detail="Restaurant admin access required")
     return user
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Simple password verification"""
-    import bcrypt
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+# CR-2026-09-15-004: verify_password deleted — POS verifies credentials directly.
 
 # ============================================
 # POS Token Refresh Helper
@@ -370,54 +367,91 @@ async def refresh_pos_token(email: str, password: str) -> Optional[str]:
 @auth_router.post("/login", response_model=LoginResponse)
 @limiter.limit("5/minute")  # CR-2026-09-12-004: rate-limit
 async def unified_login(request: Request, body: LoginRequest):
-    """Restaurant admin login (password)."""
-    identifier = body.phone_or_email.strip().lower()
-    # Step 1: Check users collection (restaurant admins)
-    user = await db.users.find_one({
-        "$or": [
-            {"email": identifier},
-            {"phone": identifier}
-        ]
-    }, USERS_LOGIN_PROJECTION)  # CR-2026-10-03-002
-    
-    if user:
-        # Restaurant user found - verify password
-        if not body.password:
-            raise HTTPException(status_code=400, detail="Password required for restaurant login")
-        
-        password_hash = user.get("password_hash")
-        if not password_hash:
-            raise HTTPException(status_code=401, detail="Password not set for this account")
-        
-        if not verify_password(body.password, password_hash):
-            raise HTTPException(status_code=401, detail="Invalid password")
-        
-        # Refresh POS token on every login
-        # This ensures pos_token is always fresh for POS API calls (QR, etc.)
-        user_email = user.get("email", identifier)
-        pos_token = await refresh_pos_token(user_email, body.password)
+    """Restaurant admin login — CR-2026-09-15-004: POS direct (two-step). No db.users read."""
+    import httpx
+    identifier = body.phone_or_email.strip()
+    if not body.password:
+        raise HTTPException(status_code=400, detail="Password required")
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as http_client:
+            # Step 1: POS vendoremployee login
+            login_resp = await http_client.post(
+                f"{MYGENIE_API_URL}/auth/vendoremployee/login",
+                json={"email": identifier, "password": body.password},
+                headers={"Content-Type": "application/json", "Accept": "application/json"},
+            )
+        if login_resp.status_code == 401:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not login_resp.is_success:
+            logging.warning(f"[Auth] POS vendoremployee/login returned {login_resp.status_code}")
+            raise HTTPException(status_code=502, detail="Authentication service unavailable. Please try again.")
+
+        login_data = login_resp.json()
+        pos_token = login_data.get("token")
+        crm_token_from_login = login_data.get("crm_token")
         if not pos_token:
-            logging.warning(f"[Auth] Could not get POS token for {user_email}")
-        
-        token = create_token(user["id"], "restaurant")
+            raise HTTPException(status_code=502, detail="Authentication service error. Please try again.")
+
+        async with httpx.AsyncClient(timeout=15.0) as http_client:
+            # Step 2: POS profile — get restaurant_id and other JWT claims
+            # (POS improvement pending: add restaurant_id to login response to skip this call)
+            profile_resp = await http_client.get(
+                f"{MYGENIE_API_URL}/vendoremployee/profile",
+                headers={"Authorization": f"Bearer {pos_token}", "Accept": "application/json"},
+            )
+        if not profile_resp.is_success:
+            logging.warning(f"[Auth] POS vendoremployee/profile returned {profile_resp.status_code}")
+            raise HTTPException(status_code=502, detail="Authentication service error. Please try again.")
+
+        profile = profile_resp.json()
+        restaurants = profile.get("restaurants", [])
+        if not restaurants:
+            raise HTTPException(status_code=403, detail="No restaurant associated with this account.")
+        if len(restaurants) > 1:
+            # CR-2026-10-03-006: franchise multi-outlet — not supported yet
+            logging.warning(f"[Auth] {identifier} has {len(restaurants)} restaurants — using restaurants[0], see CR-2026-10-03-006")
+
+        restaurant = restaurants[0]
+        restaurant_id = str(restaurant.get("id", ""))
+        restaurant_name = restaurant.get("name", "")
+        mygenie_token = restaurant.get("crm_token") or crm_token_from_login  # D1: preserves T6 fallback
+        emp_id = str(profile.get("emp_id", ""))
+        emp_email = profile.get("emp_email", identifier)
+        emp_phone = profile.get("phone", "")
+
+        token = create_token(
+            emp_id, "restaurant",
+            restaurant_id=restaurant_id,
+            restaurant_name=restaurant_name,
+            email=emp_email,
+            phone=emp_phone,
+            pos_id="0001",  # CR-2026-10-03-006: constant until multi-outlet ships
+            pos_name="",
+            mygenie_token=mygenie_token,
+        )
         return LoginResponse(
             success=True,
             user_type="restaurant",
             token=token,
-            pos_token=pos_token,  # Return POS token to frontend for localStorage
+            pos_token=pos_token,
             user={
-                "id": user["id"],
-                "restaurant_id": user.get("restaurant_id", ""),
-                "email": user.get("email", ""),
-                "restaurant_name": user.get("restaurant_name", ""),
-                "phone": user.get("phone", ""),
-                "pos_id": user.get("pos_id", ""),
-                "pos_name": user.get("pos_name", "")
+                "id": emp_id,
+                "restaurant_id": restaurant_id,
+                "email": emp_email,
+                "restaurant_name": restaurant_name,
+                "phone": emp_phone,
+                "pos_id": "0001",
+                "pos_name": "",
             }
         )
-    
-    # Step 2: Not found
-    raise HTTPException(status_code=404, detail="Account not found. Please contact restaurant.")
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=502, detail="Authentication service timed out. Please try again.")
+    except Exception as e:
+        logging.error(f"[Auth] POS login error: {e}")
+        raise HTTPException(status_code=502, detail="Authentication service unavailable. Please try again.")
 
 @auth_router.get("/me")
 async def get_me(user: dict = Depends(get_current_user)):
@@ -495,7 +529,7 @@ async def get_table_config(
     import httpx
     from urllib.parse import unquote, urlparse
 
-    # Use token from header (preferred) or fallback to db.users (legacy)
+    # CR-2026-09-15-004: use token from header (preferred) or fallback to JWT claim (mygenie_token from POS profile)
     mygenie_token = x_pos_token or user.get("mygenie_token")
     if not mygenie_token:
         raise HTTPException(status_code=400, detail="No POS token provided. Please logout and login again.")

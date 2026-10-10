@@ -128,51 +128,9 @@ export const AuthProvider = ({ children }) => {
     setCurrentRestaurantId(restIdStr);
   }, [currentRestaurantId, crmToken, userType]);
 
-  // Admin login (used by Login.jsx — our backend, admin only)
-  const login = async (phoneOrEmail, otpOrPassword, isOTP = true, restaurantContext = null) => {
-    const body = { phone_or_email: phoneOrEmail };
-
-    if (isOTP) {
-      body.otp = otpOrPassword;
-    } else {
-      body.password = otpOrPassword;
-    }
-    
-    if (restaurantContext) {
-      body.restaurant_id = restaurantContext.restaurant_id;
-      body.pos_id = restaurantContext.pos_id || "0001";
-    }
-
-    const response = await fetchWithTimeout(`${API_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }, DEFAULT_WRITE_TIMEOUT_MS); // CR-2026-07-03-004 — 15 s write timeout
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      logger.error('auth', 'Non-JSON response:', text);
-      throw new Error('Server is temporarily unavailable. Please try again.');
-    }
-
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.detail || 'Login failed');
-    }
-
-    setUser(data.user);
-    setUserType(data.user_type);
-    setToken(data.token);
-    localStorage.setItem('auth_token', data.token);
-    
-    if (data.restaurant_context) {
-      localStorage.setItem('restaurant_context', JSON.stringify(data.restaurant_context));
-    }
-    
-    return data;
-  };
+  // CR-2026-09-15-004: login() deleted — dead code (0 callers).
+  // Admin login is handled by Login.jsx calling POST /api/auth/login directly.
+  // Per CR-2026-10-03-001 D3 ruling.
 
   // Admin auth setter (used by Login.jsx for direct admin login)
   const setAuth = (newToken, newUser, newUserType) => {
@@ -228,7 +186,6 @@ export const AuthProvider = ({ children }) => {
     isCustomer: userType === 'customer',
     isRestaurant: userType === 'restaurant',
     setRestaurantScope,
-    login,
     setAuth,
     setCrmAuth,
     logout

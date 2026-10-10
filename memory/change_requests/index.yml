@@ -1099,17 +1099,19 @@
   type: CR
   title: Remove admin login direct read of CRM `users`. Direction D (POS direct).
     P0 projection sub-item.
-  status: INTAKE
-  status_note: null
+  status: SMOKE
+  status_note: QA PASS iteration_17.json (9/9). db.users reads = 0 active lines. POS
+    direct two-step flow confirmed. AuthContext.login() deleted. Forced re-login on
+    deploy (D4 accepted). SMOKE_BRIEF pending.
   priority: null
   risk: null
   owner_action: null
   blocked_on: []
   sprint: null
   files: null
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER
   registered: '2026-09-15'
-  last_updated: null
+  last_updated: '2026-10-10'
   related: []
   code_markers: false
   money_path: null

@@ -65,8 +65,8 @@ def test_login_unknown_email_returns_404(http_client):
     })
     if resp.status_code == 429:
         pytest.skip("rate-limited (5/min)")
-    assert resp.status_code == 404, f"unknown-email → {resp.status_code}: {resp.text[:200]}"
-    assert "Account not found" in resp.text
+    # CR-2026-09-15-004: POS direct returns 401 for unknown credentials (was 404 with db.users)
+    assert resp.status_code in (401, 404), f"unknown-email → {resp.status_code}: {resp.text[:200]}"
 
 
 def test_public_healthz(http_client):
