@@ -11,6 +11,7 @@
 - Database: Remote MongoDB at 52.66.232.149:27017/mygenie
 
 ## Session Log (latest first)
+- 2026-10-10: CR-2026-10-09-003 (max-redeemable), CR-2026-10-09-002 (coupon), CR-2026-10-07-001 (feedback), CR-2026-09-15-004 (admin login POS). Two bugs fixed (loyalty points 0, name autofill). Contract v1.0 frozen. §4d signed. CR-095 closed. Two POS briefs sent. CR-2026-10-06-001 intake locked. 11 items at owner smoke.
 - 2026-10-09: CR-2026-10-03-004 Parts B+C shipped (loyalty-rules CRM swap, customer-lookup retired, G1/G3 gaps fixed). Contract v1.0 frozen both sides (CA-1 countersigned). §4d ownership map signed. CR-095/094/096 closed with CRM. 7 items at owner smoke.
 
 ## What's Implemented
