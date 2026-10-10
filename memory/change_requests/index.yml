@@ -42,16 +42,22 @@
   type: BUG
   title: Image upload writes to local disk (lost on pod restart)
   status: INTAKE
-  status_note: null
+  status_note: ' | 2026-10-10: direction confirmed by owner — use POS S3 upload endpoint
+    + read logo from POS profile (restaurants[0].bill_logo_path or logo field). POS
+    brief sent: inbox/OUTBOUND_TO_POS_IMAGE_UPLOAD_CONTRACT_REQUEST_2026_10_10.md.
+    Blocked on POS reply.'
   priority: null
   risk: null
   owner_action: null
-  blocked_on: []
+  blocked_on:
+  - party: POS
+    ref: upload endpoint contract + logo field clarification
+    since: '2026-10-10'
   sprint: null
   files: null
   artefacts: INTAKE, IMPLEMENTATION_PLAN, QA_HANDOVER, QA_REPORT
   registered: '2026-09-10'
-  last_updated: null
+  last_updated: '2026-10-10'
   related: []
   code_markers: true
   money_path: null
