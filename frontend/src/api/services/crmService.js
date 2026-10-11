@@ -294,7 +294,7 @@ const stripPhonePrefix = (phone) => {
  *          Response envelope unwrapped by crmFetch; synthesized to v1-like shape.
  * No v1 equivalent — this call always uses v2.
  */
-export const crmSkipOtp = async (phone, userId) => {
+export const crmSkipOtp = async (phone, userId, name = '') => {
   const restaurantId = getRestaurantIdFromUserId(userId);
   const data = await crmFetch('/scan/auth/skip-otp', {
     method: 'POST',
@@ -302,13 +302,16 @@ export const crmSkipOtp = async (phone, userId) => {
       phone: stripPhonePrefix(phone),
       restaurant_id: restaurantId,
       country_code: '+91', // CR-085-A: send separately for canonical matching
+      // CR-2026-10-11-006 B-1: send name when captured (stored by CRM after CR-119 on prod)
+      ...(name.trim() ? { name: name.trim() } : {}),
     }),
     userId, // used by crmFetch to resolve restaurant -> x-api-key
   });
   return {
     success: true,
     token: data?.token,
-    customer: { id: data?.customer_id, phone: data?.phone, name: '' },
+    // CR-2026-10-11-006 B-2: read name from response (CRM CR-119 returns it)
+    customer: { id: data?.customer_id, phone: data?.phone, name: data?.name || '' },
     is_new_customer: data?.is_new_customer,
   };
 };
@@ -411,6 +414,36 @@ export const crmGetProfile = async (token) => {
     return crmAuthFetch('/scan/auth/me', token, { method: 'GET' });
   }
   return crmAuthFetch('/customer/me', token, { method: 'GET' });
+};
+
+/**
+ * CR-2026-10-11-006 B-3: Update customer profile fields.
+ * PUT /scan/profile — Bearer customer token required.
+ * Body: any subset of { name, email, dob, anniversary, gender, ... }
+ *
+ * Caveats:
+ *  - CRM accepts empty string for name and blanks the stored value.
+ *    Always trim; skip the call entirely if name reduces to ''.
+ *  - "No fields to update" → CRM returns success:false (200) → treat as no-op.
+ */
+export const crmUpdateProfile = async (token, fields) => {
+  const sanitised = { ...fields };
+  if ('name' in sanitised) {
+    sanitised.name = (sanitised.name || '').trim();
+    if (!sanitised.name) delete sanitised.name;
+  }
+  if (!Object.keys(sanitised).length) return { success: true };
+  try {
+    await crmAuthFetch('/scan/profile', token, {
+      method: 'PUT',
+      body: JSON.stringify(sanitised),
+    });
+    return { success: true };
+  } catch (err) {
+    // CRM returns success:false / "No fields to update" as a business error — not a failure
+    if (err?.message?.includes('No fields to update')) return { success: true };
+    throw err;
+  }
 };
 
 /**

@@ -4,9 +4,9 @@
  * Thin retry wrapper around the existing `crmSkipOtp` helper.
  *
  * Why a wrapper (and not modify the helper itself):
- *  - The bare `crmSkipOtp` is still called by `PasswordSetup.handleSkip`
- *    (the manual "Skip for now" button). That call site keeps today's
- *    single-shot behaviour. Risk isolation.
+ *  - The bare `crmSkipOtp` is also importable for single-shot use.
+ *    CR-2026-10-08-001: PasswordSetup route removed — that call site is dead code.
+ *    Default name='' keeps it backward-compatible.
  *  - Only the new Landing-side silent-skip call gets retries.
  *
  * Retry policy (per integration playbook + owner decision D=b):
@@ -26,22 +26,23 @@ const RETRIABLE = new Set([429, 500, 502, 503, 504]);
 const NON_RETRIABLE_BUBBLE = new Set([400, 401, 403, 404, 409, 422]);
 
 /**
- * @param {string} phone   - raw phone (passed straight to crmSkipOtp)
- * @param {string} userId  - "pos_{posId}_restaurant_{restaurantId}" string
+ * @param {string} phone      - raw phone (passed straight to crmSkipOtp)
+ * @param {string} userId     - "pos_{posId}_restaurant_{restaurantId}" string
+ * @param {string} [name='']  - customer name to store (CR-2026-10-11-006 B-1)
  * @param {object} [opts]
  * @param {number} [opts.maxAttempts=3]
  * @param {number} [opts.baseDelayMs=500]
  * @param {number} [opts.maxDelayMs=4000]
  * @returns {Promise<{token, customer, success, is_new_customer}>}
  */
-export const crmSkipOtpWithRetry = async (phone, userId, opts = {}) => {
+export const crmSkipOtpWithRetry = async (phone, userId, name = '', opts = {}) => {
   const { maxAttempts = 3, baseDelayMs = 500, maxDelayMs = 4000 } = opts;
   let attempt = 0;
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
     try {
-      return await crmSkipOtp(phone, userId);
+      return await crmSkipOtp(phone, userId, name); // CR-2026-10-11-006 B-1
     } catch (e) {
       const status = e?.status;
 

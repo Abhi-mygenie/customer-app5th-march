@@ -2156,17 +2156,18 @@
   type: CR
   title: Customer name prefill — spread fix + crmSkipOtp name param + read name from
     response + crmUpdateProfile + AuthContext defensive merge
-  status: IMPLEMENTATION_PLAN
-  status_note: 'Implementation Plan complete 2026-10-11. All 6 items, 4 files, 6 steps.
-    Exit gate checklist written. Ready for Role 3.'
+  status: QA_PASS
+  status_note: 'Implemented + testing agent PASS (iteration_19.json). New customer
+    TestRavi name pre-fill confirmed. All 6 code items verified. Build clean.
+    Returning customer inconclusive due to CRM 429 rate-limit in test env (not a bug).'
   priority: P2
   risk: HIGH
-  owner_action: 'Say "Implement CR-2026-10-11-006" to start Role 3 implementation'
+  owner_action: 'Smoke test: open /689, enter new phone + name, Browse Menu, check name on Review Order'
   blocked_on: []
   sprint: null
   files: frontend/src/pages/LandingPage.jsx · frontend/src/api/services/crmService.js
     · frontend/src/api/services/crmSkipOtpRetry.js · frontend/src/context/AuthContext.jsx
-  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER
   registered: '2026-10-11'
   last_updated: '2026-10-11'
   related:

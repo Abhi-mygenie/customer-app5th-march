@@ -154,7 +154,13 @@ export const AuthProvider = ({ children }) => {
     // BUG-FIX: skip-otp response only returns { id, phone, name } — no total_points/tier.
     // Enrich asynchronously so ReviewOrder shows correct loyalty balance.
     crmGetProfile(newCrmToken).then(fullProfile => {
-      if (fullProfile) setUser(fullProfile);
+      if (fullProfile) {
+        // CR-2026-10-11-006 C: preserve captured name if CRM async enrichment returns blank
+        // (guard for pre-CR-119 prod window — no-op once CRM stores name correctly)
+        const merged = { ...fullProfile };
+        if (!merged.name && customerProfile?.name) merged.name = customerProfile.name;
+        setUser(merged);
+      }
     }).catch(() => {
       // Silently fail — partial profile is acceptable fallback
     });

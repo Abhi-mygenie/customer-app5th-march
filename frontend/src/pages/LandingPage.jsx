@@ -16,7 +16,7 @@ import { isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability
 import { getAuthToken } from '../utils/authToken';
 // CR-2026-10-08-001 Step 1: otpPolicy gate removed — skip-otp is always called
 import { crmSkipOtpWithRetry } from '../api/services/crmSkipOtpRetry';
-import { buildUserId, crmLookupCustomer } from '../api/services/crmService';
+import { buildUserId, crmLookupCustomer, crmUpdateProfile } from '../api/services/crmService';
 import { shouldBlockNonQrOrder, buildNonQrBlockPayload } from '../utils/orderAccessPolicy';
 import { postNonQrBlock } from '../api/services/diagnosticsService';
 import NonQrBlockModal from '../components/NonQrBlockModal';
@@ -451,10 +451,16 @@ const LandingPage = () => {
     };
 
     try {
-      const result = await crmSkipOtpWithRetry(phone, userId);
+      const result = await crmSkipOtpWithRetry(phone, userId, name); // CR-2026-10-11-006 B-1
       if (result?.token) {
-        const customerProfile = { name, phone, ...(result.customer || {}) };
+        // CR-2026-10-11-006 A: spread result.customer first — captured name wins over CRM empty string
+        const customerProfile = { ...(result.customer || {}), name: name || result.customer?.name || '', phone };
         setCrmAuth(result.token, customerProfile, rid);
+        // CR-2026-10-11-006 B-4: pre-CR-119 prod path — store name via PUT /scan/profile
+        // (skip-otp accepts name on preprod but not on production until CR-119 ships)
+        if (result.is_new_customer && name.trim()) {
+          crmUpdateProfile(result.token, { name: name.trim() }).catch(() => {});
+        }
       }
       // Persist guestCustomer regardless of CRM token, so downstream payloads
       // (cust_name, cust_phone) carry the captured identity.
