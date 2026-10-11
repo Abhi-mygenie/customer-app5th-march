@@ -2184,16 +2184,17 @@
   type: CR
   title: ReviewOrder identity update — P4 phone change re-auth via skip-otp + P5
     name edit calls PUT /scan/profile before order
-  status: INTAKE
-  status_note: INTAKE COMPLETE. Unblocked — PUT /scan/profile confirmed by CRM. Requires
-    full gate flow (CRITICAL risk).
+  status: IMPACT_ANALYSIS
+  status_note: 'IA complete 2026-10-11. 1 file only (ReviewOrder.jsx). 4 edits identified.
+    Owner decisions D1+D2+D3 pending before Implementation Plan.'
   priority: P2
-  risk: CRITICAL
-  owner_action: null
+  risk: HIGH
+  owner_action: 'Confirm D1 (Place Order trigger), D2 (P4 failure = proceed), D3 (P5 failure = fire-and-forget).
+    Then say "Implementation Plan for CR-2026-10-11-007".'
   blocked_on: []
   sprint: null
-  files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx
-  artefacts: INTAKE
+  files: frontend/src/pages/ReviewOrder.jsx
+  artefacts: INTAKE · IMPACT_ANALYSIS
   registered: '2026-10-11'
   last_updated: '2026-10-11'
   related:
