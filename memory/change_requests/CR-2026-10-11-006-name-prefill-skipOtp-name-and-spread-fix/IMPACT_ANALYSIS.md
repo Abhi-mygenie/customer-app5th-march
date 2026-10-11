@@ -8,6 +8,24 @@
 
 ---
 
+## 0. Live CRM Validation — 2026-10-11 (post-preprod deploy)
+
+**New CRM URL (owner updated):** `https://mygenie-crm-preprod.preview.emergentagent.com/api`
+**CR-119 status:** LIVE on this preprod pod. NOT yet on production.
+
+| Probe | Result | Impact on plan |
+|---|---|---|
+| skip-otp + `name:"FreshCustomer"` → response | `data.name = "FreshCustomer"` returned ✅ | crmSkipOtp must read `data?.name` from response (currently hardcodes `name:''`) |
+| skip-otp without name field | `data.name = ''` | Until CR-119 on prod: must call PUT /scan/profile for new customers |
+| PUT /scan/profile `{"name":"ValidatedName"}` | `200 success:true`, GET /me confirms ✅ | Endpoint confirmed working |
+| PUT /scan/profile `{"name":""}` | `200 success:true` — blanks stored name | Must trim + skip call if name is empty string |
+| Repeat skip-otp new phone | New token, is_new_customer:true ✅ | Phone change re-auth confirmed |
+
+**New mandatory item added to scope (see Item B-2 below):** crmSkipOtp must map `data?.name` from response.
+**crmUpdateProfile scope change:** Function needed in LandingPage (pre-CR-119 path). Moving add from CR-007 into CR-006 crmService.js step.
+
+---
+
 ## 1. Code Reality Check
 
 | Item | Status | Evidence |
@@ -226,3 +244,58 @@ Recommendation: Owner confirms D1+D2, then proceed to Implementation Plan
 Docs: CR-2026-10-11-006/IMPACT_ANALYSIS.md (this file)
 Next: Implementation Plan (after owner approves D1 + D2)
 ```
+
+---
+
+## 11. Live Validation Addendum — 2026-10-11 (post CRM reply + new endpoint)
+
+**Owner changed REACT_APP_CRM_URL to:** `https://mygenie-crm-preprod.preview.emergentagent.com/api`
+**CRM CR-119 status:** LIVE on this pod · NOT yet on production
+
+### Updated scope (4 items, not 2)
+
+| Item | Change | Blocked? | Risk |
+|---|---|---|---|
+| **A** — LandingPage.jsx line 456 spread order | 1 line | ✅ Unblocked | MEDIUM |
+| **B-1** — crmSkipOtp: send `name` in body | ~3 lines | ⏳ Pre-code now; works on prod after CR-119 | LOW |
+| **B-2** — crmSkipOtp: READ `data?.name` from response | 1 line | ✅ Unblocked (CR-119 live on preprod) | LOW |
+| **B-3** — Add `crmUpdateProfile` to crmService.js | ~15 lines new fn | ✅ Unblocked (moved from CR-007) | LOW |
+| **B-4** — LandingPage: call crmUpdateProfile if is_new_customer (pre-CR-119 prod path) | ~5 lines | ✅ Unblocked | MEDIUM |
+| **C** — AuthContext.jsx defensive name merge | 3 lines | ✅ Unblocked | HIGH |
+
+### Transitional implementation (two-phase, one codebase)
+
+```
+Phase 1 — until CR-119 reaches PRODUCTION:
+  skip-otp body: { phone, restaurant_id, country_code, name }   ← sent but silently stored now
+  response:      { token, customer_id, is_new_customer, phone, name }  ← CR-119 preprod returns it
+  if is_new_customer: true  → crmUpdateProfile(token, { name })  ← ensures name stored
+  if is_new_customer: false → crmGetProfile enriches from CRM   ← existing name returned
+
+Phase 2 — after CR-119 on PRODUCTION:
+  skip-otp body includes name → stored in CRM → returned in response
+  crmUpdateProfile call for new customers becomes redundant (harmless to keep)
+  PUT /scan/profile still needed for name CORRECTIONS on review screen (CR-007)
+```
+
+### Validation table (live probe results 2026-10-11)
+
+| Probe | Expected | Actual | Pass |
+|---|---|---|---|
+| skip-otp + name:"FreshCustomer" → response.name | "FreshCustomer" | "FreshCustomer" | ✅ |
+| skip-otp no name field → response.name | '' | '' | ✅ |
+| PUT /scan/profile {"name":"ValidatedName"} → 200 | success:true | success:true | ✅ |
+| GET /scan/auth/me after PUT → name | "ValidatedName" | "ValidatedName" | ✅ |
+| PUT /scan/profile {"name":""} → accepted (risk) | silently stored | success:true (blanks name!) | ⚠️ Must trim+skip |
+| Repeat skip-otp new phone → is_new_customer | true + new token | true + new token | ✅ |
+
+### Key code gap confirmed (still broken today)
+
+`crmService.js` returns `name: ''` hardcoded even though CRM now sends `name` in response:
+```javascript
+// CURRENT (broken — ignores data?.name)
+customer: { id: data?.customer_id, phone: data?.phone, name: '' }
+// NEEDED (B-2 fix)
+customer: { id: data?.customer_id, phone: data?.phone, name: data?.name || '' }
+```
+This single line is the fastest path to a working name prefill on preprod right now.

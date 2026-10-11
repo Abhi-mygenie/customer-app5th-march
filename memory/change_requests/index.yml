@@ -2154,20 +2154,19 @@
   notes: null
 - id: CR-2026-10-11-006
   type: CR
-  title: Customer name prefill — fix LandingPage spread order (RC-2, unblocked) +
-    add name param to crmSkipOtp (RC-1, blocked on CRM deploy) + AuthContext defensive
-    merge (RC-4 race condition, new finding)
+  title: Customer name prefill — spread fix + crmSkipOtp name param + read name from
+    response + crmUpdateProfile + AuthContext defensive merge
   status: IMPACT_ANALYSIS
-  status_note: 'Impact Analysis complete 2026-10-11. New finding: race condition in
-    AuthContext.jsx setCrmAuth — Item C required for complete fix. Owner decisions
-    D1 + D2 pending.'
+  status_note: 'Impact Analysis complete + live validated 2026-10-11. CRM CR-119 LIVE
+    on preprod pod. 6 items confirmed. crmUpdateProfile scope moved from CR-007.
+    Owner decisions D1+D2 pending.'
   priority: P2
   risk: HIGH
-  owner_action: 'Confirm D1 (include AuthContext Item C in CR-006) and D2 (pre-code
-    Item B before CRM deploys). Then say "Implementation Plan for CR-2026-10-11-006".'
+  owner_action: 'Confirm D1 (AuthContext Item C in scope) and D2 (pre-code Item B-1).
+    Then say "Implementation Plan for CR-2026-10-11-006".'
   blocked_on:
   - party: CRM
-    ref: skip-otp name field — CRM will add, pending deploy (Item B only — Items A+C unblocked)
+    ref: CR-119 on PRODUCTION (Item B-1 only — all other items unblocked)
     since: '2026-10-11'
   sprint: null
   files: frontend/src/pages/LandingPage.jsx · frontend/src/api/services/crmService.js
