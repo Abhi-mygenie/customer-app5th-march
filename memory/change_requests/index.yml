@@ -2156,17 +2156,17 @@
   type: CR
   title: Customer name prefill — spread fix + crmSkipOtp name param + read name from
     response + crmUpdateProfile + AuthContext defensive merge
-  status: IMPACT_ANALYSIS_CLOSED
-  status_note: 'IA closed 2026-10-11. D1 (Item C in scope) + D2 (pre-code B-1) confirmed
-    by owner. All 6 items unblocked. Gate open for Implementation Plan.'
+  status: IMPLEMENTATION_PLAN
+  status_note: 'Implementation Plan complete 2026-10-11. All 6 items, 4 files, 6 steps.
+    Exit gate checklist written. Ready for Role 3.'
   priority: P2
   risk: HIGH
-  owner_action: 'Say "Implementation Plan for CR-2026-10-11-006" to proceed'
+  owner_action: 'Say "Implement CR-2026-10-11-006" to start Role 3 implementation'
   blocked_on: []
   sprint: null
   files: frontend/src/pages/LandingPage.jsx · frontend/src/api/services/crmService.js
     · frontend/src/api/services/crmSkipOtpRetry.js · frontend/src/context/AuthContext.jsx
-  artefacts: INTAKE · IMPACT_ANALYSIS
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-11'
   last_updated: '2026-10-11'
   related:
