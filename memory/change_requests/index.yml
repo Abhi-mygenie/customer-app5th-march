@@ -2206,3 +2206,68 @@
   notes: 'Requires new crmUpdateProfile function (Item A, LOW risk) before ReviewOrder
     wiring (Item B+C, CRITICAL). Owner approval required before ReviewOrder implementation.
     CRM contract: PUT /scan/profile, Bearer token, { name } subset, 200 success:true.'
+- id: CR-2026-10-11-008
+  type: CR
+  title: Anonymous coupon validation — two-step flow (no-token validate + CUSTOMER_REQUIRED
+    prompt + re-validate after skip-otp) + all 8 error codes wired to specific messages
+  status: INTAKE
+  status_note: INTAKE COMPLETE. Blocked on CRM preprod deploy (token optional on
+    POST /scan/coupons/validate). CRM will notify when live.
+  priority: P2
+  risk: HIGH
+  owner_action: null
+  blocked_on:
+  - party: CRM
+    ref: Make token optional on POST /scan/coupons/validate + accept restaurant_id
+      in body — route layer change only, no engine change
+    since: '2026-10-11'
+  sprint: null
+  files: frontend/src/pages/ReviewOrder.jsx · frontend/src/api/services/crmService.js
+  artefacts: INTAKE
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - CR-2026-10-09-002
+  - CR-2026-10-11-009
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'CRM contract frozen 2026-10-11. Two-step flow: POST validate (no token)
+    → generic coupon shows discount OR CUSTOMER_REQUIRED → skip-otp → POST validate
+    (with token) → confirmed discount. Rate limit 10/min/IP. Error codes: CUSTOMER_REQUIRED,
+    CUSTOMER_USAGE_LIMIT_REACHED, CUSTOMER_NOT_ELIGIBLE, MIN_ORDER_NOT_MET, EXPIRED,
+    CHANNEL_NOT_VALID, OUTSIDE_TIME_WINDOW, INVALID_CODE.'
+- id: CR-2026-10-11-009
+  type: CR
+  title: Coupon discovery list — GET /scan/coupons on checkout open, anonymous (generic
+    only) and authenticated (personalised), tap to apply, requires_cart_validation
+    handling
+  status: INTAKE
+  status_note: INTAKE COMPLETE. Blocked on CRM preprod deploy AND CR-2026-10-11-008
+    shipping first. CRM will notify when live.
+  priority: P2
+  risk: HIGH
+  owner_action: null
+  blocked_on:
+  - party: CRM
+    ref: Make token optional on GET /scan/coupons + accept restaurant_id query param
+    since: '2026-10-11'
+  - party: internal
+    ref: CR-2026-10-11-008 must ship first (anonymous validate path required)
+    since: '2026-10-11'
+  sprint: null
+  files: frontend/src/pages/ReviewOrder.jsx · frontend/src/api/services/crmService.js
+    · new CouponDiscoveryList component
+  artefacts: INTAKE
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - CR-2026-10-11-008
+  - CR-2026-10-09-002
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'CRM contract frozen 2026-10-11. Anonymous list: generic coupons only, standard
+    hidden. Auth list: full personalised, my_usage_count included. requires_cart_validation:true
+    → show display_title only, validate with items on tap. 50 coupon cap. Anonymous
+    rate limit 10/min/IP.'
