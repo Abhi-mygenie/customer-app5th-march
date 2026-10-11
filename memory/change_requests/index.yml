@@ -1999,3 +1999,210 @@
     G3 client-side caps from CR-2026-10-03-004 Part B. Probe confirmed: ok:true, max_pts:36,
     max_disc:108, ratio:3.0 for Gold/bill:500. projected_points_earned discrepancy
     needs CRM clarification.'
+- id: CR-2026-10-11-001
+  type: CR
+  title: POS-only coupon bypasses CRM validation — couponCode vs appliedCouponCode mismatch
+    sends unvalidated code to POS causing order_amount mismatch
+  status: QA_PASS
+  status_note: 'QA PASS iteration_18. 3-line fix in ReviewOrder.jsx. AWAITING OWNER
+    APPROVAL to implement.'
+  priority: P0
+  risk: CRITICAL
+  owner_action: Say "Approved — implement CR-2026-10-11-001"
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/ReviewOrder.jsx
+  artefacts: INTAKE, IMPACT_ANALYSIS, QA_HANDOVER, SMOKE_BRIEF, SMOKE_BRIEF.pdf
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - INV-2026-10-11-001
+  - CR-2026-10-09-002
+  code_markers: false
+  money_path: true
+  closed: null
+  notes: 'Fix: pass appliedCouponCode (CRM-confirmed) not couponCode (raw input) to
+    placeOrder. couponDiscount stays 0 when CRM rejects → POS receives empty code
+    → totals stay in sync.'
+- id: CR-2026-10-11-003
+  type: CR
+  title: Retry placeOrder call (401 token refresh path) missing couponDiscount and
+    couponTitle — discount lost on token-expiry retry
+  status: INTAKE
+  status_note: Registered during CR-2026-10-11-001 QA. Pre-existing gap. P2.
+  priority: P2
+  risk: MEDIUM
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/ReviewOrder.jsx
+  artefacts: INTAKE
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - CR-2026-10-11-001
+  code_markers: false
+  money_path: true
+  closed: null
+  notes: Retry path line 1595 passes appliedCouponCode (now fixed by CR-001) but
+    still missing couponDiscount and couponTitle. Rare scenario (token expiry during
+    order). Does not block CR-001.
+- id: BUG-2026-10-11-004
+  type: BUG
+  title: New customer name not pre-filling on Review Order page — spread order overwrites
+    captured name; CRM never stores name from skip-otp
+  status: INTAKE
+  status_note: 'Investigation CLOSED 2026-10-11. CRs raised: CR-006 (RC-2 + RC-1),
+    CR-007 (P4 + P5).'
+  priority: P2
+  risk: MEDIUM
+  owner_action: null
+  blocked_on:
+  - party: CRM
+    ref: skip-otp name field support — CRM will add, pending deploy
+    since: '2026-10-11'
+  sprint: null
+  files: frontend/src/api/services/crmService.js · frontend/src/pages/LandingPage.jsx
+    · frontend/src/pages/ReviewOrder.jsx · frontend/src/context/AuthContext.jsx
+  artefacts: INTAKE, INVESTIGATION_REPORT
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - CR-2026-10-11-006
+  - CR-2026-10-11-007
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: '4 root causes code-verified. RC-2 (LandingPage spread) unblocked now. RC-1
+    (crmSkipOtp name param) blocked on CRM deploy. P5 (PUT /scan/profile) and P4
+    (phone reauth) confirmed by CRM — unblocked in CR-007.'
+- id: BUG-2026-10-11-005
+  type: BUG
+  title: CRM coupon applied twice — once by scan & order app (scan channel), once
+    by POS (POS channel) — resulting in total_amount 0 at POS
+  status: INTAKE
+  status_note: BLOCKED ON POS. POS brief sent. No code change on our side.
+  priority: P0
+  risk: CRITICAL
+  owner_action: null
+  blocked_on:
+  - party: POS
+    ref: coupon_discount_amount>0 signal to skip reapplication
+    since: '2026-10-11'
+  sprint: null
+  files: null
+  artefacts: INTAKE, POS_BRIEF
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - CR-2026-10-09-002
+  - INV-2026-10-11-001
+  code_markers: false
+  money_path: true
+  closed: null
+  notes: 'Order #015065: our order_amount 74 correct; POS returned total_amount 0
+    (re-applied MARRY via POS channel). Fix must come from POS: treat coupon_discount_amount>0
+    as pre-applied signal.'
+- id: INV-2026-10-11-001
+  type: INV
+  title: Order 015060 seven-issue investigation — coupon, loyalty, amount mismatch
+    root cause tracing
+  status: CLOSED
+  status_note: Root causes identified. Split into CR-001, BUG-004, BUG-005, INV-002.
+  priority: null
+  risk: null
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: null
+  artefacts: INTAKE
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - CR-2026-10-11-001
+  - BUG-2026-10-11-004
+  - BUG-2026-10-11-005
+  - INV-2026-10-11-002
+  code_markers: false
+  money_path: null
+  closed: '2026-10-11'
+  notes: null
+- id: INV-2026-10-11-002
+  type: INV
+  title: order_amount=6 state collapse root cause — parked pending CR-2026-10-11-001
+    baseline
+  status: PARKED
+  status_note: Reopen if order_amount<=10 recurs after CR-001 ships.
+  priority: null
+  risk: null
+  owner_action: null
+  blocked_on:
+  - party: internal
+    ref: CR-2026-10-11-001 must ship first
+    since: '2026-10-11'
+  sprint: null
+  files: null
+  artefacts: INTAKE
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - CR-2026-10-11-001
+  - INV-2026-10-11-001
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: null
+- id: CR-2026-10-11-006
+  type: CR
+  title: Customer name prefill — fix LandingPage spread order (RC-2, unblocked) +
+    add name param to crmSkipOtp (RC-1, blocked on CRM deploy)
+  status: INTAKE
+  status_note: RC-2 unblocked. RC-1 blocked on CRM deploy of skip-otp name support.
+  priority: P2
+  risk: MEDIUM
+  owner_action: null
+  blocked_on:
+  - party: CRM
+    ref: skip-otp name field — CRM will add, pending deploy
+    since: '2026-10-11'
+  sprint: null
+  files: frontend/src/pages/LandingPage.jsx · frontend/src/api/services/crmService.js
+    · frontend/src/api/services/crmSkipOtpRetry.js
+  artefacts: INTAKE
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - BUG-2026-10-11-004
+  - CR-2026-10-11-007
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Item A (LandingPage spread fix): 1 line, planning can start now. Item B
+    (crmSkipOtp name param): ~5 lines across 3 files, ship after CRM deploys. Item
+    B is safe to pre-code with default name="" — silently ignored by CRM until they
+    ship.'
+- id: CR-2026-10-11-007
+  type: CR
+  title: ReviewOrder identity update — P4 phone change re-auth via skip-otp + P5
+    name edit calls PUT /scan/profile before order
+  status: INTAKE
+  status_note: INTAKE COMPLETE. Unblocked — PUT /scan/profile confirmed by CRM. Requires
+    full gate flow (CRITICAL risk).
+  priority: P2
+  risk: CRITICAL
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx
+  artefacts: INTAKE
+  registered: '2026-10-11'
+  last_updated: '2026-10-11'
+  related:
+  - BUG-2026-10-11-004
+  - CR-2026-10-11-006
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Requires new crmUpdateProfile function (Item A, LOW risk) before ReviewOrder
+    wiring (Item B+C, CRITICAL). Owner approval required before ReviewOrder implementation.
+    CRM contract: PUT /scan/profile, Bearer token, { name } subset, 200 success:true.'

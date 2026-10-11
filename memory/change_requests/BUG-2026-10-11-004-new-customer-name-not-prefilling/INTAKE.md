@@ -5,7 +5,7 @@
 **Date registered:** 2026-10-11
 **Registered by:** Role 6 — Investigation Agent
 **Source:** Owner report + screenshot + code trace (this session)
-**Status:** INVESTIGATION COMPLETE — ready for Planning
+**Status:** INVESTIGATION CLOSED — 2026-10-11 (CRM reply received, owner decisions updated)
 
 ---
 
@@ -143,22 +143,45 @@ const customerProfile = { ...(result.customer || {}), name: name || result.custo
 
 ---
 
-## Owner Decisions — 2026-10-11
+## Owner Decisions — 2026-10-11 (original + CRM reply rulings)
 
 | Point | Decision |
 |---|---|
-| P1 — Send name to CRM on skip-otp | YES — confirmed CRM supports `name` field in skip-otp. Live probe approved. |
-| P2 — CRM response populates review screen | OK — no extra work, fixed by P1 |
+| P1 — Send name to CRM on skip-otp | YES — CRM will ADD `name` support to skip-otp (§0 overturned 2026-10-11). Our code change BLOCKED on CRM deploy. |
+| P2 — CRM response populates review screen | OK — resolved as side effect of P1 once CRM deploys |
 | P3 — Phone editable on review screen | ALLOW EDIT — phone remains editable |
-| P4 — Phone changed → re-authenticate new customer | YES — call skip-otp again with new phone, new CRM token |
-| P5 — Name changed on review → update CRM | YES — CRM brief sent, awaiting endpoint confirmation |
+| P4 — Phone changed → re-authenticate new customer | YES — repeat skip-otp, discard old token, then crmGetProfile for name/points |
+| P5 — Name changed on review → update CRM | YES — `PUT /scan/profile` confirmed by CRM (§1), unblocked |
+
+## CRM Reply Rulings — 2026-10-11
+
+| § | CRM Claim | Owner Ruling |
+|---|---|---|
+| §0 | skip-otp currently ignores `name` (silently drops) | **OVERTURNED** — CRM will add `name` support. Blocked on their deploy. |
+| §1 | `PUT /scan/profile` exists today | **ACCEPTED** — unblocks P5 |
+| §2 | Repeat skip-otp for phone change works | **ACCEPTED** — unblocks P4 |
+| §3 | Move skip-otp to Place Order timing | **REJECTED** — coupons need early token. Keep at Browse Menu. Future edge cases handled when they arise. |
+
+## Investigation Summary (Role 6 — 2026-10-11)
+
+All 4 root causes code-verified. Full report: `INVESTIGATION_REPORT.md`
+
+| RC | File | Line | Confirmed | Unblocked |
+|---|---|---|---|---|
+| RC-1 | crmService.js | 311 | `name:''` hardcoded, never sent to CRM | Blocked on CRM deploy |
+| RC-2 | LandingPage.jsx | 456 | `...(result.customer)` spread overwrites captured name | Unblocked now |
+| RC-3 | ReviewOrder.jsx | 316 | localStorage read gated behind `!isAuthenticated` | Resolved by RC-2 fix |
+| RC-4 | AuthContext.jsx | 156 | async `crmGetProfile` returns `name:''` (CRM never stored it) | Resolved once RC-1 ships |
 
 ## Status
 
 ```
-INVESTIGATION:  COMPLETE
-OWNER DECISIONS: RECORDED (2026-10-11)
-PLANNING:       NOT STARTED — blocked on P5 CRM reply
-CRM brief:      memory/inbox/OUTBOUND_TO_CRM_NAME_UPDATE_ENDPOINT_2026-10-11.md
-Gate:           Intake complete → await CRM reply for P5 → Planning
+INVESTIGATION:   CLOSED — 2026-10-11
+OWNER DECISIONS: UPDATED (CRM reply rulings recorded)
+PLANNING:        NOT STARTED — split into two CRs
+CRs raised:      CR-2026-10-11-006 (RC-2 spread fix + RC-1 name send — RC-2 unblocked now, RC-1 blocked on CRM deploy)
+                 CR-2026-10-11-007 (ReviewOrder P4 phone reauth + P5 name edit via PUT /scan/profile)
+Gate:            Investigation CLOSED → Planning on CR-006 RC-2 unblocked
+                                      → Planning on CR-006 RC-1 blocked on CRM deploy
+                                      → Planning on CR-007 unblocked (PUT /scan/profile confirmed)
 ```
