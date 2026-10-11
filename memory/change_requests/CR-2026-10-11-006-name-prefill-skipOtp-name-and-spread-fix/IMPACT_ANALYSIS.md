@@ -196,12 +196,12 @@ ReviewOrder: user.name="John" → setCustomerName("John") → pre-filled correct
 
 ---
 
-## 8. Owner Decisions Required
+## 8. Owner Decisions — RECORDED 2026-10-11
 
-| # | Decision | Options | Recommendation |
-|---|---|---|---|
-| D1 | Include Item C (AuthContext defensive merge) in CR-006? | A) Yes — ship together · B) Separate micro-CR | **A — ship together.** Item A without Item C is an incomplete fix (race condition). All 3 items are small and tightly coupled. |
-| D2 | Ship Item B before CRM deploys (name silently dropped by CRM until then)? | A) Yes — pre-code now, zero risk · B) Wait for CRM confirmation | **A — pre-code now.** Default `name=''` means zero regression. When CRM deploys, it just starts working without another release. |
+| # | Decision | Owner Ruling |
+|---|---|---|
+| D1 | Include Item C (AuthContext defensive merge) in CR-006? | **YES — IN SCOPE** (2026-10-11) |
+| D2 | Pre-code Item B-1 before CR-119 reaches production? | **YES — PRE-CODE** (2026-10-11) |
 
 ---
 
@@ -222,27 +222,26 @@ ReviewOrder: user.name="John" → setCustomerName("John") → pre-filled correct
 
 ```
 Planning complete: CR-2026-10-11-006
-Stage: Impact Analysis
-Code reality: FULL (all files inspected, data flow traced)
+Stage: Impact Analysis — CLOSED 2026-10-11
+Code reality: FULL (all files inspected, data flow traced, live CRM probed)
 Risk: HIGH (AuthContext.jsx Item C)
 
+Owner decisions recorded:
+  D1 — Item C (AuthContext defensive merge): IN SCOPE ✅
+  D2 — Item B-1 (pre-code name in skip-otp body): PRE-CODE ✅
+
 Files WILL change:
-  frontend/src/pages/LandingPage.jsx           (Item A — HIGH risk file, 1 line)
-  frontend/src/api/services/crmService.js      (Item B — LOW risk, additive)
-  frontend/src/api/services/crmSkipOtpRetry.js (Item B — LOW risk, pass-through)
-  frontend/src/context/AuthContext.jsx         (Item C NEW — CRITICAL risk, 3 lines)
+  frontend/src/pages/LandingPage.jsx           (Items A + B-4 — HIGH risk file)
+  frontend/src/api/services/crmService.js      (Items B-1, B-2, B-3 — LOW risk, additive)
+  frontend/src/api/services/crmSkipOtpRetry.js (Item B-1 pass-through — LOW risk)
+  frontend/src/context/AuthContext.jsx         (Item C — CRITICAL risk, 3 lines)
 
 Files WILL NOT touch:
   ReviewOrder.jsx, PasswordSetup.jsx, backend/server.py, all others
 
-New finding: Race condition in AuthContext.jsx setCrmAuth — Item C required.
-             Item A without Item C is an incomplete fix.
-
-Owner decisions: D1 (include Item C in scope) · D2 (pre-code Item B)
-Recommendation: Owner confirms D1+D2, then proceed to Implementation Plan
-
+Gate: IMPACT ANALYSIS CLOSED → Implementation Plan unblocked
 Docs: CR-2026-10-11-006/IMPACT_ANALYSIS.md (this file)
-Next: Implementation Plan (after owner approves D1 + D2)
+Next: Say "Implementation Plan for CR-2026-10-11-006" to proceed
 ```
 
 ---

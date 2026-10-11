@@ -84,9 +84,13 @@ body: JSON.stringify({
 | Point | Decision |
 |---|---|
 | Item A (spread fix) | Proceed — unblocked |
-| Item B (name in skip-otp) | Proceed once CRM confirms deploy. CRM will notify. |
+| Item B-1 (name in skip-otp body) | **PRE-CODE** — ship now, activates when CRM CR-119 reaches production (D2 confirmed 2026-10-11) |
+| Item B-2 (read name from response) | Proceed — unblocked (CR-119 live on preprod) |
+| Item B-3 (add crmUpdateProfile) | Proceed — unblocked (moved from CR-007) |
+| Item B-4 (call crmUpdateProfile for new customers in LandingPage) | Proceed — unblocked |
+| Item C (AuthContext defensive merge) | **IN SCOPE** — confirmed (D1 confirmed 2026-10-11) |
 | Sending empty name | Skip — only send `name` field if captured name is non-empty string after trim |
-| Backward compat | Item B uses default param `name=''` so existing callers are unaffected |
+| Backward compat | Item B-1 uses default param `name=''` so existing callers are unaffected |
 
 ---
 
@@ -106,8 +110,9 @@ body: JSON.stringify({
 
 ```
 INTAKE:          COMPLETE
+IMPACT ANALYSIS: CLOSED — 2026-10-11 (D1 + D2 confirmed by owner)
 PLANNING:        NOT STARTED
-Gate:            Item A → Planning unblocked now
-                 Item B → Planning unblocked; implementation blocked on CRM deploy
-Next:            Planning Agent — start with Item A
+Gate:            IA CLOSED → Implementation Plan UNBLOCKED
+                 All 6 items unblocked (B-1 pre-coded; activates on CRM CR-119 prod deploy)
+Next:            Say "Implementation Plan for CR-2026-10-11-006"
 ```
