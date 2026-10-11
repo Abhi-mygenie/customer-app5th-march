@@ -916,7 +916,7 @@ const ReviewOrder = () => {
         setCouponError(msg);
       }
     } catch (err) {
-      const msg = err?.status === 429 ? 'Too many attempts. Please try again shortly.' : 'Could not validate coupon. Please try again.';
+      const msg = err?.status === 429 ? 'Too many attempts. Please try again shortly.' : 'Coupon not recognized for online orders.'; // CR-2026-10-11-001 D1
       toast.error(msg);
     } finally {
       setCouponLoading(false);
@@ -1417,7 +1417,7 @@ const ReviewOrder = () => {
           customerPhone: customerPhone || '',
           tableNumber: finalTableId,
           specialInstructions,
-          couponCode,
+          couponCode: appliedCouponCode,  // CR-2026-10-11-001: send CRM-validated code only, not raw input
           couponDiscount,                  // CR-2026-10-09-002
           couponTitle: appliedCouponTitle, // CR-2026-10-09-002
           restaurantId,
@@ -1598,7 +1598,7 @@ const ReviewOrder = () => {
               customerPhone: customerPhone || '',
               tableNumber: retryTableId,
               specialInstructions,
-              couponCode,
+              couponCode: appliedCouponCode,  // CR-2026-10-11-001: send CRM-validated code only, not raw input
               restaurantId,
               orderType: scannedOrderType,
               subtotal,
