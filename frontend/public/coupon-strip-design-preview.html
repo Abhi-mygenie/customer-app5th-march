@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CR-2026-10-12-002 · Coupon Strip Design Preview · r689</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #ECEEF1; color: #1F2937; padding: 24px 16px 64px; }
+  .wrap { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; align-items: flex-start; }
+  .phone { width: 390px; background: #F8F9FA; border-radius: 28px; padding: 18px 14px 26px; box-shadow: 0 12px 40px rgba(0,0,0,.14); border: 6px solid #1A1A1A; }
+  .phone h3 { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #999; margin: 0 0 10px 2px; }
+  .legend { font-size: 11px; color: #666; margin: 10px 2px 0; line-height: 1.5; }
+  .legend b { color: #1A1A1A; }
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: visible; margin-bottom: 18px; }
+  .card-header { display: flex; align-items: center; gap: 6px; padding: 12px 14px 8px; font-size: 13px; font-weight: 600; color: #1A1A1A; }
+  .row { display: flex; justify-content: space-between; padding: 7px 14px; font-size: 13px; color: #444; }
+  .row.total { border-top: 1px dashed #E5E7EB; margin-top: 4px; padding-top: 10px; font-weight: 700; color: #1A1A1A; }
+  .coupon-block { padding: 6px 14px 10px; border-top: 1px solid #F1F2F4; }
+  .section-label { font-size: 11px; color: #6B7280; margin-bottom: 8px; padding-left: 2px; display: flex; justify-content: space-between; align-items: center; }
+  .section-label small { font-size: 10px; color: #9CA3AF; }
+  .strip { display: flex; gap: 12px; overflow-x: auto; padding: 10px 2px 10px; margin: 0 -2px; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none; }
+  .strip::-webkit-scrollbar { display: none; }
+  .cp { width: 148px; min-height: 76px; flex-shrink: 0; scroll-snap-align: start; position: relative; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 4px; text-align: left; font: inherit; transition: transform .12s ease, box-shadow .12s ease; }
+  .cp.active { background: #FFFBF5; border: 1.5px dashed #E5800A; cursor: pointer; }
+  .cp.active:active { transform: scale(.95); }
+  .cp .t { font-size: 12px; font-weight: 600; color: #1F2937; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .cp .meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px; }
+  .chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #E5800A; background: #FFEDD5; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  .chip.mystery { font-size: 10px; color: #E8531E; background: rgba(232,83,30,.10); animation: pulse 1.6s ease-in-out infinite; }
+  .hint { font-size: 10px; color: #9CA3AF; white-space: nowrap; }
+  .code { font-size: 10px; font-weight: 700; color: #D1D5DB; letter-spacing: .02em; }
+  /* state 3 — out of window */
+  .cp.off { background: #F3F4F6; border: 1.5px solid #E5E7EB; opacity: .8; filter: grayscale(20%); pointer-events: none; }
+  .cp.off .t { color: #9CA3AF; font-weight: 500; }
+  .chip.time { color: #6B7280; background: #E5E7EB; font-size: 10px; }
+  .cp.off .code { color: #D1D5DB; }
+  /* variant B for discussion — keeps dashed border, lighter */
+  .cp.offB { background: #FAFAFA; border: 1.5px dashed #D1D5DB; cursor: default; }
+  .cp.offB .t { color: #9CA3AF; }
+  .chip.timeB { color: #92400E; background: #FEF3C7; font-size: 10px; }
+  /* state 4 — best offer badge */
+  .badge { position: absolute; top: -8px; right: -4px; background: #E8531E; color: #fff; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,.18); display: inline-flex; align-items: center; gap: 3px; z-index: 2; }
+  .cp.best { border-style: solid; box-shadow: 0 0 0 2px rgba(232,83,30,.12); }
+  /* manual entry */
+  .entry { display: flex; gap: 8px; align-items: center; }
+  .input { flex: 1; display: flex; align-items: center; gap: 8px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 10px; font-size: 12px; color: #9CA3AF; background: #fff; }
+  .btn { font-size: 12px; font-weight: 600; padding: 9px 14px; border-radius: 8px; border: 0; background: #F3F4F6; color: #9CA3AF; }
+  .btn.on { background: #E8531E; color: #fff; }
+  /* state 5 — auto-applied row */
+  .applied { display: flex; align-items: center; justify-content: space-between; background: #FFFBF5; border: 1px solid rgba(232,83,30,.4); border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .applied .l { display: flex; flex-direction: column; gap: 3px; }
+  .applied .ttl { font-size: 12px; font-weight: 600; color: #1F2937; display: flex; align-items: center; gap: 6px; }
+  .cue { font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #E8531E; background: rgba(232,83,30,.10); padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; width: fit-content; }
+  .remove { font-size: 11px; font-weight: 600; color: #9CA3AF; text-decoration: underline; text-decoration-color: rgba(156,163,175,.4); background: none; border: 0; padding: 8px; margin-right: -8px; }
+  /* loyalty row (context only) */
+  .loy { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px 12px; border-top: 1px solid #F1F2F4; }
+  .loy .lt { font-size: 12px; color: #1F2937; display: flex; align-items: center; gap: 6px; }
+  .loy .sub { font-size: 10.5px; color: #D97706; padding-left: 20px; }
+  svg { flex-shrink: 0; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===================== SCREEN 1: strip states ===================== -->
+  <div class="phone" data-testid="preview-screen-strip">
+    <h3>Screen 1 — Discovery strip · all card states</h3>
+    <div class="card">
+      <div class="card-header">Price breakdown</div>
+      <div class="row"><span>Item total</span><span>₹960</span></div>
+      <div class="row"><span>GST (5%)</span><span>₹48</span></div>
+
+      <div class="coupon-block">
+        <div class="section-label"><span>Available coupons</span><small>6 for your cart</small></div>
+        <div class="strip" data-testid="coupon-strip-container">
+
+          <!-- 4: best offer (badged, not auto-applied — diner has points) -->
+          <button class="cp active best" data-testid="coupon-card-normal-GYAN">
+            <span class="badge"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Best offer</span>
+            <span class="t">10% off your order</span>
+            <span class="meta"><span class="chip">₹96 off</span><span class="hint">Min ₹10</span></span>
+            <span class="code">GYAN</span>
+          </button>
+
+          <!-- 1: normal -->
+          <button class="cp active" data-testid="coupon-card-normal-STO-GENERIC-MIN">
+            <span class="t">Rs.50 off on orders above ₹300</span>
+            <span class="meta"><span class="chip">₹50 off</span><span class="hint">Min ₹300</span></span>
+            <span class="code">STO-GENERIC-MIN</span>
+          </button>
+
+          <!-- 2: cart-validated -->
+          <button class="cp active" data-testid="coupon-card-mystery-SEED_V3B_BXGY_FLAT">
+            <span class="t">Buy 3 Golden Caramel Get 1 Ras Bhari Mango at Rs.99</span>
+            <span class="meta"><span class="chip mystery"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>Tap to see discount</span></span>
+            <span class="code">SEED_V3B_BXGY_FLAT</span>
+          </button>
+
+          <!-- 3: out of window (design-agent variant A) -->
+          <div class="cp off" aria-disabled="true" data-testid="coupon-card-disabled-SEED_V3A_EVERYDAY">
+            <span class="t">Rs.50 off · Happy hour</span>
+            <span class="meta"><span class="chip time"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Valid 5–7 PM</span></span>
+            <span class="code">SEED_V3A_EVERYDAY</span>
+          </div>
+
+          <!-- 1b: normal with usage -->
+          <button class="cp active" data-testid="coupon-card-normal-STO-ONCE">
+            <span class="t">Rs.100 off · one time</span>
+            <span class="meta"><span class="chip">₹100 off</span><span class="hint">Used 1×</span></span>
+            <span class="code">STO-ONCE</span>
+          </button>
+        </div>
+
+        <div class="entry">
+          <div class="input"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Enter coupon code</div>
+          <button class="btn">Apply</button>
+        </div>
+      </div>
+
+      <div class="loy">
+        <div>
+          <div class="lt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E8531E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>Use 200 points (−₹200)</div>
+        </div>
+        <button class="btn on">Use</button>
+      </div>
+      <div class="row total"><span>To pay</span><span>₹1,008</span></div>
+    </div>
+    <div class="legend">
+      <b>Badge, not auto-apply:</b> this diner can redeem 200 pts (> ₹96) and GYAN is non-stackable → D-LOYALTY option L-A keeps the choice with the diner.<br>
+      <b>Greyed card:</b> solid #E5E7EB border, #F3F4F6 fill, 80% opacity, title #9CA3AF, clock chip "Valid 5–7 PM", not tappable.
+    </div>
+    <h3 style="margin-top:22px">Same strip, unrolled (every card state)</h3>
+    <div class="card"><div class="coupon-block" style="border-top:0">
+      <div class="strip" style="flex-wrap:wrap;overflow:visible;padding-top:14px">
+        <button class="cp active best"><span class="badge"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Best offer</span><span class="t">10% off your order</span><span class="meta"><span class="chip">₹96 off</span><span class="hint">Min ₹10</span></span><span class="code">GYAN</span></button>
+        <button class="cp active"><span class="t">Rs.50 off on orders above ₹300</span><span class="meta"><span class="chip">₹50 off</span><span class="hint">Min ₹300</span></span><span class="code">STO-GENERIC-MIN</span></button>
+        <button class="cp active"><span class="t">Buy 3 Golden Caramel Get 1 Ras Bhari Mango at Rs.99</span><span class="meta"><span class="chip mystery"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>Tap to see discount</span></span><span class="code">SEED_V3B_BXGY_FLAT</span></button>
+        <div class="cp off" aria-disabled="true"><span class="t">Rs.50 off · Happy hour</span><span class="meta"><span class="chip time"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Valid 5–7 PM</span></span><span class="code">SEED_V3A_EVERYDAY</span></div>
+        <button class="cp active"><span class="t">Rs.100 off · one time</span><span class="meta"><span class="chip">₹100 off</span><span class="hint">Used 1×</span></span><span class="code">STO-ONCE</span></button>
+        <button class="cp active"><span class="t">Buy 1 Signature Trio Get 1 Free</span><span class="meta"><span class="chip mystery"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>Tap to see discount</span></span><span class="code">SEED_V3B_BOGO</span></button>
+      </div>
+    </div></div>
+    <div class="legend">Left→right: ① Best-offer badge ② normal ③ cart-validated "Tap to see discount" (pulsing) ④ out-of-window greyed ⑤ normal with usage ⑥ BOGO cart-validated.</div>
+  </div>
+
+  <!-- ===================== SCREEN 2: auto-applied + variant B ===================== -->
+  <div class="phone" data-testid="preview-screen-applied">
+    <h3>Screen 2 — Auto-applied row · greyed variant B</h3>
+    <div class="card">
+      <div class="card-header">Price breakdown</div>
+      <div class="row"><span>Item total</span><span>₹960</span></div>
+      <div class="row"><span>GST (5%)</span><span>₹48</span></div>
+      <div class="coupon-block">
+        <div class="applied" data-testid="coupon-auto-applied-row">
+          <div class="l">
+            <span class="ttl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E8531E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>GYAN — ₹96 off</span>
+            <span class="cue"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Best offer applied</span>
+          </div>
+          <button class="remove" data-testid="coupon-remove-btn">Remove</button>
+        </div>
+      </div>
+      <div class="loy">
+        <div>
+          <div class="lt" style="color:#9CA3AF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/></svg>Points redemption</div>
+          <div class="sub">Earn 90 more points to redeem</div>
+        </div>
+        <button class="btn">Use</button>
+      </div>
+      <div class="row total"><span>To pay</span><span>₹912</span></div>
+    </div>
+    <div class="legend" style="margin-bottom:18px">
+      <b>Auto-applied (anonymous or no redeemable points):</b> existing applied row + 9px "BEST OFFER APPLIED" cue so the diner knows it wasn't their tap. Loyalty row below is BUG-003 wording.
+    </div>
+
+    <div class="card">
+      <div class="coupon-block" style="border-top:0">
+        <div class="section-label"><span>Variant B for the greyed card (alternative)</span></div>
+        <div class="strip">
+          <div class="cp offB" aria-disabled="true">
+            <span class="t">Rs.50 off · Happy hour</span>
+            <span class="meta"><span class="chip timeB"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Valid 17:00–19:00</span></span>
+            <span class="code">SEED_V3A_EVERYDAY</span>
+          </div>
+          <div class="cp offB" aria-disabled="true">
+            <span class="t">Rs.150 off · Weekends</span>
+            <span class="meta"><span class="chip timeB"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Sat–Sun</span></span>
+            <span class="code">SEED_V3A_WEEKEND</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <b>Variant B:</b> keeps the dashed coupon silhouette (still reads as a coupon), amber "Valid 17:00–19:00" chip, 24-hour time. Pick A (Screen 1) or B, and 12h vs 24h.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
