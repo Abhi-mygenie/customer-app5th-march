@@ -2270,11 +2270,10 @@
   title: Remove Emergent branding from public/index.html — fix page title, meta description,
     add MyGenie favicon
   status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE 2026-10-12. IA+plan in IMPACT_ANALYSIS_AND_PLAN.md. LOW risk, 1 file. Fast Lane eligible on owner say-so. Awaiting owner wording (title/description) + favicon approval + gate.'
+  status_note: 'PLANNING COMPLETE 2026-10-12 (title/description/favicon) + theme-color scope-extension IA/plan 2026-10-12 (IMPACT_ANALYSIS_AND_PLAN_theme-color.md). Recommend Option A static #E8531E inside this CR; Option B dynamic per-restaurant theme-color proposed as separate CR. LOW, 1 file, Fast Lane eligible. Awaiting owner wording + scope-extension decision + gate.'
   priority: P1
   risk: LOW
-  owner_action: Provide replacement title, meta description wording, and confirm favicon
-    source (existing ic_login_logo.png or new file)
+  owner_action: Confirm title/description/favicon; approve theme-color extension (A) and colour value (#E8531E vs #E8632B); yes/no to registering Option B as new CR
   blocked_on: []
   sprint: null
   files: public/index.html · public/favicon (new asset)
