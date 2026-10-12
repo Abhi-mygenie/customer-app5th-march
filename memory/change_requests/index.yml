@@ -2294,13 +2294,10 @@
   title: Coupon list engine path — adopt CRM CR-122 (order_total filter, items[] on
     validate, recommended_code silent auto-apply, time-window grey-out). Absorbs BUG-2026-10-12-001
   status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE 2026-10-12. CRM V1–V8 validated live on preprod (all
-    PASS). IA + plan written. GATE HOLD — owner to approve plan, D-TW design, D-TITLE,
-    B8 opt-in before implementation.'
+  status_note: 'PLANNING COMPLETE — IA Rev 2 2026-10-12 (re-verified after BUG-002; line refs +9). NEW R10: all r689 coupons are stackable_with_loyalty:false → silent auto-apply would block Use points (existing D2=(a) guard). Options L-A..L-D in IA; L-A recommended. GATE HOLD — owner decisions D-TW, D-TITLE, B8, D-LOYALTY.'
   priority: P1
   risk: MEDIUM
-  owner_action: Approve IMPLEMENTATION_PLAN; decide D-TW visual design; confirm D-TITLE;
-    opt in/out of B8 (re-validate applied coupon on subtotal change)
+  owner_action: Decide D-TW design, D-TITLE, B8, D-LOYALTY (L-A recommended); then approve IMPLEMENTATION_PLAN
   blocked_on: []
   sprint: null
   files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx ·

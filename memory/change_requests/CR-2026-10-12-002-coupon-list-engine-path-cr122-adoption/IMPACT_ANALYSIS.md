@@ -4,7 +4,9 @@
 **ID:** CR-2026-10-12-002
 **Written by:** Role 2 — Planning Agent
 **Date:** 2026-10-12
-**Status:** COMPLETE — awaiting owner gate
+**Status:** COMPLETE — Rev 2 (2026-10-12, re-verified after BUG-2026-10-12-002 landed) — awaiting owner gate
+
+> **Rev 2 changes:** line references shifted +9 (BUG-002 added a 9-line helper at top of `ReviewOrder.jsx`); new finding **R10 — loyalty vs auto-apply conflict** (live data: every r689 coupon is `stackable_with_loyalty:false`); conflict check updated; environment note (POS preprod down). See §Rev 2 at the end.
 
 ---
 
@@ -78,3 +80,53 @@ No backend. No `.env`. No new dependency.
 
 ## Test surface (for QA handover)
 Preprod r689; test user Saurav (phone in CR-009 QA_HANDOVER). Coupons: `STO-GENERIC-MIN` (min filter), `SEED_V3B_BXGY_FLAT` (items 182043×3 + 182044), `SEED_V2_ITEMFLAT` (item 182041), `SEED_V3A_EVERYDAY` (window 17:00–19:00), `GYAN` (recommended anon), `MARRY` (recommended auth).
+
+---
+
+## Rev 2 — re-verification 2026-10-12 (post BUG-2026-10-12-002)
+
+### Code reality (current line numbers)
+| Item | Was | Now |
+|---|---|---|
+| `couponList` / `couponListLoading` state | L198–199 | L207–208 |
+| list fetch effect (`crmGetCouponList(crmToken \|\| null, channel, …)`) | L600–614 | L609–623 |
+| max-redeemable 500 ms debounce (pattern to copy) | L~580–598 | L585–605 |
+| `errorMap` | L917 | L926 |
+| `crmValidateCoupon` calls | L946 / L955 | L955 / L964 |
+| `handleRemoveCoupon` / `handleTapCoupon` | L977 / L986 | L986 / L995 |
+| `handleUsePoints` non-stackable guard (`'Remove coupon first to use points'`) | — | L899–904 |
+| `<CouponDiscoveryList>` render | L1984 | L1993 |
+| BUG-003 target line (independent region) | L2076 | L2085 |
+All other reality-check rows unchanged. `crmService.js` and `CouponDiscoveryList.jsx` untouched since Rev 1.
+
+### Conflict check (updated)
+| Item | State | Conflict |
+|---|---|---|
+| BUG-2026-10-12-002 | IMPLEMENTED (ReviewOrder.jsx top helper + 3 pre-fill lines) | none — disjoint region; merge order irrelevant |
+| BUG-2026-10-12-003 | gated (1 line, loyalty subtext) | none — disjoint |
+| CR-2026-10-11-009 | IMPLEMENTED, QA pending | this CR **modifies** CR-009 code → QA both together |
+| CR-2026-10-11-007 | IA stage | reads `customerPhone`, no coupon overlap |
+
+### R10 — NEW: silent auto-apply blocks loyalty redemption (owner decision needed)
+Live r689 (`order_total=960`, anon and auth): **every** coupon — including the recommended `GYAN` and `MARRY` — has `stackable_with_loyalty:false`.
+Existing rule (CR-2026-10-09-002 D2=(a), `ReviewOrder.jsx` L899–904): if a non-stackable coupon is applied, **Use points** is refused with toast "Remove coupon first to use points".
+Consequence of D-AUTO as ruled: a loyalty-eligible diner lands on checkout, `GYAN` is applied silently, they tap **Use points** → refused. They must notice the auto-applied coupon and remove it. Worse when points would have saved more than the coupon (e.g. 200 redeemable points vs ₹96 coupon).
+
+| Option | Behaviour | Pros / cons |
+|---|---|---|
+| **L-A (recommended)** | Auto-apply **unless** diner is loyalty-eligible right now (`maxRedeemable?.ok === true`) **and** the recommended coupon is non-stackable. In that case show the coupon as a "Best offer" badge on its card instead of applying it | Never steals the diner's choice; zero new logic beyond one condition + existing badge; coupon still one tap away |
+| L-B | Auto-apply always; when non-stackable and loyalty-eligible, change the toast to "Coupon applied — ₹96 off · Remove it to use points instead" | Simplest; still a surprise block on Use points |
+| L-C | Auto-apply the better of the two: compare `recommended_discount` vs `maxRedeemable.max_discount_value`; apply coupon only if it saves more, otherwise leave for points | Best savings for diner; adds a comparison + depends on max-redeemable having loaded first (timing) |
+| L-D | Auto-apply only when `stackable_with_loyalty !== false` | On r689 today this means never — kills the feature until merchants flag stackables |
+
+Anonymous diners (no token → `maxRedeemable` null) are unaffected: auto-apply proceeds in all options.
+Timing note: `maxRedeemable` arrives via its own 500 ms debounce; the auto-apply effect must wait until `maxRedeemableLoading === false` for authenticated diners (or L-A/L-C can't decide). Adds `maxRedeemableLoading` to the effect deps.
+
+### R11 — environment
+POS preprod (`preprod.mygenie.online`) was timing out at 07:35 UTC 2026-10-12 → landing/menu skeleton for all restaurants. Blocks any live QA of this CR until POS responds. CRM preprod is up (validated same hour).
+
+### Owner decisions — consolidated (gate opens when all answered)
+1. **D-TW** grey-out visual (style, 24h vs 12h, "Valid 17:00–19:00" wording)
+2. **D-TITLE** `title` over `display_title` — yes/no
+3. **B8** re-validate applied coupon on debounced subtotal change — in/out
+4. **R10 / D-LOYALTY** — L-A / L-B / L-C / L-D
