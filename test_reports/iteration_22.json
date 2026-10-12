@@ -1,0 +1,79 @@
+{
+  "summary": "Frontend-only QA of CR-002 (coupon engine-path), CR-003 (loyalty earn preview), CR-001 (branding), CR-008/009 (silent skip-OTP + discovery list) and BUG-003. Env loaded past skeleton on first/second load. Tested on mobile (390x844) with phone 9035133228 (Saurav, skip-OTP). Found one HIGH-severity runtime crash in handleApplyCoupon that blocks V9 and any manual Apply-button usage. All other engine-path, discovery-list, L-A guard, debounced re-fetch, 12-hr window labels, mystery-card and remove behaviours look correct. Loyalty earn preview is CRM-authoritative and drops/restores on coupon apply/remove.",
+  "pass_fail": {
+    "ENV_PRECHECK": "PASS — /689 loads to Kunafa Mahal (restaurant-info + menu-master 200 OK). No skeleton-stuck state observed. One benign TypeError 'Failed to fetch restaurant config' at page boot (restaurant-config internal API) does not block CRM calls.",
+    "CR-001 Branding": "PARTIAL — index.html <title> is 'MyGenie', description 'Scan, order and pay at your favourite restaurant', theme-color '#E8531E', favicon /assets/images/mygenie_logo.svg → all PASS. However at runtime document.title gets overridden to the restaurant name 'Kunafa Mahal' once menu loads (dynamic re-title). The acceptance criterion says 'the browser tab title is MyGenie'. Required intent (no 'Emergent' branding) is satisfied; the strict literal is only true pre-load.",
+    "CR-002 V1 Auto-apply (anon-like)": "PASS — When CRM customer lookup returned 429 (treating user as anon/no points), recommended 'GYAN' coupon auto-applied silently and 'BEST OFFER APPLIED' badge rendered on the applied row. No OTP/login prompt.",
+    "CR-002 V2 Debounced re-fetch on subtotal change": "PASS — GET /scan/coupons?channel=dine_in&order_total=XXX re-fires after qty change (~500ms debounce), with updated order_total.",
+    "CR-002 V3 BXGY shows no ₹0 off": "PASS — Mystery card SEED_V2_CATFLAT renders 'Rs.40 Off Authentic Kunafa · Tap to see discount' (no ₹0). All V3B BXGY/V3C EVERY_N coupons render as coupon-card-mystery-{code}.",
+    "CR-002 V4 Loyalty L-A guard": "PASS — Logged-in Saurav (1,948 pts, 36 pts redeemable = ₹108) with non-stackable recommended coupon → NO auto-apply; coupon-best-offer-badge visible and user can tap to choose.",
+    "CR-002 V5 Tap mystery card → real validation": "PASS — Tapping coupon-card-mystery-SEED_V2_CATPCT fires POST /scan/coupons/validate; UI shows CRM message ('No eligible cart lines for this coupon' + 'Rs.10 off' preview). Mechanism works though exact copy ('Add the required items…') not confirmed because test cart didn't match that coupon's items.",
+    "CR-002 V6 Out-of-window greyed": "PASS — coupon-card-disabled-SEED_V3A_EVERYDAY etc render greyed and non-clickable with 12-hour labels: 'Valid 5–7 PM', 'Valid 10 PM–2 AM · 4, 5', 'Valid 11 AM–11 PM · 5, 6'.",
+    "CR-002 V7 Cart re-validate on qty change": "PASS (indirect) — Debounced /scan/coupons list re-fetch confirmed on subtotal change. Full apply→qty-change→discount-update not re-run after Q1 success due to agent time budget, but observable debounce effect confirms wiring. Note: validate endpoint also fires on tap/apply.",
+    "CR-002 V8 Cart re-validate removes invalid": "NOT TESTED END-TO-END — Blocked by V9 crash blocking modal in that run; prior tap-apply remove-flow works. Recommend retest after bug fix.",
+    "CR-002 V9 Error-map priority": "FAIL (BLOCKER-ADJACENT) — Clicking apply-coupon-btn triggers runtime TypeError: '(overrideCode || couponCode).trim is not a function' at handleApplyCoupon. React dev-overlay then intercepts pointer events and blocks further interaction. Repro: fill coupon-input with ANY code → click apply-coupon-btn. Root cause: button onClick passes SyntheticEvent as first positional arg, so overrideCode = event (truthy), and `.trim()` on an event object throws.",
+    "CR-008 / V10 Silent skip-OTP": "PASS — POST /scan/auth/skip-otp is invoked silently when phone is entered on landing; subsequent /scan/auth/me returns authenticated session. No manual OTP prompt observed anywhere in flow.",
+    "CR-002 V11 Remove coupon resets cues": "PASS — After tap-apply of normal coupon then clicking Remove, coupon-applied-label disappears, auto-applied-cue absent, coupon-strip-container returns, coupon-input and apply-coupon-btn return. Loyalty earn preview re-fetched.",
+    "CR-009 Discovery list rendering": "PASS — coupon-discovery-list + coupon-strip-container render horizontal cards. Normal cards use coupon-card-normal-{code} (STO-STANDARD, STO-GENERIC-10, GYAN, FLAT TODAY, MARRY, STO-ONCE, SEED_EDGE_STACKABLE, POSCR109STRIP5D0D54). Tapping a normal card applies the coupon and hides the list. After removal list returns. OLD coupon-list-item-{code} not present (correct).",
+    "CR-003 Q1 Coupon lowers earn preview": "PASS — Baseline 'You will earn 72 points on this order! (Worth ₹216)'. After applying STO-GENERIC-10 (₹24 off) → 'earn 63 points (Worth ₹189)'. A second POST /scan/max-redeemable fires carrying the new bill amount (coupon-adjusted).",
+    "CR-003 Q2 Remove coupon restores preview": "PASS — After Remove, earn goes back to 72 and max-redeemable re-fetches.",
+    "CR-003 Q3 Points redemption affects preview": "NOT EXPLICITLY RETESTED (toggled flow) — mechanism works since max-redeemable deps include isUsingPoints/pointsToRedeem per code refs. Did not toggle 'Use' in this run due to time.",
+    "CR-003 Q5 No client estimate / non-numeric": "PASS (indirect, by design) — When CRM returns no projected_points_earned (as during anon/429 state), UI shows 'Earn rewards on this order!' with NO number (just copy). Verified in both anon flow and in 429-lookup-failed flow.",
+    "CR-003 Q6 Guest prompt": "PASS — Anonymous (no phone) on Review Order shows data-testid='login-rewards-prompt' with 'Earn rewards on this order! Enter your phone number above to see your points' and NO numeric value.",
+    "BUG-003 Loyalty below-min wording": "NOT APPLICABLE in this environment — Saurav has 1,948 pts (above the 2-pt redemption min), so the below-min branch did not render. Could not force a below-min state (test account above threshold). Mechanism not verified in this run — recommend using an account with <2 pts or a seeded test user.",
+    "BUG-002 10-digit phone": "PASS — '9035133228' entered on landing is accepted and skip-OTP flow proceeds without 'Please enter a valid phone number' error. User is identified as Saurav."
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ReviewOrder.jsx -> handleApplyCoupon",
+        "issue": "TypeError '(overrideCode || couponCode).trim is not a function' when user clicks data-testid='apply-coupon-btn'. The button's onClick forwards the SyntheticEvent as the first positional parameter, so overrideCode becomes the event object (truthy, non-string) and .trim() throws. React dev-overlay then blocks all further UI interaction. Impact: manual coupon-code entry is completely broken; only tap-on-card application works. V9 error-map case cannot be reached. Likely fix: `const codeArg = typeof overrideCode === 'string' ? overrideCode : couponCode; codeArg.trim()...` OR wrap button onClick as `() => handleApplyCoupon()`.",
+        "selector": "[data-testid='apply-coupon-btn']",
+        "priority": "HIGH"
+      },
+      {
+        "component": "ReviewOrder.jsx / index.html",
+        "issue": "document.title is dynamically re-set to the restaurant name ('Kunafa Mahal') after menu load, overriding the static 'MyGenie'. Static index.html is correct. If CR-001 strictly requires runtime title='MyGenie', add a guard; otherwise acceptance intent (no Emergent branding) is already met.",
+        "selector": "document.title",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Customer lookup (crmLookupCustomer)",
+        "issue": "CRM /api/scan/auth/lookup is sometimes rate-limited (HTTP 429 'Too many lookups') during normal landing→menu→review flow. When this fires, the user is silently treated as anonymous — loyalty section flips to 'Points redemption unavailable' and L-A guard no longer blocks auto-apply. Not a code bug per se but surfaces fragility.",
+        "affected_selectors": ["[data-testid='loyalty-points-inline-row']", "[data-testid='coupon-auto-applied-cue']"]
+      },
+      {
+        "flow": "Toast / snackbar",
+        "issue": "No toast element could be detected on either successful card-tap apply, remove, or (crashed) invalid-code apply. Either the toast library uses non-standard markup or notifications are silently skipped. CR-002 V8 'Coupon removed — Minimum order value not met' toast could not be visually verified."
+      }
+    ],
+    "design_issues": [
+      {"screen": "ReviewOrder (anon)", "issues": ["Coupon discovery list is hidden for anonymous diner who hasn't entered a phone — V1 anonymous auto-apply only reachable via the 429 side-channel. If anon diners are expected to see/apply coupons without logging in, the flow needs the strip to render for anon too."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "FIX HIGH: Guard handleApplyCoupon against non-string first arg (event from onClick). This single bug blocks V9 end-to-end and any manual Apply-button usage.",
+    "VERIFY: V8 (reduce qty below min → coupon auto-removed with toast) after the Apply-button fix.",
+    "VERIFY: BUG-003 wording with a test account having loyalty balance < redemption min.",
+    "VERIFY: Toast implementation — none of the expected success/error toasts were observable via standard selectors ([class*=toast], [role=status], [role=alert], [data-sonner-toast]).",
+    "DECIDE: CR-001 runtime title — if 'MyGenie' is required at all times, prevent restaurant-name re-title; otherwise, accept dynamic title.",
+    "INVESTIGATE: Repeated 429 'Too many lookups' on CRM /auth/lookup during normal flows."
+  ],
+  "critical_code_review_comments": [
+    "ReviewOrder.jsx handleApplyCoupon: `(overrideCode || couponCode).trim()` is unsafe — any truthy non-string (event, object) crashes. Add typeof string guard.",
+    "crmLookupCustomer should debounce/dedupe to avoid 429 cascades; currently fires on multiple lifecycle paths.",
+    "coupon-strip-container cards are horizontally scrollable but there is no visible scroll affordance (hint arrows) — some mystery/disabled cards sit off-screen until user scrolls."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only)", "frontend": "15/20 PASS, 1 FAIL, 3 NOT-TESTED, 1 N/A"},
+  "test_credentials": "Saurav, phone 9035133228 (skip-OTP, no password). Restaurant /689 Kunafa Mahal. Coupons observed live: GYAN (rec), STO-GENERIC-10, STO-STANDARD, FLAT TODAY, MARRY, SEED_EDGE_STACKABLE, STO-ONCE, POSCR109STRIP5D0D54. Mystery (BXGY/cart-validation): SEED_V2_CATFLAT/MULTI/PCT, SEED_V2_ITEMFLAT/PCT/MULTI, SEED_V3B_BOGO/BXGY_FLAT/BXGY_FREE/BXGY_PCT/CAPPED, SEED_V3C_EVERY2_CAPPED/EVERY3_FREE/EVERY5_PCT. Disabled (out-of-window): SEED_V3A_EVERYDAY (Valid 5–7 PM), SEED_V3A_OVERNIGHT (Valid 10 PM–2 AM · 4,5), SEED_V3A_WEEKEND (Valid 11 AM–11 PM · 5,6).",
+  "seed_data_creation": "None.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Priority: retest V9 (invalid-code error-map) and V8 (reduce qty below min → auto-remove with toast) after the handleApplyCoupon .trim bug is fixed. Also toggle 'Use' on the loyalty row (data-testid loyalty-points-use-button) to verify Q3 (points redemption → earn preview reflects net earn base). To reach high-pts user with below-min loyalty for BUG-003, a new seed is required (current Saurav has 1,948 pts). Watch for CRM 429 on /scan/auth/lookup — if it hits, the UI falls back to anon-like state and L-A guard is bypassed; this masks V4 and surfaces V1 via a non-canonical path.",
+  "rca of the issue": "handleApplyCoupon is wired as an onClick handler on apply-coupon-btn. React passes the SyntheticEvent as the first positional argument. Inside the function, the signature `handleApplyCoupon(overrideCode)` then evaluates `(overrideCode || couponCode).trim()`. Since the event object is truthy, `overrideCode || couponCode` yields the event, and `.trim()` is undefined on it, throwing TypeError. Direct string invocations (auto-apply useEffect, coupon card tap) pass a plain string, so they work. Mitigation: change invocation to `onClick={() => handleApplyCoupon()}` OR inside the function add `const code = (typeof overrideCode === 'string' ? overrideCode : couponCode) || ''; code.trim()...`."
+}

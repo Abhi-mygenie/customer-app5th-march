@@ -2103,7 +2103,7 @@ const ReviewOrder = () => {
                       <button
                         className="price-inline-btn"
                         data-testid="apply-coupon-btn"
-                        onClick={handleApplyCoupon}
+                        onClick={() => handleApplyCoupon()}
                         disabled={couponLoading || !couponCode.trim() || isEditMode}
                         style={(couponLoading || !couponCode.trim() || isEditMode)
                           ? { background: '#F3F4F6', color: '#9CA3AF' } : {}} // CR-2026-10-11-008: removed !isAuthenticated guard
