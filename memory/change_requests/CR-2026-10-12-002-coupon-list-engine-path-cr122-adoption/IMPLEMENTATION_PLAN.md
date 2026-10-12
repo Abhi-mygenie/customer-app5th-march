@@ -1,138 +1,229 @@
-# IMPLEMENTATION PLAN — CR-2026-10-12-002 (Rev 2)
-## Coupon List Engine Path — CRM CR-122 Adoption
+# IMPLEMENTATION PLAN — CR-2026-10-12-002 (Rev 3 · edit-by-edit)
+## Coupon List Engine Path — CRM CR-122 adoption (+ folded CR-2026-10-11-003)
 
-**Written by:** Role 2 — Planning Agent · **Rev 1:** 2026-10-12 · **Rev 2:** 2026-10-12 (all owner decisions in)
-**Gate:** HOLD — Role 3 may start only after owner writes "Approve CR-2026-10-12-002".
-**Risk:** MEDIUM (money path: `coupon_code` → POS; hotspot `ReviewOrder.jsx`). Normal gate flow. Not Fast Lane.
+**Written by:** Role 2 — Planning Agent · **Rev 3:** 2026-10-12 · **Risk:** MEDIUM
+**Gate:** HOLD — one approval covers Session Part A (CR-2026-10-12-003) + Part B (this) + BUG-2026-10-12-003.
+**Supersedes Rev 2** for edit detail; decisions, matrix and sequencing from Rev 2 remain in force.
+Line numbers as of 2026-10-12 **before** Part A; Part A shifts the max-redeemable effect by +6 lines — Role 3 re-greps every anchor.
 
-## Owner decisions (all ruled 2026-10-12)
-| # | Decision | Ruling |
-|---|---|---|
-| D-AUTO | Recommended coupon | Silent auto-apply on Review Order open, into coupon field |
-| D-LOYALTY | Auto-apply vs points (IA R10) | **L-A** — no auto-apply when diner can redeem points (`maxRedeemable.ok`) and coupon is non-stackable → "Best offer" badge on the card instead |
-| D-REFETCH | List on subtotal change | Yes, 500 ms debounce |
-| D-TW | Out-of-window card | **Variant A** — solid `#E5E7EB` border, `#F3F4F6` fill, opacity .8, grey title, clock chip, not tappable |
-| D-TW time | Chip text | **12-hour** — "Valid 5–7 PM" (CRM sends `17:00`/`19:00` → convert client-side) |
-| D-TITLE | Card title | **CRM `title`** (descriptive); fall back to `display_title`, then `code` |
-| B8 | Re-validate applied coupon on subtotal change | **Included** |
-| Design | Spec + mock-up | `DESIGN_GUIDELINES_coupon_strip.json`; `frontend/public/coupon-strip-design-preview.html` (State A badge / State B auto-applied) |
+## Owner decisions (ruled) — unchanged
+D-AUTO silent auto-apply · D-LOYALTY L-A · D-REFETCH 500 ms · D-TW Variant A, 12-hour · D-TITLE CRM `title` · B8 included · CR-2026-10-11-003 folded.
 
-## 0. Pre-flight for Role 3
-| Check | Expected |
-|---|---|
-| Registry `CR-2026-10-12-002` | `IMPACT_ANALYSIS`, risk MEDIUM, owner approval present in chat |
-| `crmGetCouponList` signature `(token, channel, restaurantId)` | `crmService.js` L418 |
-| `crmValidateCoupon` builds `items: []` | `crmService.js` L392–405 |
-| List effect deps `[showCoupon, crmToken, numericRestaurantId, scannedOrderType]` | `ReviewOrder.jsx` L609–623 |
-| `errorMap` 9 entries | L926 |
-| `handleUsePoints` non-stackable guard | L899–904 |
-| CRM preprod `GET /scan/coupons?restaurant_id=689&order_total=960` returns `recommended_code` | live (R7 verify APIs) |
-| POS preprod responding (`/api/v1/web/restaurant-info`) | needed for live self-test; if down, S-live BLOCKED |
+## Reference assets (copy verbatim)
+- `plan_assets/CouponDiscoveryList.jsx` — full replacement for `frontend/src/components/CouponDiscoveryList/CouponDiscoveryList.jsx` (helpers `fmt12`/`windowLabel` verified in node: "Valid 5–7 PM", "Valid 11 AM–2 PM", "Valid 10 PM–2 AM · Fri, Sat").
+- `plan_assets/CouponDiscoveryList.css` — new file, same folder.
 
-## 0b. Step zero of this session — CR-2026-10-12-003 (owner ruling 2026-10-12)
-Implement `CR-2026-10-12-003/IMPLEMENTATION_PLAN.md` E1–E5 **first** (max-redeemable gets `coupon_discount` + `points_to_redeem`; re-fetch on coupon/points change; client-side earn estimate dropped). Reason: auto-apply/B8 below change `couponDiscount` on nearly every checkout; without CR-003 the "You will earn N points" preview is overstated. No effect loop (see CR-003 E2). QA matrix L1–L9 joins V1–V13.
+---
 
-## 1. `crmService.js` — 2 edits
-**1a** `crmGetCouponList(token, channel, restaurantId, orderTotal = null)` — `if (Number.isFinite(orderTotal)) params.append('order_total', String(orderTotal));` Marker `// CR-2026-10-12-002`.
-**1b** `crmValidateCoupon(token, code, orderTotal, channel, restaurantId, items = [])` — `body.items = items`.
+## Part B-1 · `frontend/src/api/services/crmService.js`
 
-## 2. `ReviewOrder.jsx` — module helpers (after `toE164India`)
+**B1a — `crmGetCouponList` (L418–426)**
 ```js
-// CR-2026-10-12-002: CRM /validate items[] shape
+// OLD
+export const crmGetCouponList = async (token, channel = 'dine_in', restaurantId = null) => {
+  const params = new URLSearchParams({ channel });
+  if (!token && restaurantId) params.append('restaurant_id', String(restaurantId));
+// NEW
+export const crmGetCouponList = async (token, channel = 'dine_in', restaurantId = null, orderTotal = null) => {
+  const params = new URLSearchParams({ channel });
+  if (!token && restaurantId) params.append('restaurant_id', String(restaurantId));
+  if (Number.isFinite(orderTotal) && orderTotal > 0) params.append('order_total', String(orderTotal)); // CR-2026-10-12-002: engine path (CRM CR-122)
+```
+Docblock: add `* order_total → engine path: filtered list + recommended_code/recommended_discount (CR-2026-10-12-002)`.
+
+**B1b — `crmValidateCoupon` (L392–398)**
+```js
+// OLD
+export const crmValidateCoupon = async (token, code, orderTotal, channel = 'dine_in', restaurantId = null) => {
+  const body = {
+    code: code.trim(),
+    order_total: orderTotal,
+    channel,
+    items: [],
+  };
+// NEW
+export const crmValidateCoupon = async (token, code, orderTotal, channel = 'dine_in', restaurantId = null, items = []) => {
+  const body = {
+    code: code.trim(),
+    order_total: orderTotal,
+    channel,
+    items, // CR-2026-10-12-002: cart items for requires_cart_validation coupons (CRM CR-122)
+  };
+```
+
+## Part B-2 · `frontend/src/pages/ReviewOrder.jsx`
+
+**B2a — module helpers** (insert after `toE164India` block, before `const buildPreviousItems`)
+```js
+// CR-2026-10-12-002: CRM /validate items[] shape (food_id|item_id + quantity + unit_price minimum)
 const buildCrmItems = (cartItems) => (cartItems || []).map(ci => ({
-  food_id: String(ci.itemId), item_id: String(ci.itemId),
-  name: ci.item?.name || 'Item', quantity: ci.quantity,
+  food_id: String(ci.itemId),
+  item_id: String(ci.itemId),
+  name: ci.item?.name || 'Item',
+  quantity: ci.quantity,
   unit_price: ci.item?.price || ci.totalPrice / ci.quantity,
 }));
+
+// CR-2026-10-11-008: full CRM error code map · CR-2026-10-12-002: +5 engine-path codes, hoisted for B8 re-validate
+const COUPON_ERROR_MAP = {
+  INVALID_CODE:                  'Invalid coupon code',
+  NOT_FOUND:                     'Invalid coupon code',
+  EXPIRED:                       'This coupon has expired',
+  INACTIVE:                      'This coupon is no longer valid',
+  CUSTOMER_USAGE_LIMIT_REACHED:  "You've already used this coupon the maximum number of times",
+  PER_USER_LIMIT:                "You've already used this coupon the maximum number of times",
+  CUSTOMER_NOT_ELIGIBLE:         'This coupon is not available for your account',
+  MIN_ORDER_NOT_MET:             'Minimum order value not met for this coupon',
+  CHANNEL_NOT_VALID:             'This coupon is not valid for this order type',
+  OUTSIDE_TIME_WINDOW:           'This coupon is only valid during specific hours',
+  CUSTOMER_REQUIRED:             'Enter your phone number to use this coupon',
+  MISSING_ITEMS_FOR_BXGY_COUPON: 'Add the required items to your cart to use this coupon',
+  MISSING_ITEMS_FOR_ITEM_COUPON: 'Add the required items to your cart to use this coupon',
+  NO_ELIGIBLE_BUY_ITEMS_IN_CART: "Your cart doesn't have the items this coupon needs",
+};
 ```
 
-## 3. `ReviewOrder.jsx` — state
+**B2b — state** (after L208 `couponListLoading`)
 ```js
-const [recommendedCode, setRecommendedCode] = useState(null);      // CR-2026-10-12-002
-const autoApplyAttempted = useRef(false);                           // CR-2026-10-12-002 D-AUTO once per mount
+  const [recommendedCode, setRecommendedCode] = useState(null);   // CR-2026-10-12-002: CRM recommended_code
+  const autoApplyAttempted = useRef(false);                        // CR-2026-10-12-002 D-AUTO: once per mount
+  const autoAppliedCode = useRef(null);                            // CR-2026-10-12-002: for "Best offer applied" cue
+  const lastValidatedSubtotal = useRef(null);                      // CR-2026-10-12-002 B8
 ```
-Reset both in the restaurant-change reset block (where `setCouponList([])` is reset, L~407).
 
-## 4. `ReviewOrder.jsx` — list effect (replace L609–623)
-- deps add `subtotal`; skip when `subtotal <= 0`; 500 ms `setTimeout` (mirror L594–605); cleanup clears timer.
-- call `crmGetCouponList(crmToken || null, channel, crmToken ? null : numericRestaurantId, subtotal)`.
-- success: `setCouponList(data?.coupons || [])`, `setRecommendedCode(data?.recommended_code ?? null)`.
-- catch: `err.status === 429` → keep previous list; else `setCouponList([])`, `setRecommendedCode(null)`.
-
-## 5. `ReviewOrder.jsx` — auto-apply effect (D-AUTO + L-A)
+**B2c — restaurant-change reset** (after L408 `setCouponListLoading(false);`)
 ```js
-useEffect(() => {
-  if (autoApplyAttempted.current || !recommendedCode || isEditMode) return;
-  if (appliedCouponCode || couponCode.trim() || isUsingPoints || couponLoading) return;
-  if (crmToken && maxRedeemableLoading) return;                 // wait for loyalty answer
-  const rec = couponList.find(c => c.code === recommendedCode);
-  const loyaltyEligible = !!maxRedeemable?.ok;
-  const nonStackable = rec?.stackable_with_loyalty === false;
-  autoApplyAttempted.current = true;
-  if (loyaltyEligible && nonStackable) return;                  // L-A: badge only
-  handleTapCoupon(recommendedCode);
-}, [recommendedCode, couponList, maxRedeemable, maxRedeemableLoading, crmToken]);
+      setRecommendedCode(null);                  // CR-2026-10-12-002
+      autoApplyAttempted.current = false;        // CR-2026-10-12-002
+      autoAppliedCode.current = null;            // CR-2026-10-12-002
+      lastValidatedSubtotal.current = null;      // CR-2026-10-12-002
 ```
-`autoApplyAttempted` set before the L-A return so a later list refetch never flips to auto-apply after the diner has seen the badge.
 
-## 6. `ReviewOrder.jsx` — validate calls
-Both `crmValidateCoupon` calls (L955, L964) get 6th arg `buildCrmItems(cartItems)`.
-
-## 7. `ReviewOrder.jsx` — errorMap (+5)
-`MISSING_ITEMS_FOR_BXGY_COUPON`, `MISSING_ITEMS_FOR_ITEM_COUPON` → 'Add the required items to your cart to use this coupon'; `NO_ELIGIBLE_BUY_ITEMS_IN_CART` → "Your cart doesn't have the items this coupon needs"; `PER_USER_LIMIT` → existing usage-limit text; `NOT_FOUND` → 'Invalid coupon code'.
-
-## 8. `ReviewOrder.jsx` — B8 re-validate applied coupon on subtotal change
-New effect, deps `[subtotal]`; guard `appliedCouponCode && !couponLoading && !isEditMode`; 500 ms debounce; call `crmValidateCoupon(crmToken || null, appliedCouponCode, subtotal, channel, crmToken ? null : numericRestaurantId, buildCrmItems(cartItems))`.
-- valid → `setCouponDiscount(data.computed_discount)` (silent; title/stackable unchanged).
-- invalid → `handleRemoveCoupon()` + `toast(\`Coupon ${appliedCouponCode} removed — ${errorMap[code] || 'no longer valid for this cart'}\`)`. Hoist `errorMap` to module scope so both effects share it.
-- network/429 → keep current discount (no change).
-Skip the very first run after apply (use a `lastValidatedSubtotal` ref set in `applyValidResult`) to avoid a redundant call.
-
-## 9. `ReviewOrder.jsx` — pass props to strip
-`<CouponDiscoveryList coupons={couponList} loading={couponListLoading} onTap={handleTapCoupon} isAuthenticated={isAuthenticated} recommendedCode={recommendedCode} />`
-Applied row (L~1974–1988): when `appliedCouponCode === recommendedCode` and the apply came from auto-apply (`autoAppliedRef` set in step 5), render the 9px "BEST OFFER APPLIED" cue under the label per design spec state 5. `data-testid="coupon-auto-applied-cue"`.
-
-## 10. `CouponDiscoveryList.jsx` — rewrite per design spec (states 1–4)
-- `formatDiscount`: `if (rcv) return null; if (offer_type && offer_type !== 'simple') return null;` then existing chain (B7 safety net).
-- title: `c.title || c.display_title || c.code`.
-- `outOfWindow = c.time_window?.configured && c.time_window?.within_window_now === false` → `<div aria-disabled>` with Variant A styles, chip `Valid {fmt12(start)}–{fmt12(end)}`; if `valid_days` present and today excluded, append `· {days}` (e.g. "Sat–Sun"). Not tappable. `data-testid="coupon-card-disabled-{code}"`.
-- `fmt12('17:00') → '5 PM'`, `'17:30' → '5:30 PM'`; if `start` and `end` share AM/PM, show once ("5–7 PM").
-- cart-validated: pulsing chip "Tap to see discount" with Sparkles icon (lucide-react). `data-testid="coupon-card-mystery-{code}"`.
-- `c.code === recommendedCode` → "Best offer" badge (Flame icon), solid border + glow. `data-testid="coupon-best-offer-badge"`.
-- discount chip filled `#FFEDD5`; `active:scale-95` via CSS class, transition on `transform` only.
-- Keep component < ~120 lines; move styles to `CouponDiscoveryList.css` (new file) instead of inline objects.
-
-## 11. Verification matrix (self-test → QA handover)
-| # | Case | Expected |
-|---|---|---|
-| V1 | anon, ₹96 cart | `STO-GENERIC-MIN` absent; `GYAN` auto-applied; toast; applied row shows cue |
-| V2 | anon, remove GYAN | strip returns, GYAN badged, **not** re-applied; add item → refetch, still not re-applied |
-| V3 | auth Saurav, points below min (`ok:false`) | `MARRY` auto-applied |
-| V4 | auth with redeemable points ≥ min and non-stackable recommended | **no** auto-apply; badge on card; *Use points* works |
-| V5 | BXGY card | "Tap to see discount"; cart lacks 182043 → mapped error; cart has 182043×3 → ₹99 applied |
-| V6 | `SEED_V3A_EVERYDAY` outside 17–19 IST | greyed, "Valid 5–7 PM", not tappable |
-| V7 | B8: apply `STO-GENERIC-MIN` at ₹300+, reduce cart below ₹300 | coupon removed, toast with min-order text |
-| V8 | B8: 10% coupon, cart ₹960 → ₹1,500 | discount ₹96 → ₹150 silently |
-| V9 | legacy response (no `recommended_code`, `rcv:null`) mocked | no crash, no auto-apply, BXGY shows "Tap to see discount" via offer_type guard |
-| V10 | Place Order with applied coupon | POS payload `coupon_code` unchanged (money path) |
-| V11 | rapid cart edits | ≤1 list call and ≤1 re-validate per 500 ms; no 429 toast |
-| V12 | edit-order mode | no auto-apply, strip unchanged behaviour |
-| V13 | titles | three "10% off" coupons show distinct CRM `title`s |
-
-## 12. Sequencing / registry
-- Implement after BUG-2026-10-12-003 (1 line, same file) or before — disjoint; prefer BUG-003 first (smaller).
-- QA CR-2026-10-11-009 together with this CR.
-- On IMPLEMENTED: this CR → `IMPLEMENTED`; BUG-2026-10-12-001 → `CLOSED (superseded)`; delete or keep `coupon-strip-design-preview.html` (owner call; default keep as design record).
-- Preprod-only until CRM CR-122 is on prod.
-
-## 13. Rollback
-Three files; revert restores CR-009 legacy behaviour. No data.
-
-## 14. Absorbed — CR-2026-10-11-003 (owner ruling 2026-10-12: fold)
-Retry `placeOrder` path (`ReviewOrder.jsx` L~1666–1672, 401-token-refresh branch) omits `couponDiscount` and `couponTitle` → POS gets `coupon_discount_amount: 0` on retry even with a valid coupon. Add the two fields exactly as the primary call (L1487–1489):
+**B2d — list effect** (replace L609–623 whole effect)
 ```js
-              couponCode: appliedCouponCode,
+  // CR-2026-10-11-009: coupon discovery list · CR-2026-10-12-002: engine path — pass order_total, debounce on subtotal,
+  // keep recommended_code; 429 keeps previous list. Re-fetches when crmToken changes (anon → authenticated).
+  useEffect(() => {
+    if (!showCoupon) return;
+    if (!subtotal || subtotal <= 0) { setCouponList([]); setRecommendedCode(null); return; }
+    let cancelled = false;
+    setCouponListLoading(true);
+    const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
+    const timer = setTimeout(() => {
+      crmGetCouponList(crmToken || null, channel, crmToken ? null : numericRestaurantId, subtotal)
+        .then(data => {
+          if (cancelled) return;
+          setCouponList(Array.isArray(data) ? data : (data?.coupons || []));
+          setRecommendedCode(Array.isArray(data) ? null : (data?.recommended_code ?? null));
+        })
+        .catch(err => {
+          if (cancelled) return;
+          if (err?.status === 429) return; // rate-limited: keep what we have
+          setCouponList([]); setRecommendedCode(null);
+        })
+        .finally(() => { if (!cancelled) setCouponListLoading(false); });
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [showCoupon, crmToken, numericRestaurantId, scannedOrderType, subtotal]); // CR-2026-10-12-002: +subtotal
+```
+
+**B2e — `handleApplyCoupon`**
+- Delete the local `const errorMap = { … };` (L926–936) and replace the three `errorMap` reads with `COUPON_ERROR_MAP` (L968, L972 and `errorMap.CUSTOMER_REQUIRED` L972/973).
+- In `applyValidResult` (after `setCouponStackable(stackable);`) add: `lastValidatedSubtotal.current = subtotal; // CR-2026-10-12-002 B8`
+- L955: `crmValidateCoupon(activeToken, codeToUse, subtotal, channel, activeToken ? null : numericRestaurantId, buildCrmItems(cartItems))` — marker `// CR-2026-10-12-002: items[]`
+- L964: `crmValidateCoupon(authResult.token, codeToUse, subtotal, channel, null, buildCrmItems(cartItems))`
+
+**B2f — `handleRemoveCoupon`** (L986–992) add inside: `autoAppliedCode.current = null; lastValidatedSubtotal.current = null; // CR-2026-10-12-002`
+
+**B2g — auto-apply effect** (insert after `handleTapCoupon`, L~1000)
+```js
+  // CR-2026-10-12-002 D-AUTO + D-LOYALTY(L-A): auto-apply CRM recommended coupon once per mount,
+  // unless the diner can redeem points now and the coupon is non-stackable → badge only.
+  useEffect(() => {
+    if (autoApplyAttempted.current || !recommendedCode || isEditMode) return;
+    if (appliedCouponCode || couponCode.trim() || isUsingPoints || couponLoading) return;
+    if (crmToken && maxRedeemableLoading) return;                       // wait for loyalty answer
+    const rec = couponList.find(c => c.code === recommendedCode);
+    if (!rec) return;
+    autoApplyAttempted.current = true;
+    if (maxRedeemable?.ok === true && rec.stackable_with_loyalty === false) return; // L-A: badge instead
+    autoAppliedCode.current = recommendedCode;
+    handleTapCoupon(recommendedCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recommendedCode, couponList, maxRedeemable, maxRedeemableLoading, crmToken]);
+```
+
+**B2h — B8 re-validate effect** (insert directly after B2g)
+```js
+  // CR-2026-10-12-002 B8: keep an applied coupon truthful when the cart changes (debounced); remove if it no longer qualifies.
+  useEffect(() => {
+    if (!appliedCouponCode || isEditMode || couponLoading) return;
+    if (lastValidatedSubtotal.current === subtotal) return;
+    const timer = setTimeout(async () => {
+      try {
+        const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
+        const data = await crmValidateCoupon(crmToken || null, appliedCouponCode, subtotal, channel,
+          crmToken ? null : numericRestaurantId, buildCrmItems(cartItems));
+        lastValidatedSubtotal.current = subtotal;
+        if (data?.valid) {
+          setCouponDiscount(data.computed_discount);
+        } else {
+          const why = COUPON_ERROR_MAP[data?.error?.code] || 'no longer valid for this cart';
+          const code = appliedCouponCode;
+          handleRemoveCoupon();
+          toast(`Coupon ${code} removed — ${why}`);
+        }
+      } catch {
+        // network / 429: keep current discount
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal, appliedCouponCode]);
+```
+Loop check: B8 writes `couponDiscount`; CR-003's max-redeemable effect reads it and writes only `maxRedeemable*`; B2g reads `maxRedeemable` but is guarded by `autoApplyAttempted`. No cycle. ✔
+
+**B2i — applied row cue** (L1976–1980, inside `data-testid="coupon-applied-row"` → `.price-input-group`)
+```jsx
+// OLD
+                      <span className="price-loyalty-text price-loyalty-applied" data-testid="coupon-applied-label">
+                        {appliedCouponCode} — ₹{couponDiscount.toFixed(0)} off
+                      </span>
+// NEW
+                      <span style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className="price-loyalty-text price-loyalty-applied" data-testid="coupon-applied-label">
+                          {appliedCouponCode} — ₹{couponDiscount.toFixed(0)} off
+                        </span>
+                        {autoAppliedCode.current === appliedCouponCode && ( // CR-2026-10-12-002: silent auto-apply cue
+                          <span className="cdl-applied-cue" data-testid="coupon-auto-applied-cue">Best offer applied</span>
+                        )}
+                      </span>
+```
+(`cdl-applied-cue` comes from the new CSS, imported by the component which ReviewOrder already imports.)
+
+**B2j — strip props** (L1993–1998)
+```jsx
+                        isAuthenticated={isAuthenticated}
+                        recommendedCode={recommendedCode} // CR-2026-10-12-002
+```
+
+**B2k — folded CR-2026-10-11-003: retry placeOrder** (L1666–1672)
+```js
+// OLD
+              couponCode: appliedCouponCode,  // CR-2026-10-11-001: send CRM-validated code only, not raw input
+              restaurantId,
+// NEW
+              couponCode: appliedCouponCode,  // CR-2026-10-11-001: send CRM-validated code only, not raw input
               couponDiscount,                  // CR-2026-10-11-003 (folded into CR-2026-10-12-002)
               couponTitle: appliedCouponTitle, // CR-2026-10-11-003
+              restaurantId,
 ```
-Verification V14: force a 401 on first placeOrder (expired token) with coupon applied → retry payload carries `coupon_discount_amount` and `coupon_discount_title`. If not forceable on preprod → QA marks BLOCKED and we rely on code review + unit assertion on the payload builder.
+
+## Part B-3 · `CouponDiscoveryList.jsx` + `.css`
+Replace the component file with `plan_assets/CouponDiscoveryList.jsx`; add `plan_assets/CouponDiscoveryList.css` beside it. `lucide-react@0.516.0` already in package.json — no install.
+Test-id map (QA): `coupon-card-normal-{code}` · `coupon-card-mystery-{code}` · `coupon-card-disabled-{code}` · `coupon-best-offer-badge` · `coupon-strip-container` · `coupon-discovery-list` · `coupon-list-loading` · `coupon-auto-applied-cue`. **Breaking for QA scripts:** old `coupon-list-item-{code}` is gone — CR-009 QA handover must be updated to the new ids.
+
+## Part B-4 · self-test (Role 3)
+1. `yarn build` clean. 2. `grep -c "CR-2026-10-12-002"` ReviewOrder ≥ 14, crmService 2, component 1. 3. Old `coupon-list-item-` grep → 0 in src. 4. node: `fmt12`/`windowLabel` table (done in planning, re-run). 5. Live when POS up: V1 (anon ₹96 → GYAN auto-applied + cue), V4 (Saurav has points → badge, no apply), V6 (greyed happy-hour), V7/V8 (B8). 6. If POS down → S-live BLOCKED, hand to QA with that flag.
+
+## Verification matrix → QA: V1–V13 (Rev 2) + V14 (retry payload) + L1–L9 (Part A) + CR-009 regressions on new test ids.

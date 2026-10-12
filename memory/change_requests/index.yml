@@ -2291,7 +2291,7 @@
   title: Coupon list engine path — adopt CRM CR-122 (order_total filter, items[] on
     validate, recommended_code silent auto-apply, time-window grey-out). Absorbs BUG-2026-10-12-001
   status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE Rev 2 2026-10-12 — ALL decisions ruled: D-AUTO silent auto-apply; D-LOYALTY L-A; D-REFETCH debounced; D-TW Variant A + 12h chip; D-TITLE CRM title; B8 included. IMPLEMENTATION_PLAN Rev 2 written (13 sections, V1–V13). Mock-up /coupon-strip-design-preview.html. GATE HOLD — awaiting "Approve CR-2026-10-12-002". Rev 3: CRM CR-123 cross-impact — CR-2026-10-12-003 must land before/with this CR.'
+  status_note: 'PLANNING COMPLETE Rev 3 2026-10-12 — edit-by-edit plan (B1a–B2k, old→new code), reference component + CSS in plan_assets/ (helpers verified in node). Absorbs CR-2026-10-11-003 (§B2k). Session order: BUG-003 → CR-003 (Part A) → CR-002 (Part B). GATE HOLD — awaiting joint approval.'
   priority: P1
   risk: MEDIUM
   owner_action: Approve IMPLEMENTATION_PLAN Rev 2 to open gate
@@ -2322,7 +2322,7 @@
   title: Loyalty earn preview — adopt CRM CR-123 (send coupon_discount + points_to_redeem
     to /scan/max-redeemable; re-fetch on coupon/points change; drop post-tax client estimate)
   status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE 2026-10-12. Owner rulings: C4 drop client estimate; fold E1–E5 into CR-2026-10-12-002 session as step 0b; edit-mode bill_amount parked as BUG-2026-10-12-004. IMPLEMENTATION_PLAN written (L1–L9). GATE HOLD — opens with CR-002 approval.'
+  status_note: 'PLANNING COMPLETE Rev 2 2026-10-12 — edit-by-edit (E1–E5, old→new code). Executes as Session Part A before CR-002. GATE HOLD — joint approval with CR-002.'
   priority: P1
   risk: MEDIUM
   owner_action: Approve together with CR-2026-10-12-002

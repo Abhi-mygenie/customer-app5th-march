@@ -1,45 +1,141 @@
-# IMPLEMENTATION PLAN — CR-2026-10-12-003
+# IMPLEMENTATION PLAN — CR-2026-10-12-003 (Rev 2 · edit-by-edit)
 ## Loyalty earn preview — CRM CR-123 adoption
 
 **Written by:** Role 2 — Planning Agent · **Date:** 2026-10-12 · **Risk:** MEDIUM
-**Gate:** HOLD — implemented as **step 0b of the CR-2026-10-12-002 session** (owner ruling), under CR-002's approval. Single QA pass covers both.
+**Gate:** HOLD — executes as **Session Part A** (before CR-2026-10-12-002), under the joint approval.
+Line numbers are as of 2026-10-12 after BUG-2026-10-12-002 landed. Role 3 re-greps anchors before editing.
 
-## Owner rulings 2026-10-12
-| # | Ruling |
-|---|---|
-| C4 | **Drop** the client-side estimate. Earn number shown only when CRM `projected_points_earned` is present. Anonymous diners see a generic prompt without a number |
-| Sequence | Fold C1–C4 into CR-002 implementation session, first |
-| Edit-order `bill_amount` (new items only) | Out of scope → registered **BUG-2026-10-12-004** (P3) |
+---
 
-## Edits
-**E1 `crmService.js`** — `crmGetMaxRedeemable(token, billAmount, { couponDiscount = 0, pointsToRedeem = 0 } = {})`; body adds `coupon_discount` when `> 0`, `points_to_redeem` when `> 0`. Marker `// CR-2026-10-12-003`.
+## E1 — `frontend/src/api/services/crmService.js` (replace L372–377)
+```js
+// OLD
+export const crmGetMaxRedeemable = async (token, billAmount) => {
+  return crmAuthFetch('/scan/max-redeemable', token, {
+    method: 'POST',
+    body: JSON.stringify({ bill_amount: billAmount }),
+  });
+};
+```
+```js
+// NEW
+// CR-2026-10-12-003: CRM CR-123 — optional coupon_discount / points_to_redeem shape the earn base
+export const crmGetMaxRedeemable = async (token, billAmount, { couponDiscount = 0, pointsToRedeem = 0 } = {}) => {
+  const body = { bill_amount: billAmount };
+  if (couponDiscount > 0) body.coupon_discount = couponDiscount;
+  if (pointsToRedeem > 0) body.points_to_redeem = pointsToRedeem;
+  return crmAuthFetch('/scan/max-redeemable', token, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+};
+```
+Also extend the docblock above it with one line: `Returns +earn_base_preview, points_to_redeem_applied (CR-123).`
 
-**E2 `ReviewOrder.jsx` L585–608** — effect deps `[isAuthenticated, crmToken, subtotal, couponDiscount, isUsingPoints, pointsToRedeem]`; call `crmGetMaxRedeemable(crmToken, subtotal, { couponDiscount, pointsToRedeem: isUsingPoints ? pointsToRedeem : 0 })`. Keep 500 ms debounce and `setMaxRedeemable(null)` on error. **No loop:** this effect never writes `couponDiscount`/`pointsToRedeem`; CR-002 B8 never reads `maxRedeemable`.
+## E2 — `frontend/src/pages/ReviewOrder.jsx` max-redeemable effect (L594–608)
+```js
+// OLD (L596)
+        const result = await crmGetMaxRedeemable(crmToken, subtotal);
+// NEW
+        const result = await crmGetMaxRedeemable(crmToken, subtotal, {
+          couponDiscount,                                        // CR-2026-10-12-003
+          pointsToRedeem: isUsingPoints ? pointsToRedeem : 0,    // CR-2026-10-12-003
+        });
+        if (isUsingPoints && result?.points_to_redeem_applied != null && result.points_to_redeem_applied !== pointsToRedeem) {
+          logger.warn('order', `[CR-2026-10-12-003] CRM clamped points_to_redeem ${pointsToRedeem} → ${result.points_to_redeem_applied}`); // diagnostic only
+        }
+```
+```js
+// OLD (L608)
+  }, [isAuthenticated, crmToken, subtotal]);
+// NEW
+  }, [isAuthenticated, crmToken, subtotal, couponDiscount, isUsingPoints, pointsToRedeem]); // CR-2026-10-12-003: re-fetch on coupon/points change
+```
+Update the comment at L582: append ` · CR-2026-10-12-003: also on coupon/points change`.
+**Loop check:** this effect writes only `maxRedeemable`/`maxRedeemableLoading`; neither is in its own deps. ✔
 
-**E3 `ReviewOrder.jsx` `handleUsePoints`** — unchanged (`max_points_redeemable` is already the clamp). Add one `logger.warn` if a later response has `points_to_redeem_applied` ≠ `pointsToRedeem` while `isUsingPoints` (diagnostic only; no auto-correction — avoids yanking the diner's selection mid-edit). Owner may upgrade later.
+## E3 — `ReviewOrder.jsx` prop to LoyaltyRewardsSection (L2235)
+```jsx
+// OLD
+            projectedPointsEarned={maxRedeemable?.projected_points_earned ?? null}
+// NEW
+            projectedPointsEarned={maxRedeemable?.projected_points_earned ?? null}
+            earnBasePreview={maxRedeemable?.earn_base_preview ?? null} // CR-2026-10-12-003
+```
 
-**E4 `LoyaltyRewardsSection.jsx`** —
-- Variant 1 (identified): remove `earnPercent × totalToPay` fallback. If `projectedPointsEarned != null` → "You will earn {N} points on this order!" (N may be **0** → still render the sentence; eligibility hint below). Else → "Earn rewards on this order!" + "Points are calculated on food value after discounts" (no number).
-- Eligibility hint: pass new prop `earnBasePreview` (from `maxRedeemable.earn_base_preview`); when `projectedPointsEarned === 0 && earnBasePreview != null && earnBasePreview < loyaltySettings.min_order_value` → "Add ₹{min − earnBasePreview} more to earn points". Otherwise no hint.
-- Variant 3 (guest): remove the computed number. Title "Earn rewards on this order!", subtitle "Enter your phone number above to see your points" .
-- Remove now-unused `totalToPay` maths; keep prop until CR-002 session confirms no other consumer (`grep totalToPay` → only ReviewOrder L2233).
-- `data-testid`s unchanged: `logged-in-user-info`, `login-rewards-prompt`.
+## E4 — `frontend/src/components/LoyaltyRewardsSection/LoyaltyRewardsSection.jsx`
+**E4a props (L18–20)**
+```js
+// OLD
+  totalToPay,
+  projectedPointsEarned, // CR-2026-10-09-003 D2=(a): CRM server-authoritative earn preview; null = client-side fallback
+}) => {
+// NEW
+  totalToPay, // kept for prop compatibility; no longer used for earn maths (CR-2026-10-12-003)
+  projectedPointsEarned, // CR-2026-10-09-003 · CR-2026-10-12-003: CRM-only; null = no number shown
+  earnBasePreview = null, // CR-2026-10-12-003: CRM earn_base_preview (₹ the % was applied to)
+}) => {
+```
+**E4b Variant 1 body (L28–66) — replace the maths + JSX branch**
+```js
+// OLD (L30–37)
+    const earnPercent = loyaltySettings[`${tier}_earn_percent`] || loyaltySettings.bronze_earn_percent || 5;
+    const billAmount = totalToPay;
+    const minOrderValue = loyaltySettings.min_order_value || 100;
+    const isEligible = billAmount >= minOrderValue;
+    const pointsToEarn = (projectedPointsEarned !== null && projectedPointsEarned !== undefined)
+      ? projectedPointsEarned
+      // CR-2026-10-09-003 D2=(a): CRM projected_points_earned is authoritative; client-side as fallback
+      : Math.round(billAmount * (earnPercent / 100));
+// NEW
+    // CR-2026-10-12-003 C4: CRM is the only source — no client-side estimate (post-tax total was wrong)
+    const minOrderValue = loyaltySettings.min_order_value || 100;
+    const hasPreview = projectedPointsEarned !== null && projectedPointsEarned !== undefined;
+    const pointsToEarn = hasPreview ? projectedPointsEarned : 0;
+    const belowMin = hasPreview && pointsToEarn === 0 && earnBasePreview !== null && earnBasePreview < minOrderValue;
+```
+```jsx
+// OLD (L52–66)  {isEligible ? ( …earn N… ) : ( Almost there! / Add ₹… )}
+// NEW
+            {!hasPreview ? (
+              <>
+                <span className="user-info-name">Earn rewards on this order!</span>
+                <span className="user-info-points">Points are calculated on food value after discounts</span>
+              </>
+            ) : belowMin ? (
+              <>
+                <span className="user-info-name">Almost there!</span>
+                <span className="user-info-points">
+                  Add ₹{(minOrderValue - earnBasePreview).toFixed(0)} more to earn points
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="user-info-name">
+                  You will earn {pointsToEarn} points on this order!
+                </span>
+                <span className="user-info-points">
+                  Worth ₹{pointsWorth}{firstVisitBonus > 0 ? ` + ${firstVisitBonus} bonus points for first visit` : ''}
+                </span>
+              </>
+            )}
+```
+(`pointsWorth`, `firstVisitBonus`, `redemptionValue` lines L38–43 stay; `earnPercent` line is deleted — grep that nothing else uses it in this file.)
 
-**E5 `ReviewOrder.jsx` L2235** — add `earnBasePreview={maxRedeemable?.earn_base_preview ?? null}`.
+**E4c Variant 3 guest (L94–124) — remove the number**
+```js
+// DELETE L94–101 (earnPercent, billAmount, pointsToEarn, redemptionValue, pointsWorth, minOrderValue, isEligible)
+```
+```jsx
+// REPLACE the {isEligible ? … : …} block (L108–124) with
+            <span className="login-prompt-title">Earn rewards on this order!</span>
+            <span className="login-prompt-subtitle">Enter your phone number above to see your points</span>
+```
+Markers: `// CR-2026-10-12-003` on E4a/E4b/E4c. `data-testid`s unchanged.
 
-## Verification matrix
-| # | Case | Expected |
-|---|---|---|
-| L1 | auth, no coupon, no points, ₹290 | N = CRM value (29 for Saurav); body has no optional fields |
-| L2 | apply coupon ₹43.5 | re-fetch within 500 ms; N drops (24); request body `coupon_discount: 43.5` |
-| L3 | Use points (36) with coupon | request `points_to_redeem: 36`; N = 0 → sentence renders "0 points"; hint "Add ₹X more to earn points" only if base < min-order |
-| L4 | Remove coupon → N back to 29 | |
-| L5 | anonymous diner | guest prompt without a number; no max-redeemable call |
-| L6 | looked-up (phone entered, not yet token) | identified variant without number |
-| L7 | CRM error / 429 | identified variant without number; Use button disabled (existing D3) |
-| L8 | edit-order mode | behaviour unchanged (BUG-004 parked) |
-| L9 | CR-002 auto-apply fires → coupon applied → max-redeemable re-fetched with coupon_discount | single extra call, no loop (network tab) |
+## E5 — self-test
+- `yarn build` clean.
+- node: assert E1 body shape for (0,0) → `{bill_amount}` only; (43.5,0) → +`coupon_discount`; (43.5,36) → both.
+- Live (auth Saurav, POS up): apply `STO-GENERIC-10` → network shows second max-redeemable call with `coupon_discount`; "You will earn" number drops. Anonymous: guest prompt without number.
 
-## Files WILL change: `crmService.js`, `ReviewOrder.jsx` (effect + 1 prop), `LoyaltyRewardsSection.jsx`
-## Files WILL NOT touch: `OrderSuccess.jsx`, loyalty-rules fetch, POS payload, backend
-## Registry on completion: CR-003 → IMPLEMENTED alongside CR-002; `code_markers: true`.
+## Verification matrix → QA (L1–L9 as Rev 1, unchanged).

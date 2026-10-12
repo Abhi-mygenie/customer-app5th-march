@@ -40,7 +40,7 @@ Wording. Recommended: **`Earn ${n} more points to redeem`**. Alternatives: `${n}
 
 **Fast Lane eligible** (LOW, 1 file, 1 line, no API/auth/payment) **if** owner explicitly approves Fast Lane despite hotspot file; otherwise normal flow with QA spot-check.
 
-1. `ReviewOrder.jsx` L2076 — replace
+1. `ReviewOrder.jsx` L2085 (was L2076 before BUG-002) — replace
    `` `Add ₹${…} more to redeem` `` → `` `Earn ${…} more points to redeem` `` with marker `// BUG-2026-10-12-003: unit is points, not ₹; verb "Earn" — cart changes don't move it`.
 2. Self-test: screenshot Review Order with Saurav (10 pts, min 100) → text reads "Earn 90 more points to redeem".
 3. QA: verification matrix above (testing agent, frontend only) → SMOKE_BRIEF → owner smoke.
