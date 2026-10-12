@@ -2248,7 +2248,6 @@
   risk: HIGH
   owner_action: null
   blocked_on: []
-    since: '2026-10-11'
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx · frontend/src/api/services/crmService.js
     · new CouponDiscoveryList component
@@ -2292,13 +2291,47 @@
     <link rel="icon"> — no favicon exists currently. Emergent platform scripts (emergent-main.js,
     PostHog ap.emergent.sh) must NOT be removed — platform infrastructure.'
 
+- id: CR-2026-10-12-002
+  type: CR
+  title: Coupon list engine path — adopt CRM CR-122 (order_total filter, items[] on
+    validate, recommended_code silent auto-apply, time-window grey-out). Absorbs BUG-2026-10-12-001
+  status: IMPACT_ANALYSIS
+  status_note: 'PLANNING COMPLETE 2026-10-12. CRM V1–V8 validated live on preprod (all
+    PASS). IA + plan written. GATE HOLD — owner to approve plan, D-TW design, D-TITLE,
+    B8 opt-in before implementation.'
+  priority: P1
+  risk: MEDIUM
+  owner_action: Approve IMPLEMENTATION_PLAN; decide D-TW visual design; confirm D-TITLE;
+    opt in/out of B8 (re-validate applied coupon on subtotal change)
+  blocked_on: []
+  sprint: null
+  files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx ·
+    frontend/src/components/CouponDiscoveryList/CouponDiscoveryList.jsx
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related:
+  - CR-2026-10-11-008
+  - CR-2026-10-11-009
+  - BUG-2026-10-12-001
+  code_markers: false
+  money_path: true
+  closed: null
+  notes: 'Owner rulings 2026-10-12: D-AUTO silent auto-apply of recommended_code into
+    coupon field on Review Order open; D-TW grey-out with "Valid HH:MM–HH:MM" (design
+    TBD); D-REFETCH yes, debounced 500ms. CRM CR-122 is preprod-only; do not promote
+    before CRM prod. Sequence CR-2026-10-11-009 QA after this CR (legacy path retired).
+    Inbox: INBOUND_FROM_CRM_CR119…, VALIDATION_OF_CRM_CR119…, OUTBOUND_TO_CRM_CR119…_VALIDATION_RESULTS.'
+
 - id: BUG-2026-10-12-001
   type: BUG
   title: Coupon discovery list — BXGY coupons show ₹0 off instead of hiding discount
     when expected_discount is 0 from CRM
   status: INTAKE
-  status_note: INTAKE COMPLETE 2026-10-12. Root cause confirmed. Fast Lane eligible
-    (1 condition, 1 file, LOW risk). Ready to implement on owner go-ahead.
+  status_note: 'INTAKE COMPLETE 2026-10-12. SUPERSEDED — folded into CR-2026-10-12-002
+    (B1 engine path fixes root cause server-side; B7 offer_type guard as safety net).
+    Do NOT ship the standalone discount_value > 0 patch. Close when CR-2026-10-12-002
+    is IMPLEMENTED.'
   priority: P2
   risk: LOW
   owner_action: null
