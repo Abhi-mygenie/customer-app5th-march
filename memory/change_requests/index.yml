@@ -2294,15 +2294,15 @@
   title: Coupon list engine path — adopt CRM CR-122 (order_total filter, items[] on
     validate, recommended_code silent auto-apply, time-window grey-out). Absorbs BUG-2026-10-12-001
   status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE — IA Rev 2 2026-10-12 (re-verified after BUG-002; line refs +9). NEW R10: all r689 coupons are stackable_with_loyalty:false → silent auto-apply would block Use points (existing D2=(a) guard). Options L-A..L-D in IA; L-A recommended. GATE HOLD — owner decisions D-TW, D-TITLE, B8, D-LOYALTY.'
+  status_note: 'PLANNING COMPLETE Rev 2 2026-10-12 — ALL decisions ruled: D-AUTO silent auto-apply; D-LOYALTY L-A; D-REFETCH debounced; D-TW Variant A + 12h chip; D-TITLE CRM title; B8 included. IMPLEMENTATION_PLAN Rev 2 written (13 sections, V1–V13). Mock-up /coupon-strip-design-preview.html. GATE HOLD — awaiting "Approve CR-2026-10-12-002".'
   priority: P1
   risk: MEDIUM
-  owner_action: Decide D-TW design, D-TITLE, B8, D-LOYALTY (L-A recommended); then approve IMPLEMENTATION_PLAN
+  owner_action: Approve IMPLEMENTATION_PLAN Rev 2 to open gate
   blocked_on: []
   sprint: null
   files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx ·
-    frontend/src/components/CouponDiscoveryList/CouponDiscoveryList.jsx
-  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+    frontend/src/components/CouponDiscoveryList/CouponDiscoveryList.jsx (+ new .css) · frontend/public/coupon-strip-design-preview.html (mock)
+  artefacts: INTAKE · IMPACT_ANALYSIS (Rev 2) · IMPLEMENTATION_PLAN (Rev 2) · DESIGN_GUIDELINES_coupon_strip.json
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related:

@@ -31,9 +31,11 @@ CRM shipped CR-122 on preprod: `GET /scan/coupons?order_total=` now returns only
 | # | Decision | Ruling |
 |---|---|---|
 | D-AUTO | Recommended coupon surfacing | **Silent auto-apply** on Review Order open, into the coupon field, before Place Order (as CRM suggests) |
-| D-TW | Time-window coupons out of window | **Grey-out with "Valid HH:MM–HH:MM"**; visual design to be discussed before implementation |
+| D-TW | Time-window coupons out of window | **Variant A** grey-out (solid grey border/fill, opacity .8, not tappable), **12-hour** chip "Valid 5–7 PM" (ruled 2026-10-12, mock-up approved) |
 | D-REFETCH | Re-fetch list on subtotal change | **Yes**, debounced |
-| D-TITLE | Card title source | Open — recommended `title` over `display_title` |
+| D-TITLE | Card title source | **CRM `title`** (descriptive), fallback `display_title` → `code` (ruled 2026-10-12) |
+| D-LOYALTY | Auto-apply vs loyalty points (IA R10) | **L-A** — skip auto-apply when diner can redeem points and coupon is non-stackable; badge "Best offer" instead (ruled 2026-10-12) |
+| B8 | Re-validate applied coupon on subtotal change | **Included** (ruled 2026-10-12) |
 | GATE | Implementation | **HOLD** — stay at gate until owner approves plan + design for D-TW |
 
 ## Scope
@@ -47,5 +49,6 @@ CRM shipped CR-122 on preprod: `GET /scan/coupons?order_total=` now returns only
 | B5 | Grey-out time-window coupons out of window | Issue 1 residual |
 | B6 | Card title: `title` preferred | Identical "10% off" cards |
 | B7 | `offer_type !== 'simple'` guard in `formatDiscount` | BUG-001 safety net |
+| B8 | Re-validate applied coupon on debounced subtotal change; remove + toast if invalid | Pre-existing stale-discount gap (IA R5) |
 
 Out of scope: CR-2026-10-11-007; any backend change; loyalty logic.

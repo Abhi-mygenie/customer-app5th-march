@@ -130,3 +130,10 @@ POS preprod (`preprod.mygenie.online`) was timing out at 07:35 UTC 2026-10-12 �
 2. **D-TITLE** `title` over `display_title` — yes/no
 3. **B8** re-validate applied coupon on debounced subtotal change — in/out
 4. **R10 / D-LOYALTY** — L-A / L-B / L-C / L-D
+
+### Owner ruling 2026-10-12 — D-LOYALTY = **L-A**
+Auto-apply `recommended_code` **unless** the diner is loyalty-eligible right now (`maxRedeemable?.ok === true`) **and** the recommended coupon has `stackable_with_loyalty === false`; in that case do not apply — render the "Best offer" badge on the recommended card instead. Anonymous diners (no token) always get auto-apply. Auto-apply effect must wait for `maxRedeemableLoading === false` when authenticated. Mock-up: `frontend/public/coupon-strip-design-preview.html` (State A = badge, State B = auto-applied). Design spec: `DESIGN_GUIDELINES_coupon_strip.json`.
+Still open: D-TW (variant A/B, 12h/24h), D-TITLE, B8.
+
+### Owner rulings 2026-10-12 (final set) — all IA decisions closed
+D-TW = **Variant A**, **12-hour** chip ("Valid 5–7 PM") · D-TITLE = **CRM `title`** (descriptive) · B8 = **included** (re-validate applied coupon on debounced subtotal change; remove + toast if invalid). IMPLEMENTATION_PLAN.md Rev 2 reflects all. Gate still HOLD pending "Approve CR-2026-10-12-002".
