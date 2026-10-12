@@ -2318,3 +2318,56 @@
     return expected_discount:0 from CRM when no cart context given. Confirmed from
     owner screenshot 2026-10-12 — SEED_V3B_BXGY_FLAT and SEED_V3B_BXGY_FREE showing
     ₹0 off.'
+
+- id: BUG-2026-10-12-002
+  type: BUG
+  title: Phone number starting with 91 — PhoneInput strips "91" as country code leaving
+    only 8 local digits — shows invalid on Review Order screen
+  status: INTAKE
+  status_note: INTAKE COMPLETE 2026-10-12. P1. Owner decision needed on fix approach
+    (auto-correct vs hint text) before planning.
+  priority: P1
+  risk: MEDIUM
+  owner_action: Confirm preferred fix approach — auto-correct silently OR show inline
+    hint text to guide user
+  blocked_on: []
+  sprint: null
+  files: frontend/src/components/LandingCustomerCapture/LandingCustomerCapture.jsx
+  artefacts: INTAKE
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related: []
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'react-phone-number-input defaultCountry=IN parses leading "91" as country
+    code, discards 2 digits, stores only 8 local digits. ReviewOrder validation rejects
+    (needs 10). Affects all customers with mobile starting 91XXXXXXXX. Confirmed live
+    by owner. LandingCustomerCapture handlePhoneChange has no guard.'
+
+- id: BUG-2026-10-12-003
+  type: BUG
+  title: Loyalty "Add ₹X more to redeem" message misleading — never updates when cart
+    quantity changes, wrong unit symbol
+  status: INTAKE
+  status_note: INTAKE COMPLETE 2026-10-12. P2. 1-word text fix — no owner decisions
+    needed. Ready to implement on go-ahead.
+  priority: P2
+  risk: LOW
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/ReviewOrder.jsx
+  artefacts: INTAKE
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related: []
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Line 2076: message uses min_redemption_points - available_points. Both fields
+    are customer/restaurant-level config — never change with bill_amount. Message says
+    "Add ₹X more" implying add to cart, but actually means earn X more points from
+    future orders. Fix: "Earn X more points to redeem". Remove ₹ symbol (unit is
+    points not rupees — today coincides because ratio=1:1 but would break if ratio
+    changes).'
