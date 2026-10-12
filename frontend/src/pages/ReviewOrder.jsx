@@ -38,7 +38,8 @@ import { isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability
 import { postNonQrBlock } from '../api/services/diagnosticsService';
 import NonQrBlockModal from '../components/NonQrBlockModal';
 import './ReviewOrder.css';
-import { crmGetLoyaltyRules, crmGetMaxRedeemable, crmValidateCoupon } from '../api/services/crmService'; // CR-2026-10-03-004 Part B · CR-2026-10-09-003 · CR-2026-10-09-002
+import { crmGetLoyaltyRules, crmGetMaxRedeemable, crmValidateCoupon, buildUserId } from '../api/services/crmService'; // CR-2026-10-03-004 Part B · CR-2026-10-09-003 · CR-2026-10-09-002 · CR-2026-10-11-008
+import { crmSkipOtpWithRetry } from '../api/services/crmSkipOtpRetry'; // CR-2026-10-11-008
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
 
@@ -88,7 +89,7 @@ const buildPreviousItems = (previousOrderItems, isEditMode) => {
 const ReviewOrder = () => {
   const navigate = useNavigate();
   const { restaurantId } = useRestaurantId();
-  const { isAuthenticated, user, isCustomer, setRestaurantScope, crmToken } = useAuth();
+  const { isAuthenticated, user, isCustomer, setRestaurantScope, crmToken, setCrmAuth } = useAuth(); // CR-2026-10-11-008: setCrmAuth for two-step coupon flow
   const { showCustomerDetails: configShowCustomerDetails, showCustomerName: configShowCustomerName, showCustomerPhone: configShowCustomerPhone, showCookingInstructions: configShowCookingInstructions, showSpecialInstructions: configShowSpecialInstructions, showPriceBreakdown: configShowPriceBreakdown, showTableInfo: configShowTableInfo, showLoyaltyPoints: configShowLoyaltyPoints, showCouponCode: configShowCouponCode, fetchConfig, codEnabled, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery, payOnlineLabel, payAtCounterLabel, allowNonQrOrders, categoryTimings, itemTimings,
     deliveryShifts, takeawayShifts, dineInShifts, roomShifts, walkinShifts,
     restaurantShifts, restaurantOpen,
@@ -884,34 +885,61 @@ const ReviewOrder = () => {
   };
 
   // CR-2026-10-09-002: coupon validation and application
+  // CR-2026-10-11-008: anonymous path + two-step flow + full 8-code error map
   const handleApplyCoupon = async () => {
-    if (!isAuthenticated || !crmToken) { toast.error('Sign in first to apply coupons'); return; }
     if (!couponCode.trim() || isEditMode) return;
     setCouponLoading(true);
     setCouponError('');
+    // CR-2026-10-11-008: full CRM error code map
+    const errorMap = {
+      INVALID_CODE:                 'Invalid coupon code',
+      EXPIRED:                      'This coupon has expired',
+      INACTIVE:                     'This coupon is no longer valid',
+      CUSTOMER_USAGE_LIMIT_REACHED: "You've already used this coupon the maximum number of times",
+      CUSTOMER_NOT_ELIGIBLE:        'This coupon is not available for your account',
+      MIN_ORDER_NOT_MET:            'Minimum order value not met for this coupon',
+      CHANNEL_NOT_VALID:            'This coupon is not valid for this order type',
+      OUTSIDE_TIME_WINDOW:          'This coupon is only valid during specific hours',
+      CUSTOMER_REQUIRED:            'Enter your phone number to use this coupon',
+    };
+    const applyValidResult = (data) => {
+      setCouponDiscount(data.computed_discount);
+      setAppliedCouponCode(data.code);
+      setAppliedCouponTitle(data.title || data.code);
+      const stackable = data.stackable_with_loyalty !== false;
+      setCouponStackable(stackable);
+      // D2=(a): non-stackable coupon auto-removes loyalty points
+      if (!stackable && isUsingPoints) {
+        handleRemovePoints();
+        toast('Coupon applied — loyalty points removed (cannot stack)');
+      } else {
+        toast.success(`Coupon applied — ₹${data.computed_discount.toFixed(0)} off`);
+      }
+    };
     try {
       const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
-      const data = await crmValidateCoupon(crmToken, couponCode, subtotal, channel);
+      const activeToken = crmToken || null;
+      // CR-2026-10-11-008: pass restaurantId for anonymous path; authenticated path ignores it
+      const data = await crmValidateCoupon(activeToken, couponCode, subtotal, channel, activeToken ? null : numericRestaurantId);
       if (data?.valid) {
-        setCouponDiscount(data.computed_discount);
-        setAppliedCouponCode(data.code);
-        setAppliedCouponTitle(data.title || data.code);
-        const stackable = data.stackable_with_loyalty !== false;
-        setCouponStackable(stackable);
-        // D2=(a): non-stackable coupon auto-removes loyalty points
-        if (!stackable && isUsingPoints) {
-          handleRemovePoints();
-          toast('Coupon applied — loyalty points removed (cannot stack)');
-        } else {
-          toast.success(`Coupon applied — ₹${data.computed_discount.toFixed(0)} off`);
+        applyValidResult(data);
+      } else if (!activeToken && data?.error?.code === 'CUSTOMER_REQUIRED') {
+        // CR-2026-10-11-008: two-step flow — acquire token silently then re-validate
+        try {
+          const userId = buildUserId(numericRestaurantId);
+          const authResult = await crmSkipOtpWithRetry(customerPhone, userId, customerName);
+          setCrmAuth(authResult.token, authResult.customer, numericRestaurantId);
+          const step2Data = await crmValidateCoupon(authResult.token, couponCode, subtotal, channel);
+          if (step2Data?.valid) {
+            applyValidResult(step2Data);
+          } else {
+            const msg = step2Data?.error?.detail || errorMap[step2Data?.error?.code] || 'Coupon not valid';
+            setCouponError(msg);
+          }
+        } catch {
+          setCouponError(errorMap.CUSTOMER_REQUIRED);
         }
       } else {
-        const errorMap = {
-          INVALID_CODE: 'Invalid coupon code',
-          EXPIRED: 'This coupon has expired',
-          PER_USER_LIMIT: "You've already used this coupon the maximum number of times",
-          NOT_APPLICABLE: 'This coupon is not available for your order type',
-        };
         const msg = data?.error?.detail || errorMap[data?.error?.code] || 'Coupon not valid';
         setCouponError(msg);
       }
@@ -1938,9 +1966,9 @@ const ReviewOrder = () => {
                         className="price-inline-btn"
                         data-testid="apply-coupon-btn"
                         onClick={handleApplyCoupon}
-                        disabled={couponLoading || !couponCode.trim() || isEditMode || !isAuthenticated}
-                        style={(couponLoading || !couponCode.trim() || isEditMode || !isAuthenticated)
-                          ? { background: '#F3F4F6', color: '#9CA3AF' } : {}}
+                        disabled={couponLoading || !couponCode.trim() || isEditMode}
+                        style={(couponLoading || !couponCode.trim() || isEditMode)
+                          ? { background: '#F3F4F6', color: '#9CA3AF' } : {}} // CR-2026-10-11-008: removed !isAuthenticated guard
                       >
                         {couponLoading ? '...' : 'Apply'}
                       </button>

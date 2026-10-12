@@ -2210,33 +2210,29 @@
   type: CR
   title: Anonymous coupon validation — two-step flow (no-token validate + CUSTOMER_REQUIRED
     prompt + re-validate after skip-otp) + all 8 error codes wired to specific messages
-  status: INTAKE
-  status_note: INTAKE COMPLETE. Blocked on CRM preprod deploy (token optional on
-    POST /scan/coupons/validate). CRM will notify when live.
+  status: IMPLEMENTED
+  status_note: Implemented 2026-10-12. Build clean. Self-test 8/8 PASS. Awaiting QA.
+    CRM blocker lifted (CR-120 live on preprod per CRM deploy notice 2026-10-11).
   priority: P2
   risk: HIGH
   owner_action: null
-  blocked_on:
-  - party: CRM
-    ref: Make token optional on POST /scan/coupons/validate + accept restaurant_id
-      in body — route layer change only, no engine change
-    since: '2026-10-11'
+  blocked_on: []
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx · frontend/src/api/services/crmService.js
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER
   registered: '2026-10-11'
-  last_updated: '2026-10-11'
+  last_updated: '2026-10-12'
   related:
   - CR-2026-10-09-002
   - CR-2026-10-11-009
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
-  notes: 'CRM contract frozen 2026-10-11. Two-step flow: POST validate (no token)
-    → generic coupon shows discount OR CUSTOMER_REQUIRED → skip-otp → POST validate
-    (with token) → confirmed discount. Rate limit 10/min/IP. Error codes: CUSTOMER_REQUIRED,
-    CUSTOMER_USAGE_LIMIT_REACHED, CUSTOMER_NOT_ELIGIBLE, MIN_ORDER_NOT_MET, EXPIRED,
-    CHANNEL_NOT_VALID, OUTSIDE_TIME_WINDOW, INVALID_CODE.'
+  notes: '5 edits: crmValidateCoupon optional token + restaurantId param; setCrmAuth
+    destructured in ReviewOrder; crmSkipOtpWithRetry + buildUserId imported; handleApplyCoupon
+    replaced (anon path + two-step flow + 8-code error map); !isAuthenticated removed
+    from Apply button. Build clean. QA note: requires CRM to create requires_customer=false
+    test coupon on r689 before TC-4/TC-5 can run.'
 - id: CR-2026-10-11-009
   type: CR
   title: Coupon discovery list — GET /scan/coupons on checkout open, anonymous (generic

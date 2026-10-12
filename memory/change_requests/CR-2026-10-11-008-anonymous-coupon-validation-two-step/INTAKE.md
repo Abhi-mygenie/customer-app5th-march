@@ -5,7 +5,7 @@
 **Date registered:** 2026-10-11
 **Registered by:** Role 1 — Intake Agent
 **Source:** CRM contract freeze 2026-10-11 (reply to Coupon UX brief)
-**Status:** INTAKE COMPLETE — BLOCKED on CRM preprod deploy
+**Status:** INTAKE COMPLETE — IMPLEMENTED 2026-10-12, awaiting QA
 
 ---
 
