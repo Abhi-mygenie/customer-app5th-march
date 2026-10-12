@@ -1,7 +1,8 @@
 /* CR-2026-10-12-002: coupon discovery strip — design spec DESIGN_GUIDELINES_coupon_strip.json */
-.cdl-wrap { padding: 6px 0 2px; }
+.cdl-wrap { padding: 6px 0 2px; width: 100%; } /* BUG-2026-10-12-006: constrain to container (parent row uses align-items:center) */
 .cdl-label { font-size: 11px; color: #6B7280; margin-bottom: 8px; padding-left: 2px; }
 .cdl-strip { display: flex; gap: 12px; overflow-x: auto; padding: 10px 2px 8px; margin: 0 -2px;
+  min-width: 0; max-width: 100%; /* BUG-2026-10-12-006: bound the scroller so it clips internally instead of overflowing the page */
   scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none; }
 .cdl-strip::-webkit-scrollbar { display: none; }
 .cdl-skel { min-width: 160px; height: 72px; border-radius: 8px; background: #F3F4F6; flex-shrink: 0; }
