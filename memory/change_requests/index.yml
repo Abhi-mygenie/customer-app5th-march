@@ -2356,11 +2356,10 @@
   title: Phone number starting with 91 — PhoneInput strips "91" as country code leaving
     only 8 local digits — shows invalid on Review Order screen
   status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE 2026-10-12. ROOT CAUSE CORRECTED — not react-phone-number-input; it is the pre-fill regex phone.replace(/^\+?91/, "") in ReviewOrder.jsx L309/L337/L357 eating the first two digits of a bare 10-digit number starting 91. Library simulated and cleared. Scope moves to ReviewOrder.jsx (hotspot, MEDIUM). Awaiting owner approval of corrected scope + gate.'
+  status_note: 'PLANNING COMPLETE 2026-10-12. Root cause corrected (ReviewOrder.jsx pre-fill regex, not the PhoneInput library). Standalone IMPLEMENTATION_PLAN.md written: 1 helper toE164India + 3 call-site swaps (L309/L337/L357), helper table verified 10/10 in node. Risk MEDIUM owner-confirmed. GATE HOLD — awaiting "Approve BUG-2026-10-12-002" + a 91-prefixed preprod test number (or OK to create one).'
   priority: P1
   risk: MEDIUM
-  owner_action: Confirm preferred fix approach — auto-correct silently OR show inline
-    hint text to guide user
+  owner_action: Approve gate; provide 91-prefixed preprod test number or approve creating one via skip-otp
   blocked_on: []
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx (corrected 2026-10-12; LandingCustomerCapture.jsx no longer in scope)
