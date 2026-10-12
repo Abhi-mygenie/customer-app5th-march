@@ -127,3 +127,12 @@ Applied row (L~1974–1988): when `appliedCouponCode === recommendedCode` and th
 
 ## 13. Rollback
 Three files; revert restores CR-009 legacy behaviour. No data.
+
+## 14. Absorbed — CR-2026-10-11-003 (owner ruling 2026-10-12: fold)
+Retry `placeOrder` path (`ReviewOrder.jsx` L~1666–1672, 401-token-refresh branch) omits `couponDiscount` and `couponTitle` → POS gets `coupon_discount_amount: 0` on retry even with a valid coupon. Add the two fields exactly as the primary call (L1487–1489):
+```js
+              couponCode: appliedCouponCode,
+              couponDiscount,                  // CR-2026-10-11-003 (folded into CR-2026-10-12-002)
+              couponTitle: appliedCouponTitle, // CR-2026-10-11-003
+```
+Verification V14: force a 401 on first placeOrder (expired token) with coupon applied → retry payload carries `coupon_discount_amount` and `coupon_discount_title`. If not forceable on preprod → QA marks BLOCKED and we rely on code review + unit assertion on the payload builder.

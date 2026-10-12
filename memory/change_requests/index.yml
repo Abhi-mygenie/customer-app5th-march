@@ -2028,8 +2028,8 @@
   type: CR
   title: Retry placeOrder call (401 token refresh path) missing couponDiscount and
     couponTitle — discount lost on token-expiry retry
-  status: INTAKE
-  status_note: Registered during CR-2026-10-11-001 QA. Pre-existing gap. P2.
+  status: SUPERSEDED
+  status_note: 'SUPERSEDED 2026-10-12 (owner ruling: fold) — absorbed into CR-2026-10-12-002 IMPLEMENTATION_PLAN §14 (retry placeOrder adds couponDiscount + couponTitle). Close when CR-2026-10-12-002 is IMPLEMENTED.'
   priority: P2
   risk: MEDIUM
   owner_action: null
@@ -2038,7 +2038,7 @@
   files: frontend/src/pages/ReviewOrder.jsx
   artefacts: INTAKE
   registered: '2026-10-11'
-  last_updated: '2026-10-11'
+  last_updated: '2026-10-12'
   related:
   - CR-2026-10-11-001
   code_markers: false
@@ -2051,9 +2051,8 @@
   type: BUG
   title: New customer name not pre-filling on Review Order page — spread order overwrites
     captured name; CRM never stores name from skip-otp
-  status: INTAKE
-  status_note: 'Investigation CLOSED 2026-10-11. CRs raised: CR-006 (RC-2 + RC-1),
-    CR-007 (P4 + P5).'
+  status: CLOSED
+  status_note: 'CLOSED 2026-10-12 (owner ruling) — resolved by CR-2026-10-11-006 (QA_PASS: spread fix + skip-otp name). Registry was stale.'
   priority: P2
   risk: MEDIUM
   owner_action: null
@@ -2066,13 +2065,13 @@
     · frontend/src/pages/ReviewOrder.jsx · frontend/src/context/AuthContext.jsx
   artefacts: INTAKE, INVESTIGATION_REPORT
   registered: '2026-10-11'
-  last_updated: '2026-10-11'
+  last_updated: '2026-10-12'
   related:
   - CR-2026-10-11-006
   - CR-2026-10-11-007
   code_markers: false
   money_path: false
-  closed: null
+  closed: '2026-10-12'
   notes: '4 root causes code-verified. RC-2 (LandingPage spread) unblocked now. RC-1
     (crmSkipOtp name param) blocked on CRM deploy. P5 (PUT /scan/profile) and P4
     (phone reauth) confirmed by CRM — unblocked in CR-007.'
@@ -2081,10 +2080,10 @@
   title: CRM coupon applied twice — once by scan & order app (scan channel), once
     by POS (POS channel) — resulting in total_amount 0 at POS
   status: INTAKE
-  status_note: BLOCKED ON POS. POS brief sent. No code change on our side.
+  status_note: 'INTAKE — P0. Owner ruling 2026-10-12: issue is POS-side; POS team to confirm whether double-apply persists now that CRM CR-120/121 are live. No app-side action until POS replies.'
   priority: P0
   risk: CRITICAL
-  owner_action: null
+  owner_action: Chase POS confirmation
   blocked_on:
   - party: POS
     ref: coupon_discount_amount>0 signal to skip reapplication
@@ -2093,7 +2092,7 @@
   files: null
   artefacts: INTAKE, POS_BRIEF
   registered: '2026-10-11'
-  last_updated: '2026-10-11'
+  last_updated: '2026-10-12'
   related:
   - CR-2026-10-09-002
   - INV-2026-10-11-001
@@ -2184,19 +2183,17 @@
   type: CR
   title: ReviewOrder identity update — P4 phone change re-auth via skip-otp + P5
     name edit calls PUT /scan/profile before order
-  status: IMPACT_ANALYSIS
-  status_note: 'IA complete 2026-10-11. 1 file only (ReviewOrder.jsx). 4 edits identified.
-    Owner decisions D1+D2+D3 pending before Implementation Plan.'
+  status: PARKED
+  status_note: 'PARKED 2026-10-12 (owner ruling: later). IA exists; no plan. Revisit after CR-2026-10-12-002/003 land.'
   priority: P2
   risk: HIGH
-  owner_action: 'Confirm D1 (Place Order trigger), D2 (P4 failure = proceed), D3 (P5 failure = fire-and-forget).
-    Then say "Implementation Plan for CR-2026-10-11-007".'
+  owner_action: null
   blocked_on: []
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx
   artefacts: INTAKE · IMPACT_ANALYSIS
   registered: '2026-10-11'
-  last_updated: '2026-10-11'
+  last_updated: '2026-10-12'
   related:
   - BUG-2026-10-11-004
   - CR-2026-10-11-006
@@ -2310,6 +2307,7 @@
   - CR-2026-10-11-009
   - BUG-2026-10-12-001
   - CR-2026-10-12-003
+  - CR-2026-10-11-003
   code_markers: false
   money_path: true
   closed: null
