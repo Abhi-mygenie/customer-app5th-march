@@ -2210,9 +2210,12 @@
   type: CR
   title: Anonymous coupon validation — two-step flow (no-token validate + CUSTOMER_REQUIRED
     prompt + re-validate after skip-otp) + all 8 error codes wired to specific messages
-  status: IMPLEMENTED
-  status_note: Implemented 2026-10-12. Build clean. Self-test 8/8 PASS. Awaiting QA.
-    CRM blocker lifted (CR-120 live on preprod per CRM deploy notice 2026-10-11).
+  status: QA_PASS
+  status_note: QA PASS 2026-10-12. 11/13 TCs PASS. TC-2 BLOCKED (preprod ordering
+    unavailable — env constraint, not code). TC-13 PARTIAL (CRM coupon config issue —
+    STO-GENERIC-10 stackable_with_loyalty=false on preprod, should be true; code correct).
+    0 code bugs. Bug fix applied in iteration_20 (errorMap priority) verified in iteration_21.
+    Test user Saurav (9035133228) r689. Awaiting smoke.
   priority: P2
   risk: HIGH
   owner_action: null

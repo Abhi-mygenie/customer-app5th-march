@@ -933,14 +933,14 @@ const ReviewOrder = () => {
           if (step2Data?.valid) {
             applyValidResult(step2Data);
           } else {
-            const msg = step2Data?.error?.detail || errorMap[step2Data?.error?.code] || 'Coupon not valid';
+            const msg = errorMap[step2Data?.error?.code] || step2Data?.error?.detail || 'Coupon not valid'; // CR-2026-10-11-008: errorMap takes priority over raw CRM detail
             setCouponError(msg);
           }
         } catch {
           setCouponError(errorMap.CUSTOMER_REQUIRED);
         }
       } else {
-        const msg = data?.error?.detail || errorMap[data?.error?.code] || 'Coupon not valid';
+        const msg = errorMap[data?.error?.code] || data?.error?.detail || 'Coupon not valid'; // CR-2026-10-11-008: errorMap takes priority over raw CRM detail
         setCouponError(msg);
       }
     } catch (err) {
