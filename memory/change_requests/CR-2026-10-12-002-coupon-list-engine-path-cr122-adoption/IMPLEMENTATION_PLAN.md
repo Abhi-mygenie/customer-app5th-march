@@ -29,6 +29,9 @@
 | CRM preprod `GET /scan/coupons?restaurant_id=689&order_total=960` returns `recommended_code` | live (R7 verify APIs) |
 | POS preprod responding (`/api/v1/web/restaurant-info`) | needed for live self-test; if down, S-live BLOCKED |
 
+## 0b. Step zero of this session — CR-2026-10-12-003 (owner ruling 2026-10-12)
+Implement `CR-2026-10-12-003/IMPLEMENTATION_PLAN.md` E1–E5 **first** (max-redeemable gets `coupon_discount` + `points_to_redeem`; re-fetch on coupon/points change; client-side earn estimate dropped). Reason: auto-apply/B8 below change `couponDiscount` on nearly every checkout; without CR-003 the "You will earn N points" preview is overstated. No effect loop (see CR-003 E2). QA matrix L1–L9 joins V1–V13.
+
 ## 1. `crmService.js` — 2 edits
 **1a** `crmGetCouponList(token, channel, restaurantId, orderTotal = null)` — `if (Number.isFinite(orderTotal)) params.append('order_total', String(orderTotal));` Marker `// CR-2026-10-12-002`.
 **1b** `crmValidateCoupon(token, code, orderTotal, channel, restaurantId, items = [])` — `body.items = items`.

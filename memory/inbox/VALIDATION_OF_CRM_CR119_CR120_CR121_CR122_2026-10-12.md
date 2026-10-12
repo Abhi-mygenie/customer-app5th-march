@@ -83,3 +83,13 @@ Dependencies / sequencing:
 - Confirm: item/category-scoped simple coupons also return `requires_cart_validation:true` and need `items[]` — we will send `items[]` on every validate.
 - No contract objections. We will migrate to `?order_total=` and `items[]`; ETA after owner approves our CR.
 - Time-window coupons: we will grey-out (pending owner decision).
+
+---
+## Addendum — CR-123 (revised brief `…CR119_TO_CR123…`, same day)
+| # | Claim | Live (Saurav, r689) | Verdict |
+|---|---|---|---|
+| V9 | `{290, coupon_discount 43.5}` → `earn_base_preview 246.5`, `points_to_redeem_applied 0` | 246.5 / 0 / `projected_points_earned 24` (tier ≈10 %, not Bronze — formula correct) | PASS |
+| V10 | without new fields → old keys + 2 new, projected unchanged | 29 / base 290 / applied 0 | PASS |
+| V11 | `points_to_redeem 9999` → applied == max | 36 == 36 | PASS |
+Note: with 36 pts × ratio 3.0 redeemed, base 138.5 → `projected_points_earned 0` (min-order gate on net base). UI must render 0, not hide.
+**Our answer to CRM's question:** `bill_amount` = pre-tax, pre-discount cart sub-total ✅. We do not yet send `coupon_discount`/`points_to_redeem` → new CR-2026-10-12-003. Client-side fallback in `LoyaltyRewardsSection` uses post-tax `totalToPay` — wrong, in CR-003 scope.

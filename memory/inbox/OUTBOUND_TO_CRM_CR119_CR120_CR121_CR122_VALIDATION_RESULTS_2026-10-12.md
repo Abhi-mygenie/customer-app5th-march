@@ -43,3 +43,16 @@
 3. Prod timeline for CR-122 — our CR will be preprod-only until CRM prod is live.
 
 Preprod remains our test target until you confirm prod.
+
+---
+## Addendum — CR-123 (your revised brief)
+| # | Result |
+|---|---|
+| V9 | `{bill_amount:290, coupon_discount:43.5}` → `earn_base_preview 246.5`, `points_to_redeem_applied 0` ✅ (`projected_points_earned 24` for our test customer — tier ≈10 %, not Bronze; your "12" is the Bronze case) |
+| V10 | legacy body → identical keys + the 2 new ones, projected unchanged ✅ |
+| V11 | `points_to_redeem 9999` → `points_to_redeem_applied 36 == max_points_redeemable` ✅ |
+
+**Your question:** today we pass `bill_amount` = pre-tax, pre-discount cart sub-total — correct already. We do **not** yet pass `coupon_discount` / `points_to_redeem`; adopting them in CR-2026-10-12-003 (re-call on coupon or redemption change). We will also drop our client-side estimate so the preview is CRM-only.
+
+Observation: at 290 − 43.5 − (36 pts × 3.0) = 138.5 the preview returns `projected_points_earned 0` (net base below min-order). Confirm intended — we will display "0 points", not hide it.
+Doc note: §4b example says "Bronze 5 % → 12 points"; fine, just flagging our test user isn't Bronze so V9 numbers differ by tier.

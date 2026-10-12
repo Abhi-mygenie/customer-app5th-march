@@ -2294,7 +2294,7 @@
   title: Coupon list engine path — adopt CRM CR-122 (order_total filter, items[] on
     validate, recommended_code silent auto-apply, time-window grey-out). Absorbs BUG-2026-10-12-001
   status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE Rev 2 2026-10-12 — ALL decisions ruled: D-AUTO silent auto-apply; D-LOYALTY L-A; D-REFETCH debounced; D-TW Variant A + 12h chip; D-TITLE CRM title; B8 included. IMPLEMENTATION_PLAN Rev 2 written (13 sections, V1–V13). Mock-up /coupon-strip-design-preview.html. GATE HOLD — awaiting "Approve CR-2026-10-12-002".'
+  status_note: 'PLANNING COMPLETE Rev 2 2026-10-12 — ALL decisions ruled: D-AUTO silent auto-apply; D-LOYALTY L-A; D-REFETCH debounced; D-TW Variant A + 12h chip; D-TITLE CRM title; B8 included. IMPLEMENTATION_PLAN Rev 2 written (13 sections, V1–V13). Mock-up /coupon-strip-design-preview.html. GATE HOLD — awaiting "Approve CR-2026-10-12-002". Rev 3: CRM CR-123 cross-impact — CR-2026-10-12-003 must land before/with this CR.'
   priority: P1
   risk: MEDIUM
   owner_action: Approve IMPLEMENTATION_PLAN Rev 2 to open gate
@@ -2309,6 +2309,7 @@
   - CR-2026-10-11-008
   - CR-2026-10-11-009
   - BUG-2026-10-12-001
+  - CR-2026-10-12-003
   code_markers: false
   money_path: true
   closed: null
@@ -2317,6 +2318,58 @@
     TBD); D-REFETCH yes, debounced 500ms. CRM CR-122 is preprod-only; do not promote
     before CRM prod. Sequence CR-2026-10-11-009 QA after this CR (legacy path retired).
     Inbox: INBOUND_FROM_CRM_CR119…, VALIDATION_OF_CRM_CR119…, OUTBOUND_TO_CRM_CR119…_VALIDATION_RESULTS.'
+
+- id: CR-2026-10-12-003
+  type: CR
+  title: Loyalty earn preview — adopt CRM CR-123 (send coupon_discount + points_to_redeem
+    to /scan/max-redeemable; re-fetch on coupon/points change; drop post-tax client estimate)
+  status: IMPACT_ANALYSIS
+  status_note: 'PLANNING COMPLETE 2026-10-12. Owner rulings: C4 drop client estimate; fold E1–E5 into CR-2026-10-12-002 session as step 0b; edit-mode bill_amount parked as BUG-2026-10-12-004. IMPLEMENTATION_PLAN written (L1–L9). GATE HOLD — opens with CR-002 approval.'
+  priority: P1
+  risk: MEDIUM
+  owner_action: Approve together with CR-2026-10-12-002
+  blocked_on: []
+  sprint: null
+  files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx ·
+    frontend/src/components/LoyaltyRewardsSection/LoyaltyRewardsSection.jsx
+  artefacts: INTAKE_AND_IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related:
+  - CR-2026-10-09-003
+  - CR-2026-10-12-002
+  - BUG-2026-10-12-003
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'CRM CR-123 preprod-only. Dependency: should land before or with CR-2026-10-12-002
+    (auto-apply makes stale preview common). points_to_redeem_applied returned after clamp;
+    projected_points_earned can be 0 when net base < min-order — render 0, do not hide.'
+
+- id: BUG-2026-10-12-004
+  type: BUG
+  title: Edit-order mode — max-redeemable bill_amount sends new items' sub-total only (previous
+    items excluded); loyalty preview computed on partial bill
+  status: INTAKE
+  status_note: 'INTAKE 2026-10-12. Parked by owner ruling (out of CR-2026-10-12-003 scope). Not
+    reproduced live (POS preprod down). Pick up after CR-002/003.'
+  priority: P3
+  risk: MEDIUM
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/ReviewOrder.jsx
+  artefacts: INTAKE
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related:
+  - CR-2026-10-12-003
+  - CR-2026-10-11-001
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Check CR-2026-10-11-001 ruling on which total POS uses for coupon order_amount before
+    aligning edit-mode totals.'
 
 - id: BUG-2026-10-12-001
   type: BUG

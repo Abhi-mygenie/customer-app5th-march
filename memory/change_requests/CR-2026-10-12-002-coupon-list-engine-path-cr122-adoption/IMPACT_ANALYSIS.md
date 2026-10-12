@@ -137,3 +137,6 @@ Still open: D-TW (variant A/B, 12h/24h), D-TITLE, B8.
 
 ### Owner rulings 2026-10-12 (final set) — all IA decisions closed
 D-TW = **Variant A**, **12-hour** chip ("Valid 5–7 PM") · D-TITLE = **CRM `title`** (descriptive) · B8 = **included** (re-validate applied coupon on debounced subtotal change; remove + toast if invalid). IMPLEMENTATION_PLAN.md Rev 2 reflects all. Gate still HOLD pending "Approve CR-2026-10-12-002".
+
+### Rev 3 note — CRM CR-123 cross-impact (2026-10-12)
+CRM revised brief adds CR-123: `POST /scan/max-redeemable` accepts `coupon_discount` + `points_to_redeem`; earn base = sub-total − coupon − points. Our max-redeemable effect only re-runs on `subtotal`, so auto-apply/B8 from this CR will make the "You will earn N points" preview **overstated on every checkout** unless CR-2026-10-12-003 (C1–C3) lands first or in the same session. `L-A` logic unaffected (`maxRedeemable.ok` independent of coupon). No effect loop: max-redeemable never writes `couponDiscount`; B8 never reads `maxRedeemable`. **Dependency added: CR-2026-10-12-003 before/with this CR.**
