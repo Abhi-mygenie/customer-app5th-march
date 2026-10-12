@@ -2265,3 +2265,56 @@
     hidden. Auth list: full personalised, my_usage_count included. requires_cart_validation:true
     → show display_title only, validate with items on tap. 50 coupon cap. Anonymous
     rate limit 10/min/IP.'
+
+- id: CR-2026-10-12-001
+  type: CR
+  title: Remove Emergent branding from public/index.html — fix page title, meta description,
+    add MyGenie favicon
+  status: INTAKE
+  status_note: INTAKE COMPLETE 2026-10-12. Owner decisions required — replacement title,
+    description text, and favicon source before implementation can start.
+  priority: P1
+  risk: LOW
+  owner_action: Provide replacement title, meta description wording, and confirm favicon
+    source (existing ic_login_logo.png or new file)
+  blocked_on: []
+  sprint: null
+  files: public/index.html · public/favicon (new asset)
+  artefacts: INTAKE
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related: []
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Three changes: (1) <title>Emergent | Fullstack App</title> → MyGenie title.
+    (2) <meta description="A product of emergent.sh"> → MyGenie description. (3) Add
+    <link rel="icon"> — no favicon exists currently. Emergent platform scripts (emergent-main.js,
+    PostHog ap.emergent.sh) must NOT be removed — platform infrastructure.'
+
+- id: BUG-2026-10-12-001
+  type: BUG
+  title: Coupon discovery list — BXGY coupons show ₹0 off instead of hiding discount
+    when expected_discount is 0 from CRM
+  status: INTAKE
+  status_note: INTAKE COMPLETE 2026-10-12. Root cause confirmed. Fast Lane eligible
+    (1 condition, 1 file, LOW risk). Ready to implement on owner go-ahead.
+  priority: P2
+  risk: LOW
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/components/CouponDiscoveryList/CouponDiscoveryList.jsx
+  artefacts: INTAKE
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related:
+  - CR-2026-10-11-009
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'formatDiscount() line 6: expected_discount != null passes for 0 → renders
+    ₹0 off. Fix: add && expected_discount > 0 guard. BXGY coupons (Buy X Get Y free)
+    return expected_discount:0 from CRM when no cart context given. Confirmed from
+    owner screenshot 2026-10-12 — SEED_V3B_BXGY_FLAT and SEED_V3B_BXGY_FREE showing
+    ₹0 off.'
