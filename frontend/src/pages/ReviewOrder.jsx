@@ -579,7 +579,7 @@ const ReviewOrder = () => {
   const totalItems = getTotalItems();
   const subtotal = getTotalPrice();
 
-  // CR-2026-10-09-003: CRM server-side redemption cap — D1=(b) re-call on subtotal change debounced 500ms
+  // CR-2026-10-09-003: CRM server-side redemption cap — D1=(b) re-call on subtotal change debounced 500ms · CR-2026-10-12-003: also on coupon/points change
   // NOTE: must be placed AFTER `subtotal` declaration to avoid TDZ ReferenceError
   useEffect(() => {
     if (!isAuthenticated || !crmToken) {
@@ -593,7 +593,13 @@ const ReviewOrder = () => {
     setMaxRedeemableLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const result = await crmGetMaxRedeemable(crmToken, subtotal);
+        const result = await crmGetMaxRedeemable(crmToken, subtotal, {
+          couponDiscount,                                        // CR-2026-10-12-003
+          pointsToRedeem: isUsingPoints ? pointsToRedeem : 0,    // CR-2026-10-12-003
+        });
+        if (isUsingPoints && result?.points_to_redeem_applied != null && result.points_to_redeem_applied !== pointsToRedeem) {
+          logger.order(`[CR-2026-10-12-003] CRM clamped points_to_redeem ${pointsToRedeem} → ${result.points_to_redeem_applied}`); // diagnostic only
+        }
         setMaxRedeemable(result);
       } catch (err) {
         // D3=(a): disable Use on failure — safer than over-redemption
@@ -604,7 +610,7 @@ const ReviewOrder = () => {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, crmToken, subtotal]);
+  }, [isAuthenticated, crmToken, subtotal, couponDiscount, isUsingPoints, pointsToRedeem]); // CR-2026-10-12-003: re-fetch on coupon/points change
 
   // CR-2026-10-11-009: fetch coupon discovery list once on screen open
   // Re-fetches when crmToken changes (anon → authenticated after two-step flow)
@@ -2233,6 +2239,7 @@ const ReviewOrder = () => {
             loyaltySettings={loyaltySettings}
             totalToPay={totalToPay}
             projectedPointsEarned={maxRedeemable?.projected_points_earned ?? null}
+            earnBasePreview={maxRedeemable?.earn_base_preview ?? null} // CR-2026-10-12-003
           />
         </div>
 

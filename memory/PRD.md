@@ -48,6 +48,9 @@
 - REACT_APP_CRM_API_VERSION: v2
 - REACT_APP_GOOGLE_MAPS_API_KEY: set
 
+## Change Management Log
+- 2026-10-12 CR-2026-10-12-003 (Part A, E1–E5) **IMPLEMENTED — awaiting QA**: loyalty earn preview adopts CRM CR-123. `crmGetMaxRedeemable` now sends `coupon_discount`/`points_to_redeem`; preview re-fetches on coupon/points change; all client-side earn maths removed (CRM-authoritative). Files: `crmService.js`, `ReviewOrder.jsx`, `LoyaltyRewardsSection.jsx`. Build clean. QA handover in CR-003 folder. CR-2026-10-12-002 (coupon engine / Part B) remains gated.
+
 ## Backlog / Next Steps
 - P0: Verify end-to-end login flow (phone → OTP → browse menu → order)
 - P1: Confirm external POS API connectivity from backend

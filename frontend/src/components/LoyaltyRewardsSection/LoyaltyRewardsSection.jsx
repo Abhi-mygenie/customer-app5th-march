@@ -15,8 +15,9 @@ const LoyaltyRewardsSection = ({
   user,
   lookedUpCustomer,
   loyaltySettings,
-  totalToPay,
-  projectedPointsEarned, // CR-2026-10-09-003 D2=(a): CRM server-authoritative earn preview; null = client-side fallback
+  totalToPay, // kept for prop compatibility; no longer used for earn maths (CR-2026-10-12-003)
+  projectedPointsEarned, // CR-2026-10-09-003 · CR-2026-10-12-003: CRM-only; null = no number shown
+  earnBasePreview = null, // CR-2026-10-12-003: CRM earn_base_preview (₹ the % was applied to)
 }) => {
   if (!configShowLoyaltyPoints || restaurant?.is_loyalty !== 'Yes') return null;
 
@@ -27,14 +28,11 @@ const LoyaltyRewardsSection = ({
   if (isIdentified && loyaltySettings) {
     const custTier = isAuthenticated ? (user?.tier || 'Bronze') : (lookedUpCustomer?.tier || 'Bronze');
     const tier = custTier.toLowerCase();
-    const earnPercent = loyaltySettings[`${tier}_earn_percent`] || loyaltySettings.bronze_earn_percent || 5;
-    const billAmount = totalToPay;
+    // CR-2026-10-12-003 C4: CRM is the only source — no client-side estimate (post-tax total was wrong)
     const minOrderValue = loyaltySettings.min_order_value || 100;
-    const isEligible = billAmount >= minOrderValue;
-    const pointsToEarn = (projectedPointsEarned !== null && projectedPointsEarned !== undefined)
-      ? projectedPointsEarned
-      // CR-2026-10-09-003 D2=(a): CRM projected_points_earned is authoritative; client-side as fallback
-      : Math.round(billAmount * (earnPercent / 100));
+    const hasPreview = projectedPointsEarned !== null && projectedPointsEarned !== undefined;
+    const pointsToEarn = hasPreview ? projectedPointsEarned : 0;
+    const belowMin = hasPreview && pointsToEarn === 0 && earnBasePreview !== null && earnBasePreview < minOrderValue;
     // CR-2026-10-03-004 Part B: G1 — per-tier redemption value; never fall back to flat redemption_value
     const tierKey = `${tier}_redemption_value`;
     const redemptionValue = loyaltySettings[tierKey] || loyaltySettings.bronze_redemption_value || 1.0;
@@ -47,20 +45,25 @@ const LoyaltyRewardsSection = ({
         <div className="user-info-content">
           <IoGiftOutline className="user-info-icon" />
           <div className="user-info-text">
-            {isEligible ? (
+            {!hasPreview ? (
+              <>
+                <span className="user-info-name">Earn rewards on this order!</span>
+                <span className="user-info-points">Points are calculated on food value after discounts</span>
+              </>
+            ) : belowMin ? (
+              <>
+                <span className="user-info-name">Almost there!</span>
+                <span className="user-info-points">
+                  Add ₹{(minOrderValue - earnBasePreview).toFixed(0)} more to earn points
+                </span>
+              </>
+            ) : (
               <>
                 <span className="user-info-name">
                   You will earn {pointsToEarn} points on this order!
                 </span>
                 <span className="user-info-points">
                   Worth ₹{pointsWorth}{firstVisitBonus > 0 ? ` + ${firstVisitBonus} bonus points for first visit` : ''}
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="user-info-name">Almost there!</span>
-                <span className="user-info-points">
-                  Add ₹{(minOrderValue - billAmount).toFixed(0)} more to earn points
                 </span>
               </>
             )}
@@ -91,37 +94,14 @@ const LoyaltyRewardsSection = ({
 
   // Variant 3: Guest (no phone entered, not logged in) WITH loyalty settings
   if (isGuest && loyaltySettings) {
-    const earnPercent = loyaltySettings.bronze_earn_percent || 5;
-    const billAmount = totalToPay;
-    const pointsToEarn = Math.round(billAmount * (earnPercent / 100));
-    // CR-2026-10-03-004 Part B: G1 — guest uses bronze tier (tier unknown pre-login)
-    const redemptionValue = loyaltySettings.bronze_redemption_value || 1.0;
-    const pointsWorth = (pointsToEarn * redemptionValue).toFixed(0);
-    const minOrderValue = loyaltySettings.min_order_value || 100;
-    const isEligible = billAmount >= minOrderValue;
-
+    // CR-2026-10-12-003 C4: anonymous diners see a non-numeric prompt — no client-side estimate
     return (
       <div className="review-order-login-prompt" data-testid="login-rewards-prompt">
         <div className="login-prompt-content">
           <IoGiftOutline className="login-prompt-icon" />
           <div className="login-prompt-text">
-            {isEligible ? (
-              <>
-                <span className="login-prompt-title">
-                  Earn {pointsToEarn} points on this order!
-                </span>
-                <span className="login-prompt-subtitle">
-                  Worth ₹{pointsWorth} — enter your phone number above
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="login-prompt-title">Earn rewards on this order!</span>
-                <span className="login-prompt-subtitle">
-                  Add ₹{(minOrderValue - billAmount).toFixed(0)} more to earn points
-                </span>
-              </>
-            )}
+            <span className="login-prompt-title">Earn rewards on this order!</span>
+            <span className="login-prompt-subtitle">Enter your phone number above to see your points</span>
           </div>
         </div>
       </div>

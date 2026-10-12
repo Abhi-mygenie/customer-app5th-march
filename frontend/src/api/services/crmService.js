@@ -367,12 +367,17 @@ export const crmGetLoyaltyRules = async (restaurantId) => {
  * Auth: customer Bearer token required.
  * Returns: { ok, code, max_points_redeemable, max_discount_value, ratio_per_point,
  *            available_points, min_redemption_points, loyalty_enabled, projected_points_earned }
+ * Returns +earn_base_preview, points_to_redeem_applied (CR-123).
  * D3=(a): caller sets maxRedeemable=null on error → Use button disabled.
  */
-export const crmGetMaxRedeemable = async (token, billAmount) => {
+// CR-2026-10-12-003: CRM CR-123 — optional coupon_discount / points_to_redeem shape the earn base
+export const crmGetMaxRedeemable = async (token, billAmount, { couponDiscount = 0, pointsToRedeem = 0 } = {}) => {
+  const body = { bill_amount: billAmount };
+  if (couponDiscount > 0) body.coupon_discount = couponDiscount;
+  if (pointsToRedeem > 0) body.points_to_redeem = pointsToRedeem;
   return crmAuthFetch('/scan/max-redeemable', token, {
     method: 'POST',
-    body: JSON.stringify({ bill_amount: billAmount }),
+    body: JSON.stringify(body),
   });
 };
 

@@ -3,7 +3,7 @@
 
 **Registered by:** Role 2 — Planning Agent (owner forwarded CRM brief 2026-10-12) · **Date:** 2026-10-12
 **Source:** `inbox/INBOUND_FROM_CRM_CR119_TO_CR123_LIVE_PLEASE_VALIDATE_2026-10-12.md` §4b
-**Status:** IMPACT_ANALYSIS — awaiting gate
+**Status:** IMPLEMENTED (Part A, E1–E5) 2026-10-12 — awaiting QA · owner-authorised as Session Part A
 
 ## Classification
 | Field | Value |
