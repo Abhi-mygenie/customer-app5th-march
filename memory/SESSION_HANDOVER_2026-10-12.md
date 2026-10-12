@@ -111,3 +111,6 @@ CR-008 code markers:    Lines 41-42, 92, 887-946, 1969-1970 in ReviewOrder.jsx
 - `public/index.html`: title MyGenie, description, favicon (svg) + apple-touch-icon (png), theme-color #E8531E. Platform scripts untouched. Build PASS; served HTML verified; frontend restarted (CRA caches public/index.html). Status IMPLEMENTED, QA pending.
 - ⚠ Environment: POS preprod `preprod.mygenie.online` was timing out at 07:35 UTC — landing stays on skeleton for ALL restaurants. Blocks live QA of CR-001 Q2 and BUG-002 Q1–Q7 until POS is back. Not code-related.
 - Option B (dynamic theme-color per restaurant primaryColor) proposed as separate CR — owner decision pending.
+
+### Fixed (later) — BUG-2026-10-12-003
+- ReviewOrder.jsx L2085 wording → "Earn X more points to redeem". Build PASS. Status IMPLEMENTED; QA visual pending (POS preprod down).

@@ -2082,7 +2082,7 @@ const ReviewOrder = () => {
                           </div>
                           <span style={{ fontSize: '10.5px', color: '#D97706', paddingLeft: 18 }} data-testid="loyalty-points-below-min-subtext">
                             {(maxRedeemable.min_redemption_points - (maxRedeemable.available_points || 0)) > 0
-                              ? `Add ₹${maxRedeemable.min_redemption_points - (maxRedeemable.available_points || 0)} more to redeem`
+                              ? `Earn ${maxRedeemable.min_redemption_points - (maxRedeemable.available_points || 0)} more points to redeem` // BUG-2026-10-12-003: unit is points, not ₹; "Earn" — cart changes don't move it
                               : 'Not enough points to redeem'}
                           </span>
                         </div>

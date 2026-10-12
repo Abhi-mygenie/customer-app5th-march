@@ -2426,19 +2426,19 @@
   type: BUG
   title: Loyalty "Add ₹X more to redeem" message misleading — never updates when cart
     quantity changes, wrong unit symbol
-  status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE 2026-10-12. IA+plan in IMPACT_ANALYSIS_AND_PLAN.md. LOW risk, 1 line in hotspot ReviewOrder.jsx. Recommended wording "Earn X more points to redeem". Awaiting gate.'
+  status: IMPLEMENTED
+  status_note: 'FIXED 2026-10-12 (Role 5) — ReviewOrder.jsx L2085: "Add ₹X more to redeem" → "Earn X more points to redeem". Root cause PLAN_GAP. Build PASS. Live render BLOCKED (POS preprod down) — QA visual re-test pending in combined run.'
   priority: P2
   risk: LOW
-  owner_action: null
+  owner_action: Approve QA (combined run)
   blocked_on: []
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx
-  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · BUG_FIX_REPORT
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related: []
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
   notes: 'Line 2076: message uses min_redemption_points - available_points. Both fields
