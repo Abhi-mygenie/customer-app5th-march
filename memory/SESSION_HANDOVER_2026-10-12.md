@@ -106,3 +106,8 @@ CR-008 code markers:    Lines 41-42, 92, 887-946, 1969-1970 in ReviewOrder.jsx
 1. Owner: approve QA for BUG-2026-10-12-002 + give a 91-prefixed preprod number.
 2. Owner: open gates for BUG-003, CR-001 (+ theme-color planning), CR-002.
 3. CR-2026-10-11-009 QA still pending — run after CR-002.
+
+### Implemented (later) — CR-2026-10-12-001
+- `public/index.html`: title MyGenie, description, favicon (svg) + apple-touch-icon (png), theme-color #E8531E. Platform scripts untouched. Build PASS; served HTML verified; frontend restarted (CRA caches public/index.html). Status IMPLEMENTED, QA pending.
+- ⚠ Environment: POS preprod `preprod.mygenie.online` was timing out at 07:35 UTC — landing stays on skeleton for ALL restaurants. Blocks live QA of CR-001 Q2 and BUG-002 Q1–Q7 until POS is back. Not code-related.
+- Option B (dynamic theme-color per restaurant primaryColor) proposed as separate CR — owner decision pending.

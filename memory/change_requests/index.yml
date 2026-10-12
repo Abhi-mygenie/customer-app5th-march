@@ -2269,19 +2269,19 @@
   type: CR
   title: Remove Emergent branding from public/index.html — fix page title, meta description,
     add MyGenie favicon
-  status: IMPACT_ANALYSIS
-  status_note: 'PLANNING COMPLETE 2026-10-12 (title/description/favicon) + theme-color scope-extension IA/plan 2026-10-12 (IMPACT_ANALYSIS_AND_PLAN_theme-color.md). Recommend Option A static #E8531E inside this CR; Option B dynamic per-restaurant theme-color proposed as separate CR. LOW, 1 file, Fast Lane eligible. Awaiting owner wording + scope-extension decision + gate.'
+  status: IMPLEMENTED
+  status_note: 'IMPLEMENTED 2026-10-12 — public/index.html only: title MyGenie, description, favicon svg + apple-touch-icon png, theme-color #E8531E (Option A). Platform scripts untouched. Self-test 5/6 PASS; landing render check BLOCKED by POS preprod timeout (environment, unrelated). Awaiting QA approval.'
   priority: P1
   risk: LOW
-  owner_action: Confirm title/description/favicon; approve theme-color extension (A) and colour value (#E8531E vs #E8632B); yes/no to registering Option B as new CR
+  owner_action: Approve QA; smoke theme-color/favicon on a real phone (Q4); decide on Option B (dynamic theme-color) as new CR
   blocked_on: []
   sprint: null
-  files: public/index.html · public/favicon (new asset)
-  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  files: frontend/public/index.html
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related: []
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
   notes: 'Three changes: (1) <title>Emergent | Fullstack App</title> → MyGenie title.
