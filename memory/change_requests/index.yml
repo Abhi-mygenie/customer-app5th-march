@@ -2241,18 +2241,13 @@
   title: Coupon discovery list — GET /scan/coupons on checkout open, anonymous (generic
     only) and authenticated (personalised), tap to apply, requires_cart_validation
     handling
-  status: INTAKE
-  status_note: INTAKE COMPLETE. Blocked on CRM preprod deploy AND CR-2026-10-11-008
-    shipping first. CRM will notify when live.
+  status: IMPLEMENTED
+  status_note: Implemented 2026-10-12. Build clean (Compiled successfully +930B). Self-test
+    9/9 PASS. Awaiting QA. All blockers lifted — CRM CR-121 live on preprod, CR-008 QA passed.
   priority: P2
   risk: HIGH
   owner_action: null
-  blocked_on:
-  - party: CRM
-    ref: Make token optional on GET /scan/coupons + accept restaurant_id query param
-    since: '2026-10-11'
-  - party: internal
-    ref: CR-2026-10-11-008 must ship first (anonymous validate path required)
+  blocked_on: []
     since: '2026-10-11'
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx · frontend/src/api/services/crmService.js

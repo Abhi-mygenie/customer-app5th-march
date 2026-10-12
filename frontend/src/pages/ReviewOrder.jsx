@@ -38,8 +38,9 @@ import { isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability
 import { postNonQrBlock } from '../api/services/diagnosticsService';
 import NonQrBlockModal from '../components/NonQrBlockModal';
 import './ReviewOrder.css';
-import { crmGetLoyaltyRules, crmGetMaxRedeemable, crmValidateCoupon, buildUserId } from '../api/services/crmService'; // CR-2026-10-03-004 Part B · CR-2026-10-09-003 · CR-2026-10-09-002 · CR-2026-10-11-008
+import { crmGetLoyaltyRules, crmGetMaxRedeemable, crmValidateCoupon, buildUserId, crmGetCouponList } from '../api/services/crmService'; // CR-2026-10-03-004 Part B · CR-2026-10-09-003 · CR-2026-10-09-002 · CR-2026-10-11-008 · CR-2026-10-11-009
 import { crmSkipOtpWithRetry } from '../api/services/crmSkipOtpRetry'; // CR-2026-10-11-008
+import CouponDiscoveryList from '../components/CouponDiscoveryList/CouponDiscoveryList'; // CR-2026-10-11-009
 
 // === CA-008 Phase 2: Extracted pure helper functions ===
 
@@ -193,6 +194,9 @@ const ReviewOrder = () => {
   const [couponStackable, setCouponStackable] = useState(true);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
+  // CR-2026-10-11-009: coupon discovery list state
+  const [couponList, setCouponList] = useState([]);
+  const [couponListLoading, setCouponListLoading] = useState(false);
   
   // Payment method selection state (FEAT-001)
   const [paymentMethod, setPaymentMethod] = useState('cod'); // 'online' | 'cod' — default COD, user switches to online if Razorpay configured
@@ -391,6 +395,8 @@ const ReviewOrder = () => {
       setAppliedCouponTitle('');
       setCouponStackable(true);
       setCouponError('');
+      setCouponList([]);          // CR-2026-10-11-009
+      setCouponListLoading(false); // CR-2026-10-11-009
       
       // Clear loyalty/points state
       setLoyaltySettings(null);
@@ -590,6 +596,22 @@ const ReviewOrder = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [isAuthenticated, crmToken, subtotal]);
+
+  // CR-2026-10-11-009: fetch coupon discovery list once on screen open
+  // Re-fetches when crmToken changes (anon → authenticated after two-step flow)
+  useEffect(() => {
+    if (!showCoupon) return;
+    let cancelled = false;
+    setCouponListLoading(true);
+    const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
+    crmGetCouponList(crmToken || null, channel, crmToken ? null : numericRestaurantId)
+      .then(data => {
+        if (!cancelled) setCouponList(Array.isArray(data) ? data : (data?.coupons || []));
+      })
+      .catch(() => { if (!cancelled) setCouponList([]); })
+      .finally(() => { if (!cancelled) setCouponListLoading(false); });
+    return () => { cancelled = true; };
+  }, [showCoupon, crmToken, numericRestaurantId, scannedOrderType]); // CR-2026-10-11-009
   
   // Previous order subtotal (for edit mode)
   const previousSubtotal = isEditMode ? getPreviousOrderTotal() : 0;
@@ -886,8 +908,9 @@ const ReviewOrder = () => {
 
   // CR-2026-10-09-002: coupon validation and application
   // CR-2026-10-11-008: anonymous path + two-step flow + full 8-code error map
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim() || isEditMode) return;
+  const handleApplyCoupon = async (overrideCode = null) => { // CR-2026-10-11-009: overrideCode for tap-to-apply
+    const codeToUse = (overrideCode || couponCode).trim();
+    if (!codeToUse || isEditMode) return;
     setCouponLoading(true);
     setCouponError('');
     // CR-2026-10-11-008: full CRM error code map
@@ -920,7 +943,7 @@ const ReviewOrder = () => {
       const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
       const activeToken = crmToken || null;
       // CR-2026-10-11-008: pass restaurantId for anonymous path; authenticated path ignores it
-      const data = await crmValidateCoupon(activeToken, couponCode, subtotal, channel, activeToken ? null : numericRestaurantId);
+      const data = await crmValidateCoupon(activeToken, codeToUse, subtotal, channel, activeToken ? null : numericRestaurantId); // CR-2026-10-11-009: codeToUse supports tap-to-apply
       if (data?.valid) {
         applyValidResult(data);
       } else if (!activeToken && data?.error?.code === 'CUSTOMER_REQUIRED') {
@@ -929,7 +952,7 @@ const ReviewOrder = () => {
           const userId = buildUserId(numericRestaurantId);
           const authResult = await crmSkipOtpWithRetry(customerPhone, userId, customerName);
           setCrmAuth(authResult.token, authResult.customer, numericRestaurantId);
-          const step2Data = await crmValidateCoupon(authResult.token, couponCode, subtotal, channel);
+          const step2Data = await crmValidateCoupon(authResult.token, codeToUse, subtotal, channel); // CR-2026-10-11-009
           if (step2Data?.valid) {
             applyValidResult(step2Data);
           } else {
@@ -957,6 +980,13 @@ const ReviewOrder = () => {
     setAppliedCouponTitle('');
     setCouponStackable(true);
     setCouponError('');
+  };
+
+  // CR-2026-10-11-009: tap a coupon from discovery list — pre-fill code and apply immediately
+  const handleTapCoupon = (code) => {
+    setCouponCode(code);
+    setCouponError('');
+    handleApplyCoupon(code);
   };
 
   // Handle place order
@@ -1949,6 +1979,15 @@ const ReviewOrder = () => {
                   </div>
                 ) : (
                   <div className="price-row price-row-input" style={{ flexDirection: 'column', gap: 4 }}>
+                    {/* CR-2026-10-11-009: coupon discovery list — shown above code entry */}
+                    {(couponList.length > 0 || couponListLoading) && (
+                      <CouponDiscoveryList
+                        coupons={couponList}
+                        loading={couponListLoading}
+                        onTap={handleTapCoupon}
+                        isAuthenticated={isAuthenticated}
+                      />
+                    )}
                     <div style={{ display: 'flex', width: '100%', gap: 8, alignItems: 'center' }}>
                       <div className="price-input-group" style={{ flex: 1 }}>
                         <span className="price-input-icon">🏷️</span>

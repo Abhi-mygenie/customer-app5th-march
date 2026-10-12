@@ -404,6 +404,27 @@ export const crmValidateCoupon = async (token, code, orderTotal, channel = 'dine
   return crmAuthFetch('/scan/coupons/validate', token, { method: 'POST', body: JSON.stringify(body) });
 };
 
+/**
+ * CR-2026-10-11-009: Fetch available coupons for the discovery list.
+ * Called once when checkout screen opens — not on every keystroke or subtotal change.
+ *
+ * Anonymous (no token): GET /scan/coupons?restaurant_id={id}&channel={ch}
+ *   → Returns generic coupons only (requires_customer:false). No my_usage_count.
+ * Authenticated (token): GET /scan/coupons?channel={ch} + Bearer header
+ *   → Returns full personalised list. my_usage_count on every coupon.
+ *
+ * Rate limit: 10/min anonymous, none authenticated.
+ */
+export const crmGetCouponList = async (token, channel = 'dine_in', restaurantId = null) => {
+  const params = new URLSearchParams({ channel });
+  if (!token && restaurantId) params.append('restaurant_id', String(restaurantId));
+  const endpoint = `/scan/coupons?${params.toString()}`;
+  if (!token) {
+    return crmFetch(endpoint, { method: 'GET' });
+  }
+  return crmAuthFetch(endpoint, token, { method: 'GET' });
+};
+
 // ============================================
 // Profile — CRM token required
 // ============================================
