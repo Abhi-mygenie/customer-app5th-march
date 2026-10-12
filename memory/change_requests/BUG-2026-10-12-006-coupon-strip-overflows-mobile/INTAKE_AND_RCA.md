@@ -1,8 +1,12 @@
 # BUG-2026-10-12-006 — Coupon strip overflows the screen on mobile (bleed + empty "gap")
 
 **Registered:** 2026-10-12 · **Found by:** Investigation (Role, read-only) from owner mobile screenshots (2nd report)
-**Severity:** MEDIUM (visual/layout; no data or payment impact) · **Status:** RCA COMPLETE — awaiting Bug-Fix gate
+**Severity:** MEDIUM (visual/layout; no data or payment impact) · **Status:** QA_PASS (iteration_24) 2026-10-12 — fixed & verified on mobile
 **Area:** `frontend/src/components/CouponDiscoveryList/CouponDiscoveryList.css` + the coupon wrapper in `frontend/src/pages/ReviewOrder.jsx` (L2079)
+
+## FIX APPLIED (2026-10-12)
+`CouponDiscoveryList.css`: `.cdl-wrap { width:100% }` and `.cdl-strip { min-width:0; max-width:100% }` (kept `overflow-x:auto`).
+Verified on 390px mobile (testing iteration_24): html scrollWidth==clientWidth==390 (no page overflow); strip left=31 / width=324 ≤ 390 (contained, no edge bleed); strip scrolls internally (scrollWidth 1113, clientWidth 324) while page scrollLeft stays 0; tap-apply / remove / strip-return regression all PASS. Build clean.
 
 ## Symptoms (from screenshots)
 1. The coupon discovery cards **bleed past both left and right screen edges**; the left and right cards are clipped mid-word (e.g. "-Night 10%", "Buy 3 Golden Caramel Get 1 R…"), and the "Best offer" card's content is cut off.

@@ -49,6 +49,7 @@
 - REACT_APP_GOOGLE_MAPS_API_KEY: set
 
 ## Change Management Log
+- 2026-10-12 BUG-2026-10-12-006 **QA_PASS**: fixed coupon discovery strip overflowing the screen on mobile (cards bled past both edges + page panned sideways into an empty "gap"). Root cause: coupon wrapper inherited `align-items:center` from `.price-row`, and the strip had no width bound, so it grew to its 1113px content width. Fix (CSS-only): `.cdl-wrap{width:100%}` + `.cdl-strip{min-width:0;max-width:100%}`. Verified on 390px: no page overflow, strip contained & scrolls internally. (iteration_24)
 - 2026-10-12 BUG-2026-10-12-005 **QA_PASS**: fixed Apply-coupon-button crash (`onClick={() => handleApplyCoupon()}` — event was being passed as the coupon code). Verified live: manual apply works, V9 error-map "Invalid coupon code" shows, no crash. (iteration_23)
 - 2026-10-12 BUG-2026-10-12-003 **QA_PASS**: below-min loyalty wording "Earn 36 more points to redeem" verified live with account 9120004531; old "Add ₹X more" gone. (iteration_23)
 - 2026-10-12 QA batch (iteration_22+23): CR-002 Part B, CR-003 Part A, CR-009 (new test-ids), CR-008 skip-OTP — all core cases PASS. Deferred: V8 auto-remove (testability gap, LOW-D). LOW items A–D registered in `_BACKLOG_LOW_2026-10-12.md`. CR-001 branding: accepted dynamic restaurant-name title.
