@@ -5,7 +5,7 @@
 **Date registered:** 2026-10-12
 **Registered by:** Role 1 — Intake Agent
 **Source:** Owner reported + Investigation confirmed (Role 6, 2026-10-12)
-**Status:** INTAKE COMPLETE
+**Status:** INTAKE COMPLETE — **ROOT CAUSE CORRECTED 2026-10-12 by Planning (see IMPACT_ANALYSIS_AND_PLAN.md).** The library-stripping theory below was disproven by simulation; the defect is the `phone.replace(/^\+?91/, '')` pre-fill regex in `ReviewOrder.jsx` (L309/L337/L357). Scope moves from LandingCustomerCapture to ReviewOrder. Sections below retained for history.
 
 ---
 

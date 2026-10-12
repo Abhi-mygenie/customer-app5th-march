@@ -2269,9 +2269,8 @@
   type: CR
   title: Remove Emergent branding from public/index.html — fix page title, meta description,
     add MyGenie favicon
-  status: INTAKE
-  status_note: INTAKE COMPLETE 2026-10-12. Owner decisions required — replacement title,
-    description text, and favicon source before implementation can start.
+  status: IMPACT_ANALYSIS
+  status_note: 'PLANNING COMPLETE 2026-10-12. IA+plan in IMPACT_ANALYSIS_AND_PLAN.md. LOW risk, 1 file. Fast Lane eligible on owner say-so. Awaiting owner wording (title/description) + favicon approval + gate.'
   priority: P1
   risk: LOW
   owner_action: Provide replacement title, meta description wording, and confirm favicon
@@ -2279,7 +2278,7 @@
   blocked_on: []
   sprint: null
   files: public/index.html · public/favicon (new asset)
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related: []
@@ -2356,17 +2355,16 @@
   type: BUG
   title: Phone number starting with 91 — PhoneInput strips "91" as country code leaving
     only 8 local digits — shows invalid on Review Order screen
-  status: INTAKE
-  status_note: INTAKE COMPLETE 2026-10-12. P1. Owner decision needed on fix approach
-    (auto-correct vs hint text) before planning.
+  status: IMPACT_ANALYSIS
+  status_note: 'PLANNING COMPLETE 2026-10-12. ROOT CAUSE CORRECTED — not react-phone-number-input; it is the pre-fill regex phone.replace(/^\+?91/, "") in ReviewOrder.jsx L309/L337/L357 eating the first two digits of a bare 10-digit number starting 91. Library simulated and cleared. Scope moves to ReviewOrder.jsx (hotspot, MEDIUM). Awaiting owner approval of corrected scope + gate.'
   priority: P1
   risk: MEDIUM
   owner_action: Confirm preferred fix approach — auto-correct silently OR show inline
     hint text to guide user
   blocked_on: []
   sprint: null
-  files: frontend/src/components/LandingCustomerCapture/LandingCustomerCapture.jsx
-  artefacts: INTAKE
+  files: frontend/src/pages/ReviewOrder.jsx (corrected 2026-10-12; LandingCustomerCapture.jsx no longer in scope)
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related: []
@@ -2382,16 +2380,15 @@
   type: BUG
   title: Loyalty "Add ₹X more to redeem" message misleading — never updates when cart
     quantity changes, wrong unit symbol
-  status: INTAKE
-  status_note: INTAKE COMPLETE 2026-10-12. P2. 1-word text fix — no owner decisions
-    needed. Ready to implement on go-ahead.
+  status: IMPACT_ANALYSIS
+  status_note: 'PLANNING COMPLETE 2026-10-12. IA+plan in IMPACT_ANALYSIS_AND_PLAN.md. LOW risk, 1 line in hotspot ReviewOrder.jsx. Recommended wording "Earn X more points to redeem". Awaiting gate.'
   priority: P2
   risk: LOW
   owner_action: null
   blocked_on: []
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related: []
