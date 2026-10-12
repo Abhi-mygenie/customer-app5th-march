@@ -76,6 +76,15 @@ const buildOrderItems = (cartItems) => cartItems.map(item => ({
   veg: item.item?.veg === 1 || item.item?.veg === true
 }));
 
+// BUG-2026-10-12-002: normalise a stored phone to E.164 without eating the leading "91" of a 10-digit national number
+const toE164India = (phone) => {
+  if (!phone) return '';
+  if (phone.startsWith('+')) return phone;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
+  return `+91${digits}`;
+};
+
 const buildPreviousItems = (previousOrderItems, isEditMode) => {
   if (!isEditMode) return [];
   return previousOrderItems.map(item => ({
@@ -306,7 +315,7 @@ const ReviewOrder = () => {
         if (name && !customerName) setCustomerName(name);
         if (phone && !customerPhone) {
           // Store E.164 format (+91...) so PhoneInput shows India flag correctly
-          const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+          const formattedPhone = toE164India(phone); // BUG-2026-10-12-002
           setCustomerPhone(formattedPhone);
         }
       }
@@ -334,7 +343,7 @@ const ReviewOrder = () => {
           if (name && !customerName) setCustomerName(name);
           if (phone && !customerPhone) {
             // Store E.164 format (+91...) so PhoneInput shows India flag correctly
-            const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+            const formattedPhone = toE164India(phone); // BUG-2026-10-12-002
             setCustomerPhone(formattedPhone);
           }
           // CR Phase-2 — if the guest was auto-populated from a checked-in room,
@@ -354,7 +363,7 @@ const ReviewOrder = () => {
       if (user.phone && !customerPhone) {
         // Store E.164 format (+91...) so PhoneInput shows India flag correctly
         const phone = user.phone;
-        const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^\+?91/, '')}`;
+        const formattedPhone = toE164India(phone); // BUG-2026-10-12-002
         setCustomerPhone(formattedPhone);
       }
       // Set looked up customer from auth user data

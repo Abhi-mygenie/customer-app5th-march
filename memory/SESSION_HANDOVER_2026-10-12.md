@@ -83,3 +83,26 @@ CR-008 code markers:    Lines 41-42, 92, 887-946, 1969-1970 in ReviewOrder.jsx
 | `memory/change_requests/index.yml` | CR-008 status → IMPLEMENTED |
 | `frontend/src/api/services/crmService.js` | Edit 1 |
 | `frontend/src/pages/ReviewOrder.jsx` | Edits 2–5 |
+
+---
+## Addendum — 2026-10-12 (later session)
+
+### CRM CR-119/120/121/122 reply validated
+- All V1–V8 PASS live on preprod r689. Docs: `inbox/VALIDATION_OF_CRM_CR119_CR120_CR121_CR122_2026-10-12.md`, reply draft `inbox/OUTBOUND_TO_CRM_CR119_CR120_CR121_CR122_VALIDATION_RESULTS_2026-10-12.md` (owner to send).
+- New CR-2026-10-12-002 (coupon engine path: order_total, items[], recommended_code silent auto-apply, time-window grey-out) — IA + plan written, GATE HOLD (D-TW design, D-TITLE, B8). Absorbs BUG-2026-10-12-001.
+
+### Planning done (all at gate)
+- CR-2026-10-12-001 (branding) LOW — IA+plan. Owner asked for theme-color planning next (paused, pending).
+- BUG-2026-10-12-003 (loyalty wording) LOW — IA+plan.
+- BUG-2026-10-12-002 — ROOT CAUSE CORRECTED: not react-phone-number-input; it is the ReviewOrder.jsx pre-fill regex. Risk MEDIUM.
+
+### Implemented
+- BUG-2026-10-12-002 — `toE164India()` helper + 3 call sites in ReviewOrder.jsx. Build PASS. Self-test S1–S3 PASS; S4 live 91-number not run (no test number). Status IMPLEMENTED, QA pending. Trap: stale sessionStorage keeps old corrupted value — fresh tab for QA.
+
+### Registry hygiene
+- Fixed pre-existing YAML break in CR-2026-10-11-009 entry (orphan `since:` key) — index.yml parses again.
+
+### Next
+1. Owner: approve QA for BUG-2026-10-12-002 + give a 91-prefixed preprod number.
+2. Owner: open gates for BUG-003, CR-001 (+ theme-color planning), CR-002.
+3. CR-2026-10-11-009 QA still pending — run after CR-002.
