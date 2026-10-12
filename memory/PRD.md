@@ -49,7 +49,8 @@
 - REACT_APP_GOOGLE_MAPS_API_KEY: set
 
 ## Change Management Log
-- 2026-10-12 CR-2026-10-12-003 (Part A, E1–E5) **IMPLEMENTED — awaiting QA**: loyalty earn preview adopts CRM CR-123. `crmGetMaxRedeemable` now sends `coupon_discount`/`points_to_redeem`; preview re-fetches on coupon/points change; all client-side earn maths removed (CRM-authoritative). Files: `crmService.js`, `ReviewOrder.jsx`, `LoyaltyRewardsSection.jsx`. Build clean. QA handover in CR-003 folder. CR-2026-10-12-002 (coupon engine / Part B) remains gated.
+- 2026-10-12 CR-2026-10-12-002 (Part B, B1–B3 + folded CR-2026-10-11-003) **IMPLEMENTED — awaiting QA**: coupon list adopts CRM CR-122 engine path (`order_total` → filtered list + `recommended_code`); validate sends cart `items[]`; silent auto-apply of recommended coupon (loyalty L-A guard → "Best offer" badge); B8 re-validates applied coupon on cart change; discovery strip rebuilt (mystery/disabled/best states, 12-hr time window). Retry place-order now carries `couponDiscount`/`couponTitle`. Supersedes BUG-2026-10-12-001 (BXGY ₹0) and CR-2026-10-11-003. Files: `crmService.js`, `ReviewOrder.jsx`, `CouponDiscoveryList.jsx`+`.css`. Build clean. ⚠ Test-id change: `coupon-list-item-{code}` → `coupon-card-{kind}-{code}`. QA handover in CR-002 folder.
+- 2026-10-12 CR-2026-10-12-003 (Part A, E1–E5) **IMPLEMENTED — awaiting QA**: loyalty earn preview adopts CRM CR-123.
 
 ## Backlog / Next Steps
 - P0: Verify end-to-end login flow (phone → OTP → browse menu → order)

@@ -394,12 +394,12 @@ export const crmGetMaxRedeemable = async (token, billAmount, { couponDiscount = 
  * §4 DB whitespace bug: always trim code before sending.
  * Rate limit: 10/min IP → caller must handle 429.
  */
-export const crmValidateCoupon = async (token, code, orderTotal, channel = 'dine_in', restaurantId = null) => {
+export const crmValidateCoupon = async (token, code, orderTotal, channel = 'dine_in', restaurantId = null, items = []) => {
   const body = {
     code: code.trim(),
     order_total: orderTotal,
     channel,
-    items: [],
+    items, // CR-2026-10-12-002: cart items for requires_cart_validation coupons (CRM CR-122)
   };
   if (!token) {
     // CR-2026-10-11-008: anonymous path — restaurant_id required, no Authorization header
@@ -419,10 +419,12 @@ export const crmValidateCoupon = async (token, code, orderTotal, channel = 'dine
  *   → Returns full personalised list. my_usage_count on every coupon.
  *
  * Rate limit: 10/min anonymous, none authenticated.
+ * order_total → engine path: filtered list + recommended_code/recommended_discount (CR-2026-10-12-002)
  */
-export const crmGetCouponList = async (token, channel = 'dine_in', restaurantId = null) => {
+export const crmGetCouponList = async (token, channel = 'dine_in', restaurantId = null, orderTotal = null) => {
   const params = new URLSearchParams({ channel });
   if (!token && restaurantId) params.append('restaurant_id', String(restaurantId));
+  if (Number.isFinite(orderTotal) && orderTotal > 0) params.append('order_total', String(orderTotal)); // CR-2026-10-12-002: engine path (CRM CR-122)
   const endpoint = `/scan/coupons?${params.toString()}`;
   if (!token) {
     return crmFetch(endpoint, { method: 'GET' });

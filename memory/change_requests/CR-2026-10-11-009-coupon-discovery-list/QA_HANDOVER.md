@@ -26,6 +26,7 @@
 Navigate to /689/review-order (anonymous). Fill name + phone. Coupon section visible.
 Expected: discovery list shows STO-GENERIC-10, STO-GENERIC-MIN, STO-DELIVERY. STO-STANDARD and STO-ONCE NOT shown.
 data-testid: `coupon-discovery-list`, `coupon-list-item-STO-GENERIC-10`
+> ⚠ **SUPERSEDED BY CR-2026-10-12-002 (2026-10-12):** the discovery-list component was rebuilt. The `coupon-list-item-{code}` test id **no longer exists**. New card ids: `coupon-card-normal-{code}` / `coupon-card-mystery-{code}` / `coupon-card-disabled-{code}`, plus `coupon-strip-container`, `coupon-best-offer-badge`, `coupon-auto-applied-cue`. CR-009 must be QA'd together with CR-002 using these new ids.
 
 ### TC-2 — Authenticated, list shows all 5 coupons
 Login as Saurav (9035133228). Go to review order.

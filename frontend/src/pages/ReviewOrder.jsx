@@ -85,6 +85,33 @@ const toE164India = (phone) => {
   return `+91${digits}`;
 };
 
+// CR-2026-10-12-002: CRM /validate items[] shape (food_id|item_id + quantity + unit_price minimum)
+const buildCrmItems = (cartItems) => (cartItems || []).map(ci => ({
+  food_id: String(ci.itemId),
+  item_id: String(ci.itemId),
+  name: ci.item?.name || 'Item',
+  quantity: ci.quantity,
+  unit_price: ci.item?.price || ci.totalPrice / ci.quantity,
+}));
+
+// CR-2026-10-11-008: full CRM error code map · CR-2026-10-12-002: +5 engine-path codes, hoisted for B8 re-validate
+const COUPON_ERROR_MAP = {
+  INVALID_CODE:                  'Invalid coupon code',
+  NOT_FOUND:                     'Invalid coupon code',
+  EXPIRED:                       'This coupon has expired',
+  INACTIVE:                      'This coupon is no longer valid',
+  CUSTOMER_USAGE_LIMIT_REACHED:  "You've already used this coupon the maximum number of times",
+  PER_USER_LIMIT:                "You've already used this coupon the maximum number of times",
+  CUSTOMER_NOT_ELIGIBLE:         'This coupon is not available for your account',
+  MIN_ORDER_NOT_MET:             'Minimum order value not met for this coupon',
+  CHANNEL_NOT_VALID:             'This coupon is not valid for this order type',
+  OUTSIDE_TIME_WINDOW:           'This coupon is only valid during specific hours',
+  CUSTOMER_REQUIRED:             'Enter your phone number to use this coupon',
+  MISSING_ITEMS_FOR_BXGY_COUPON: 'Add the required items to your cart to use this coupon',
+  MISSING_ITEMS_FOR_ITEM_COUPON: 'Add the required items to your cart to use this coupon',
+  NO_ELIGIBLE_BUY_ITEMS_IN_CART: "Your cart doesn't have the items this coupon needs",
+};
+
 const buildPreviousItems = (previousOrderItems, isEditMode) => {
   if (!isEditMode) return [];
   return previousOrderItems.map(item => ({
@@ -206,6 +233,10 @@ const ReviewOrder = () => {
   // CR-2026-10-11-009: coupon discovery list state
   const [couponList, setCouponList] = useState([]);
   const [couponListLoading, setCouponListLoading] = useState(false);
+  const [recommendedCode, setRecommendedCode] = useState(null);   // CR-2026-10-12-002: CRM recommended_code
+  const autoApplyAttempted = useRef(false);                        // CR-2026-10-12-002 D-AUTO: once per mount
+  const autoAppliedCode = useRef(null);                            // CR-2026-10-12-002: for "Best offer applied" cue
+  const lastValidatedSubtotal = useRef(null);                      // CR-2026-10-12-002 B8
   
   // Payment method selection state (FEAT-001)
   const [paymentMethod, setPaymentMethod] = useState('cod'); // 'online' | 'cod' — default COD, user switches to online if Razorpay configured
@@ -406,6 +437,10 @@ const ReviewOrder = () => {
       setCouponError('');
       setCouponList([]);          // CR-2026-10-11-009
       setCouponListLoading(false); // CR-2026-10-11-009
+      setRecommendedCode(null);                  // CR-2026-10-12-002
+      autoApplyAttempted.current = false;        // CR-2026-10-12-002
+      autoAppliedCode.current = null;            // CR-2026-10-12-002
+      lastValidatedSubtotal.current = null;      // CR-2026-10-12-002
       
       // Clear loyalty/points state
       setLoyaltySettings(null);
@@ -612,21 +647,30 @@ const ReviewOrder = () => {
     return () => clearTimeout(timer);
   }, [isAuthenticated, crmToken, subtotal, couponDiscount, isUsingPoints, pointsToRedeem]); // CR-2026-10-12-003: re-fetch on coupon/points change
 
-  // CR-2026-10-11-009: fetch coupon discovery list once on screen open
-  // Re-fetches when crmToken changes (anon → authenticated after two-step flow)
+  // CR-2026-10-11-009: coupon discovery list · CR-2026-10-12-002: engine path — pass order_total, debounce on subtotal,
+  // keep recommended_code; 429 keeps previous list. Re-fetches when crmToken changes (anon → authenticated).
   useEffect(() => {
     if (!showCoupon) return;
+    if (!subtotal || subtotal <= 0) { setCouponList([]); setRecommendedCode(null); return; }
     let cancelled = false;
     setCouponListLoading(true);
     const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
-    crmGetCouponList(crmToken || null, channel, crmToken ? null : numericRestaurantId)
-      .then(data => {
-        if (!cancelled) setCouponList(Array.isArray(data) ? data : (data?.coupons || []));
-      })
-      .catch(() => { if (!cancelled) setCouponList([]); })
-      .finally(() => { if (!cancelled) setCouponListLoading(false); });
-    return () => { cancelled = true; };
-  }, [showCoupon, crmToken, numericRestaurantId, scannedOrderType]); // CR-2026-10-11-009
+    const timer = setTimeout(() => {
+      crmGetCouponList(crmToken || null, channel, crmToken ? null : numericRestaurantId, subtotal)
+        .then(data => {
+          if (cancelled) return;
+          setCouponList(Array.isArray(data) ? data : (data?.coupons || []));
+          setRecommendedCode(Array.isArray(data) ? null : (data?.recommended_code ?? null));
+        })
+        .catch(err => {
+          if (cancelled) return;
+          if (err?.status === 429) return; // rate-limited: keep what we have
+          setCouponList([]); setRecommendedCode(null);
+        })
+        .finally(() => { if (!cancelled) setCouponListLoading(false); });
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [showCoupon, crmToken, numericRestaurantId, scannedOrderType, subtotal]); // CR-2026-10-12-002: +subtotal
   
   // Previous order subtotal (for edit mode)
   const previousSubtotal = isEditMode ? getPreviousOrderTotal() : 0;
@@ -928,24 +972,13 @@ const ReviewOrder = () => {
     if (!codeToUse || isEditMode) return;
     setCouponLoading(true);
     setCouponError('');
-    // CR-2026-10-11-008: full CRM error code map
-    const errorMap = {
-      INVALID_CODE:                 'Invalid coupon code',
-      EXPIRED:                      'This coupon has expired',
-      INACTIVE:                     'This coupon is no longer valid',
-      CUSTOMER_USAGE_LIMIT_REACHED: "You've already used this coupon the maximum number of times",
-      CUSTOMER_NOT_ELIGIBLE:        'This coupon is not available for your account',
-      MIN_ORDER_NOT_MET:            'Minimum order value not met for this coupon',
-      CHANNEL_NOT_VALID:            'This coupon is not valid for this order type',
-      OUTSIDE_TIME_WINDOW:          'This coupon is only valid during specific hours',
-      CUSTOMER_REQUIRED:            'Enter your phone number to use this coupon',
-    };
     const applyValidResult = (data) => {
       setCouponDiscount(data.computed_discount);
       setAppliedCouponCode(data.code);
       setAppliedCouponTitle(data.title || data.code);
       const stackable = data.stackable_with_loyalty !== false;
       setCouponStackable(stackable);
+      lastValidatedSubtotal.current = subtotal; // CR-2026-10-12-002 B8
       // D2=(a): non-stackable coupon auto-removes loyalty points
       if (!stackable && isUsingPoints) {
         handleRemovePoints();
@@ -958,7 +991,7 @@ const ReviewOrder = () => {
       const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
       const activeToken = crmToken || null;
       // CR-2026-10-11-008: pass restaurantId for anonymous path; authenticated path ignores it
-      const data = await crmValidateCoupon(activeToken, codeToUse, subtotal, channel, activeToken ? null : numericRestaurantId); // CR-2026-10-11-009: codeToUse supports tap-to-apply
+      const data = await crmValidateCoupon(activeToken, codeToUse, subtotal, channel, activeToken ? null : numericRestaurantId, buildCrmItems(cartItems)); // CR-2026-10-11-009 · CR-2026-10-12-002: items[]
       if (data?.valid) {
         applyValidResult(data);
       } else if (!activeToken && data?.error?.code === 'CUSTOMER_REQUIRED') {
@@ -967,18 +1000,18 @@ const ReviewOrder = () => {
           const userId = buildUserId(numericRestaurantId);
           const authResult = await crmSkipOtpWithRetry(customerPhone, userId, customerName);
           setCrmAuth(authResult.token, authResult.customer, numericRestaurantId);
-          const step2Data = await crmValidateCoupon(authResult.token, codeToUse, subtotal, channel); // CR-2026-10-11-009
+          const step2Data = await crmValidateCoupon(authResult.token, codeToUse, subtotal, channel, null, buildCrmItems(cartItems)); // CR-2026-10-11-009 · CR-2026-10-12-002: items[]
           if (step2Data?.valid) {
             applyValidResult(step2Data);
           } else {
-            const msg = errorMap[step2Data?.error?.code] || step2Data?.error?.detail || 'Coupon not valid'; // CR-2026-10-11-008: errorMap takes priority over raw CRM detail
+            const msg = COUPON_ERROR_MAP[step2Data?.error?.code] || step2Data?.error?.detail || 'Coupon not valid'; // CR-2026-10-11-008 · CR-2026-10-12-002: map takes priority over raw CRM detail
             setCouponError(msg);
           }
         } catch {
-          setCouponError(errorMap.CUSTOMER_REQUIRED);
+          setCouponError(COUPON_ERROR_MAP.CUSTOMER_REQUIRED);
         }
       } else {
-        const msg = errorMap[data?.error?.code] || data?.error?.detail || 'Coupon not valid'; // CR-2026-10-11-008: errorMap takes priority over raw CRM detail
+        const msg = COUPON_ERROR_MAP[data?.error?.code] || data?.error?.detail || 'Coupon not valid'; // CR-2026-10-11-008 · CR-2026-10-12-002: map takes priority over raw CRM detail
         setCouponError(msg);
       }
     } catch (err) {
@@ -995,6 +1028,8 @@ const ReviewOrder = () => {
     setAppliedCouponTitle('');
     setCouponStackable(true);
     setCouponError('');
+    autoAppliedCode.current = null;            // CR-2026-10-12-002
+    lastValidatedSubtotal.current = null;      // CR-2026-10-12-002
   };
 
   // CR-2026-10-11-009: tap a coupon from discovery list — pre-fill code and apply immediately
@@ -1003,6 +1038,47 @@ const ReviewOrder = () => {
     setCouponError('');
     handleApplyCoupon(code);
   };
+
+  // CR-2026-10-12-002 D-AUTO + D-LOYALTY(L-A): auto-apply CRM recommended coupon once per mount,
+  // unless the diner can redeem points now and the coupon is non-stackable → badge only.
+  useEffect(() => {
+    if (autoApplyAttempted.current || !recommendedCode || isEditMode) return;
+    if (appliedCouponCode || couponCode.trim() || isUsingPoints || couponLoading) return;
+    if (crmToken && maxRedeemableLoading) return;                       // wait for loyalty answer
+    const rec = couponList.find(c => c.code === recommendedCode);
+    if (!rec) return;
+    autoApplyAttempted.current = true;
+    if (maxRedeemable?.ok === true && rec.stackable_with_loyalty === false) return; // L-A: badge instead
+    autoAppliedCode.current = recommendedCode;
+    handleTapCoupon(recommendedCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recommendedCode, couponList, maxRedeemable, maxRedeemableLoading, crmToken]);
+
+  // CR-2026-10-12-002 B8: keep an applied coupon truthful when the cart changes (debounced); remove if it no longer qualifies.
+  useEffect(() => {
+    if (!appliedCouponCode || isEditMode || couponLoading) return;
+    if (lastValidatedSubtotal.current === subtotal) return;
+    const timer = setTimeout(async () => {
+      try {
+        const channel = scannedOrderType === 'dinein' ? 'dine_in' : (scannedOrderType || 'dine_in');
+        const data = await crmValidateCoupon(crmToken || null, appliedCouponCode, subtotal, channel,
+          crmToken ? null : numericRestaurantId, buildCrmItems(cartItems));
+        lastValidatedSubtotal.current = subtotal;
+        if (data?.valid) {
+          setCouponDiscount(data.computed_discount);
+        } else {
+          const why = COUPON_ERROR_MAP[data?.error?.code] || 'no longer valid for this cart';
+          const code = appliedCouponCode;
+          handleRemoveCoupon();
+          toast(`Coupon ${code} removed — ${why}`);
+        }
+      } catch {
+        // network / 429: keep current discount
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal, appliedCouponCode]);
 
   // Handle place order
   const handlePlaceOrder = async () => {
@@ -1672,6 +1748,8 @@ const ReviewOrder = () => {
               tableNumber: retryTableId,
               specialInstructions,
               couponCode: appliedCouponCode,  // CR-2026-10-11-001: send CRM-validated code only, not raw input
+              couponDiscount,                  // CR-2026-10-11-003 (folded into CR-2026-10-12-002)
+              couponTitle: appliedCouponTitle, // CR-2026-10-11-003
               restaurantId,
               orderType: scannedOrderType,
               subtotal,
@@ -1980,8 +2058,13 @@ const ReviewOrder = () => {
                   <div className="price-row price-row-input price-row-discount" data-testid="coupon-applied-row">
                     <div className="price-input-group">
                       <span className="price-input-icon">🏷️</span>
-                      <span className="price-loyalty-text price-loyalty-applied" data-testid="coupon-applied-label">
-                        {appliedCouponCode} — ₹{couponDiscount.toFixed(0)} off
+                      <span style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span className="price-loyalty-text price-loyalty-applied" data-testid="coupon-applied-label">
+                          {appliedCouponCode} — ₹{couponDiscount.toFixed(0)} off
+                        </span>
+                        {autoAppliedCode.current === appliedCouponCode && ( // CR-2026-10-12-002: silent auto-apply cue
+                          <span className="cdl-applied-cue" data-testid="coupon-auto-applied-cue">Best offer applied</span>
+                        )}
                       </span>
                     </div>
                     <button
@@ -2001,6 +2084,7 @@ const ReviewOrder = () => {
                         loading={couponListLoading}
                         onTap={handleTapCoupon}
                         isAuthenticated={isAuthenticated}
+                        recommendedCode={recommendedCode}
                       />
                     )}
                     <div style={{ display: 'flex', width: '100%', gap: 8, alignItems: 'center' }}>

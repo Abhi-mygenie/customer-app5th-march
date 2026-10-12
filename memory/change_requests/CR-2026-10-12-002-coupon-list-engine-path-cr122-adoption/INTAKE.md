@@ -5,7 +5,7 @@
 **Date registered:** 2026-10-12
 **Registered by:** Role 2 — Planning Agent (owner go-ahead 2026-10-12)
 **Source:** CRM reply `memory/inbox/INBOUND_FROM_CRM_CR119_CR120_CR121_CR122_LIVE_PLEASE_VALIDATE_2026-10-12.md` + live validation `memory/inbox/VALIDATION_OF_CRM_CR119_CR120_CR121_CR122_2026-10-12.md`
-**Status:** INTAKE COMPLETE → planning in progress
+**Status:** IMPLEMENTED (Part B, B1–B3 + folded CR-2026-10-11-003) 2026-10-12 — awaiting QA · owner-authorised as Session Part B
 
 ---
 
