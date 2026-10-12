@@ -49,6 +49,10 @@
 - REACT_APP_GOOGLE_MAPS_API_KEY: set
 
 ## Change Management Log
+- 2026-10-12 BUG-2026-10-12-005 **QA_PASS**: fixed Apply-coupon-button crash (`onClick={() => handleApplyCoupon()}` — event was being passed as the coupon code). Verified live: manual apply works, V9 error-map "Invalid coupon code" shows, no crash. (iteration_23)
+- 2026-10-12 BUG-2026-10-12-003 **QA_PASS**: below-min loyalty wording "Earn 36 more points to redeem" verified live with account 9120004531; old "Add ₹X more" gone. (iteration_23)
+- 2026-10-12 QA batch (iteration_22+23): CR-002 Part B, CR-003 Part A, CR-009 (new test-ids), CR-008 skip-OTP — all core cases PASS. Deferred: V8 auto-remove (testability gap, LOW-D). LOW items A–D registered in `_BACKLOG_LOW_2026-10-12.md`. CR-001 branding: accepted dynamic restaurant-name title.
+- 2026-10-12 CR-2026-10-12-002 (Part B) IMPLEMENTED+QA_PASS; CR-2026-10-12-003 (Part A) IMPLEMENTED+QA_PASS.
 - 2026-10-12 CR-2026-10-12-002 (Part B, B1–B3 + folded CR-2026-10-11-003) **IMPLEMENTED — awaiting QA**: coupon list adopts CRM CR-122 engine path (`order_total` → filtered list + `recommended_code`); validate sends cart `items[]`; silent auto-apply of recommended coupon (loyalty L-A guard → "Best offer" badge); B8 re-validates applied coupon on cart change; discovery strip rebuilt (mystery/disabled/best states, 12-hr time window). Retry place-order now carries `couponDiscount`/`couponTitle`. Supersedes BUG-2026-10-12-001 (BXGY ₹0) and CR-2026-10-11-003. Files: `crmService.js`, `ReviewOrder.jsx`, `CouponDiscoveryList.jsx`+`.css`. Build clean. ⚠ Test-id change: `coupon-list-item-{code}` → `coupon-card-{kind}-{code}`. QA handover in CR-002 folder.
 - 2026-10-12 CR-2026-10-12-003 (Part A, E1–E5) **IMPLEMENTED — awaiting QA**: loyalty earn preview adopts CRM CR-123.
 

@@ -1,7 +1,7 @@
 # BUG-2026-10-12-005 — "Apply" coupon button crashes (manual code entry broken)
 
 **Registered:** 2026-10-12 · **Found by:** QA (Role 4), iteration_22.json
-**Severity:** HIGH · **Status:** INTAKE — awaiting Bug-Fix gate approval
+**Severity:** HIGH · **Status:** QA_PASS (iteration_23) 2026-10-12 — fixed & verified live
 **Area:** `frontend/src/pages/ReviewOrder.jsx` → `handleApplyCoupon` + apply button wiring
 
 ## Symptom
