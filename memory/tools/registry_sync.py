@@ -6,7 +6,8 @@ without owner approval (§5). change_requests/README.md is never machine-written
 
     python registry_sync.py bootstrap        # skeleton index.yml, derivable fields only
     python registry_sync.py migrate          # P3: rename fields 18→19, no value change
-    python registry_sync.py audit            # read-only drift / divergence report
+    python registry_sync.py audit            # read-only LOCAL drift / divergence report
+    python registry_sync.py drift            # read-only: diff LIVE Sheet vs index.yml, classify, print
     python registry_sync.py propose          # surface README prose for owner adjudication
     python registry_sync.py sync --dry-run   # build views, dump CSVs, write nothing remote
     python registry_sync.py sync             # push to Sheets, append CHANGELOG
@@ -18,6 +19,11 @@ CR-2026-10-04-006 amendment — changes 1-21 (contract v1.2):
   P1: schema + enum  P2: artefact suffix + truncation  P3: migrate
   P4: layout (22 cols, no banners, Summary last)  P5: 87-row status write
   P6: hard gate dry-run  P7-P10: read-merge-write (Band b, deferrable)
+
+CR-2026-10-12-005 (v1, read-only): adds `drift` — reads the LIVE Sheet (All Items), diffs each
+cell against the index.yml-derived baseline, classifies every edit (ACCEPTED / INFORMATIONAL /
+IGNORED / OUT-OF-SCHEMA) and prints it. Writes NOTHING. The governed write-back loop
+(reverse=PENDING Change Log append, apply=owner-approved write to index.yml) stays DEFERRED.
 """
 import csv
 import json
@@ -105,6 +111,11 @@ HEADERS = [
     "Registered", "Last updated", "Closed", "Related", "Artefacts",
     "ID mentioned in code", "Files", "Notes", "Money path",
 ]
+
+# CR-2026-10-12-005: reverse read-only classification (contract §5 whitelist + §5.6 Assignee)
+REVERSE_ACCEPTED = {"Status", "Registered", "Closed"}   # would flow back (write-loop deferred)
+REVERSE_INFO = {"Assignee"}                             # dashboard-owned, informational only
+REVERSE_NEVER = {"Last updated"}                        # agent-computed-only, never accepted (§5.5)
 
 
 # ---------------------------------------------------------------- P2 helpers
@@ -690,6 +701,98 @@ def push(views):
     print(f"Sheet: https://docs.google.com/spreadsheets/d/{sheet_id}/edit")
 
 
+# ------------------------------------------------- reverse read-only (CR-2026-10-12-005)
+
+# CR-2026-10-12-005: read the live All Items tab (read-only)
+def read_sheet_all_items(token, sheet_id):
+    resp = api("GET", token, f"{sheet_id}/values/{a1('All Items')}")
+    rows = resp.get("values", [])
+    if not rows:
+        return {}, []
+    live_header = [str(c).strip() for c in rows[0]]
+    items = {}
+    for r in rows[1:]:
+        rid = str(r[1]).strip() if len(r) > 1 else ""
+        if not rid:
+            continue
+        items[rid] = {
+            (live_header[i] if i < len(live_header) and live_header[i] else f"col{i}"):
+            (str(r[i]).strip() if i < len(r) else "")
+            for i in range(max(len(live_header), len(r)))
+        }
+    return items, live_header
+
+
+# CR-2026-10-12-005: expected All Items rebuilt from index.yml (authoritative baseline, decision 6)
+def expected_all_items():
+    records = load_index()
+    rows = build_views(records)["All Items"]
+    header = [str(c).strip() for c in rows[0]]
+    items = {}
+    for r in rows[1:]:
+        rid = str(r[1]).strip() if len(r) > 1 else ""
+        if rid:
+            items[rid] = {header[i]: (str(r[i]).strip() if i < len(r) else "")
+                          for i in range(len(header))}
+    return items, header
+
+
+# CR-2026-10-12-005: classify a changed column for the read-only drift report
+def classify_column(col):
+    if col in REVERSE_NEVER:
+        return "IGNORED"          # §5.5 never accepted (agent-computed)
+    if col in REVERSE_ACCEPTED:
+        return "ACCEPTED"         # would flow back (write deferred)
+    if col in REVERSE_INFO:
+        return "INFORMATIONAL"    # Assignee, dashboard-owned
+    if col in HEADERS:
+        return "IGNORED"          # registry-owned agent column
+    return "OUT-OF-SCHEMA"        # new column/header on the sheet
+
+
+# CR-2026-10-12-005: per-cell diff; returns (edits, sheet_only_ids, index_only_ids)
+def diff_all_items(expected, sheet):
+    edits = []
+    for rid in sorted(set(expected) & set(sheet)):
+        exp, got = expected[rid], sheet[rid]
+        cols = list(dict.fromkeys(list(exp.keys()) + list(got.keys())))
+        for col in cols:
+            if col == "ID":
+                continue
+            ev, sv = exp.get(col, ""), got.get(col, "")
+            if ev != sv:
+                edits.append((rid, col, ev, sv, classify_column(col)))
+    sheet_only = sorted(set(sheet) - set(expected))
+    index_only = sorted(set(expected) - set(sheet))
+    return edits, sheet_only, index_only
+
+
+# CR-2026-10-12-005: SHEET DRIFT read-only — read live Sheet, classify, print. Writes NOTHING.
+def drift():
+    token, sheet_id = access_token()
+    sheet, live_header = read_sheet_all_items(token, sheet_id)
+    expected, _ = expected_all_items()
+    edits, sheet_only, index_only = diff_all_items(expected, sheet)
+    labels = {
+        "ACCEPTED": "ACCEPTED (whitelisted; write-back deferred, NOT applied)",
+        "INFORMATIONAL": "INFORMATIONAL (Assignee, dashboard-owned)",
+        "IGNORED": "IGNORED (registry-owned / never-accepted)",
+        "OUT-OF-SCHEMA": "OUT-OF-SCHEMA (new column on the sheet)",
+    }
+    print(f"SHEET DRIFT (live Sheet vs index.yml) — {len(edits)} edited cell(s)\n")
+    for bucket, label in labels.items():
+        rows = [e for e in edits if e[4] == bucket]
+        print(f"{label}: {len(rows)}")
+        for rid, col, ev, sv, _ in rows:
+            print(f"    {rid} | {col}: index='{ev}' -> sheet='{sv}'")
+    print(f"\nMembership: SHEET-ONLY={len(sheet_only)} {sheet_only[:10]} | "
+          f"INDEX-ONLY={len(index_only)} {index_only[:10]}")
+    new_cols = [h for h in live_header if h and h not in HEADERS]
+    if new_cols:
+        print(f"New columns on sheet (out-of-schema): {new_cols}")
+    print("\n(READ-ONLY — nothing written to the Sheet or index.yml. No auto-update.)")
+
+
 # ------------------------------------------------------------ changelog (P6)
 # NOTE: This function writes to CHANGELOG.md (the generator's field-diff log).
 # It is NOT the contract's Change Log tab. See V48 — these must never be merged.
@@ -755,6 +858,8 @@ if __name__ == "__main__":
         migrate()
     elif command == "audit":
         audit()
+    elif command == "drift":
+        drift()
     elif command == "propose":
         propose()
     elif command == "sync":

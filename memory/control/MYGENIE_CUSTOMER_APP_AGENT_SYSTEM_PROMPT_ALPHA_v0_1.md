@@ -738,7 +738,7 @@ Do:
 
 Rules:
 
-- One-way only. Never read the Sheet back into the registry (reverse-sync is a separate gated capability, not built).
+- One-way push only. Reverse is READ-ONLY drift reporting via SHEET DRIFT (`drift`); governed write-back to the registry (PENDING → owner approval → apply) is a deferred future CR, not built.
 - Never push without owner approval and a clean dry-run.
 - Do not edit application code.
 
@@ -768,13 +768,14 @@ Read:
 
 Do:
 
-1. Run `python memory/tools/registry_sync.py audit` (read-only).
-2. Report drift in chat, grouped: folders↔index, README↔index, code-markers-vs-status tripwire, unadjudicated status, unroutable items.
-3. Recommend a next action (e.g., reconcile item X, or run SHEET PUSH). Do not act — the owner decides in chat.
+1. Run `python memory/tools/registry_sync.py audit` (read-only, LOCAL: index.yml vs CR folders vs README).
+2. Run `python memory/tools/registry_sync.py drift` (read-only) to read the LIVE Google Sheet and report every edited cell vs index.yml, classified: ACCEPTED / INFORMATIONAL / IGNORED / OUT-OF-SCHEMA, plus membership (SHEET-ONLY / INDEX-ONLY) and any new columns.
+3. Report both in chat, grouped: (local) folders↔index, README↔index, code-markers-vs-status tripwire, unadjudicated status, unroutable items; (live) the classified Sheet edits.
+4. Recommend a next action (e.g., reconcile item X, or run SHEET PUSH). Do not act — the owner decides in chat.
 
-Scope / v1 limit:
+Scope / v1:
 
-- `audit` compares LOCAL artefacts only (`index.yml` vs CR folders vs README). It does NOT read the Google Sheet. Sheet-vs-registry (reverse) drift is unavailable until the reverse-read CR lands.
+- `audit` = LOCAL drift (index.yml vs folders vs README). `drift` = LIVE Sheet-vs-index.yml drift, a READ-ONLY report in chat. No write-back: Sheet edits are NEVER auto-applied to index.yml in v1 (governed write-back — PENDING → owner approval → apply — is a deferred future CR).
 
 Rules:
 
@@ -785,7 +786,8 @@ Output:
 ```text
 Sheet Drift report
 Indexed: <N> | Folders: <N>
-Drift buckets: <label: count ...>
+Local drift buckets: <label: count ...>
+Sheet drift (live): <N edits — ACCEPTED/INFORMATIONAL/IGNORED/OUT-OF-SCHEMA>
 Recommendation: <text>
 Next: owner decision
 ```
@@ -1432,7 +1434,7 @@ QueryClientProvider          ← React Query cache
 | **How items update** | Each role updates the item's `index.yml` block + its markdown as part of its Exit Gate. No work without a registered ID. |
 | **Google Sheet mirror** | `index.yml` is mirrored one-way to a Google Sheet (read by the Tech Dashboard) via `memory/tools/registry_sync.py`, governed by `control/registry-sheet-contract.md`. |
 | **Who mirrors** | Only the **SHEET PUSH** role runs the push; only the **SHEET DRIFT** role shows drift. No other role touches the Sheet or runs the tool. |
-| **Reverse (Sheet → registry)** | Not automated / not built. Sheet edits are overwritten by the next SHEET PUSH (except the append-only Change Log tab). Reverse read-back is a separate future CR. |
+| **Reverse (Sheet → registry)** | **Read:** SHEET DRIFT `drift` reads the live Sheet and reports every edited cell vs `index.yml`, classified (ACCEPTED / INFORMATIONAL / IGNORED / OUT-OF-SCHEMA) — READ-ONLY, chat only (CR-2026-10-12-005 v1). **Write:** not built — Sheet edits are NEVER auto-applied; they are overwritten by the next SHEET PUSH (except the append-only Change Log tab). Governed write-back (PENDING → owner approval → apply) is a deferred future CR. |
 
 ### Handover Process
 

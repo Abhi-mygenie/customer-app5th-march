@@ -2531,30 +2531,30 @@
   type: CR
   title: Reverse Sheet→registry read — SHEET DRIFT reads the live Google Sheet, surfaces ALL owner
     edits (classified), and a governed apply loop flows approved edits back into index.yml
-  status: PLANNING
-  status_note: 'PLANNING COMPLETE 2026-10-12 (Role 2). Owner ruled v1 = READ-ONLY, no auto-update, just
-    show in chat what changed (DECISIONS.md). Scope v1: registry_sync.py gains read-only `drift` (read
-    LIVE All Items → diff vs index.yml-derived baseline → classify every edited cell ACCEPTED /
-    INFORMATIONAL / IGNORED / OUT-OF-SCHEMA + membership; writes NOTHING); control prompt ROLE 14 gains a
-    drift step + drops local-only caveat; ROLE 13/§10 get a short reverse-is-read-only note. DEFERRED to a
-    future CR: reverse (PENDING Change Log) + apply (owner-approved write to index.yml) + any whitelist/
-    contract change. Line-by-line plan + 12-check verification matrix ready. AWAITING owner gate approval to
-    start Implementation.'
+  status: IMPLEMENTED
+  status_note: 'IMPLEMENTED 2026-10-12 (Role 3). v1 READ-ONLY per owner ruling. registry_sync.py gained
+    read-only `drift`: reads LIVE All Items → diffs vs index.yml-derived baseline (build_views) → classifies
+    every edited cell ACCEPTED/INFORMATIONAL/IGNORED/OUT-OF-SCHEMA + membership + new columns; writes NOTHING.
+    New fns read_sheet_all_items/expected_all_items/classify_column/diff_all_items/drift + __main__ dispatch,
+    all marked # CR-2026-10-12-005. Control prompt ROLE 14 gained a drift step (local-only caveat replaced),
+    ROLE 13 rule + §10 reverse row updated. Self-test V1-V12 + regression PASS; live drift exit 0 (13 Priority
+    edits→IGNORED, Release week surfaced, 0 ACCEPTED, new CR INDEX-ONLY). testing_agent N/A (CLI+OAuth, no app
+    surface). DEFERRED: reverse/apply write-back + whitelist/contract change → future CR. Probes to delete
+    after QA sign-off.'
   priority: P2
   risk: MEDIUM
-  owner_action: Approve the v1 read-only plan to open the Implementation gate (write-back loop deferred)
+  owner_action: Smoke-check `python memory/tools/registry_sync.py drift`; then approve probe deletion (R2)
   blocked_on: []
   sprint: null
-  files: memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md (ROLE 14 drift step; ROLE 13/§10 note) ·
-    memory/tools/registry_sync.py (read-only drift; reverse/apply DEFERRED) · (reference, delete after QA)
-    memory/tools/reverse_drift_probe.py · memory/tools/reverse_drift_snapshot.py
-  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · DECISIONS
+  files: memory/tools/registry_sync.py (read-only drift + 4 helpers + __main__) ·
+    memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md (ROLE 14 drift step; ROLE 13 rule; §10)
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · DECISIONS · QA_HANDOVER
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related:
   - CR-2026-10-12-004
   - CR-2026-10-04-006
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
   notes: 'Deferred reverse-read from CR-2026-10-12-004. Design/demo source:
