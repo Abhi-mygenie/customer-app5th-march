@@ -7,7 +7,15 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from registry_sync import access_token, api, a1, HEADERS
 
 CSV_DIR = pathlib.Path(__file__).parent / ".registry_csv"
-TABS = ["All Items", "Intake", "Planning", "Implemented", "QA", "Smoke", "Closed", "Blockers", "Summary"]
+TABS = ["All Items", "Intake", "Planning", "Implemented", "QA", "Smoke", "Closed", "Blockers", "Summary", "Change Log"]
+ACCEPTED = {"Status", "Registered", "Closed"}      # reverse-sync whitelist (contract)
+INFO = {"Assignee"}                                  # dashboard-owned / informational
+
+def classify(col):
+    if col in ACCEPTED: return "ACCEPTED (would flow back)"
+    if col in INFO: return "INFO (dashboard-owned)"
+    if col.startswith("col"): return "OUT-OF-SCHEMA (new column)"
+    return "IGNORED (registry-owned, not reverse-accepted)"
 
 def norm(v): return (str(v).strip() if v is not None else "")
 
@@ -36,8 +44,8 @@ def main():
                     diffs.append((rid, col, sv, lv))
         if diffs:
             print(f"\n[{tab}] {len(diffs)} changed cell(s):")
-            for rid, col, sv, lv in diffs[:40]:
-                print(f"    {rid} | {col}: pushed='{sv}'  ->  live='{lv}'")
+            for rid, col, sv, lv in diffs[:200]:
+                print(f"    {rid} | {col}: pushed='{sv}'  ->  live='{lv}'   [{classify(col)}]")
             total += len(diffs)
     print(f"\nTOTAL changed cells across tabs: {total}")
     print("(READ-ONLY — nothing written)")
