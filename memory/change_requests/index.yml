@@ -2003,7 +2003,7 @@
   type: CR
   title: POS-only coupon bypasses CRM validation — couponCode vs appliedCouponCode mismatch
     sends unvalidated code to POS causing order_amount mismatch
-  status: QA_PASS
+  status: QA
   status_note: 'QA PASS iteration_18. 3-line fix in ReviewOrder.jsx. AWAITING OWNER
     APPROVAL to implement.'
   priority: P0
@@ -2028,7 +2028,7 @@
   type: CR
   title: Retry placeOrder call (401 token refresh path) missing couponDiscount and
     couponTitle — discount lost on token-expiry retry
-  status: SUPERSEDED
+  status: DUPLICATE
   status_note: 'SUPERSEDED 2026-10-12 (owner ruling: fold) — absorbed into CR-2026-10-12-002 IMPLEMENTATION_PLAN §14 (retry placeOrder adds couponDiscount + couponTitle). Close when CR-2026-10-12-002 is IMPLEMENTED.'
   priority: P2
   risk: MEDIUM
@@ -2136,7 +2136,7 @@
   risk: null
   owner_action: null
   blocked_on:
-  - party: internal
+  - party: INTERNAL
     ref: CR-2026-10-11-001 must ship first
     since: '2026-10-11'
   sprint: null
@@ -2155,7 +2155,7 @@
   type: CR
   title: Customer name prefill — spread fix + crmSkipOtp name param + read name from
     response + crmUpdateProfile + AuthContext defensive merge
-  status: QA_PASS
+  status: QA
   status_note: 'Implemented + testing agent PASS (iteration_19.json). New customer
     TestRavi name pre-fill confirmed. All 6 code items verified. Build clean.
     Returning customer inconclusive due to CRM 429 rate-limit in test env (not a bug).'
@@ -2207,7 +2207,7 @@
   type: CR
   title: Anonymous coupon validation — two-step flow (no-token validate + CUSTOMER_REQUIRED
     prompt + re-validate after skip-otp) + all 8 error codes wired to specific messages
-  status: QA_PASS
+  status: QA
   status_note: QA PASS 2026-10-12. 11/13 TCs PASS. TC-2 BLOCKED (preprod ordering
     unavailable — env constraint, not code). TC-13 PARTIAL (CRM coupon config issue —
     STO-GENERIC-10 stackable_with_loyalty=false on preprod, should be true; code correct).
@@ -2290,11 +2290,11 @@
   type: CR
   title: Coupon list engine path — adopt CRM CR-122 (order_total filter, items[] on
     validate, recommended_code silent auto-apply, time-window grey-out). Absorbs BUG-2026-10-12-001
-  status: IMPACT_ANALYSIS
+  status: QA
   status_note: 'PLANNING COMPLETE Rev 3 2026-10-12 — edit-by-edit plan (B1a–B2k, old→new code), reference component + CSS in plan_assets/ (helpers verified in node). Absorbs CR-2026-10-11-003 (§B2k). Session order: BUG-003 → CR-003 (Part A) → CR-002 (Part B). GATE HOLD — awaiting joint approval.'
   priority: P1
   risk: MEDIUM
-  owner_action: Approve IMPLEMENTATION_PLAN Rev 2 to open gate
+  owner_action: QA passed iteration_22/23 (core green; V8 auto-remove deferred LOW-D)
   blocked_on: []
   sprint: null
   files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx ·
@@ -2321,11 +2321,11 @@
   type: CR
   title: Loyalty earn preview — adopt CRM CR-123 (send coupon_discount + points_to_redeem
     to /scan/max-redeemable; re-fetch on coupon/points change; drop post-tax client estimate)
-  status: IMPACT_ANALYSIS
+  status: QA
   status_note: 'PLANNING COMPLETE Rev 2 2026-10-12 — edit-by-edit (E1–E5, old→new code). Executes as Session Part A before CR-002. GATE HOLD — joint approval with CR-002.'
   priority: P1
   risk: MEDIUM
-  owner_action: Approve together with CR-2026-10-12-002
+  owner_action: QA passed iteration_22/23
   blocked_on: []
   sprint: null
   files: frontend/src/api/services/crmService.js · frontend/src/pages/ReviewOrder.jsx ·
@@ -2426,7 +2426,7 @@
   type: BUG
   title: Loyalty "Add ₹X more to redeem" message misleading — never updates when cart
     quantity changes, wrong unit symbol
-  status: IMPLEMENTED
+  status: QA
   status_note: 'FIXED 2026-10-12 (Role 5) — ReviewOrder.jsx L2085: "Add ₹X more to redeem" → "Earn X more points to redeem". Root cause PLAN_GAP. Build PASS. Live render BLOCKED (POS preprod down) — QA visual re-test pending in combined run.'
   priority: P2
   risk: LOW
@@ -2477,3 +2477,52 @@
     fixes stale addendum §10. Tool reality: sync=one-way overwrite (Change Log append-only); audit=LOCAL
     only (does NOT read Sheet). Creds absent in pod (need sheets_token.json + GOOGLE_OAUTH_*/GOOGLE_SHEET_ID).
     index.yml currently behind markdown (BUG-005/006 + recent transitions not yet mirrored).'
+
+- id: BUG-2026-10-12-005
+  type: BUG
+  title: Apply-coupon button crashed (manual coupon entry broken) — React event passed as overrideCode
+  status: QA
+  status_note: 'QA_PASS iteration_23 2026-10-12. Fixed in ReviewOrder.jsx: onClick={() => handleApplyCoupon()}
+    (the click event was being passed as the coupon code → .trim() threw). Verified: manual apply works, V9
+    error-map message shows, no crash. Pre-existing (introduced by CR-2026-10-11-009).'
+  priority: P1
+  risk: LOW
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/ReviewOrder.jsx (apply button onClick + handleApplyCoupon)
+  artefacts: INTAKE_RCA · BUG_FIX_REPORT · QA (iteration_23)
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related:
+  - CR-2026-10-11-009
+  - CR-2026-10-12-002
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Found during coupon+loyalty QA batch (iteration_22). Docs in change_requests/BUG-2026-10-12-005-apply-coupon-button-crash/.'
+
+- id: BUG-2026-10-12-006
+  type: BUG
+  title: Coupon discovery strip overflowed the screen on mobile (edge bleed + sideways page drag)
+  status: QA
+  status_note: 'QA_PASS iteration_24 2026-10-12 (390px). CSS-only fix in CouponDiscoveryList.css
+    (.cdl-wrap width:100%; .cdl-strip min-width:0; max-width:100%). Root cause: strip wrapper inherited
+    align-items:center + had no width bound → grew to its 1113px content width. Verified: no page overflow,
+    strip contained and scrolls internally.'
+  priority: P2
+  risk: LOW
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/components/CouponDiscoveryList/CouponDiscoveryList.css
+  artefacts: INTAKE_RCA · QA_HANDOVER (iteration_24)
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related:
+  - CR-2026-10-12-002
+  - CR-2026-10-11-009
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: '2nd owner report; mobile. Docs in change_requests/BUG-2026-10-12-006-coupon-strip-overflows-mobile/.'
