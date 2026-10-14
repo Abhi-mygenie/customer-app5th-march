@@ -71,6 +71,11 @@ Out of scope (own future CRs):
    first SHEET PUSH run.
 3. Confirm MEDIUM risk (external shared-artefact overwrite).
 
+## Decisions locked (2026-10-12)
+1. Role names: **Sheet Push** and **Sheet Drift** (confirmed).
+2. `index.yml` reconcile: handled **per gate rules** — a Sheet-Push-time task, not a Planning side-effect.
+3. Risk: **MEDIUM** confirmed.
+
 ## Next
-Planning (impact analysis + implementation plan for the control-prompt edits). **Never code during
-Intake — none written.**
+Intake CLOSED → Planning complete (IMPACT_ANALYSIS.md + IMPLEMENTATION_PLAN.md written). Awaiting owner
+approval to implement. **No code written during Intake.**

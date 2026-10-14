@@ -2452,18 +2452,19 @@
   type: CR
   title: Registry↔Google Sheet — two owner-invoked roles SHEET PUSH (registry→Sheet, one-way)
     and SHEET DRIFT (read-only drift view); no real-time/session-start sync; reverse read deferred
-  status: INTAKE
-  status_note: 'INTAKE 2026-10-12. Owner decision captured in inbox/DECISION_registry-sheet-roles_2026-10-12.md.
-    v1 = SHEET PUSH (sync, one-way, creds-gated) + SHEET DRIFT (audit = LOCAL drift only). No cron/preamble.
-    Sheet→registry reverse-read is a separate future CR (tool P7–P10 not built). Next: Planning.'
+  status: PLANNING
+  status_note: 'PLANNING 2026-10-12 — IMPACT_ANALYSIS + IMPLEMENTATION_PLAN (edit-by-edit for control prompt §3 role tree,
+    §8 ROLE 13 SHEET PUSH + ROLE 14 SHEET DRIFT, §10 addendum rewrite) written. Owner decisions locked: names Sheet Push/Sheet
+    Drift; index.yml reconcile is a Sheet-Push-time task (per gate rules); risk MEDIUM. GATE HOLD — awaiting owner approval to
+    implement. Reverse Sheet-read deferred to its own CR.'
   priority: P2
   risk: MEDIUM
-  owner_action: Approve scope to open Planning gate
+  owner_action: Approve IMPLEMENTATION_PLAN to open Implementation gate
   blocked_on: []
   sprint: null
-  files: memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md (§3 role tree + §8 playbooks +
-    §10 addendum fix) · memory/change_requests/index.yml (source-of-truth declaration) · (reuse) memory/tools/registry_sync.py
-  artefacts: INTAKE
+  files: memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md (§3 role tree + §8 ROLE 13 SHEET PUSH + ROLE 14
+    SHEET DRIFT + §10 addendum rewrite) · (reuse, no change) memory/tools/registry_sync.py
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related:
