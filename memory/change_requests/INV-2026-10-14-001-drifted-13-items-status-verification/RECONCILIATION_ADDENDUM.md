@@ -54,6 +54,23 @@ Recommend a single SMOKE session to formally close the SMOKE ones.
 - **Architecture Correction Programme umbrella** (= CR-2026-09-12-001) — sequences B1/B2/B3 architecture children; still open.
 - **Registry hygiene** — set real Priority on these items in `index.yml`; reconcile `INV-2026-10-09-002` folder + README lag (from SHEET DRIFT).
 
-## C. Notes
+## C. READINESS — which of the 13 can be SUMMONED (started) now
+"Summonable" = no blocker, no pending prerequisite/decision → can go Intake→Planning→Impl immediately.
+**None are DONE / closeable** (code trace confirms each is still open; only BUG-09-10-001 has partial shipped code for the old local-disk scope).
+
+| Readiness | Items | Note |
+|---|---|---|
+| ✅ **READY NOW** | CR-2026-09-08-001 · CR-2026-07-04-003 · CR-2026-07-03-012 | self-contained; 09-08-001 one-line; 07-04-003 prereqs met; 07-03-012 patches already drafted in `memory/v2/` |
+| ⚠️ **READY after 2 owner inputs** | CR-2026-07-04-004 | needs retention (30d?) + rate-limit (5/IP/min?) decisions |
+| ⛔ **BLOCKED / sequenced / ops** | CR-2026-09-12-006 (needs CR-09-12-005 contract snapshots) · CR-09-12-007 (NEW-2+NEW-3) · CR-09-12-008 (NEW-2) · CR-09-12-010 (G0.7, after 006) · CR-2026-07-03-011 (idempotency INV + endpoint sign-off, HIGH risk) · CR-2026-07-03-008 (ops/DB) · CR-2026-07-03-009 (ops probe) · BUG-2026-09-10-001 (POS reply) · CR-2026-09-12-001 (umbrella, orchestrates children) | |
+
+## D. BATCHES for next session (the 13 + adjacent items found during reconciliation)
+- **SECURITY batch:** CR-07-03-011 (POS proxy) · CR-09-12-008 (route guard) · CR-07-03-012 (cred scrub + CI lint) · *(adjacent)* CR-10-04-001 (table-config CRM token pin) · *(new)* CRM-429 identity-downgrade
+- **DATA batch:** CR-07-03-008 (prod DB cleanup) · CR-09-12-010 (config defaults SSOT) · CR-07-04-004 (telemetry) · *(adjacent)* BUG-10-11-005 (duplicate coupon)
+- **CLEANUP batch:** dead `/api/docs/*` delete (slice of CR-09-12-006) · CR-09-12-006 (backend split) · CR-09-12-007 (FE facade) · CR-09-12-009 (478/pos_id/+91 hardcoding) · CR-07-04-003 (menu empty-state + fetch swaps) · CR-09-08-001 (MenuItem guard) · CR-07-03-009 (observability)
+- **Governance:** CR-09-12-001 umbrella sequences the architecture children (006/007/008/010/011); close the 8 recent SMOKE items; registry-hygiene (set real Priority, reconcile INV-2026-10-09-002 folder + README lag).
+
+## E. Notes
 - The recent batch closed the **CRM axis** (dead CRM calls, api_key leak, feedback schema, pre-login lookups) and **CORS/rate-limit**. It did **not** touch the **POS axis** (CR-011) or the FE/BE structural work.
 - Nothing here is money-path-breaking today; the sharpest live risk is the **429 identity downgrade** (security + revenue via coupon guard).
+- This INV (INV-2026-10-14-001) is **not yet registered in `index.yml`** (read-only role). Register it at next session's intake if you want it tracked.
