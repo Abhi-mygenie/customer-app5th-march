@@ -2526,3 +2526,36 @@
   money_path: false
   closed: null
   notes: '2nd owner report; mobile. Docs in change_requests/BUG-2026-10-12-006-coupon-strip-overflows-mobile/.'
+
+- id: CR-2026-10-12-005
+  type: CR
+  title: Reverse Sheet→registry read — SHEET DRIFT reads the live Google Sheet, surfaces ALL owner
+    edits (classified), and a governed apply loop flows approved edits back into index.yml
+  status: INTAKE
+  status_note: 'INTAKE 2026-10-12 (Role 1). Deferred reverse-read stream from CR-2026-10-12-004. ONE CR,
+    TWO streams: (a) control prompt ROLE 14 SHEET DRIFT read-the-Sheet + ROLE 13/§10 governed apply loop
+    wording; (b) registry_sync.py read-merge-write (read Sheet → diff → PENDING Change Log rows → owner
+    approve → apply whitelisted cols → reconcile). Reporting: surface ALL edits classified
+    ACCEPTED/INFORMATIONAL/IGNORED/OUT-OF-SCHEMA. Read-only demo proved 14 live edits detected (13 Priority→P0
+    IGNORED, 1 new column OUT-OF-SCHEMA, 0 reverse-accepted). Design decisions deferred to Planning.'
+  priority: P2
+  risk: MEDIUM
+  owner_action: Review Intake; approve move to PLANNING (and the deferred design decisions listed in INTAKE §6)
+  blocked_on: []
+  sprint: null
+  files: memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md (ROLE 13/14 + §10) ·
+    memory/tools/registry_sync.py (read-merge-write) · (reference, to fold-in then delete)
+    memory/tools/reverse_drift_probe.py · memory/tools/reverse_drift_snapshot.py
+  artefacts: INTAKE
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related:
+  - CR-2026-10-12-004
+  - CR-2026-10-04-006
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Deferred reverse-read from CR-2026-10-12-004. Design/demo source:
+    memory/inbox/REVERSE_SHEET_READ_design-and-demo_2026-10-12.md. Out of scope (separate cleanup): backfill
+    13 empty-Priority items, INV-2026-10-09-002 folder reconcile, README lag. Docs in
+    change_requests/CR-2026-10-12-005-reverse-sheet-read-governed-apply/INTAKE.md.'
