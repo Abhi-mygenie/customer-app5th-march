@@ -1,132 +1,218 @@
-# IMPLEMENTATION PLAN — CR-2026-10-12-005
+# IMPLEMENTATION PLAN — CR-2026-10-12-005 (v1, read-only)
 
-**Title:** Reverse Sheet→registry read (SHEET DRIFT reads the live Sheet + governed apply loop)
+**Title:** Reverse Sheet→registry read — SHEET DRIFT reads the live Sheet and reports ALL edits in chat
 **Role:** PLANNING · **Risk:** MEDIUM · **Priority:** P2 · **Date:** 2026-10-12
-**Prereq gate:** OWNER APPROVAL of this plan + the 7 decisions in IMPACT_ANALYSIS §6.
-**Scope lock:** two files change in code terms (`registry_sync.py`, control prompt) + `index.yml` block + probe deletion at end. No app source. No column-schema or contract change (unless owner picks decision 1/2 → separate gate).
+**Owner ruling (DECISIONS.md):** v1 = **READ-ONLY. No auto-update. Show in chat what changed.**
+No write-back to `index.yml`, no Sheet writes, no Change Log rows. `reverse`/`apply` write-loop **DEFERRED**.
 
-> This plan assumes the IMPACT_ANALYSIS §6 **recommended defaults** (3-column whitelist, surface-all-classified, targeted index edits, rebuilt-from-index baseline, owner-invoked). If the owner overrides any, the affected steps below are annotated "[decision N]".
-
----
-
-## STREAM 1 — TOOL (`memory/tools/registry_sync.py`)
-
-Implements the tool's own reserved **P7–P10 (read-merge-write)**. All new code reuses existing helpers (`access_token`, `api`, `a1`, `HEADERS`, `load_index`, `build_views`, `CHANGELOG`-style append). No edits to `build_views`, `push`, `row_for`, or the schema constants.
-
-### T1 — Read the live Sheet (P7a)
-Add `read_sheet_all_items(token, sheet_id) -> dict[rid] = {header: value}`:
-- `GET {sheet_id}/values/{a1('All Items')}` (same call the probe uses).
-- Row 0 = live header list (capture it — needed for OUT-OF-SCHEMA column detection).
-- For each data row, map by **position** to `HEADERS`; key by the `ID` column (index 1). Preserve any extra trailing columns beyond the 22 known headers as `col<N>` / their live header text.
-- Return `(sheet_items, live_header)`.
-
-### T2 — Build the expected view from index.yml (P7b)
-- `records = load_index()`; `expected_rows = build_views(records)["All Items"]` (header + rows).
-- Convert to `expected_items[rid] = {HEADERS[i]: cell}` using the same positional mapping. This is the authoritative baseline [decision 6].
-
-### T3 — Diff + classify every changed cell (P8a)
-Add `diff_all_items(expected_items, sheet_items, live_header) -> list[Edit]` where `Edit = (rid, column, registry_value, sheet_value, classification)`:
-- For every rid present in both: compare each of the 22 columns; emit an Edit for any difference.
-- Classification function (fold in from `reverse_drift_snapshot.classify`):
-  - `ACCEPTED` → column in `{Status, Registered, Closed}` (whitelist) [decision 1].
-  - `INFORMATIONAL` → column == `Assignee` (dashboard-owned; never read into registry — contract §5.6; report only).
-  - `IGNORED` → any other known agent-owned column (e.g. Priority, Risk, Title…).
-  - `OUT-OF-SCHEMA` → a live header not in `HEADERS` (e.g. "Release week") [decision 2].
-- Also emit membership edits: rid only on Sheet (`SHEET-ONLY`), rid only in index (`INDEX-ONLY`).
-- **Exclusions (contract §5):** never emit `Last updated` as ACCEPTED (agent-computed-only); Assignee is INFORMATIONAL only.
-
-### T4 — `drift` subcommand — SHEET DRIFT read-only report (P8b)
-Add CLI `python registry_sync.py drift`:
-- Runs T1–T3, prints **every** edit grouped by classification with counts (ALL edits surfaced, per owner instruction) [decision 3]:
-  ```
-  SHEET DRIFT (live Sheet vs index.yml)
-  ACCEPTED (would flow back): N
-      <rid> | <col>: registry='..' -> sheet='..'
-  INFORMATIONAL (Assignee, dashboard-owned): N
-  IGNORED (registry-owned, not reverse-accepted): N
-  OUT-OF-SCHEMA (new column/header): N
-  Membership: SHEET-ONLY=N INDEX-ONLY=N
-  TOTAL edits: N
-  ```
-- **Writes nothing.** This is the command ROLE 14 invokes.
-
-### T5 — `reverse --dry-run` / `reverse` — governed apply loop (P9)
-Add CLI `python registry_sync.py reverse [--dry-run]`:
-1. Runs T1–T3.
-2. For each **ACCEPTED** edit, append one **PENDING** row to the **Change Log tab** (8 cols per contract §5): `Logged at · ID · Column · Old value (registry) · New value (sheet) · Decision=PENDING · Decided at= · Note`. Use `values:append` on `'Change Log'` (never clear it). [decision 3: PENDING rows only for ACCEPTED].
-3. IGNORED / OUT-OF-SCHEMA / INFORMATIONAL edits are **reported but not written** to the Change Log (keeps it free of never-appliable rows); they are shown in the console summary with their classification.
-4. `--dry-run` prints what would be appended and writes nothing.
-5. **No write to `index.yml` in this step** — apply happens only after owner approval (T6).
-
-### T6 — Apply approved rows (P10)
-Add CLI `python registry_sync.py apply`:
-1. Read the Change Log tab; select rows with `Decision == APPROVED` (owner sets this in chat → agent writes APPROVED, or owner types it in the cell — per contract D-A7, chat approval is SO's choice).
-2. For each approved row, validate: column ∈ whitelist; if column == Status, value ∈ `STATUSES` else REJECT with note "invalid enum" [decision 5].
-3. Apply via **targeted edit** to `index.yml` [decision 4]: locate the item block by `- id: <rid>` and replace only the single field line (`status:` / `registered:` / `closed:`), preserving all other lines, comments, ordering, and block spacing. Never rewrite the whole file.
-4. Also bump that item's `last_updated` to today (agent-computed) and mark the Change Log row `APPLIED` with `Decided at`.
-5. Rows failing validation → mark `REJECTED` with reason; their sheet cell is reverted to the registry value on the next `sync`.
-6. Conflict rule: registry wins unless the row is owner-APPROVED (contract §5.4).
-
-### T7 — Docstring + help
-Update the module docstring: move P7–P10 from "deferrable" to implemented; document `drift`, `reverse`, `apply`. Wire the three new commands into `__main__`.
+**Scope lock (v1):**
+- CHANGE: `memory/tools/registry_sync.py` (add read-only `drift`) · control prompt ROLE 14 (+ small ROLE 13/§10 note) · `index.yml` (this item).
+- DO NOT TOUCH: `frontend/**`, `backend/**`, `build_views`/`push`/`row_for`/schema constants, contract, `.env`, OAuth token, Change Log tab, `index.yml` data of other items.
+- DEFER: `reverse` (PENDING append) + `apply` (write to index) + any whitelist/contract change → future CR.
 
 ---
 
-## STREAM 2 — CONTROL PROMPT (`...AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md`)
+## STREAM 1 — TOOL: `memory/tools/registry_sync.py` (read-only `drift`)
 
-### C1 — ROLE 14 (SHEET DRIFT) upgrade
-- Add a step: *"Run `python memory/tools/registry_sync.py drift` (read-only) to read the live Sheet and report Sheet-vs-registry drift, classified (ACCEPTED / INFORMATIONAL / IGNORED / OUT-OF-SCHEMA) + membership."*
-- Keep the existing local `audit` step (still useful for folders↔index↔README).
-- **Remove** the "Scope / v1 limit … does NOT read the Google Sheet" caveat; replace with the new two-source capability (local `audit` + live `drift`).
-- Keep "Read-only. Never write `index.yml`, never push, never edit code."
+All additions **reuse** existing helpers: `access_token()` (L582), `api()` (L602), `a1()` (L611),
+`HEADERS` (L102-107), `load_index()` (L303), `build_views()` (L506). Nothing existing is modified except
+the docstring and the `__main__` dispatch.
 
-### C2 — ROLE 13 (SHEET PUSH) + §10 governed apply loop
-- ROLE 13: add a note that the governed **reverse apply loop** (`reverse` → owner approval → `apply`) is the sanctioned path for Sheet→registry, owner-gated, whitelist = {Status, Registered, Closed}; `reverse`/`apply` are run only under an owner-approved SHEET DRIFT/PUSH session.
-- §10 addendum "Reverse (Sheet → registry)" row: change from "Not automated / not built" to a short description of the governed loop (diff → PENDING Change Log rows → owner approval → apply whitelisted columns), citing contract §5 and the 3-column whitelist. Note that non-whitelisted edits are reported but overwritten on next push.
+### T1 — Docstring: promote the read-only reverse command (edit L7-21)
+In the module docstring command list (currently lines 7-13), add one line under `audit`:
+```
+    python registry_sync.py drift           # read-only: diff LIVE Sheet vs index.yml, classify, print
+```
+In the P-note block (lines 17-21), change the `P7-P10` line to record that **v1 ships the read-only
+drift report; the governed write-back (PENDING→approve→apply) remains deferred**.
+
+### T2 — Classification constants (insert after HEADERS, ~L108)
+Add, with a `# CR-2026-10-12-005:` marker:
+```python
+# CR-2026-10-12-005: reverse read-only classification (contract §5 whitelist + §5.6 Assignee)
+REVERSE_ACCEPTED = {"Status", "Registered", "Closed"}   # would flow back (write-loop deferred)
+REVERSE_INFO     = {"Assignee"}                          # dashboard-owned, informational only
+REVERSE_NEVER    = {"Last updated"}                      # agent-computed-only, never accepted (§5.5)
+```
+
+### T3 — `read_sheet_all_items(token, sheet_id)` (new fn, place in the push/read area ~after L690)
+```python
+# CR-2026-10-12-005: read the live All Items tab (read-only)
+def read_sheet_all_items(token, sheet_id):
+    resp = api("GET", token, f"{sheet_id}/values/{a1('All Items')}")
+    rows = resp.get("values", [])
+    if not rows:
+        return {}, []
+    live_header = [str(c).strip() for c in rows[0]]
+    items = {}
+    for r in rows[1:]:
+        rid = str(r[1]).strip() if len(r) > 1 else ""
+        if not rid:
+            continue
+        items[rid] = {live_header[i] if i < len(live_header) else f"col{i}":
+                      (str(r[i]).strip() if i < len(r) else "") for i in range(len(live_header))}
+    return items, live_header
+```
+Notes: keyed by the `ID` column (position 1, same as the probe). Trailing cells beyond the known
+headers are keyed by their live header text (or `col<N>` if blank) — this is how OUT-OF-SCHEMA
+columns like "Release week" get surfaced.
+
+### T4 — `expected_all_items()` (new fn)
+```python
+# CR-2026-10-12-005: expected All Items rebuilt from index.yml (authoritative baseline, decision 6)
+def expected_all_items():
+    records = load_index()
+    rows = build_views(records)["All Items"]
+    header = [str(c).strip() for c in rows[0]]
+    items = {}
+    for r in rows[1:]:
+        rid = str(r[1]).strip() if len(r) > 1 else ""
+        if rid:
+            items[rid] = {header[i]: (str(r[i]).strip() if i < len(r) else "")
+                          for i in range(len(header))}
+    return items, header
+```
+Reuses `build_views` so the baseline is exactly what the next push would write — never a stale snapshot.
+
+### T5 — `classify_column(col)` (new fn)
+```python
+# CR-2026-10-12-005: classify a changed column for the read-only drift report
+def classify_column(col):
+    if col in REVERSE_NEVER:    return "IGNORED"          # §5.5 never accepted
+    if col in REVERSE_ACCEPTED: return "ACCEPTED"         # would flow back (write deferred)
+    if col in REVERSE_INFO:     return "INFORMATIONAL"    # Assignee, dashboard-owned
+    if col in HEADERS:          return "IGNORED"          # registry-owned agent column
+    return "OUT-OF-SCHEMA"                                # new column/header on the sheet
+```
+
+### T6 — `diff_all_items(expected, sheet)` (new fn)
+```python
+# CR-2026-10-12-005: per-cell diff; returns (edits, sheet_only_ids, index_only_ids)
+def diff_all_items(expected, sheet):
+    edits = []
+    for rid in sorted(set(expected) & set(sheet)):
+        exp, got = expected[rid], sheet[rid]
+        cols = list(dict.fromkeys(list(exp.keys()) + list(got.keys())))
+        for col in cols:
+            if col == "ID":
+                continue
+            ev, sv = exp.get(col, ""), got.get(col, "")
+            if ev != sv:
+                edits.append((rid, col, ev, sv, classify_column(col)))
+    sheet_only = sorted(set(sheet) - set(expected))
+    index_only = sorted(set(expected) - set(sheet))
+    return edits, sheet_only, index_only
+```
+Compares the union of known + live-only columns so an added column is caught on every row.
+
+### T7 — `drift()` command (new fn, read-only report)
+```python
+# CR-2026-10-12-005: SHEET DRIFT read-only — read live Sheet, classify, print. Writes NOTHING.
+def drift():
+    token, sheet_id = access_token()
+    sheet, live_header = read_sheet_all_items(token, sheet_id)
+    expected, _ = expected_all_items()
+    edits, sheet_only, index_only = diff_all_items(expected, sheet)
+    buckets = ["ACCEPTED", "INFORMATIONAL", "IGNORED", "OUT-OF-SCHEMA"]
+    print(f"SHEET DRIFT (live Sheet vs index.yml) — {len(edits)} edited cell(s)\n")
+    for b in buckets:
+        rows = [e for e in edits if e[4] == b]
+        label = {"ACCEPTED": "ACCEPTED (whitelisted; write-back deferred, NOT applied)",
+                 "INFORMATIONAL": "INFORMATIONAL (Assignee, dashboard-owned)",
+                 "IGNORED": "IGNORED (registry-owned / never-accepted)",
+                 "OUT-OF-SCHEMA": "OUT-OF-SCHEMA (new column on the sheet)"}[b]
+        print(f"{label}: {len(rows)}")
+        for rid, col, ev, sv, _ in rows:
+            print(f"    {rid} | {col}: index='{ev}' -> sheet='{sv}'")
+    print(f"\nMembership: SHEET-ONLY={len(sheet_only)} {sheet_only[:10]} | "
+          f"INDEX-ONLY={len(index_only)} {index_only[:10]}")
+    new_cols = [h for h in live_header if h and h not in HEADERS]
+    if new_cols:
+        print(f"New columns on sheet (out-of-schema): {new_cols}")
+    print("\n(READ-ONLY — nothing written to the Sheet or index.yml. No auto-update.)")
+```
+
+### T8 — Wire `drift` into `__main__` (edit L749-763)
+Add before the final `else:`:
+```python
+    elif command == "drift":
+        drift()
+```
+
+### T9 — NO changes to
+`build_views`, `push`, `row_for`, `sync`, `changelog`, `audit`, column/enum constants, Change Log tab.
+
+---
+
+## STREAM 2 — CONTROL PROMPT
+
+### C1 — ROLE 14 SHEET DRIFT (edit lines 769-791)
+- **Insert** a new step after the current step 1 (`audit`):
+  `2. Run `python memory/tools/registry_sync.py drift` (read-only) to read the LIVE Google Sheet and report every edited cell vs index.yml, classified: ACCEPTED / INFORMATIONAL / IGNORED / OUT-OF-SCHEMA, plus membership (SHEET-ONLY / INDEX-ONLY) and any new columns.`
+  (renumber the old steps 2→3, 3→4.)
+- **Replace** the "Scope / v1 limit" block (lines 775-777) with:
+  `Scope / v1: `audit` = LOCAL drift (index.yml vs folders vs README). `drift` = LIVE Sheet-vs-index.yml drift, READ-ONLY report in chat. No write-back: Sheet edits are NEVER auto-applied to index.yml in v1 (governed write-back — PENDING→owner approval→apply — is a deferred future CR).`
+- **Keep** the Rules block ("Read-only. Never write index.yml, never push, never edit code.").
+- Update the Output block to add a line: `Sheet drift (live): <N edits: ACCEPTED/INFO/IGNORED/OUT-OF-SCHEMA>`.
+
+### C2 — ROLE 13 SHEET PUSH (edit line 741) + §10 (edit line 1435)
+- ROLE 13 rule (line 741): keep "One-way only" but amend the parenthetical to:
+  `(reverse is READ-ONLY drift reporting via SHEET DRIFT; governed write-back to the registry is a deferred future CR, not built).`
+- §10 "Reverse (Sheet → registry)" row (line 1435): change to note that **reading** the Sheet for a
+  read-only, classified drift report now exists (SHEET DRIFT `drift`), but **writing** Sheet edits
+  back into `index.yml` is still not built; Sheet edits remain overwritten by the next SHEET PUSH.
 
 ### C3 — Preserve CR-004 invariants
-- Do NOT disturb the §3 role-decision-tree rows or the 14-role contiguity. After edits, re-verify: 14 role headers present & contiguous, `## 9` appears once, code fences balanced, only this file changed in the step.
+After edits re-verify: 14 role headers present & contiguous; `## 9` appears exactly once; code fences
+balanced; only this file changed in the step. (Same self-test CR-004 used.)
 
 ---
 
 ## STREAM 3 — REGISTRY + CLEANUP
 
-### R1 — index.yml block
-Update `CR-2026-10-12-005` at each gate (PLANNING now → IMPLEMENTED after code). Exit-Gate: status, status_note, artefacts (+IMPACT_ANALYSIS, +IMPLEMENTATION_PLAN), last_updated.
+### R1 — `index.yml` block (this item)
+Implementation Exit-Gate: status → IMPLEMENTED, status_note (what shipped: read-only `drift` + ROLE 14),
+artefacts += DECISIONS, last_updated. No other item touched.
 
-### R2 — Delete throwaway probes (AFTER QA passes)
-Remove `memory/tools/reverse_drift_probe.py` and `memory/tools/reverse_drift_snapshot.py` once their logic is folded into `registry_sync.py` and QA is green. Not before.
+### R2 — Delete throwaway probes AFTER QA passes
+Remove `memory/tools/reverse_drift_probe.py` + `memory/tools/reverse_drift_snapshot.py` once `drift`
+is QA-green. Their logic is fully folded into T3/T5/T6.
 
 ---
 
-## VERIFICATION MATRIX
+## VERIFICATION MATRIX (v1)
 
 | # | Check | How | Expected |
 |---|---|---|---|
-| V1 | `drift` reads the live Sheet | run `drift` | prints ACCEPTED/INFORMATIONAL/IGNORED/OUT-OF-SCHEMA + membership, no exception |
-| V2 | ALL edits surfaced | seed a Priority edit + a Status edit + a new column on the Sheet | all three appear, correctly classified (Priority=IGNORED, Status=ACCEPTED, new col=OUT-OF-SCHEMA) |
-| V3 | `drift` writes nothing | diff `index.yml` + Sheet revisions before/after | unchanged |
-| V4 | Baseline is index-derived | edit `index.yml`, re-run `drift` without push | diff reflects new index value (no stale-snapshot false positive) |
-| V5 | `reverse --dry-run` writes nothing | run it | prints planned PENDING rows; Change Log tab unchanged |
-| V6 | `reverse` appends PENDING only for ACCEPTED | run with 1 Status edit + 1 Priority edit | exactly 1 PENDING row (Status) appended; Priority reported, not appended |
-| V7 | Change Log never cleared | run `reverse`, then `sync` | prior Change Log rows intact (append-only) |
-| V8 | `apply` writes only whitelisted field, targeted | approve the Status row, run `apply` | only that item's `status:` line changes in `index.yml`; comments/order intact; row marked APPLIED |
-| V9 | enum guard | approve a Status row with an invalid value | REJECTED with "invalid enum"; `index.yml` unchanged |
-| V10 | `Last updated` never accepted | edit Last updated on Sheet | classified IGNORED, never ACCEPTED/PENDING (contract §5.5) |
-| V11 | Assignee informational only | set Assignee on Sheet | reported INFORMATIONAL; never read into registry, never a PENDING row |
-| V12 | index.yml still valid | `load_index()` after `apply` | validation passes, 114 items |
-| V13 | control prompt integrity | structural check | 14 roles contiguous, `## 9` once, fences balanced, caveat removed from ROLE 14, §10 updated |
-| V14 | no app code touched | `git diff --stat` | only `registry_sync.py`, control prompt, `index.yml`, (deleted probes) |
+| V1 | `drift` reads the live Sheet without error | `python registry_sync.py drift` | prints 4 buckets + membership, exit 0 |
+| V2 | Status edit → ACCEPTED | set a Status cell on the Sheet, run `drift` | that cell listed under ACCEPTED |
+| V3 | Priority edit → IGNORED | the 13 live Priority→P0 edits | listed under IGNORED (not ACCEPTED) |
+| V4 | New column → OUT-OF-SCHEMA | "Release week" column | listed under OUT-OF-SCHEMA + in "New columns" line |
+| V5 | Assignee → INFORMATIONAL | set an Assignee cell | listed under INFORMATIONAL |
+| V6 | `Last updated` never ACCEPTED | edit Last updated on Sheet | classified IGNORED |
+| V7 | baseline is index-derived (no stale snapshot) | edit `index.yml`, re-run `drift` (no push) | diff reflects the new index value |
+| V8 | writes NOTHING | capture Sheet revision + `git status` before/after `drift` | Sheet unchanged; only console output; no file writes |
+| V9 | membership | an id only in index / only on sheet | shown under INDEX-ONLY / SHEET-ONLY |
+| V10 | `index.yml` still valid | `load_index()` | passes, 114 items |
+| V11 | control prompt integrity | structural check | 14 roles contiguous, `## 9` once, fences balanced, caveat replaced |
+| V12 | no app code touched | `git diff --stat` | only `registry_sync.py`, control prompt, `index.yml` (+ probe deletions) |
 
-**QA note:** reverse-sheet tests require live Sheet access (OAuth token + `GOOGLE_*`). QA will seed edits on a throwaway revision, verify, then restore. No application regression needed (no app code changed), but a 1-line backend `curl` + frontend smoke confirms nothing was disturbed.
+**QA note:** needs live Sheet access (OAuth token + `GOOGLE_*`, already validated). QA seeds a few cell
+edits on the live Sheet, runs `drift`, confirms classification, then the owner can restore cells (or a
+later SHEET PUSH overwrites them). No app regression needed (no app code changed).
 
 ---
 
-## EXIT GATE (Implementation will satisfy)
-1. index.yml updated (this item)
-2. (registry = this item's tracker; no separate issue tracker)
-3. File ownership: documented in this plan (files WILL/WON'T change)
-4. Code markers: `# CR-2026-10-12-005:` on new functions/commands in `registry_sync.py`
-5. Tool runs clean: `drift`, `reverse --dry-run`, `apply` on seeded edits
-6. Self-test V1–V14
+## EXIT GATE (Implementation must satisfy)
+1. `index.yml` updated (this item) ✅ at impl time
+2. (this CR is its own tracker)
+3. File ownership documented above (WILL/WON'T change)
+4. Code markers `# CR-2026-10-12-005:` on every new fn/command
+5. Tool runs clean: `drift` on seeded edits
+6. Self-test V1–V12
 7. QA_HANDOVER written
+
+## DEFERRED (future CR — not v1)
+- `reverse` (append PENDING rows to Change Log for ACCEPTED edits)
+- `apply` (owner-approved, targeted write of whitelisted fields to `index.yml`, enum-guarded)
+- any whitelist expansion (Priority/Risk) / new-column adoption → contract v1.3 gate

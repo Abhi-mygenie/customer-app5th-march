@@ -63,19 +63,21 @@ live Google Sheet (All Items)                index.yml (registry)
 - `registry-sheet-contract.md` — **unless** owner expands the whitelist (decision 1) or adopts a new column (decision 2); a contract change is cross-project (POS/CRM/INV/INFRA) and would be its own gated edit, flagged here, not done silently.
 - `.emergent/**`, `.env` files, OAuth token.
 
-## 6. Owner decisions required before Implementation
+## 6. Owner decisions — RULED 2026-10-12 (see DECISIONS.md)
 
-The owner's instruction — *"surface ALL edits, classified"* — is a **reporting** requirement and is fully satisfiable without changing the contract (report everything; apply only the whitelist). The following remain open:
+Owner ruling: **v1 = READ-ONLY. No auto-update. Just show in chat what changed.** The `reverse`/`apply`
+governed write-back loop is **DEFERRED** to a future CR. v1 writes nothing (no Sheet writes, no Change
+Log rows, no `index.yml` data writes).
 
-| # | Decision | Recommendation |
+| # | Decision | Ruling |
 |---|---|---|
-| 1 | **Whitelist for apply-back:** keep {Status, Registered, Closed}, or add Priority / Risk? (today's 13 live edits were Priority) | Keep 3-column whitelist for v1 apply; report Priority edits as IGNORED. Expanding is a **contract v1.3** change (cross-project) — separate gate. |
-| 2 | **New columns ("Release week"):** surface-and-ignore / adopt into schema / reject-and-warn | Surface-and-warn as OUT-OF-SCHEMA for v1 (overwritten next push). Adoption = contract change — separate gate. |
-| 3 | **Where drift surfaces:** chat only, vs also PENDING rows in Change Log | Both, but split by command: `drift` = read-only chat report (ALL edits); the governed apply command writes PENDING rows **only for ACCEPTED-whitelist edits** (keeps Change Log clean of never-appliable rows). |
-| 4 | **Apply mechanism to index.yml:** targeted string edits vs YAML round-trip | Targeted edits (preserve comments/order/formatting). YAML round-trip reformats the whole file and loses the header comment + block spacing — rejected. |
-| 5 | **Legacy status on read:** reuse the 8-enum validation | Yes — reuse `STATUSES`; a sheet value outside the enum is logged REJECTED ("invalid enum"), never applied. |
-| 6 | **Diff baseline:** rebuilt-from-index expected view vs `.registry_csv` snapshot | Rebuilt-from-index (always current). Snapshot kept only as an optional secondary "since last push" view. |
-| 7 | **Trigger:** owner-invoked only (no cron) | Keep owner-invoked, consistent with CR-004. |
+| 1 | Apply-back whitelist | N/A in v1 (nothing applied). Priority edits shown as IGNORED. No contract change now. |
+| 2 | New columns ("Release week") | Surface-and-report as OUT-OF-SCHEMA. No schema change. |
+| 3 | Where drift surfaces | Chat only. No Change Log writes in v1. |
+| 4 | Apply mechanism | N/A in v1 (deferred; when built: targeted index.yml edits). |
+| 5 | Legacy status on read | Reuse 8-value enum for classification; nothing written so no risk. |
+| 6 | Diff baseline | Expected view rebuilt from `index.yml` (always current), not `.registry_csv`. |
+| 7 | Trigger | Owner-invoked only (no cron), consistent with CR-2026-10-12-004. |
 
 ## 7. Risk assessment
 
