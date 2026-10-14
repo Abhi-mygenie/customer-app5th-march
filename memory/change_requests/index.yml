@@ -2531,22 +2531,23 @@
   type: CR
   title: Reverse Sheet→registry read — SHEET DRIFT reads the live Google Sheet, surfaces ALL owner
     edits (classified), and a governed apply loop flows approved edits back into index.yml
-  status: INTAKE
-  status_note: 'INTAKE 2026-10-12 (Role 1). Deferred reverse-read stream from CR-2026-10-12-004. ONE CR,
-    TWO streams: (a) control prompt ROLE 14 SHEET DRIFT read-the-Sheet + ROLE 13/§10 governed apply loop
-    wording; (b) registry_sync.py read-merge-write (read Sheet → diff → PENDING Change Log rows → owner
-    approve → apply whitelisted cols → reconcile). Reporting: surface ALL edits classified
-    ACCEPTED/INFORMATIONAL/IGNORED/OUT-OF-SCHEMA. Read-only demo proved 14 live edits detected (13 Priority→P0
-    IGNORED, 1 new column OUT-OF-SCHEMA, 0 reverse-accepted). Design decisions deferred to Planning.'
+  status: PLANNING
+  status_note: 'PLANNING 2026-10-12 (Role 2) — IMPACT_ANALYSIS + IMPLEMENTATION_PLAN written. Code reality
+    PARTIAL: contract v1.2 §5 fully specifies the governed reverse loop; registry_sync.py reserves P7-P10
+    (read-merge-write) as unbuilt; two probes prove feasibility. Plan: tool gains drift (read-only, surface
+    ALL edits classified) + reverse (PENDING Change Log rows for ACCEPTED only) + apply (owner-approved,
+    targeted index.yml edits, 3-col whitelist); control prompt ROLE 14 read-the-Sheet step (drop local-only
+    caveat) + ROLE 13/§10 apply-loop wording. 7 owner decisions in IMPACT_ANALYSIS §6 (defaults recommended;
+    whitelist/new-column adoption would be a separate contract v1.3 gate). AWAITING owner gate approval.'
   priority: P2
   risk: MEDIUM
-  owner_action: Review Intake; approve move to PLANNING (and the deferred design decisions listed in INTAKE §6)
+  owner_action: Approve the plan + the 7 design decisions (IMPACT_ANALYSIS §6) to open the Implementation gate
   blocked_on: []
   sprint: null
   files: memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md (ROLE 13/14 + §10) ·
-    memory/tools/registry_sync.py (read-merge-write) · (reference, to fold-in then delete)
+    memory/tools/registry_sync.py (read-merge-write — drift/reverse/apply) · (reference, to fold-in then delete)
     memory/tools/reverse_drift_probe.py · memory/tools/reverse_drift_snapshot.py
-  artefacts: INTAKE
+  artefacts: INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-12'
   last_updated: '2026-10-12'
   related:
