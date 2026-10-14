@@ -140,6 +140,8 @@ Pick exactly one role for the session.
 | Release readiness must be checked | PRE-RELEASE AUDIT |
 | Sprint/workstream needs final reconciliation | CLOSURE |
 | Production release is approved | RELEASE |
+| Registry must be mirrored (pushed) to the Google Sheet | SHEET PUSH |
+| Registry drift / health must be shown for an owner decision | SHEET DRIFT |
 
 If the owner request maps to multiple roles, choose the earliest role in the gate sequence and state why.
 
@@ -710,6 +712,82 @@ Environment: <production/staging/etc>
 Post-deploy smoke: <N/N PASS>
 Rollback plan: <summary>
 Report: <path>
+```
+
+---
+
+### ROLE 13 — SHEET PUSH AGENT
+
+Use when the owner asks to mirror the CR registry to the Google Sheet.
+
+Read:
+
+- project addendum §10 (Registry / Tracking Rules)
+- control/registry-sheet-contract.md
+- memory/change_requests/index.yml (machine source of truth)
+
+Do:
+
+1. Verify credentials present: `/app/secrets/sheets_token.json` plus `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_SHEET_ID` in `backend/.env`. If any missing, stop with OWNER APPROVAL REQUIRED (credentials).
+2. Reconcile `index.yml` with the CR markdown / PRD so it reflects reality. This is the only role that writes `index.yml` for the purpose of a push.
+3. Run `python memory/tools/registry_sync.py audit` and show drift.
+4. Run `python memory/tools/registry_sync.py sync --dry-run`; show the diff / CSV summary.
+5. Get explicit owner approval to push.
+6. Run `python memory/tools/registry_sync.py sync` (one-way `index.yml` → Sheet; Change Log tab is append-only).
+7. Report Sheet URL, Summary counts, and any pending Change-Log rows.
+
+Rules:
+
+- One-way only. Never read the Sheet back into the registry (reverse-sync is a separate gated capability, not built).
+- Never push without owner approval and a clean dry-run.
+- Do not edit application code.
+
+Output:
+
+```text
+Sheet Push complete: <IDs synced / all>
+Creds: PRESENT / MISSING
+Reconcile: index.yml == docs (YES/NO)
+Dry-run reviewed: YES
+Owner approval: YES
+Push: SUCCESS / FAIL
+Sheet: <url>
+Next: none / SHEET DRIFT
+```
+
+---
+
+### ROLE 14 — SHEET DRIFT AGENT
+
+Use when the owner wants to see registry drift / health before deciding what to do. Read-only.
+
+Read:
+
+- project addendum §10 (Registry / Tracking Rules)
+- memory/change_requests/index.yml
+
+Do:
+
+1. Run `python memory/tools/registry_sync.py audit` (read-only).
+2. Report drift in chat, grouped: folders↔index, README↔index, code-markers-vs-status tripwire, unadjudicated status, unroutable items.
+3. Recommend a next action (e.g., reconcile item X, or run SHEET PUSH). Do not act — the owner decides in chat.
+
+Scope / v1 limit:
+
+- `audit` compares LOCAL artefacts only (`index.yml` vs CR folders vs README). It does NOT read the Google Sheet. Sheet-vs-registry (reverse) drift is unavailable until the reverse-read CR lands.
+
+Rules:
+
+- Read-only. Never write `index.yml`, never push, never edit code.
+
+Output:
+
+```text
+Sheet Drift report
+Indexed: <N> | Folders: <N>
+Drift buckets: <label: count ...>
+Recommendation: <text>
+Next: owner decision
 ```
 
 ---
@@ -1343,29 +1421,18 @@ QueryClientProvider          ← React Query cache
 
 ## 10. Registry / Tracking Rules
 
-### Bug Tracker
+### Machine registry (single source of truth)
 
 | Field | Detail |
 |-------|--------|
-| **Location** | `/app/memory_repo/BUG_TRACKER_v2.md` |
-| **ID Format** | `BUG-NNN` (e.g., BUG-001, BUG-010) |
-| **Priority Values** | P0 (Critical), P1 (High) |
-| **Status Values** | Open, Closed/Reduced-Risk |
-| **Evidence Basis** | Code-verified, Build-verified, Partially-verified |
-| **How to update** | Edit the markdown file directly. Add evidence basis. |
-| **Ownership** | Not tracked — no assignee field. **UNKNOWN: needs owner process definition.** |
-| **Current open bugs** | 10 (2× P0, 8× P1) |
-
-### Change Request Tracker
-
-| Field | Detail |
-|-------|--------|
-| **Active CRs** | `/app/memory/change_requests/` (organized by CR folder) |
-| **Historical CRs** | `/app/memory_repo/change_requests/` (flat files) |
-| **ID Format** | `CR-YYYY-MM-DD-NNN-<description>` (e.g., CR-2026-05-30-001-config-mandatory-fields-and-scan-misrouting) |
-| **CR Lifecycle** | CR.md → INVESTIGATION → PLAN → IMPLEMENTATION → QA_REPORT → HANDOVER |
-| **Status tracking** | Status embedded in PRD.md and CR.md content. Values: IMPLEMENTED, PARKED, INVESTIGATION only. |
-| **How to update** | Edit relevant markdown files. Update `/app/memory/PRD.md` with CR status. |
+| **Source of truth** | `/app/memory/change_requests/index.yml` — one YAML block per item. CR markdown folders hold human detail; `PRD.md` holds narrative. On conflict, reconcile **into** `index.yml`. |
+| **ID Format** | `<TYPE>-YYYY-MM-DD-NNN` where TYPE ∈ {CR, BUG, INV, PROD-INCIDENT}; NNN is per-type per-day. |
+| **Status enum** | `INTAKE · PLANNING · IMPLEMENTED · QA · SMOKE · CLOSED · PARKED · DUPLICATE` (contract v1.2). Terminal: CLOSED / PARKED / DUPLICATE. |
+| **Priority / Risk** | Priority `P0–P3`; Risk `LOW / MEDIUM / HIGH / CRITICAL`. |
+| **How items update** | Each role updates the item's `index.yml` block + its markdown as part of its Exit Gate. No work without a registered ID. |
+| **Google Sheet mirror** | `index.yml` is mirrored one-way to a Google Sheet (read by the Tech Dashboard) via `memory/tools/registry_sync.py`, governed by `control/registry-sheet-contract.md`. |
+| **Who mirrors** | Only the **SHEET PUSH** role runs the push; only the **SHEET DRIFT** role shows drift. No other role touches the Sheet or runs the tool. |
+| **Reverse (Sheet → registry)** | Not automated / not built. Sheet edits are overwritten by the next SHEET PUSH (except the append-only Change Log tab). Reverse read-back is a separate future CR. |
 
 ### Handover Process
 

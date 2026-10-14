@@ -49,6 +49,7 @@
 - REACT_APP_GOOGLE_MAPS_API_KEY: set
 
 ## Change Management Log
+- 2026-10-12 CR-2026-10-12-004 **IMPLEMENTED**: added two owner-invoked roles to the control prompt — **SHEET PUSH** (registry→Google Sheet, one-way `sync`, creds-gated + owner-approved) and **SHEET DRIFT** (read-only `audit`; v1 = local drift only). Rewrote stale addendum §10 to make `index.yml` the single source of truth. Self-test V1–V7 PASS; only the control prompt changed. Reverse Sheet→registry read deferred to a future CR. (INTAKE→PLANNING→IMPLEMENTED same day)
 - 2026-10-12 BUG-2026-10-12-006 **QA_PASS**: fixed coupon discovery strip overflowing the screen on mobile (cards bled past both edges + page panned sideways into an empty "gap"). Root cause: coupon wrapper inherited `align-items:center` from `.price-row`, and the strip had no width bound, so it grew to its 1113px content width. Fix (CSS-only): `.cdl-wrap{width:100%}` + `.cdl-strip{min-width:0;max-width:100%}`. Verified on 390px: no page overflow, strip contained & scrolls internally. (iteration_24)
 - 2026-10-12 BUG-2026-10-12-005 **QA_PASS**: fixed Apply-coupon-button crash (`onClick={() => handleApplyCoupon()}` — event was being passed as the coupon code). Verified live: manual apply works, V9 error-map "Invalid coupon code" shows, no crash. (iteration_23)
 - 2026-10-12 BUG-2026-10-12-003 **QA_PASS**: below-min loyalty wording "Earn 36 more points to redeem" verified live with account 9120004531; old "Add ₹X more" gone. (iteration_23)
