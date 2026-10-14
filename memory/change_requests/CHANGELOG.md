@@ -198,3 +198,95 @@ Append-only. One entry per observed field change, newest section last.
 - `CR-2026-09-12-003` · `blocked_on` · [] → [{'party': 'OWNER', 'ref': 'Confirm OTP works on real device; decide whether OTP feature is turned on', 'since': '2026-09-12'}] · generator · 2026-10-06 12:40 UTC
 - `CR-2026-09-12-015` · `blocked_on` · [] → [{'party': 'OWNER', 'ref': 'Git access + 6 repo secrets + dependency close outstanding (Sprint Wave 2)', 'since': '2026-09-12'}] · generator · 2026-10-06 12:40 UTC
 - `INV-2026-09-12-001` · `blocked_on` · [] → [{'party': 'OWNER', 'ref': 'Deletion wording withdrawn pending owner decision', 'since': '2026-09-12'}] · generator · 2026-10-06 12:40 UTC
+
+## 2026-10-14 08:33 UTC
+
+- `BUG-2026-09-10-001` · `status_note` · None → ' | 2026-10-10: direction confirmed by owner — use POS S3 upload endpoint + read logo from POS profile (restaurants[0].bill_logo_path or logo field). POS brief sent: inbox/OUTBOUND_TO_POS_IMAGE_UPLOAD_CONTRACT_REQUEST_2026_10_10.md. Blocked on POS reply.' · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-09-10-001` · `blocked_on` · [] → [{'party': 'POS', 'ref': 'upload endpoint contract + logo field clarification', 'since': '2026-10-10'}] · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-09-10-001` · `last_updated` · None → '2026-10-10' · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-06-001` · `status` · 'INTAKE' → 'SMOKE' · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-06-001` · `status_note` · "Filed 2026-10-06 (Role 1) on owner instruction. postNonQrBlock sits inside `if (policy.block)` at all 3 checkpoints, so the 4 real bypass reasons (valid-qr incl. every walk-in, rid-716-carveout, edit-mode, non-dinein-mode) are never recorded — the allow path console.logs the decision to the customer's own browser instead. Endpoint, collection and index already exist and need no change. This is why CR-2026-10-06-001 cannot be sized. Adjudicated contract status: INTAKE." → "SMOKE 2026-10-07: Role 4 QA PASS 11/11 (QA_REPORT.md, test_reports/iteration_1.json); owner smoke pending. Role 3 complete (E1–E6 applied, 6 files, self-test 11/16 PASS, 5 deferred to QA — see SELF_TEST.md, QA_HANDOVER.md). PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. Found rolling cap (200/rid) interaction — new D4. Filed 2026-10-06 (Role 1) on owner instruction. postNonQrBlock sits inside `if (policy.block)` at all 3 checkpoints, so the 4 real bypass reasons (valid-qr incl. every walk-in, rid-716-carveout, edit-mode, non-dinein-mode) are never recorded — the allow path console.logs the decision to the customer's own browser instead. Endpoint, collection and index already exist and need no change. This is why CR-2026-10-06-001 cannot be sized. Adjudicated contract status: INTAKE." · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-06-001` · `owner_action` · 'none required to start — needs no A/B/C/D ruling, unlike CR-2026-10-06-001' → 'Owner smoke (Role 8): send SMOKE_BRIEF.pdf to tester; reply "Smoke PASS/FAIL BUG-2026-10-06-001". On PASS → CLOSED' · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-06-001` · `files` · 'frontend/src/pages/LandingPage.jsx:538/527 · frontend/src/pages/MenuItems.jsx:489 · frontend/src/pages/ReviewOrder.jsx:901 · frontend/src/utils/orderAccessPolicy.js:37-69 (backend/server.py:1687 unchanged)' → 'frontend/src/utils/orderAccessPolicy.js:76-87 · frontend/src/pages/LandingPage.jsx:527-546 · frontend/src/pages/MenuItems.jsx:19,38,479-502 · frontend/src/pages/ReviewOrder.jsx:900-915 · backend/server.py:1657-1670,1700-1735 · backend/tests/smoke/test_bug_2026_10_06_001.py (new)' · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-06-001` · `artefacts` · 'INTAKE' → 'INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN, SELF_TEST, QA_HANDOVER, QA_REPORT, SMOKE_BRIEF' · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-06-001` · `last_updated` · None → '2026-10-07' · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-06-001` · `code_markers` · False → True · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-14-001` · `notes` · None → 'Exit condition "restore when live" is void — CRM CR-090 (2026-10-08) will never build OTP. Superseded by CR-2026-10-07-002 (permanent deletion).' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `status` · 'INTAKE' → 'SMOKE' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `status_note` · None → 'Has SMOKE_BRIEF.pdf — QA passed, in consolidated PDF. Awaiting owner smoke.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `priority` · None → 'P1' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `risk` · None → 'HIGH' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `owner_action` · None → 'QA + smoke; say "Smoke PASS CR-2026-09-15-001" to close' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `files` · None → 'frontend/src/api/services/crmService.js · frontend/src/pages/Profile.jsx' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `artefacts` · 'INTAKE' → 'INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `last_updated` · None → '2026-10-09' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-001` · `code_markers` · False → True · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-002` · `status` · 'INTAKE' → 'CLOSED' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-002` · `status_note` · None → 'CLOSED 2026-10-08 — folded into CR-2026-10-08-001 Step 1 (E5 + E6). 409 branch replaced with guest-degrade; 429 exhausted surfaces Retry-After wait-time toast in LandingPage.jsx.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-002` · `files` · None → 'frontend/src/pages/LandingPage.jsx:434-503' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-002` · `artefacts` · 'INTAKE' → 'CLOSED-FOLDED' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-003` · `notes` · None → 'CRM reply 2026-10-08: CRM owns normalisation (CR-085, before 27 Oct). Our residual = send phone digits + country_code separately on lookup/skip-otp/feedback; L6 India-only needs owner re-ruling (contract v2). Re-open after CR-085.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-004` · `status` · 'INTAKE' → 'SMOKE' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-004` · `status_note` · None → 'QA PASS iteration_17.json (9/9). db.users reads = 0 active lines. POS direct two-step flow confirmed. AuthContext.login() deleted. Forced re-login on deploy (D4 accepted). SMOKE_BRIEF pending.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-004` · `artefacts` · 'INTAKE' → 'INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-004` · `last_updated` · None → '2026-10-10' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-09-15-004` · `notes` · None → 'Scope add 2026-10-09 (CR-2026-10-03-001 D3 ruling): also delete dead frontend AuthContext.login() (calls old /api/auth/login diner branch; 0 callers).' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `status` · 'INTAKE' → 'SMOKE' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `status_note` · None → 'Gate 3 accepted 2026-10-09; Role 3 executed E1-E12 bottom-up (server.py 1741→1367, -378/+5). Self-test 12/12 · 31/31 smoke · 14/14 contract. Testing agent iteration_8: 28/28 + 61/61 regression, retest_needed=false. QA_HANDOVER + SMOKE_BRIEF(.pdf) written. Awaiting owner smoke.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `priority` · None → 'P3' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `risk` · None → 'HIGH' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `owner_action` · None → 'Run SMOKE_BRIEF (3 steps) → reply "Smoke PASS CR-2026-10-03-001"' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `files` · None → 'backend/server.py (E1-E11) · backend/tests/smoke/test_cr_2026_10_03_001.py (new) · backend/tests/smoke/test_cr_2026_10_03_001_extras.py (new, testing agent)' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `artefacts` · 'INTAKE' → 'INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER · SMOKE_BRIEF · SMOKE_BRIEF.pdf · test_reports/iteration_8.json' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `last_updated` · None → '2026-10-09' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `related` · [] → ['CR-2026-09-15-004', 'CR-2026-10-03-004', 'CR-2026-10-03-002', 'CR-2026-09-12-006', 'INV-2026-09-15-003'] · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-001` · `notes` · None → 'GET /config/feedback/{rid} removed by CR-2026-10-03-003 (2026-10-07) — dead-route count 14 → 13.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `status` · 'INTAKE' → 'SMOKE' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `status_note` · None → 'SMOKE 2026-10-07: Role 4 QA PASS 11/11 (QA_REPORT.md, test_reports/iteration_2.json); owner smoke pending. Role 3 complete (E1–E4 + contract test update + setRestaurantScope restore; self-test 9/12 PASS, T2 partial = CR-2026-09-15-001, T4/T6 → QA). PLANNING 2026-10-07 (Role 2): IMPACT_ANALYSIS.md written. CRM token path shipped; anonymous/hybrid path (CR-096) re-probed → still 403. Recommend ship token-only now (D2a).' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `priority` · None → 'P1' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `risk` · None → 'CRITICAL' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `owner_action` · None → 'Send SMOKE_BRIEF.pdf to tester; send CRM_NOTE_FEEDBACK_PURGE.md to CRM (D3=a). On "Smoke PASS CR-2026-10-03-003" → CLOSED' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `files` · None → 'frontend/src/api/services/crmService.js:403-413 · frontend/src/pages/FeedbackPage.jsx · frontend/src/pages/FeedbackPage.css · backend/server.py:1293-1297 (deleted block + marker) · backend/tests/smoke/test_cr_2026_10_03_003.py (new) · backend/tests/contracts/test_public_config.py (test_config_feedback_478 → route gone)' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `artefacts` · 'INTAKE' → 'INTAKE, IMPACT_ANALYSIS, IMPLEMENTATION_PLAN, SELF_TEST, QA_HANDOVER, CRM_NOTE, QA_REPORT, SMOKE_BRIEF' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `last_updated` · None → '2026-10-07' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-003` · `code_markers` · False → True · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `status` · 'INTAKE' → 'SMOKE' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `status_note` · None → 'Parts A+B+C complete. Has QA_HANDOVER_BC.md + SMOKE_BRIEF.pdf. In consolidated PDF. Awaiting owner smoke.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `priority` · None → 'P1' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `risk` · None → 'CRITICAL' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `owner_action` · None → 'QA + smoke Part A; Parts B/C await CRM CR-094' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `files` · None → 'frontend/src/api/services/crmService.js · frontend/src/pages/LandingPage.jsx · backend/server.py' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `artefacts` · 'INTAKE' → 'INTAKE · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `last_updated` · None → '2026-10-09' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `code_markers` · False → True · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-03-004` · `notes` · None → 'Part A done. Parts B (loyalty-rules swap in ReviewOrder) + C (customer-lookup retirement) blocked on CRM CR-094.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-06-001` · `title` · "Enforce the non-QR order block — walk-in QR is exempt and the table-status check skips when table_id is '0'" → 'Add allowWalkinOrders per-restaurant flag — close URL-manipulation bypass (BP-2) for restaurants that want to block walk-in ordering. BP-1 not a bug (QSR/café correct). BP-3 deferred to CR-2026-07-03-011.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-06-001` · `status_note` · 'Fix CR for INV-2026-06-17-001, whose report was written 2026-06-17 and never got one. All 3 bypass paths re-verified live this session (orderAccessPolicy.js:20/63, ReviewOrder.jsx:1168/1281, no server-side enforcement). Owner must rule on option A/B/C/D; only B closes BP-3. Adjudicated contract status: INTAKE.' → 'INTAKE CLOSED 2026-10-10. All rulings locked. Ready for Planning.' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-06-001` · `owner_action` · 'rule on option A/B/C/D (§4 of the intake) — if B, plan jointly with CR-2026-07-03-011' → 'Say Planning for CR-2026-10-06-001 when ready' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-06-001` · `last_updated` · None → '2026-10-10' · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-07-001` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-07-002` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-08-001` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-09-001` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-09-002` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-09-003` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-11-001` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-11-003` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-11-004` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-11-005` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `INV-2026-10-11-001` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `INV-2026-10-11-002` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-11-006` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-11-007` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-11-008` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-11-009` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-12-001` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-12-002` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-12-003` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-12-004` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-12-001` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-12-002` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-12-003` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `CR-2026-10-12-004` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-12-005` · **added to index** · generator · 2026-10-14 08:33 UTC
+- `BUG-2026-10-12-006` · **added to index** · generator · 2026-10-14 08:33 UTC
