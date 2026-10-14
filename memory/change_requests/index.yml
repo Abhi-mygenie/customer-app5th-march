@@ -2447,3 +2447,32 @@
     future orders. Fix: "Earn X more points to redeem". Remove ₹ symbol (unit is
     points not rupees — today coincides because ratio=1:1 but would break if ratio
     changes).'
+
+- id: CR-2026-10-12-004
+  type: CR
+  title: Registry↔Google Sheet — two owner-invoked roles SHEET PUSH (registry→Sheet, one-way)
+    and SHEET DRIFT (read-only drift view); no real-time/session-start sync; reverse read deferred
+  status: INTAKE
+  status_note: 'INTAKE 2026-10-12. Owner decision captured in inbox/DECISION_registry-sheet-roles_2026-10-12.md.
+    v1 = SHEET PUSH (sync, one-way, creds-gated) + SHEET DRIFT (audit = LOCAL drift only). No cron/preamble.
+    Sheet→registry reverse-read is a separate future CR (tool P7–P10 not built). Next: Planning.'
+  priority: P2
+  risk: MEDIUM
+  owner_action: Approve scope to open Planning gate
+  blocked_on: []
+  sprint: null
+  files: memory/control/MYGENIE_CUSTOMER_APP_AGENT_SYSTEM_PROMPT_ALPHA_v0_1.md (§3 role tree + §8 playbooks +
+    §10 addendum fix) · memory/change_requests/index.yml (source-of-truth declaration) · (reuse) memory/tools/registry_sync.py
+  artefacts: INTAKE
+  registered: '2026-10-12'
+  last_updated: '2026-10-12'
+  related:
+  - CR-2026-10-04-006
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'RELATED to CR-2026-10-04-006 (built registry_sync.py + contract v1.2); this CR adds the two
+    named owner-invoked roles to the control prompt, declares index.yml the single source of truth, and
+    fixes stale addendum §10. Tool reality: sync=one-way overwrite (Change Log append-only); audit=LOCAL
+    only (does NOT read Sheet). Creds absent in pod (need sheets_token.json + GOOGLE_OAUTH_*/GOOGLE_SHEET_ID).
+    index.yml currently behind markdown (BUG-005/006 + recent transitions not yet mirrored).'
