@@ -1,0 +1,41 @@
+{
+  "summary": "CR-2026-10-09-003 testing: Found and fixed a CRITICAL crash bug (TDZ ReferenceError) in ReviewOrder.jsx. The useEffect calling crmGetMaxRedeemable was placed before `subtotal` declaration, causing the Review Order page to crash entirely. After fix, page loads and the loyalty inline row renders correctly.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Review Order - loyalty max-redeemable useEffect",
+        "issue": "FIXED: useEffect at line ~156 referenced `subtotal` const before its declaration at line 576, causing ReferenceError: Cannot access 'subtotal' before initialization on every Review Order page load.",
+        "affected_selectors": ["[data-testid='loyalty-points-inline-row']", "[data-testid='loyalty-points-disabled-row']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/frontend/src/pages/ReviewOrder.jsx"],
+  "action_items": [
+    "DONE (T1 fixed): Move crmGetMaxRedeemable useEffect to after `subtotal` declaration in ReviewOrder.jsx - this was causing a crash on every Review Order page visit.",
+    "NOTE: CRM returned 429 (Too many lookups) during automated testing - this is rate limiting from repeated test runs. In real user sessions skip-otp should succeed normally, setting crmToken and triggering max-redeemable call.",
+    "VERIFY: CRM API key for restaurant_id=689 is showing '[CRM] No API key configured for restaurant_id=689' in console. Verify REACT_APP_CRM_API_KEY env var includes key for restaurant 689 if required by CRM server."
+  ],
+  "critical_code_review_comments": [
+    "CRITICAL (FIXED): ReviewOrder.jsx - useEffect (CR-2026-10-09-003) at old line ~156 used `subtotal` const in both body and dependency array, but `subtotal` was declared at old line 576. JavaScript const has TDZ - this caused crash on every page render. Fixed by moving useEffect AFTER subtotal declaration.",
+    "The 429 rate-limit on CRM /scan/auth/lookup fires repeatedly during test runs. Automated testing environment hits rate limits quickly. Consider rate-limit-aware retry in crmLookupCustomer."
+  ],
+  "updated_files": ["/app/frontend/src/pages/ReviewOrder.jsx"],
+  "success_rate": {
+    "backend": "N/A",
+    "frontend": "60% - page now loads after crash fix; CRM max-redeemable states could not be fully tested due to 429 rate-limiting on skip-otp auth"
+  },
+  "test_credentials": "Phone: 9035133228 (saurav), Restaurant: 689 (Kunafa Mahal)",
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "CRITICAL BUG FIXED: ReviewOrder.jsx TDZ crash (Cannot access 'subtotal' before initialization) fixed by moving the crmGetMaxRedeemable useEffect after subtotal declaration. Page now loads. For full loyalty CRM testing: need authenticated session with crmToken (skip-otp must succeed). CRM was rate-limiting (429) during automated tests. Manual test: 1) go to /689, enter 9035133228, wait for name autofill, click Browse Menu; 2) add 'st edc' (₹10); 3) View Cart → Review Order; 4) expect loyalty-points-disabled-row (BELOW_MIN for ₹10); 5) for testing normal state, need subtotal ≥100pts threshold (add more items).",
+  "rca_of_the_issue": {
+    "bug": "ReferenceError: Cannot access 'subtotal' before initialization in ReviewOrder component",
+    "root_cause": "JavaScript const variables have Temporal Dead Zone (TDZ). The useEffect hook added by CR-2026-10-09-003 was placed at line ~156, using `subtotal` in its body (line 161, 168) and dependency array (line 179). However, `subtotal = getTotalPrice()` was declared at line 576 — AFTER the hook. React calls hooks in order during render; when hook at line 156 executes, const `subtotal` is in TDZ and throws ReferenceError, crashing the component.",
+    "fix": "Moved the useEffect block from line ~156 to after `subtotal` declaration at line 550+. The hook now correctly accesses `subtotal` after it's initialized.",
+    "reproduction": "Navigate to /689/review-order with items in cart → immediate crash with 'Cannot access subtotal before initialization'"
+  }
+}

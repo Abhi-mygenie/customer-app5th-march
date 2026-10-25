@@ -1,0 +1,35 @@
+Status,Items
+INTAKE,31
+PLANNING,5
+IMPLEMENTED,23
+QA,8
+SMOKE,19
+CLOSED,19
+PARKED,3
+DUPLICATE,3
+Unrouted (status blank),2
+
+Priority,Open items
+P0,2
+P1,12
+P2,12
+P3,3
+
+Blocked on,Blockers
+BACKEND,0
+POS,3
+CRM,2
+SO,0
+INV,0
+INFRA,0
+OWNER,4
+OPS,0
+INTERNAL,1
+
+Trust indicators,
+Items indexed,113
+Status unrouted (back-catalogue interim),2
+ID mentioned in code,37
+index.yml <-> README divergence,24
+Generated: 2026-10-14T08:33:19.307459+00:00
+Pending change-log rows: 0
