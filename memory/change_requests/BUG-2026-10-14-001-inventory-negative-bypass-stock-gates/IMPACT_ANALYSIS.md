@@ -216,14 +216,16 @@ grep -n "CustomizeItemModal" /app/frontend/src/pages/MenuItems.jsx
 | V-9 | **One real preprod order** on 689 containing a `stock_out='Y'` item → POS accepts (no 422) | Proves OD-INV2-1 end-to-end | Manual curl or Playwright |
 | V-10 | Contract snapshots: `pytest backend/tests/contracts/` → unchanged | No backend regression | pytest |
 
-## 8. Owner decisions needed
+## 8. Owner decisions — APPROVED 2026-10-25
 
-| # | Decision | Options | Recommendation |
-|---|----------|---------|---------------|
-| D-1 | Confirm P1 severity | P1 / P2 | **P1** — 541 shows 2/32 coffees today; direct revenue impact |
-| D-2 | Approve touching `ReviewOrder.jsx` (CRITICAL) and `CartContext.js` (HIGH) | Yes / No | **Yes** — changes are minimal conditional wrappers, not restructuring |
-| D-3 | How flag reaches `addToCart` | A: caller param / B: context prop / C: cache read | **A: caller param** — lowest blast radius on hotspot file |
-| D-4 | Approve one preprod test order for V-9 | Yes / No | **Yes** — essential to prove POS acceptance before shipping to customers |
+| # | Decision | Owner answer | Recorded |
+|---|----------|-------------|----------|
+| D-1 | Confirm P1 severity | **Yes — P1 confirmed** | 2026-10-25 |
+| D-2 | Approve touching `ReviewOrder.jsx` (CRITICAL) and `CartContext.js` (HIGH) | **Yes — approved** | 2026-10-25 |
+| D-3 | How flag reaches `addToCart` | **Option A: caller param — approved** | 2026-10-25 |
+| D-4 | Approve one preprod test order for V-9 | **Yes — approved** | 2026-10-25 |
+
+**Impact Analysis: CLOSED. All decisions locked. Proceed to Implementation Plan.**
 
 ---
 

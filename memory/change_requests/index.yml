@@ -2633,20 +2633,18 @@
     hides/blocks stock_out=Y items; all inventory gates must be bypassed (items shown,
     fully orderable)'
   status: PLANNING
-  status_note: 'PLANNING 2026-10-25. Impact Analysis complete. 6 FE files identified
-    (5 touch points + 1 prop-threading). Option A (caller param) recommended for CartContext.
-    Owner decisions D-1..D-4 needed before Implementation Plan.'
+  status_note: 'PLANNING 2026-10-25. Impact Analysis CLOSED, Implementation Plan
+    written (E-1..E-8 across 6 files). All owner decisions approved. Ready for
+    Role 3 — say "Implement BUG-2026-10-14-001" to proceed.'
   priority: P1
   risk: HIGH
-  owner_action: 'Approve D-1 (confirm P1), D-2 (approve hotspot touches), D-3 (caller
-    param for addToCart), D-4 (one preprod test order). Then say "Implementation Plan
-    for BUG-2026-10-14-001".'
+  owner_action: 'Approve Implementation Plan, then say "Implement BUG-2026-10-14-001"'
   blocked_on: []
   sprint: null
   files: frontend/src/pages/MenuItems.jsx:399-404 · frontend/src/components/MenuItem/MenuItem.jsx:56-57,161-170,231-240
     · frontend/src/context/CartContext.js:228-232 · frontend/src/pages/ReviewOrder.jsx:1189-1240
     · frontend/src/components/CustomizeItemModal/CustomizeItemModal.jsx:264-275
-  artefacts: INTAKE_DOC · IMPACT_ANALYSIS
+  artefacts: INTAKE_DOC · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
   registered: '2026-10-14'
   last_updated: '2026-10-14'
   related:
