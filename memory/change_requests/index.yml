@@ -2595,3 +2595,67 @@
   closed: null
   notes: 'CSS-only. No logic, API, or schema change. Docs in
     change_requests/BUG-2026-10-22-001-fssai-icon-compliance/.'
+
+- id: INV-2026-10-14-002
+  type: INV
+  title: 'Menu item visibility / inventory logic trace — how a menu item becomes visible
+    and orderable for a customer w.r.t. inventory; confirmed 5-gate cascade + 3-layer
+    enforcement; found F-2 (is_disable never enforced), F-3 (empty category boxes),
+    F-8 (inventory_negative bypass missing)'
+  status: CLOSED
+  status_note: 'CLOSED 2026-10-14 (owner: "close investigation, stay at gate"). 10/10
+    steps used. Spawned BUG-2026-10-14-001 (F-8). F-2/F-3 await owner decision on
+    follow-up CRs. Q-2..Q-4 to POS.'
+  priority: null
+  risk: null
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: null
+  artefacts: INVESTIGATION_REPORT
+  registered: '2026-10-14'
+  last_updated: '2026-10-14'
+  related:
+  - CR-2026-09-07-001
+  - CR-2026-06-17-003
+  - CR-2026-09-08-001
+  - BUG-2026-10-14-001
+  code_markers: false
+  money_path: false
+  closed: '2026-10-14'
+  notes: 'Owner question: "What is the logic of menu items showing to customers, with
+    respect to inventory." Read-only trace; no code edits. Docs in
+    change_requests/INV-2026-10-14-002-menu-item-visibility-inventory-logic/.'
+
+- id: BUG-2026-10-14-001
+  type: BUG
+  title: 'Negative-stock mode ignored — when POS inventory_negative=Yes the app still
+    hides/blocks stock_out=Y items; all inventory gates must be bypassed (items shown,
+    fully orderable)'
+  status: INTAKE
+  status_note: 'INTAKE 2026-10-14. Holding at Planning gate (owner: "stay at gate").
+    Source: INV-2026-10-14-002 F-8. Owner decisions OD-INV2-1..7 recorded. Live impact:
+    541 hides 62/406 items (30/32 coffees), 689 hides 69/126, 478 hides 10/149.'
+  priority: P1
+  risk: HIGH
+  owner_action: 'Say "Planning for BUG-2026-10-14-001" to proceed. Decisions needed:
+    confirm P1, approve touching ReviewOrder.jsx (CRITICAL) + CartContext.js (HIGH),
+    how flag reaches addToCart, approve one preprod test order.'
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/MenuItems.jsx:399-404 · frontend/src/components/MenuItem/MenuItem.jsx:56-57,161-170,231-240
+    · frontend/src/context/CartContext.js:228-232 · frontend/src/pages/ReviewOrder.jsx:1189-1240
+    · frontend/src/components/CustomizeItemModal/CustomizeItemModal.jsx:264-275
+  artefacts: INTAKE_DOC
+  registered: '2026-10-14'
+  last_updated: '2026-10-14'
+  related:
+  - INV-2026-10-14-002
+  - CR-2026-09-07-001
+  - CR-2026-09-08-001
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'FE-only fix. inventory_negative flag from web/restaurant-info (already fetched).
+    5 touch points. No Fast Lane (hotspot files). Docs in
+    change_requests/BUG-2026-10-14-001-inventory-negative-bypass-stock-gates/.'
