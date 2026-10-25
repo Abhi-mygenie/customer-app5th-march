@@ -10,7 +10,8 @@ import RepeatItemModal from '../RepeatItemModal/RepeatItemModal';
 import CookingInstructionsModal from '../CookingInstructionsModal/CookingInstructionsModal';
 import './OrderItemCard.css';
 
-const OrderItemCard = ({ cartItem, showCookingInstructions = true }) => {
+// BUG-2026-10-14-001: inventoryEnforced threaded to CustomizeItemModal
+const OrderItemCard = ({ cartItem, showCookingInstructions = true, inventoryEnforced = true }) => {
   const { updateQuantity, addToCart, updateCookingInstructions } = useCart();
   // const { restaurantId } = useRestaurantId();
   // const navigate = useNavigate();
@@ -223,6 +224,7 @@ const OrderItemCard = ({ cartItem, showCookingInstructions = true }) => {
           onClose={handleCloseCustomizeModal}
           item={cartItem.item}
           onAddToCart={handleAddToCartFromModal}
+          inventoryEnforced={inventoryEnforced}
         />
       )}
 

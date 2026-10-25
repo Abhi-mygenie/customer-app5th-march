@@ -216,7 +216,8 @@ export const CartProvider = ({ children, restaurantId }) => {
    *   - activeOrderType omitted/null  -> no channel check (legacy callers OK)
    *   - item missing channel flags    -> D-1 default 'Yes' applies; allowed
    */
-  const addToCart = useCallback((item, variations = [], add_ons = [], activeOrderType = null) => {
+  // BUG-2026-10-14-001: 5th param `options` carries inventoryEnforced flag
+  const addToCart = useCallback((item, variations = [], add_ons = [], activeOrderType = null, options = {}) => {
     // CR A-1: defensive channel guard
     if (activeOrderType && !isItemAllowedForChannel(item, activeOrderType)) {
       const channelLabel = getChannelLabel(activeOrderType);
@@ -225,7 +226,8 @@ export const CartProvider = ({ children, restaurantId }) => {
       return;
     }
     // CR-2026-09-07-001: Stock-out guard (Layer 2).
-    if (item.stock_out === 'Y') {
+    // BUG-2026-10-14-001: skip when inventory not enforced (negative-stock mode)
+    if (options.inventoryEnforced !== false && item.stock_out === 'Y') {
       toast.error(`"${item?.name || 'This item'}" is currently out of stock.`);
       logger.cart('addToCart blocked by stock-out', { itemId: item?.id, name: item?.name });
       return;

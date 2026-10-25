@@ -2632,21 +2632,23 @@
   title: 'Negative-stock mode ignored — when POS inventory_negative=Yes the app still
     hides/blocks stock_out=Y items; all inventory gates must be bypassed (items shown,
     fully orderable)'
-  status: PLANNING
-  status_note: 'PLANNING 2026-10-25. Impact Analysis CLOSED, Implementation Plan
-    written (E-1..E-8 across 6 files). All owner decisions approved. Ready for
-    Role 3 — say "Implement BUG-2026-10-14-001" to proceed.'
+  status: IMPLEMENTED
+  status_note: 'IMPLEMENTED 2026-10-25 (Role 3). E-1..E-8 applied across 6 FE files.
+    Self-test: webpack compiled, 0 new errors. Testing agent iteration_25: restaurant
+    689 (inv_negative=Yes) all 126 items visible with ADD buttons, 0 Sold Out badges,
+    0 Low Stock badges; restaurant 716 (inv_negative=No) no regression, 88 items with
+    enforcement active; backend health PASS. Implementation quality: good.'
   priority: P1
   risk: HIGH
-  owner_action: 'Approve Implementation Plan, then say "Implement BUG-2026-10-14-001"'
+  owner_action: 'QA (Role 4) then owner smoke. Say "QA BUG-2026-10-14-001" to proceed.'
   blocked_on: []
   sprint: null
   files: frontend/src/pages/MenuItems.jsx:399-404 · frontend/src/components/MenuItem/MenuItem.jsx:56-57,161-170,231-240
     · frontend/src/context/CartContext.js:228-232 · frontend/src/pages/ReviewOrder.jsx:1189-1240
     · frontend/src/components/CustomizeItemModal/CustomizeItemModal.jsx:264-275
-  artefacts: INTAKE_DOC · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  artefacts: INTAKE_DOC · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER
   registered: '2026-10-14'
-  last_updated: '2026-10-14'
+  last_updated: '2026-10-25'
   related:
   - INV-2026-10-14-002
   - CR-2026-09-07-001

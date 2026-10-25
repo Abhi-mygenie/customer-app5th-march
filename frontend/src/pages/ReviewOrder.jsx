@@ -165,6 +165,9 @@ const ReviewOrder = () => {
   
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
+
+  // BUG-2026-10-14-001: inventory gates only enforced when restaurant explicitly opts in
+  const inventoryEnforced = restaurant?.inventory_negative === 'No';
   const { stations } = useStations(numericRestaurantId);
   // CR-2026-06-17-003 APP-12: QueryClient for forced menu refetch before place-order
   const queryClient = useQueryClient();
@@ -1188,8 +1191,8 @@ const ReviewOrder = () => {
     }
 
     // CR-2026-09-07-001: Layer 3 pre-submission cache-check.
-    // Reads React Query cache — no API call. Layer 3 API (422) is the backstop for cache misses.
-    {
+    // BUG-2026-10-14-001: skip when inventory not enforced (negative-stock mode)
+    if (inventoryEnforced) {
       const cachedMenu = queryClient.getQueryData(['menuSections', restaurantId, stationId]) || [];
       const stockProblems = [];
       for (const cartItem of cartItems) {
@@ -2008,7 +2011,7 @@ const ReviewOrder = () => {
             </div>
             <div className="review-order-items-list">
               {cartItems.map((cartItem) => (
-                <OrderItemCard key={cartItem.cartId} cartItem={cartItem} showCookingInstructions={showCookingInstructions} />
+                <OrderItemCard key={cartItem.cartId} cartItem={cartItem} showCookingInstructions={showCookingInstructions} inventoryEnforced={inventoryEnforced} />
               ))}
               {/* Special Instructions inside items card */}
               {showSpecialInstructions && (

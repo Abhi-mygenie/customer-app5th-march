@@ -61,6 +61,9 @@ const MenuItems = () => {
   // Use numeric ID from restaurant-info response, fallback to restaurantId
   const numericRestaurantId = restaurant?.id?.toString() || restaurantId;
 
+  // BUG-2026-10-14-001: inventory gates only enforced when restaurant explicitly opts in
+  const inventoryEnforced = restaurant?.inventory_negative === 'No';
+
   const { foodFor, orderType: scannedOrderType, isScanned, tableId: scannedTableId, roomOrTable: scannedRoomOrTable } = useScannedTable();
 
   // Fetch menu sections from API (wait for numeric ID)
@@ -396,11 +399,14 @@ const MenuItems = () => {
     });
 
     // CR-2026-09-07-001: Stock-out filter (Layer 1).
-    // Default: hide OOS items. If show_out_of_stock_items='Yes', keep them
-    // visible (sold-out state rendered in MenuItem.jsx).
-    const showStockOut = restaurant?.show_out_of_stock_items === 'Yes';
-    if (!showStockOut) {
-      filtered = filtered.filter(item => item.stock_out !== 'Y');
+    // BUG-2026-10-14-001: skip entire block when inventory is not enforced (negative-stock mode)
+    if (inventoryEnforced) {
+      // Default: hide OOS items. If show_out_of_stock_items='Yes', keep them
+      // visible (sold-out state rendered in MenuItem.jsx).
+      const showStockOut = restaurant?.show_out_of_stock_items === 'Yes';
+      if (!showStockOut) {
+        filtered = filtered.filter(item => item.stock_out !== 'Y');
+      }
     }
 
     if (searchQuery) {
@@ -523,9 +529,9 @@ const MenuItems = () => {
     } else {
       // No variations/add-ons, add directly to cart
       // CR A-1: pass active orderType for defensive eligibility re-check inside CartContext
-      addToCart(item, [], [], scannedOrderType);
+      addToCart(item, [], [], scannedOrderType, { inventoryEnforced });
     }
-  }, [addToCart, scannedOrderType, isBlockedNonQrAdd]);
+  }, [addToCart, scannedOrderType, isBlockedNonQrAdd, inventoryEnforced]);
 
   /**
    * Handle close customization modal
@@ -541,8 +547,8 @@ const MenuItems = () => {
   const handleAddToCartFromModal = useCallback((item, variations, add_ons) => {
     if (isBlockedNonQrAdd()) return;
     // CR A-1: pass active orderType for defensive eligibility re-check inside CartContext
-    addToCart(item, variations, add_ons, scannedOrderType);
-  }, [addToCart, scannedOrderType, isBlockedNonQrAdd]);
+    addToCart(item, variations, add_ons, scannedOrderType, { inventoryEnforced });
+  }, [addToCart, scannedOrderType, isBlockedNonQrAdd, inventoryEnforced]);
 
   /**
    * Handle close repeat modal
@@ -599,10 +605,10 @@ const MenuItems = () => {
       } else {
         // Not in cart, add it
         // CR A-1: pass active orderType for defensive eligibility re-check
-        addToCart(item, [], [], scannedOrderType);
+        addToCart(item, [], [], scannedOrderType, { inventoryEnforced });
       }
     }
-  }, [cartItems, updateQuantity, addToCart, scannedOrderType, isBlockedNonQrAdd]);
+  }, [cartItems, updateQuantity, addToCart, scannedOrderType, isBlockedNonQrAdd, inventoryEnforced]);
 
   /**
    * Handle quantity decrement
@@ -916,6 +922,7 @@ const MenuItems = () => {
                                     categoryTiming={categoryTimings?.[categoryId]}
                                     itemTiming={itemTimings?.[String(item.id)]}
                                     orderType={scannedOrderType}
+                                    inventoryEnforced={inventoryEnforced}
                                   />
                                 );
                               })}
@@ -948,6 +955,7 @@ const MenuItems = () => {
           onClose={handleCloseCustomizeModal}
           item={selectedItemForCustomization}
           onAddToCart={handleAddToCartFromModal}
+          inventoryEnforced={inventoryEnforced}
         />
 
         {/* Repeat Item Modal */}

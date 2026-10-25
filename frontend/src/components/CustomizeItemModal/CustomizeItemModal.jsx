@@ -8,7 +8,8 @@ const CustomizeItemModal = ({
   isOpen,
   onClose,
   item,
-  onAddToCart
+  onAddToCart,
+  inventoryEnforced = true, // BUG-2026-10-14-001: default true preserves existing behaviour
 }) => {
   const [selectedVariations, setSelectedVariations] = useState({});
   const [selectedAddons, setSelectedAddons] = useState({});
@@ -260,8 +261,8 @@ const CustomizeItemModal = ({
                 <div className="customize-addons-list">
                   {item.add_ons.map((addon) => {
                     const quantity = selectedAddons[addon.id] || 0;
-                    // CR-2026-09-07-001: addon stock-out disable
-                    const isAddonStockOut = addon.stock_out === 'Y';
+                    // BUG-2026-10-14-001: suppress addon stock-out when inventory not enforced
+                    const isAddonStockOut = inventoryEnforced && addon.stock_out === 'Y';
                     return (
                       <div key={addon.id} className={`customize-addon-item ${quantity > 0 ? 'selected' : ''} ${isAddonStockOut ? 'customize-addon-item--sold-out' : ''}`}>
                         <label className={`customize-addon-checkbox${isAddonStockOut ? ' customize-addon-checkbox--disabled' : ''}`}>

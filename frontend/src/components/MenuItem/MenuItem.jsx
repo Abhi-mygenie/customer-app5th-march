@@ -22,6 +22,7 @@ const MenuItem = ({
   categoryTiming = null,
   itemTiming = null,
   orderType = null,
+  inventoryEnforced = true, // BUG-2026-10-14-001: default true preserves existing behaviour
 }) => {
   const shouldTruncate = item.description && item.description.length > descriptionLimit;
   const displayDescription = isExpanded || !shouldTruncate
@@ -53,8 +54,9 @@ const MenuItem = ({
   const isChannelAllowed = isItemAllowedForChannel(item, orderType);
 
   // CR-2026-09-07-001: Stock-out state (Layer 1 render).
-  const isStockOut = item.stock_out === 'Y';
-  const isLowStock = !isStockOut && item.food_stock !== null && item.food_stock > 0 && item.food_stock <= 3;
+  // BUG-2026-10-14-001: suppress when inventory not enforced (negative-stock mode)
+  const isStockOut = inventoryEnforced && item.stock_out === 'Y';
+  const isLowStock = inventoryEnforced && !isStockOut && item.food_stock !== null && item.food_stock > 0 && item.food_stock <= 3;
 
   const handleImageError = (e) => {
     // Hide the failed image

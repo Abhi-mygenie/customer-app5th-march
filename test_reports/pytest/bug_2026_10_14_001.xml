@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="6" time="4.744" timestamp="2026-10-25T07:17:45.937172+00:00" hostname="agent-env-be25b412-1666-431b-b47a-473b646ba086"><testcase classname="tests.test_bug_2026_10_14_001.TestRestaurant689InventoryBypass" name="test_restaurant_info_has_inventory_negative_yes" time="1.923"><failure message="assert 405 == 200&#10; +  where 405 = &lt;Response [405]&gt;.status_code">backend/tests/test_bug_2026_10_14_001.py:50: in test_restaurant_info_has_inventory_negative_yes
+    assert response.status_code == 200
+E   assert 405 == 200
+E    +  where 405 = &lt;Response [405]&gt;.status_code</failure></testcase><testcase classname="tests.test_bug_2026_10_14_001.TestRestaurant716InventoryEnforced" name="test_restaurant_info_has_inventory_negative_no" time="2.173"><failure message="assert 405 == 200&#10; +  where 405 = &lt;Response [405]&gt;.status_code">backend/tests/test_bug_2026_10_14_001.py:120: in test_restaurant_info_has_inventory_negative_no
+    assert response.status_code == 200
+E   assert 405 == 200
+E    +  where 405 = &lt;Response [405]&gt;.status_code</failure></testcase><testcase classname="tests.test_bug_2026_10_14_001.TestRestaurant689InventoryBypass" name="test_menu_items_count" time="0.976"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">backend/tests/test_bug_2026_10_14_001.py:70: in test_menu_items_count
+    assert response.status_code == 200
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_bug_2026_10_14_001.TestRestaurant716InventoryEnforced" name="test_menu_items_available" time="0.423"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">backend/tests/test_bug_2026_10_14_001.py:141: in test_menu_items_available
+    assert response.status_code == 200
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_bug_2026_10_14_001.TestBackendHealth" name="test_healthz_endpoint" time="1.629" /><testcase classname="tests.test_bug_2026_10_14_001.TestRestaurant689InventoryBypass" name="test_stock_out_items_exist_in_api" time="0.953"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">backend/tests/test_bug_2026_10_14_001.py:92: in test_stock_out_items_exist_in_api
+    assert response.status_code == 200
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase></testsuite></testsuites>
