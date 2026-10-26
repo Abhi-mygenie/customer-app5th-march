@@ -2691,17 +2691,21 @@
   title: 'Zero-amount order redirects to Razorpay (Rs1 charge) — when loyalty points
     or coupon fully cover the bill (roundedTotal=0), app sends paymentType prepaid
     and opens Razorpay modal instead of placing order as postpaid directly'
-  status: PLANNING
-  status_note: 'PLANNING 2026-10-25. Impact Analysis CLOSED, Implementation Plan
-    written (E-1..E-6, 1 file). D-1 approved (include UX polish). Ready for Role 3
-    — say "Implement BUG-2026-10-25-001" to proceed.'
+  status: IMPLEMENTED
+  status_note: 'IMPLEMENTED 2026-10-25 (Role 3). E-1..E-6 applied in ReviewOrder.jsx.
+    Self-test: webpack compiled, 0 new warnings. Testing agent iteration_26: all 6
+    code changes verified at correct lines, frontend compiles, backend health PASS,
+    ReviewOrder page renders correctly. Zero-amount code logic verified (code-level).
+    End-to-end test needs real coupon/loyalty on preprod.'
   priority: P1
   risk: CRITICAL
-  owner_action: 'Approve Implementation Plan, then say "Implement BUG-2026-10-25-001"'
+  owner_action: 'QA (Role 4) then owner smoke. Test with a coupon/loyalty that covers
+    the full bill — payment selector should disappear, button should say Place Order,
+    no Razorpay modal.'
   blocked_on: []
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx:1551-1552,1609,1745,1785
-  artefacts: INTAKE_DOC · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN
+  artefacts: INTAKE_DOC · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER
   registered: '2026-10-25'
   last_updated: '2026-10-25'
   related:

@@ -556,7 +556,8 @@ const ReviewOrder = () => {
     return onlinePaymentDinein; // Default to dinein setting
   }, [hasRazorpayKey, scannedOrderType, onlinePaymentDinein, onlinePaymentTakeaway, onlinePaymentDelivery]);
   
-  const showPaymentSelector = onlinePaymentEnabled && codEnabled;
+  // BUG-2026-10-25-001: no payment choice needed when nothing to pay
+  const showPaymentSelector = onlinePaymentEnabled && codEnabled && roundedTotal > 0;
   
   // Set default payment method based on available options
   useEffect(() => {
@@ -1548,8 +1549,10 @@ const ReviewOrder = () => {
         
         // Determine payment type based on user selection (FEAT-001)
         // 'online' → 'prepaid' (Razorpay), 'cod' → 'postpaid'
-        const selectedPaymentType = paymentMethod === 'online' ? 'prepaid' : 'postpaid';
-        const shouldTriggerRazorpay = paymentMethod === 'online' && hasRazorpayKey;
+        // BUG-2026-10-25-001: zero-amount orders (loyalty/coupon fully covers bill) skip payment gateway
+        const isZeroAmount = roundedTotal <= 0;
+        const selectedPaymentType = (!isZeroAmount && paymentMethod === 'online') ? 'prepaid' : 'postpaid';
+        const shouldTriggerRazorpay = !isZeroAmount && paymentMethod === 'online' && hasRazorpayKey;
         
         // DEBUG: Log payment configuration before placing order
         logger.order('[FEAT-001] Payment Config:', {
@@ -1606,7 +1609,8 @@ const ReviewOrder = () => {
       logger.order('[PlaceOrder Response]', response);
 
       // Check if Razorpay payment flow needed (only for online payment selection)
-      const shouldProcessRazorpay = paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key;
+      // BUG-2026-10-25-001: backstop — never open Razorpay for zero-amount orders
+      const shouldProcessRazorpay = roundedTotal > 0 && paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key;
       
       if (shouldProcessRazorpay) {
         try {
@@ -1742,7 +1746,8 @@ const ReviewOrder = () => {
             toast.success('Order updated successfully!');
           } else {
             // BUG-041 FIX: Use paymentMethod (user's selection), NOT razorpay_key existence
-            const retryPaymentType = paymentMethod === 'online' ? 'prepaid' : 'postpaid';
+            // BUG-2026-10-25-001: zero-amount orders skip payment gateway (retry path)
+            const retryPaymentType = (roundedTotal > 0 && paymentMethod === 'online') ? 'prepaid' : 'postpaid';
 
             retryResponse = await placeOrder({
               cartItems,
@@ -1782,7 +1787,8 @@ const ReviewOrder = () => {
           }
 
           // BUG-040 FIX: Check if Razorpay payment flow needed after 401 retry
-          const shouldRetryRazorpay = paymentMethod === 'online' && retryResponse?.razorpay_id && restaurant?.razorpay?.razorpay_key;
+          // BUG-2026-10-25-001: backstop — never open Razorpay for zero-amount orders (retry path)
+          const shouldRetryRazorpay = roundedTotal > 0 && paymentMethod === 'online' && retryResponse?.razorpay_id && restaurant?.razorpay?.razorpay_key;
 
           if (shouldRetryRazorpay) {
             try {
@@ -2356,9 +2362,12 @@ const ReviewOrder = () => {
               ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
               : (isEditMode 
                   ? `Update Order ₹${roundedTotal.toFixed(2)}` 
-                  : (paymentMethod === 'online' && hasRazorpayKey
-                      ? `Pay & Proceed ₹${roundedTotal.toFixed(2)}`
-                      : `Place Order ₹${roundedTotal.toFixed(2)}`)
+                  : (roundedTotal <= 0
+                      ? 'Place Order'
+                      : (paymentMethod === 'online' && hasRazorpayKey
+                          ? `Pay & Proceed ₹${roundedTotal.toFixed(2)}`
+                          : `Place Order ₹${roundedTotal.toFixed(2)}`)
+                    )
                 )
             }
           </button>

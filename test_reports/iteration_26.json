@@ -1,0 +1,94 @@
+{
+  "summary": "BUG-2026-10-25-001 zero-amount payment fix verified. All 6 code changes in ReviewOrder.jsx confirmed at correct line numbers. Frontend compiles with only pre-existing eslint warnings. Backend health check passed. ReviewOrder page renders correctly for restaurant 689.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "code_verification": {
+      "bug_markers_found": 5,
+      "expected_markers": 5,
+      "locations": [
+        "Line 559: showPaymentSelector includes '&& roundedTotal > 0'",
+        "Line 1552-1555: isZeroAmount guard + selectedPaymentType/shouldTriggerRazorpay",
+        "Line 1612-1613: shouldProcessRazorpay backstop with 'roundedTotal > 0'",
+        "Line 1749-1750: retryPaymentType guard with 'roundedTotal > 0'",
+        "Line 1790-1791: shouldRetryRazorpay backstop with 'roundedTotal > 0'"
+      ],
+      "button_label_fix": "Line 2365-2368: 'roundedTotal <= 0' check shows 'Place Order' without amount",
+      "result": "PASS - All 6 code changes verified at correct locations"
+    },
+    "frontend_compilation": {
+      "status": "compiled with warnings",
+      "warnings": "Pre-existing eslint warnings (useEffect missing dependencies) - not related to bug fix",
+      "errors": "None",
+      "result": "PASS"
+    },
+    "backend_health": {
+      "endpoint": "/api/healthz",
+      "response": {"ok": true, "mongo": "up"},
+      "result": "PASS"
+    },
+    "review_order_page": {
+      "restaurant": "689 (Kunafa Mahal)",
+      "page_loads": true,
+      "customer_details_visible": true,
+      "order_items_visible": true,
+      "price_breakdown_visible": true,
+      "place_order_button_visible": true,
+      "button_text": "Place Order ₹83.00",
+      "payment_selector_visible": false,
+      "payment_selector_reason": "Restaurant 689 has no Razorpay configured (razorpay: null)",
+      "result": "PASS - Page renders correctly"
+    },
+    "zero_amount_scenario": {
+      "tested": "Code-level verification only",
+      "reason": "End-to-end testing requires real coupon/loyalty that covers full bill - no test data available on preprod",
+      "code_logic_verified": true,
+      "expected_behavior": [
+        "When roundedTotal <= 0: paymentType forced to 'postpaid'",
+        "When roundedTotal <= 0: Razorpay modal skipped",
+        "When roundedTotal <= 0: Payment selector hidden",
+        "When roundedTotal <= 0: Button shows 'Place Order' (no amount)"
+      ]
+    }
+  },
+  "code_review": {
+    "files_reviewed": ["frontend/src/pages/ReviewOrder.jsx"],
+    "key_changes_verified": [
+      "Line 560: const showPaymentSelector = onlinePaymentEnabled && codEnabled && roundedTotal > 0",
+      "Line 1553: const isZeroAmount = roundedTotal <= 0",
+      "Line 1554: const selectedPaymentType = (!isZeroAmount && paymentMethod === 'online') ? 'prepaid' : 'postpaid'",
+      "Line 1555: const shouldTriggerRazorpay = !isZeroAmount && paymentMethod === 'online' && hasRazorpayKey",
+      "Line 1613: const shouldProcessRazorpay = roundedTotal > 0 && paymentMethod === 'online' && response?.razorpay_id && restaurant?.razorpay?.razorpay_key",
+      "Line 1750: const retryPaymentType = (roundedTotal > 0 && paymentMethod === 'online') ? 'prepaid' : 'postpaid'",
+      "Line 1791: const shouldRetryRazorpay = roundedTotal > 0 && paymentMethod === 'online' && retryResponse?.razorpay_id && restaurant?.razorpay?.razorpay_key",
+      "Lines 2365-2368: Button label shows 'Place Order' when roundedTotal <= 0"
+    ],
+    "implementation_quality": "Good - consistent guards at all 4 payment decision points + 2 UX improvements"
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "All 6 code changes for BUG-2026-10-25-001 are correctly implemented",
+    "The fix adds roundedTotal <= 0 guards at 4 payment decision points (main flow + retry flow)",
+    "UX improvements: payment selector hidden and button label simplified when total is zero",
+    "Note: Restaurant 689 has no Razorpay configured, so payment selector wouldn't show regardless of total"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (health check passed)",
+    "frontend": "100% (compiles, page renders correctly)"
+  },
+  "test_credentials": "No login required for code verification and page rendering tests",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "BUG-2026-10-25-001 fix verified via code inspection. All 6 edits in ReviewOrder.jsx confirmed. End-to-end testing of zero-amount payment flow requires a real coupon/loyalty that covers the full bill - this test data may not be available on preprod. The fix is FE-only, touching 1 file with 6 edits at lines ~559, ~1552-1555, ~1612-1613, ~1749-1750, ~1790-1791, ~2365-2368.",
+  "rca_of_the_issue": "When loyalty points or coupon code fully covered the bill (roundedTotal=0), the app was still redirecting to Razorpay payment gateway which asked for Rs1 minimum payment. The fix adds roundedTotal <= 0 guards at 4 payment decision points to force paymentType to 'postpaid', skip Razorpay modal, hide payment selector, and show 'Place Order' button label instead of 'Pay & Proceed Rs0.00'."
+}

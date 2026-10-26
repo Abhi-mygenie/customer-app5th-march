@@ -11,7 +11,7 @@ MyGenie Customer App — QR-based restaurant ordering (scan, browse, cart, pay).
 
 ## What's been implemented
 
-### 2026-10-25 — Deployment + BUG-2026-10-14-001 + QA Backlog Audit
+### 2026-10-25 — Deployment + BUG-2026-10-14-001 + QA Backlog Audit + BUG-2026-10-25-001
 - **Full repo deployment** from `Abhi-mygenie/customer-app5th-march` (main branch) into `/app`
   - 572 memory files synced across 6 subdirectories
   - Backend (FastAPI port 8001) + Frontend (CRA port 3000) running via supervisord
@@ -20,9 +20,11 @@ MyGenie Customer App — QR-based restaurant ordering (scan, browse, cart, pay).
   - When POS `inventory_negative='Yes'` (or absent), all inventory gates are bypassed
   - 6 FE files changed: MenuItems.jsx, MenuItem.jsx, CartContext.js, ReviewOrder.jsx, CustomizeItemModal.jsx, OrderItemCard.jsx
   - Testing: restaurant 689 now shows all 126 items (69 previously hidden); 716 control unchanged
-  - Status: IMPLEMENTED, awaiting QA + owner smoke
-- **QA Backlog Audit** — Full registry audit (117 items)
-  - 26 items at IMPLEMENTED: 6 already QA'd (promote), 11 have QA_HANDOVER (execute), 4 need backfill, 5 INV/incident status review
+- **BUG-2026-10-25-001: Zero-amount Razorpay bypass** — IMPLEMENTED
+  - When `roundedTotal <= 0` (loyalty/coupon covers full bill), forces `postpaid`, skips Razorpay modal
+  - 1 FE file changed: ReviewOrder.jsx (4 guards + 2 UX: hide payment selector, fix button label)
+  - Testing: all 6 code changes verified, compilation clean, no regression
+- **QA Backlog Audit** — Full registry audit (119 items)
   - Handover written: SESSION_HANDOVER_2026-10-25_QA_BACKLOG_AUDIT.md
 
 ## Prioritized backlog (P0/P1/P2)
