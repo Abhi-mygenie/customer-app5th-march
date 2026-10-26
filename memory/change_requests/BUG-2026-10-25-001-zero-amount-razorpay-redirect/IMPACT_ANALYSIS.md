@@ -207,11 +207,13 @@ roundedTotal <= 0
 | V-8 | Restaurant without Razorpay key → order placed directly as before | No regression for non-Razorpay restaurants | Playwright |
 | V-9 | Partial discount (total > 0 but less than original) + online payment → Razorpay opens with correct reduced amount | Discount + payment flow correct | Manual |
 
-## 8. Owner decisions needed
+## 8. Owner decisions — APPROVED 2026-10-25
 
-| # | Decision | Options | Recommendation |
-|---|----------|---------|---------------|
-| D-1 | Include TP-5 + TP-6 (optional UX: hide payment selector + fix button label when zero) | Yes / No | **Yes** — polishes the experience; 2 extra lines, same file, zero risk |
+| # | Decision | Owner answer | Recorded |
+|---|----------|-------------|----------|
+| D-1 | Include TP-5 + TP-6 (hide payment selector + fix button label when zero amount) | **Yes — include** | 2026-10-25 |
+
+**Impact Analysis: CLOSED. Decision locked. Proceed to Implementation Plan.**
 
 ---
 

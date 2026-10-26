@@ -2692,14 +2692,12 @@
     or coupon fully cover the bill (roundedTotal=0), app sends paymentType prepaid
     and opens Razorpay modal instead of placing order as postpaid directly'
   status: PLANNING
-  status_note: 'PLANNING 2026-10-25. Impact Analysis complete. 1 file (ReviewOrder.jsx),
-    4 mandatory guards (G-1..G-4) + 2 optional UX (TP-5/TP-6). roundedTotal already
-    in scope at all sites — no prop threading. Owner decision D-1 pending (include
-    optional UX). Zero risk to non-zero-amount orders.'
+  status_note: 'PLANNING 2026-10-25. Impact Analysis CLOSED — D-1 approved (include
+    TP-5 + TP-6 UX polish). 1 file, 6 touch points (4 mandatory guards + 2 UX).
+    Implementation Plan next.'
   priority: P1
   risk: CRITICAL
-  owner_action: 'Approve D-1 (include TP-5 + TP-6 UX polish — recommended Yes), then
-    say "Implementation Plan for BUG-2026-10-25-001".'
+  owner_action: null
   blocked_on: []
   sprint: null
   files: frontend/src/pages/ReviewOrder.jsx:1551-1552,1609,1745,1785
