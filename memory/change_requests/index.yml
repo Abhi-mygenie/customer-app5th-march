@@ -2659,3 +2659,57 @@
   notes: 'FE-only fix. inventory_negative flag from web/restaurant-info (already fetched).
     5 touch points. No Fast Lane (hotspot files). Docs in
     change_requests/BUG-2026-10-14-001-inventory-negative-bypass-stock-gates/.'
+
+- id: INV-2026-10-25-001
+  type: INV
+  title: 'Zero-amount order (loyalty/coupon fully covers bill) redirects to Razorpay
+    instead of placing directly — Razorpay charges Rs1 minimum. Root cause: ReviewOrder.jsx
+    never checks roundedTotal before selecting prepaid and triggering Razorpay checkout'
+  status: CLOSED
+  status_note: 'CLOSED 2026-10-25. 5/10 steps. Root cause confirmed HIGH confidence:
+    two missing guards at L1551 and L1609 (plus retry copies L1745/L1785). Spawns
+    BUG-2026-10-25-001.'
+  priority: null
+  risk: null
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: null
+  artefacts: INVESTIGATION_REPORT
+  registered: '2026-10-25'
+  last_updated: '2026-10-25'
+  related:
+  - BUG-2026-10-25-001
+  code_markers: false
+  money_path: true
+  closed: '2026-10-25'
+  notes: 'Money-path bug. 4-line fix in ReviewOrder.jsx. Docs in
+    change_requests/INV-2026-10-25-001-zero-amount-razorpay-redirect/.'
+
+- id: BUG-2026-10-25-001
+  type: BUG
+  title: 'Zero-amount order redirects to Razorpay (Rs1 charge) — when loyalty points
+    or coupon fully cover the bill (roundedTotal=0), app sends paymentType prepaid
+    and opens Razorpay modal instead of placing order as postpaid directly'
+  status: INTAKE
+  status_note: 'INTAKE 2026-10-25. Source: INV-2026-10-25-001. Fix: 4 lines in
+    ReviewOrder.jsx (2 guards main flow + 2 guards retry flow). Optional P3 UX:
+    hide payment selector when amount is zero.'
+  priority: P1
+  risk: CRITICAL
+  owner_action: 'Say "Planning for BUG-2026-10-25-001" to proceed. ReviewOrder.jsx
+    is a CRITICAL hotspot — no Fast Lane.'
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/ReviewOrder.jsx:1551-1552,1609,1745,1785
+  artefacts: INTAKE_DOC
+  registered: '2026-10-25'
+  last_updated: '2026-10-25'
+  related:
+  - INV-2026-10-25-001
+  code_markers: false
+  money_path: true
+  closed: null
+  notes: 'CRITICAL money-path. Razorpay minimum Rs1 means customer is charged when
+    they should pay Rs0. Docs in
+    change_requests/BUG-2026-10-25-001-zero-amount-razorpay-redirect/.'
