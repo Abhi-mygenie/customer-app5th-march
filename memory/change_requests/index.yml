@@ -2716,3 +2716,33 @@
   notes: 'CRITICAL money-path. Razorpay minimum Rs1 means customer is charged when
     they should pay Rs0. Docs in
     change_requests/BUG-2026-10-25-001-zero-amount-razorpay-redirect/.'
+
+- id: BUG-2026-10-25-002
+  type: BUG
+  title: 'order_amount unconditionally ceiled in orderService.ts — Math.ceil(1.26)=2
+    overcharges customer when total_round=No. Affects placeOrder (L381) and
+    updateCustomerOrder (L529)'
+  status: IMPLEMENTED
+  status_note: 'IMPLEMENTED 2026-10-25 (Role 5 Bug Fix). Replaced Math.ceil with
+    parseFloat(...toFixed(2)) at L382 (placeOrder) and L531 (updateCustomerOrder).
+    Testing agent iteration_27: all code verifications PASS, no Math.ceil on
+    order_amount, frontend compiles clean, backend health PASS. Retest: false.'
+  priority: P0
+  risk: CRITICAL
+  owner_action: 'QA + owner smoke on restaurant 510: order ₹1.26 item → verify
+    order_amount in network payload is 1.26 (not 2). Also test a total_round=Yes
+    restaurant to confirm no regression.'
+  blocked_on: []
+  sprint: null
+  files: frontend/src/api/services/orderService.ts:382,531
+  artefacts: INTAKE_DOC · BUG_FIX_REPORT
+  registered: '2026-10-25'
+  last_updated: '2026-10-25'
+  related:
+  - BUG-2026-10-25-001
+  code_markers: false
+  money_path: true
+  closed: null
+  notes: 'P0 money-path. Every restaurant with total_round=No and fractional total
+    overcharges. 2-line fix. Docs in
+    change_requests/BUG-2026-10-25-002-order-amount-unconditional-ceil/.'

@@ -24,6 +24,10 @@ MyGenie Customer App — QR-based restaurant ordering (scan, browse, cart, pay).
   - When `roundedTotal <= 0` (loyalty/coupon covers full bill), forces `postpaid`, skips Razorpay modal
   - 1 FE file changed: ReviewOrder.jsx (4 guards + 2 UX: hide payment selector, fix button label)
   - Testing: all 6 code changes verified, compilation clean, no regression
+- **BUG-2026-10-25-002: order_amount unconditional ceil fix** — IMPLEMENTED (P0)
+  - `orderService.ts` was applying `Math.ceil()` to `order_amount` unconditionally — ₹1.26 → ₹2 when `total_round='No'`
+  - 1 FE file changed: orderService.ts (2 lines: Math.ceil → parseFloat toFixed(2))
+  - Testing: verified no Math.ceil on order_amount, compilation clean
 - **QA Backlog Audit** — Full registry audit (119 items)
   - Handover written: SESSION_HANDOVER_2026-10-25_QA_BACKLOG_AUDIT.md
 

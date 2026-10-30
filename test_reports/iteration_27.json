@@ -1,0 +1,79 @@
+{
+  "summary": "BUG-2026-10-25-002 fix verified. Math.ceil replaced with parseFloat(...toFixed(2)) at both locations in orderService.ts. All code verifications passed. Frontend compiles and loads correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "code_verification": {
+      "math_ceil_check": {
+        "command": "grep -n 'Math.ceil' orderService.ts",
+        "result": "No Math.ceil found - PASS",
+        "expected": "Zero hits on order_amount lines"
+      },
+      "bug_markers": {
+        "command": "grep -n 'BUG-2026-10-25-002' orderService.ts",
+        "result": "Found at L381 and L530 - PASS",
+        "expected": "2 markers"
+      },
+      "placeOrder_fix": {
+        "line": 382,
+        "code": "order_amount: parseFloat((orderData.totalToPay || 0).toFixed(2))",
+        "result": "PASS - Math.ceil replaced with parseFloat toFixed(2)"
+      },
+      "updateCustomerOrder_fix": {
+        "line": 531,
+        "code": "order_amount: parseFloat((totalToPay || 0).toFixed(2))",
+        "result": "PASS - Math.ceil replaced with parseFloat toFixed(2)"
+      }
+    },
+    "backend_health": {
+      "endpoint": "/api/healthz",
+      "response": {"ok": true, "mongo": "up"},
+      "result": "PASS"
+    },
+    "frontend_compilation": {
+      "status": "compiled with 1 warning",
+      "warnings": "Pre-existing eslint warning - not related to bug fix",
+      "errors": "None",
+      "result": "PASS"
+    },
+    "frontend_loading": {
+      "url": "https://be25b412-1666-431b-b47a-473b646ba086.preview.emergentagent.com/689",
+      "restaurant": "689 (Kunafa Mahal)",
+      "page_loads": true,
+      "elements_visible": ["Login button", "Restaurant name", "Phone input", "Name input", "BROWSE MENU button"],
+      "api_calls_successful": ["menu-master", "restaurant-info", "restaurant-product"],
+      "result": "PASS"
+    }
+  },
+  "code_review": {
+    "files_reviewed": ["frontend/src/api/services/orderService.ts"],
+    "fix_description": "Replaced unconditional Math.ceil() with parseFloat(...toFixed(2)) for order_amount in both placeOrder (L382) and updateCustomerOrder (L531)",
+    "fix_rationale": "When restaurant has total_round='No' and total is fractional (e.g. ₹1.26), Math.ceil was sending order_amount:2 instead of 1.26, overcharging customers. The fix passes the exact value from ReviewOrder which already handles rounding based on total_round setting.",
+    "backward_compatibility": "Fix preserves correct behavior for total_round='Yes' restaurants because ReviewOrder already ceils the value before passing it"
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Both code changes for BUG-2026-10-25-002 are correctly implemented",
+    "The fix uses parseFloat((value || 0).toFixed(2)) which handles null/undefined safely and rounds to 2 decimal places",
+    "Comment markers added at both locations for traceability"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (health check passed)",
+    "frontend": "100% (compiles, page loads correctly)"
+  },
+  "test_credentials": "No login required for code verification tests",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "BUG-2026-10-25-002 fix verified via code inspection. Both edits in orderService.ts confirmed at L382 and L531. The fix replaces Math.ceil with parseFloat toFixed(2) for order_amount field. End-to-end testing of fractional order amounts would require a restaurant with total_round='No' and items with fractional prices - this is a POS configuration that may not be available on preprod.",
+  "rca_of_the_issue": "orderService.ts was unconditionally applying Math.ceil() to order_amount at L381 (placeOrder) and L529 (updateCustomerOrder). This caused fractional totals like ₹1.26 to be sent as ₹2 to POS, overcharging customers when restaurant had total_round='No'. The fix passes the already-rounded value from ReviewOrder (which respects the restaurant's total_round setting) using parseFloat toFixed(2) instead of Math.ceil."
+}

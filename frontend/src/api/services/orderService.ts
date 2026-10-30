@@ -378,7 +378,8 @@ export const placeOrder = async (orderData: any): Promise<ApiPlaceOrderResponse>
       coupon_discount_title: orderData.couponTitle || null,  // CR-2026-10-09-002
       cust_phone: custPhone || orderData.customerPhone || '',
       schedule_at: null,
-      order_amount: Math.ceil(orderData.totalToPay || 0),
+      // BUG-2026-10-25-002: pass the already-rounded value from ReviewOrder, don't re-ceil
+      order_amount: parseFloat((orderData.totalToPay || 0).toFixed(2)),
       order_note: orderData.orderNote || orderData.specialInstructions || '',
       order_type: orderData.orderType || 'dinein',
       payment_method: 'cash_on_delivery',
@@ -526,7 +527,8 @@ export const updateCustomerOrder = async ({
       cust_name: customerName,
       cust_phone: customerPhone,
       schedule_at: null,
-      order_amount: Math.ceil(totalToPay),
+      // BUG-2026-10-25-002: pass the already-rounded value from ReviewOrder, don't re-ceil
+      order_amount: parseFloat((totalToPay || 0).toFixed(2)),
       order_note: orderNote,
       order_type: orderType,
       payment_method: 'cash_on_delivery',
