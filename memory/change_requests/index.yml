@@ -2783,7 +2783,7 @@
   status_note: 'INTAKE COMPLETE 2026-11-14. Root cause confirmed by INV-2026-11-14-001.
     Fast Lane eligible: 2 × 1-character insertions, 1 file, LOW risk. Awaiting owner
     Fast Lane approval.'
-  priority: P1
+  priority: P0
   risk: LOW
   owner_action: 'Approve Fast Lane for BUG-2026-11-14-001 to implement the 2-line
     fix immediately'
@@ -2812,7 +2812,7 @@
     scope). Root cause confirmed by INV-2026-11-14-001. Requires Planning: flatten
     all sections into ranked list when searchQuery active. MEDIUM risk (render path
     change, existing no-search path untouched).'
-  priority: P1
+  priority: P0
   risk: MEDIUM
   owner_action: null
   blocked_on: []
@@ -2869,7 +2869,7 @@
     detection = price===1; ADD button unchanged; cart/order/payment flow unchanged;
     mixed cart allowed. Display-only change in 2 files. Risk downgraded HIGH→MEDIUM
     (normal flow confirmed). Ready for Planning.'
-  priority: P2
+  priority: P0
   risk: MEDIUM
   owner_action: null
   blocked_on: []
@@ -2894,7 +2894,7 @@
     Supported destinations mapped (menu, station, about, contact). Admin UX: link
     picker dropdown in AdminBannersPage. Click-vs-swipe disambiguation is main risk.
     Ready for Planning.'
-  priority: P2
+  priority: P0
   risk: MEDIUM
   owner_action: null
   blocked_on: []
