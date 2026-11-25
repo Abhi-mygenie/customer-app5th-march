@@ -90,8 +90,8 @@ body{font-family:'Montserrat',sans-serif;background:#0F172A;color:#1E293B;min-he
 .qty-btn:active{background:#FFE4D6}
 .qty-num{width:28px;height:28px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#E8622A;border-left:1.5px solid #E8622A;border-right:1.5px solid #E8622A}
 
-/* ── New item card highlight ── */
-.new-item-highlight{background:linear-gradient(135deg,#F0FDF4 0%,#ECFDF5 100%);border:1.5px solid #A7F3D0;border-radius:10px;padding:10px 12px}
+/* ── New item card — subtle, no green ── */
+.new-item-highlight{background:#FAFAFA;border:1px solid #E8622A33;border-radius:10px;padding:10px 12px}
 .new-item-row{display:flex;justify-content:space-between;align-items:center}
 .new-item-name{font-size:13px;font-weight:700;color:#1E293B;display:flex;align-items:center;gap:6px}
 .new-item-price{font-size:14px;font-weight:800;color:#E8622A}
@@ -377,13 +377,13 @@ body{font-family:'Montserrat',sans-serif;background:#0F172A;color:#1E293B;min-he
                 </div>
               </div>
 
-              <!-- NEW ITEMS — FIRST & PROMINENT -->
-              <div class="section-card" data-testid="proposed-new-items-first" style="border-color:#A7F3D0;background:linear-gradient(135deg,#F0FDF4,#ECFDF5)">
+              <!-- NEW ITEMS — FIRST, SUBTLE STYLING -->
+              <div class="section-card" data-testid="proposed-new-items-first" style="border-color:#E2E8F0">
                 <div class="section-header">
-                  <div class="section-icon green">🛍</div>
+                  <div class="section-icon orange">🛍</div>
                   <div class="section-title-row">
-                    <span class="section-title" style="color:#059669">New Items</span>
-                    <span class="items-badge green">1 item</span>
+                    <span class="section-title">New Items</span>
+                    <span class="items-badge" style="background:#FFF4EE;color:#E8622A">1 item</span>
                   </div>
                 </div>
                 <div class="new-item-highlight">
