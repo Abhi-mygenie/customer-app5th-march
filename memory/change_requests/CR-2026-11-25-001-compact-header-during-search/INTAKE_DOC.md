@@ -73,6 +73,23 @@ No backend, data, cart or payment impact. `money_path: null`.
 - Owner screenshots from INV-2026-11-25-001 (Swiggy vs Scan & Order) show the header taking up space above the results.
 - Estimated gain: about 20–30px, roughly a third to half of one more compact result card.
 
+## 7a. Measured Evidence (2026-11-25, 390px viewport, restaurant 716, query "chicken")
+
+- App header actual height: **73px** (not 55–60px as estimated).
+- Search bar row: top 78px, height 56px, so results start at about 140px.
+- After scrolling, the header scrolls away (top -131px) and only the search bar stays pinned at the top. The header only costs space before the user scrolls, but that is exactly when the keyboard first opens.
+- Review Order header (`.review-order-header`) uses the same padding, 3px border and font scale, so reusing it gives about 0px gain. Rejected.
+
+## 7b. Options for Planning (owner asked for a recommendation, customer experience first)
+
+| Option | What the customer sees while searching | Space gained |
+|---|---|---|
+| A. Reuse Review header | Same as today | ~0px |
+| B. Slim header | Thinner orange bar with a smaller name | ~25–30px |
+| C. Search takes over the top (Swiggy/Zomato pattern) **RECOMMENDED** | Orange bar hidden; the search row gets a back arrow that clears the search | ~73px |
+
+Recommendation: C. It uses the most space, is a familiar search pattern and keeps the top uncluttered. The back arrow must **clear the search** (go back to the full menu), not leave the page. Hamburger and phone are hidden only while typing. Pending owner decision.
+
 ## 8. Duplicate Check
 
 DISTINCT. Related to BUG-2026-11-14-001, BUG-2026-11-25-001, BUG-2026-11-25-002 and INV-2026-11-25-001 (same space-optimisation theme, different element).
