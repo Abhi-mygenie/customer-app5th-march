@@ -2882,26 +2882,28 @@
   title: 'Banner click on PromoBanner redirects to internal app page — PromoBanner
     onClick uses existing bannerLink field via React Router navigate()'
   status: INTAKE
-  status_note: 'INTAKE COMPLETE 2026-11-14. Owner confirmed internal links only.
-    Supported destinations mapped (menu, station, about, contact). Admin UX: link
-    picker dropdown in AdminBannersPage. Click-vs-swipe disambiguation is main risk.
-    Ready for Planning.'
+  status_note: 'PLANNING COMPLETE 2026-11-25. Impact Analysis + Implementation Plan
+    written. 7 edits (E-1 to E-7) across 2 files, ~40 lines. ?section= confirmed
+    NOT supported in MenuItems — excluded from picker. 4 destination options confirmed.
+    suppressNextClick pattern for touch-click double-fire. 13-point QA matrix.
+    Ready for Implementation on owner approval.'
   priority: P0
   risk: MEDIUM
-  owner_action: null
+  owner_action: 'Approve Implementation — say "implement CR-2026-11-14-003"'
   blocked_on: []
   sprint: null
   files: frontend/src/components/PromoBanner/PromoBanner.jsx ·
     frontend/src/pages/admin/AdminBannersPage.jsx
-  artefacts: INTAKE_DOC
+  artefacts: INTAKE_DOC · IMPACT_ANALYSIS_AND_PLAN
   registered: '2026-11-14'
-  last_updated: '2026-11-14'
+  last_updated: '2026-11-25'
   related: []
   code_markers: false
   money_path: null
   closed: null
   notes: 'bannerLink already exists in DB model (server.py line 243) and is passed
-    from LandingPage.jsx (line 959) — no backend change needed.'
+    from LandingPage.jsx (line 959) — no backend change needed. LandingPage.jsx
+    unchanged. ?section= not in scope (not supported by MenuItems).'
 
 - id: CR-2026-11-14-004
   type: CR
