@@ -634,14 +634,17 @@ const MenuItems = () => {
       <div className="review-order-page page-transition">
 
         {/* Show skeleton loader when restaurant data is loading or fetching */}
-        {(restaurantLoading || restaurantFetching) ? (
-          <HeaderSkeleton showSearchIcon={true} />
-        ) : (
-          <Header
-            brandText={restaurant?.name}
-            phone={configPhone || restaurant?.phone}
-            onBackClick={handleBackToMenu}
-          />
+        {/* CR-2026-11-25-001: header hidden during active search (Option C) */}
+        {!searchQuery.trim() && (
+          (restaurantLoading || restaurantFetching) ? (
+            <HeaderSkeleton showSearchIcon={true} />
+          ) : (
+            <Header
+              brandText={restaurant?.name}
+              phone={configPhone || restaurant?.phone}
+              onBackClick={handleBackToMenu}
+            />
+          )
         )}
 
         {/* {showSearch && (
@@ -704,6 +707,7 @@ const MenuItems = () => {
             onDietaryTagChange={setActiveDietaryTags}
             availableDietaryTags={availableDietaryTags}
             hideFilters={!!searchQuery.trim()}
+            onSearchBack={() => setSearchQuery('')}  // CR-2026-11-25-001
           />
 
           {/* Edit Order Mode Banner */}

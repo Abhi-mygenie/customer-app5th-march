@@ -1,4 +1,5 @@
 import React from 'react';
+import { IoArrowBackOutline } from 'react-icons/io5';
 import './SearchAndFilterBar.css';
 
 const SearchAndFilterBar = ({ 
@@ -11,6 +12,7 @@ const SearchAndFilterBar = ({
   onDietaryTagChange,
   availableDietaryTags = [],
   hideFilters = false,  // BUG-2026-11-25-002: hide chips during active search
+  onSearchBack,  // CR-2026-11-25-001: back arrow during search, clears query
 }) => {
   // Handle veg toggle click (single select for veg/non-veg/egg)
   const handleVegToggle = (filter) => {
@@ -42,6 +44,18 @@ const SearchAndFilterBar = ({
     <div className="search-filter-bar-container" data-testid="search-filter-bar">
       {/* Row 1: Search + Veg Toggle */}
       <div className="search-filter-row">
+        {/* CR-2026-11-25-001: back arrow replaces app header during search */}
+        {hideFilters && onSearchBack && (
+          <button
+            type="button"
+            className="search-back-btn"
+            onClick={onSearchBack}
+            aria-label="Clear search and go back to menu"
+            data-testid="search-back-btn"
+          >
+            <IoArrowBackOutline />
+          </button>
+        )}
         <div className="search-bar-section">
           <div className="search-bar">
             <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
