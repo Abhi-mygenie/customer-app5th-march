@@ -1,0 +1,43 @@
+{
+  "summary": "Frontend-only verification of CR-2026-11-25-001 (compact header during search, Option C) and BUG-2026-11-25-001 (category label inline before price). V1-V13 all pass. Preview caveat: the external preprod API (preprod.mygenie.online) is very slow. restaurant-product takes about 10-13s and restaurant-info about 8-13s, but the axios timeout is 8s, so on a plain load the menu often shows 'No menu items available'. To test the results-dependent checks (V3, V7 results Clear, V11, V13) I served the real restaurant-product response (594KB, 353 items, fetched with curl) through Playwright route interception. The app code was not changed.",
+  "results": {
+    "V1": "PASS - with empty search app-header is visible and search-back-btn is absent",
+    "V2": "PASS - after typing 's', app-header is removed. Back button (x16,y15,36x36) sits on the same row as the input (x60,y13,w314), to its left. Input keeps focus and holds 's'",
+    "V3": "PASS - header stays hidden on every keystroke (counts [0,0,0]), focus stays in the input, results render ('soup' 5, 'beer' 1, 'roast' 4, 'a' 305)",
+    "V4": "PASS - back arrow empties the query, header and veg-toggle-group come back, category nav is present, URL is still /716/menu. When restaurant-info is refetching, the header slot shows HeaderSkeleton instead (see minor issue)",
+    "V5": "PASS - type 'ab' hides the header, deleting both characters brings it back",
+    "V6": "PASS - spaces only: header stays visible, no back arrow",
+    "V7": "PASS - empty-search-clear-btn ('zzqxw') clears the query and the header returns. search-meta-clear-btn clears the query. The header slot comes back but can show HeaderSkeleton for several seconds while restaurant-info refetches (slow preprod)",
+    "V8": "PASS - header-back-btn with no search goes to /716",
+    "V9": "PASS - search input top moves from 86px to 13px (73px)",
+    "V10": "PASS - /716/stations renders its own header slot and has no search-back-btn. The header showed as a skeleton in the screenshot because of slow restaurant-info (not related to the CR)",
+    "V11": "PASS - Veg is still active after search and back arrow (class 'veg-toggle-btn veg active'). The search returned 27 veg results",
+    "V12": "PASS - at 1280px, back button and input are on the same row, header is hidden while searching and returns after back. No layout break",
+    "V13": "PASS - 'soup', 'beer', 'roast', 'a' (50 tagged cards checked): category tag is left of the price every time, vertical centres within 2px, e.g. 'Soups ₹369'. No stacking"
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Menu load in preview", "issue": "Environment issue that already existed: preprod restaurant-product (10-13s) and restaurant-info (8-13s) are slower than the 8s axios timeout. Real users in preview get 'No menu items available at the moment.' and long header skeletons. Not caused by this CR.", "affected_selectors": [".menu-item", "[data-testid=app-header]"]}
+    ],
+    "design_issues": [
+      {"screen": "MenuItems after clearing search", "issues": ["The header slot renders HeaderSkeleton whenever restaurantFetching is true, including background refetches. After the back arrow or Clear, users can see a pulsing skeleton header for several seconds even though restaurant data is already cached. Consider (restaurantLoading && !restaurant) instead of restaurantLoading || restaurantFetching. Optional; behaviour existed before this CR but is more visible now that the header remounts."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: show HeaderSkeleton only when no restaurant data is cached yet, not during background refetch (MenuItems.jsx ~L639)",
+    "Environment: think about raising the axios timeout or adding a retry for the slow preprod restaurant-product and restaurant-info endpoints (8s now, actual 8-13s)"
+  ],
+  "critical_code_review_comments": [
+    "The CR is implemented cleanly: the header is conditionally rendered on searchQuery.trim(), onSearchBack resets the query only, and filter state (activeFilter) is kept",
+    "MenuItems.jsx is 1143 lines, over the 700-line guideline. Consider splitting the search-results rendering into its own component"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100% (13/13 checks)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "In preview, preprod.mygenie.online/api/v1/web/restaurant-product often times out (8s client timeout vs 10-13s actual). Workaround for testing: curl -X POST .../web/restaurant-product -d '{\"restaurant_id\":\"716\",\"category_id\":\"0\"}' > /tmp/p.json, then in Playwright use page.route('**/web/restaurant-product', fulfill with the file plus an Access-Control-Allow-Origin header). The header slot shows HeaderSkeleton (no data-testid=app-header) while restaurant-info is fetching."
+}

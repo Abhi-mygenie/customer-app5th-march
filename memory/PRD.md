@@ -52,3 +52,9 @@ Deploy the existing React frontend repo (Abhi-mygenie/customer-app5th-march, mai
 - Test full customer flow: QR scan → browse menu → add to cart → order
 - Add production domain to CORS_ORIGINS when going live
 - Test login flow with phone +919579504871
+
+## 2026-11-25 — CR-2026-11-25-001 Compact header during search (Option C)
+- While searching on the menu page, the app header is hidden and a back arrow on the search row clears the search (stays on the page). Gains ~73px on mobile.
+- Header skeleton now shows only when no restaurant data is cached.
+- Tested: iteration_31 13/13 pass (including the inline category-before-price check for BUG-2026-11-25-001).
+- Backlog: preprod API slower than the 8s client timeout in preview; CR-2026-11-14-001 (room OTP, P1); CR-2026-11-14-003 (banner click redirect).

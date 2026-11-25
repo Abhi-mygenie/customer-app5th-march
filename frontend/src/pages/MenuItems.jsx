@@ -636,7 +636,7 @@ const MenuItems = () => {
         {/* Show skeleton loader when restaurant data is loading or fetching */}
         {/* CR-2026-11-25-001: header hidden during active search (Option C) */}
         {!searchQuery.trim() && (
-          (restaurantLoading || restaurantFetching) ? (
+          (!restaurant && (restaurantLoading || restaurantFetching)) ? (
             <HeaderSkeleton showSearchIcon={true} />
           ) : (
             <Header

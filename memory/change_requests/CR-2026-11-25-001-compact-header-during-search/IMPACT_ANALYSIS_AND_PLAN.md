@@ -189,3 +189,12 @@ The adjacent-sibling selector only matches while the arrow is rendered, so the n
 None open. Option C was confirmed. The input "x" clear button is **not** added (out of scope; it can be raised as a separate CR if wanted).
 
 **Next:** gate approval, then Implementation (Role 3).
+
+---
+
+## PART E — IMPLEMENTATION RECORD (2026-11-25, Role 3)
+
+- E1–E5 implemented exactly as planned (markers `CR-2026-11-25-001`).
+- Extra edit from a testing finding: the header skeleton condition changed to `!restaurant && (restaurantLoading || restaurantFetching)`, so clearing a search does not show a pulsing skeleton during a background refetch when restaurant data is already cached.
+- Testing agent `/app/test_reports/iteration_31.json`: V1–V12 PASS, and BUG-2026-11-25-001 inline category-before-price PASS (13/13).
+- Known environment issue (not in scope): preprod restaurant-product and restaurant-info take 8–13s against an 8s axios timeout, so the preview menu can show "No menu items available".
