@@ -3086,19 +3086,20 @@
 - id: CR-2026-11-25-002
   type: CR
   title: 'Backend menu proxy + stale-while-revalidate cache (5-min TTL) for restaurant-product'
-  status: INTAKE
-  status_note: 'INTAKE COMPLETE 2026-11-25. Registered from BUG-2026-11-25-003 investigation.
-    Owner approved stale-while-revalidate + 5-min TTL. Two owner decisions still open
-    before Planning: (1) include field stripping? (2) restaurant-info in scope?'
+  status: PARKED
+  status_note: 'PARKED 2026-11-25 (owner decision). No backend proxy CR to build.
+    Resolution path: POS_TEAM_BRIEF.md sent to POS team to fix payload at source
+    (remove unused fields + deduplicate add_ons). Frontend fix limited to per-endpoint
+    timeout raise if still needed after POS fixes. Cache approach and 5-min TTL
+    remain documented for future if POS fixes insufficient.'
   priority: P1
   risk: MEDIUM
-  owner_action: 'Approve Planning. Answer: (1) include field stripping in this CR?
-    (2) include restaurant-info proxy too?'
+  owner_action: null
   blocked_on: []
   sprint: null
   files: backend/server.py · frontend/src/api/services/restaurantService.js
     · frontend/src/api/config/endpoints.js
-  artefacts: INTAKE_DOC
+  artefacts: INTAKE_DOC · POS_TEAM_BRIEF (in BUG-2026-11-25-003 folder)
   registered: '2026-11-25'
   last_updated: '2026-11-25'
   related:
@@ -3107,5 +3108,5 @@
   code_markers: false
   money_path: null
   closed: null
-  notes: 'Cache option A (in-process dict, 1 worker) recommended. No new infra deps.
-    Field stripping saves additional ~130KB. 5-min TTL owner-approved 2026-11-25.'
+  notes: 'Owner decision 2026-11-25: no separate CR. POS team brief is the answer.
+    Parked — revisit only if POS team cannot act and timeout remains a problem.'
