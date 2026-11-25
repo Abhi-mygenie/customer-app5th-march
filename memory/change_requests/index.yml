@@ -2746,3 +2746,193 @@
   notes: 'P0 money-path. Every restaurant with total_round=No and fractional total
     overcharges. 2-line fix. Docs in
     change_requests/BUG-2026-10-25-002-order-amount-unconditional-ceil/.'
+- id: INV-2026-11-14-001
+  type: INV
+  title: 'Search UX — results hidden by keyboard (banner/category not hidden) + exact
+    match buried below partial matches (cross-category ordering)'
+  status: CLOSED
+  status_note: 'INVESTIGATION COMPLETE 2026-11-14 (8/10 steps). Root cause A: PromoBanner
+    + CategoryBox not hidden during search → keyboard obscures results (CODE_ERROR).
+    Root cause B: filterItems() no sort + per-section render → cross-category exact
+    match buried (PLAN_GAP). Confidence: HIGH. Findings split into BUG-2026-11-14-001
+    (Fast Lane) and BUG-2026-11-14-002 (Planning). CR-2026-11-14-004 superseded by
+    BUG-002.'
+  priority: null
+  risk: MEDIUM
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/MenuItems.jsx (lines 741, 754, 412-417, 829-933)
+  artefacts: INVESTIGATION_REPORT
+  registered: '2026-11-14'
+  last_updated: '2026-11-14'
+  related:
+  - BUG-2026-11-14-001
+  - BUG-2026-11-14-002
+  - CR-2026-11-14-004
+  code_markers: false
+  money_path: null
+  closed: '2026-11-14'
+  notes: null
+
+- id: BUG-2026-11-14-001
+  type: BUG
+  title: 'Search results hidden by mobile keyboard — PromoBanner and category nav
+    not hidden when searchQuery is active (MenuItems.jsx lines 741, 754)'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-14. Root cause confirmed by INV-2026-11-14-001.
+    Fast Lane eligible: 2 × 1-character insertions, 1 file, LOW risk. Awaiting owner
+    Fast Lane approval.'
+  priority: P1
+  risk: LOW
+  owner_action: 'Approve Fast Lane for BUG-2026-11-14-001 to implement the 2-line
+    fix immediately'
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/MenuItems.jsx:741,754
+  artefacts: INTAKE_DOC
+  registered: '2026-11-14'
+  last_updated: '2026-11-14'
+  related:
+  - INV-2026-11-14-001
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'Fix: add && !searchQuery to PromoBanner condition (line 741) and CategoryBox
+    condition (line 754). Effect: banner + category nav disappear while search is
+    active, full screen height available for results.'
+
+- id: BUG-2026-11-14-002
+  type: BUG
+  title: 'Search ranking — exact item match not shown first; cross-category render
+    order buries exact matches from late POS categories below partial matches from
+    early categories'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-14. Supersedes CR-2026-11-14-004 (narrower
+    scope). Root cause confirmed by INV-2026-11-14-001. Requires Planning: flatten
+    all sections into ranked list when searchQuery active. MEDIUM risk (render path
+    change, existing no-search path untouched).'
+  priority: P1
+  risk: MEDIUM
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/MenuItems.jsx (filterItems lines 412-417, render loop
+    lines 829-933)
+  artefacts: INTAKE_DOC
+  registered: '2026-11-14'
+  last_updated: '2026-11-14'
+  related:
+  - INV-2026-11-14-001
+  - CR-2026-11-14-004
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'Fix: when searchQuery active, flatten all sections, score by relevance
+    (exact=0, starts-with=1, name-partial=2, desc-only=3), render as single ranked
+    list. Supersedes CR-2026-11-14-004.'
+
+- id: CR-2026-11-14-001
+  type: CR
+  title: 'OTP required for first order into a room — new config flag otpRequiredRoomFirstOrder,
+    in-page OTP modal on LandingPage for room State 3 when flag is on'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-14. All 3 owner decisions received: first
+    order only after every new check-in; config-driven per-restaurant; can proceed
+    independently of CR-2026-10-08-001 (different flags, no conflict). Ready for
+    Planning.'
+  priority: P1
+  risk: HIGH
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: backend/server.py · frontend/src/context/RestaurantConfigContext.jsx ·
+    frontend/src/pages/LandingPage.jsx · frontend/src/pages/admin/AdminVisibilityPage.jsx
+  artefacts: INTAKE_DOC
+  registered: '2026-11-14'
+  last_updated: '2026-11-14'
+  related:
+  - CR-2026-10-08-001
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'OTP modal in-page (not separate route). Backend send-otp + login endpoints
+    still live. Edit-order (State 2) keeps current skip-otp path. LandingPage.jsx
+    is §6.7 hotspot — HIGH care.'
+
+- id: CR-2026-11-14-002
+  type: CR
+  title: 'APS (As Per Size) label for items with price=1 — show "APS" badge instead
+    of ₹1 on MenuItem and in ReviewOrder summary until POS updates final price'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-14 (re-intake v2). Owner spec fully resolved:
+    detection = price===1; ADD button unchanged; cart/order/payment flow unchanged;
+    mixed cart allowed. Display-only change in 2 files. Risk downgraded HIGH→MEDIUM
+    (normal flow confirmed). Ready for Planning.'
+  priority: P2
+  risk: MEDIUM
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/components/MenuItem/MenuItem.jsx · frontend/src/pages/ReviewOrder.jsx
+  artefacts: INTAKE_DOC
+  registered: '2026-11-14'
+  last_updated: '2026-11-14'
+  related: []
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'isAPS = parseFloat(item.price) === 1. Display only — no CartContext,
+    orderService, or backend change.'
+
+- id: CR-2026-11-14-003
+  type: CR
+  title: 'Banner click on PromoBanner redirects to internal app page — PromoBanner
+    onClick uses existing bannerLink field via React Router navigate()'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-14. Owner confirmed internal links only.
+    Supported destinations mapped (menu, station, about, contact). Admin UX: link
+    picker dropdown in AdminBannersPage. Click-vs-swipe disambiguation is main risk.
+    Ready for Planning.'
+  priority: P2
+  risk: MEDIUM
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: frontend/src/components/PromoBanner/PromoBanner.jsx ·
+    frontend/src/pages/admin/AdminBannersPage.jsx
+  artefacts: INTAKE_DOC
+  registered: '2026-11-14'
+  last_updated: '2026-11-14'
+  related: []
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'bannerLink already exists in DB model (server.py line 243) and is passed
+    from LandingPage.jsx (line 959) — no backend change needed.'
+
+- id: CR-2026-11-14-004
+  type: CR
+  title: 'Search exact match first (within-section sort) — SUPERSEDED by BUG-2026-11-14-002
+    which requires cross-section flattening'
+  status: DUPLICATE
+  status_note: 'SUPERSEDED 2026-11-14 by BUG-2026-11-14-002. CR-004 proposed within-section
+    sort only; investigation (INV-2026-11-14-001) confirmed the fix requires cross-section
+    flattening. BUG-002 covers the correct broader scope. DO NOT implement CR-004
+    separately.'
+  priority: null
+  risk: null
+  owner_action: none
+  blocked_on: []
+  sprint: null
+  files: null
+  artefacts: INTAKE_DOC
+  registered: '2026-11-14'
+  last_updated: '2026-11-14'
+  related:
+  - BUG-2026-11-14-002
+  - INV-2026-11-14-001
+  code_markers: false
+  money_path: null
+  closed: '2026-11-14'
+  notes: null
