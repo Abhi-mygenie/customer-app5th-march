@@ -2779,10 +2779,8 @@
   type: BUG
   title: 'Search results hidden by mobile keyboard — PromoBanner and category nav
     not hidden when searchQuery is active (MenuItems.jsx lines 741, 754)'
-  status: INTAKE
-  status_note: 'INTAKE COMPLETE 2026-11-14. Root cause confirmed by INV-2026-11-14-001.
-    Fast Lane eligible: 2 × 1-character insertions, 1 file, LOW risk. Awaiting owner
-    Fast Lane approval.'
+  status: IMPLEMENTED
+  status_note: 'IMPLEMENTED 2026-11-25. Fast Lane fix applied. 2 lines changed in MenuItems.jsx (lines 742, 756). Testing agent iteration_28: 100% pass, retest_needed=false. Banner and CategoryBox nav hide correctly during search, reappear on clear.'
   priority: P0
   risk: LOW
   owner_action: 'Approve Fast Lane for BUG-2026-11-14-001 to implement the 2-line

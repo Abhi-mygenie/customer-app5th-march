@@ -1,0 +1,29 @@
+{
+  "summary": "BUG-2026-11-14-001 fix verification: PromoBanner and CategoryBox nav hide during search in MenuItems.jsx. Code review and UI testing both confirm the fix is correctly applied.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_28.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fix verified: line 742 `configShowPromotionsOnMenu && !searchQuery` correctly hides PromoBanner during search",
+    "Fix verified: line 756 `configShowCategories && !searchQuery` correctly hides CategoryBox nav during search",
+    "filterItems() at lines 412-417 is UNCHANGED — search filtering still works",
+    "searchQuery state at line 41 is correct",
+    "BUG-2026-11-14-001 code markers present on both changed lines",
+    "No syntax errors — page loads and renders correctly"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "BUG-2026-11-14-001 fix is verified. During search ('pizza' typed): PromoBanner hidden (CORRECT), CategoryNav hidden (CORRECT). After clearing search: CategoryNav reappears (CORRECT). preprod.mygenie.online API times out in preview env — expected, not a bug. Page /716/menu loads without JS errors.",
+  "rca_of_issue": "PromoBanner and CategoryBox nav were unconditionally rendered when configShowPromotionsOnMenu/configShowCategories were true, even during active search. Mobile keyboard pushed these elements up, hiding search results. Fix: added `&& !searchQuery` to both conditions so they disappear when user is searching."
+}

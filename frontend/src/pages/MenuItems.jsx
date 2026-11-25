@@ -738,7 +738,8 @@ const MenuItems = () => {
           )}
 
           {/* Promo Banner - controlled by admin config, filtered for menu page */}
-          {configShowPromotionsOnMenu && (() => {
+          {/* BUG-2026-11-14-001: hide banner during search so keyboard does not push results off-screen */}
+          {configShowPromotionsOnMenu && !searchQuery && (() => {
             const menuBanners = (configBanners || [])
               .filter(b => b.displayOn === 'menu' || b.displayOn === 'both' || !b.displayOn)
               .map((b, i) => ({
@@ -751,7 +752,8 @@ const MenuItems = () => {
           })()}
 
           {/* Category Navigation - controlled by admin config */}
-          {configShowCategories && (() => {
+          {/* BUG-2026-11-14-001: hide category nav during search so keyboard does not push results off-screen */}
+          {configShowCategories && !searchQuery && (() => {
 
             if (menuLoading && menuSections.length === 0) {
               return (
