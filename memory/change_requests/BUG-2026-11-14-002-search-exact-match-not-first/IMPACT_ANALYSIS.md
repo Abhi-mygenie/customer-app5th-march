@@ -90,6 +90,8 @@ This is inside `headerBlock` which is used in BOTH image and no-image card layou
 
 ### BUG-002: Flat-list ranked search (MenuItems.jsx, ~50 lines before line 831)
 
+**OWNER DECISION 2026-11-25:** Tier labels (Exact match, Partial match, etc.) are INTERNAL ONLY — do NOT render any match labels, score indicators, or tier badges on item cards. Results appear in ranked order silently.
+
 ```
 STEP B1: Inside the {!menuLoading && !menuError && (() => { ... render block,
          BEFORE the existing sectionsToDisplay loop:
@@ -99,9 +101,9 @@ STEP B1: Inside the {!menuLoading && !menuError && (() => { ... render block,
            //    Per section: apply same item-order/visibility logic as the loop does,
            //    then call filterItems(orderedSectionItems, section.categoryId)
            //    to apply channel/availability/stock/search/veg filters.
-           //    Tag each item with _sectionName for optional display.
+           //    Tag each item with _sectionName for category tag display.
 
-           // 2. Score each item:
+           // 2. Score each item (INTERNAL — never shown to customer):
            //    name === query        → 0 (exact)
            //    name.startsWith(q)   → 1
            //    name.includes(q)     → 2
@@ -111,8 +113,9 @@ STEP B1: Inside the {!menuLoading && !menuError && (() => { ... render block,
            //    so cart items stay at top within their tier.
 
            // 4. Render as single <div id="items-section"> flat list
-           //    using the same <MenuItem .../> with same props as the loop.
-           //    No category-info-header rows.
+           //    using same <MenuItem .../> props as the loop.
+           //    Each item gets categoryName prop for the grey category tag.
+           //    NO tier/match labels rendered anywhere. No category-info-header rows.
 
            // 5. Return early — do NOT fall through to the existing loop.
          }

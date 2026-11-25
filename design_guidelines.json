@@ -90,14 +90,15 @@
     "bug_002_flat_search_result_list": {
       "context": "When searchQuery is non-empty in MenuItems.jsx, switch from per-category grouped sections (with category headers) to a single flat ranked list without category headers.",
       "ranking_algorithm": {
-        "rule": "Flatten items across all sections, filter out invalid/unavailable/channel-ineligible items, then sort by relevance tiers:",
+        "rule": "Flatten items across all sections, filter out invalid/unavailable/channel-ineligible items, then sort by relevance tiers. Tier labels are INTERNAL ONLY — never shown to the customer in the UI.",
         "tiers": [
-          "Tier 0 (Score 0): Exact item name match (case-insensitive)",
-          "Tier 1 (Score 1): Item name starts with search query",
-          "Tier 2 (Score 2): Item name contains search query (partial substring)",
-          "Tier 3 (Score 3): Item description contains search query",
-          "Tier 4 (Score 4+): Fallback POS food_order or natural array sequence"
+          "Tier 0 (Score 0): Exact item name match (case-insensitive) — internal only",
+          "Tier 1 (Score 1): Item name starts with search query — internal only",
+          "Tier 2 (Score 2): Item name contains search query (partial substring) — internal only",
+          "Tier 3 (Score 3): Item description contains search query — internal only",
+          "Tier 4 (Score 4+): Fallback POS food_order or natural array sequence — internal only"
         ],
+        "owner_decision_2026_11_25": "DO NOT render any tier/match labels (Exact match, Partial match, etc.) on the item cards. Ranking is silent — results simply appear in the correct order. No badges, no annotations, no score indicators visible to customers.",
         "in_cart_prioritization": "Within the ranked list, items already in cart remain accessible or float smoothly without disrupting tier-0 exact match prominence."
       },
       "category_indicator_design": {
