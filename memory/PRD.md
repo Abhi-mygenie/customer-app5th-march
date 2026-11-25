@@ -1,60 +1,39 @@
 # MyGenie Customer App — PRD
 
 ## Original Problem Statement
-Deploy the existing React frontend repo (Abhi-mygenie/customer-app5th-march, main branch) directly into `/app` and run it as-is with no code edits.
+Deploy the existing React frontend repo directly into `/app` and run it as-is, with no code edits.
+- Repo: https://github.com/Abhi-mygenie/customer-app5th-march (branch: main)
+- Destination: `/app`
 
 ## Architecture
-- **Frontend**: React (CRA + CRACO), TypeScript, served on port 3000
-- **Backend**: FastAPI (Python), served on port 8001
-- **Database**: MongoDB (local, `mygenie` DB)
-- **External API**: preprod.mygenie.online/api/v1
+- **Frontend**: React (CRA + CRACO), port 3000, TypeScript + JS mixed codebase
+- **Backend**: FastAPI (Python), port 8001, MongoDB via Motor
+- **Database**: MongoDB (local `mygenie` DB)
+- **Platform**: Emergent preview pod, supervisord-managed
 
-## What's Been Implemented
+## What Was Done (2026-11-25)
 
-### 2026-11-25 — Full Repo Deployment
-- Cloned `Abhi-mygenie/customer-app5th-march` (main) into `/app` via `git reset --hard origin/main`
-- Platform files preserved: `.emergent/emergent.yml`, `.emergent/markers/`
-- Backend `.env` configured: DB_NAME=mygenie, CORS_ORIGINS set to preview URL, MYGENIE_API_URL, POS credentials, JWT_SECRET (via secrets panel), GOOGLE_MAPS_API_KEY (via secrets panel)
-- Frontend `.env` configured: all REACT_APP_ vars, CRM URL, image base URL, login credentials
-- REACT_APP_GOOGLE_MAPS_API_KEY added via secrets panel
-- Python dependencies installed; yarn install completed
-- Backend health: `{"ok":true,"mongo":"up"}`
-- Frontend renders login/browse page (MyGenie branded)
-- Memory directory synced: 53 files from repo
+### Deployment
+1. Added git remote `origin` → `https://github.com/Abhi-mygenie/customer-app5th-march.git`
+2. Fetched and hard-reset to `origin/main` (commit `f444068`) — synced all tracked files
+3. Memory dir now fully synced: **608 files** across subdirs (change_requests, control, inbox, master_outlet, tools, v2)
 
-## Core Requirements
-- No code edits — deploy and run repo as-is
-- Env variables configured as placeholders (sensitive keys via secrets panel)
-- Platform files preserved after clone
-- Memory dir in sync with remote
+### Env Setup
+- **backend/.env**: DB_NAME=mygenie, CORS_ORIGINS=preview URL, MYGENIE_API_URL, login creds
+- **frontend/.env**: REACT_APP_BACKEND_URL (preserved), all REACT_APP_* vars set
+- `JWT_SECRET`, `GOOGLE_MAPS_API_KEY`, `REACT_APP_GOOGLE_MAPS_API_KEY` → managed via secrets panel
 
-## Env Keys Status
-| Key | File | Status |
-|-----|------|--------|
-| MONGO_URL | backend | localhost:27017 (platform) |
-| DB_NAME | backend | mygenie |
-| CORS_ORIGINS | backend | preview URL |
-| MYGENIE_API_URL | backend | preprod.mygenie.online |
-| GOOGLE_MAPS_API_KEY | backend | set via secrets panel |
-| JWT_SECRET | backend | set via secrets panel |
-| MYGENIE_POS_LOGIN_PHONE | backend | +919579504871 |
-| MYGENIE_POS_LOGIN_PASSWORD | backend | Qplazm@10 |
-| REACT_APP_BACKEND_URL | frontend | platform preview URL |
-| REACT_APP_API_BASE_URL | frontend | preprod.mygenie.online |
-| REACT_APP_IMAGE_BASE_URL | frontend | preprod.mygenie.online |
-| REACT_APP_CRM_URL | frontend | crm.mygenie.online |
-| REACT_APP_GOOGLE_MAPS_API_KEY | frontend | set via secrets panel |
-| REACT_APP_CRM_API_VERSION | frontend | v2 |
-| REACT_APP_LOGIN_PHONE | frontend | +919579504871 |
-| REACT_APP_LOGIN_PASSWORD | frontend | Qplazm@10 |
+### Dependency Fixes (no code edits)
+- Installed `slowapi` (missing from venv but in requirements.txt)
+- Installed `typescript@5.8.3` (repo specifies 7.x but react-scripts 5.x requires ≤5.x)
+- Both fixes are purely node_modules/venv level — no source file changes
+
+### Services Status
+- Backend: RUNNING — `/api/healthz` → `{ok: true, mongo: up}`
+- Frontend: RUNNING — webpack compiled, app rendering correctly
+- MongoDB: RUNNING
 
 ## Backlog / Next Steps
-- Test full customer flow: QR scan → browse menu → add to cart → order
-- Add production domain to CORS_ORIGINS when going live
-- Test login flow with phone +919579504871
-
-## 2026-11-25 — CR-2026-11-25-001 Compact header during search (Option C)
-- While searching on the menu page, the app header is hidden and a back arrow on the search row clears the search (stays on the page). Gains ~73px on mobile.
-- Header skeleton now shows only when no restaurant data is cached.
-- Tested: iteration_31 13/13 pass (including the inline category-before-price check for BUG-2026-11-25-001).
-- Backlog: preprod API slower than the 8s client timeout in preview; CR-2026-11-14-001 (room OTP, P1); CR-2026-11-14-003 (banner click redirect).
+- P0: Fill in `REACT_APP_GOOGLE_MAPS_API_KEY` live slot when ready for production
+- P1: Set `CORS_ORIGINS` to include production domain when deploying live
+- P2: Consider pinning `typescript` to `5.x` in package.json for reproducibility
