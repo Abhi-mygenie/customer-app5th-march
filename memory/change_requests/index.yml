@@ -2988,7 +2988,7 @@
   type: CR
   title: 'Compact the top app header while a menu search is active so more
     results fit above the mobile keyboard (remaining gap from INV-2026-11-25-001)'
-  status: INTAKE
+  status: PLANNING
   status_note: 'INTAKE COMPLETE 2026-11-25. OWNER DECISION 2026-11-25: Option C
     (search takes over top). While searching, the app header is hidden and the search
     row shows a back arrow that clears the search (does not leave the page). Measured
@@ -2997,12 +2997,12 @@
     unchanged. Ready for Planning.'
   priority: P2
   risk: LOW
-  owner_action: 'Option C approved. Next: approve Planning (IA + implementation plan)'
+  owner_action: 'Approve Implementation gate for CR-2026-11-25-001 (IA + plan ready)'
   blocked_on: []
   sprint: null
   files: frontend/src/pages/MenuItems.jsx · frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.jsx
     · frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.css
-  artefacts: INTAKE_DOC
+  artefacts: INTAKE_DOC, IMPACT_ANALYSIS_AND_PLAN
   registered: '2026-11-25'
   last_updated: '2026-11-25'
   related:
@@ -3013,7 +3013,9 @@
   code_markers: false
   money_path: null
   closed: null
-  notes: 'Decision: Option C. Header measured 73px; it scrolls away after scrolling
+  notes: 'PLANNING COMPLETE 2026-11-25: 5 edits (E1-E5) in 3 files, risk LOW, 12-step
+    verification matrix. Mobile CSS override required (search-bar-section flex-basis
+    100% at <=600px). Decision: Option C. Header measured 73px; it scrolls away after scrolling
     while the search bar stays pinned. Likely files: MenuItems.jsx (hide Header when
     searching), SearchAndFilterBar.jsx (optional back arrow that clears search).
     DiningMenu and OrderSuccess must be unchanged.'
