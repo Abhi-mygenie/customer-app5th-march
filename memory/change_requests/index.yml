@@ -3049,6 +3049,34 @@
   closed: '2026-11-25'
   notes: 'Not registered: search input clear-x button (suggested, not requested).'
 
+- id: CR-2026-11-25-003
+  type: CR
+  title: 'Review Order edit mode — new items first, previously ordered collapsed by
+    default, price breakdown split (new additions + previous order)'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-25. Full investigation done (2 reports).
+    Backend support confirmed — no API or BE changes needed. Design comparison
+    built at /public/review-order-comparison.html. All owner decisions captured.
+    Ready for Planning.'
+  priority: P1
+  risk: MEDIUM
+  owner_action: 'Approve Planning'
+  blocked_on: []
+  sprint: null
+  files: pages/ReviewOrder.jsx · components/PreviousOrderItems/PreviousOrderItems.jsx
+    · components/PreviousOrderItems/PreviousOrderItems.css
+  artefacts: INTAKE_DOC · INVESTIGATION_REPORT · INVESTIGATION_REPORT_DEEP · design comparison HTML
+  registered: '2026-11-25'
+  last_updated: '2026-11-25'
+  related:
+  - CR-2026-09-12-012
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Owner confirmed 2026-11-25: new items first, collapsed prev by default,
+    no green highlight on new items card, split price rows. Zero calc logic change.
+    ReviewOrder.jsx is hotspot — full gate required (no Fast Lane).'
+
 - id: BUG-2026-11-25-003
   type: BUG
   title: 'Menu/restaurant info often fail to load in preview: POS restaurant-product
