@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Density — Before vs After</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #E5E7EB; min-height: 100vh; padding: 24px 16px 40px; }
+
+h1 { text-align: center; font-size: 15px; font-weight: 700; color: #374151; margin-bottom: 4px; }
+.subtitle { text-align: center; font-size: 11px; color: #6B7280; margin-bottom: 24px; }
+
+/* ── Page layout ── */
+.wrap { display: flex; gap: 20px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+.col  { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.col-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.col-label.before { color: #9CA3AF; }
+.col-label.after  { color: #E8622A; }
+.col-tag { font-size: 10px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+.col-tag.before { background: #FEE2E2; color: #DC2626; }
+.col-tag.after  { background: #DCFCE7; color: #16A34A; }
+
+/* ── Phone frame ── */
+.phone {
+  width: 320px;
+  height: 693px; /* 844 * 0.82 scale */
+  background: #fff;
+  border-radius: 36px;
+  border: 8px solid #1F2937;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+.dynamic-island {
+  width: 90px; height: 18px;
+  background: #1F2937; border-radius: 0 0 12px 12px;
+  margin: 0 auto 0;
+  flex-shrink: 0;
+}
+.phone-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── Header ── */
+.header {
+  background: #E8622A;
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+.header .back { color: #fff; font-size: 16px; font-weight: 300; }
+.header .title { color: #fff; font-weight: 700; font-size: 13px; flex: 1; }
+.header .menu-btn {
+  width: 28px; height: 28px; background: rgba(255,255,255,0.2);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.header .menu-btn span { color: #fff; font-size: 11px; }
+
+/* ── Search bar ── */
+.search-wrap { padding: 10px 12px 0; flex-shrink: 0; }
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  border: 2px solid #E8622A; border-radius: 10px;
+  padding: 8px 12px; background: #fff;
+}
+.search-box .s-icon { color: #E8622A; font-size: 13px; }
+.search-box input { border: none; outline: none; font-size: 13px; color: #374151; flex: 1; background: transparent; }
+
+/* ── Filter chips ── */
+.filter-row {
+  display: flex; gap: 8px; padding: 8px 12px 0; flex-shrink: 0;
+}
+.f-chip {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 999px;
+  border: 1.5px solid #E5E7EB; background: #F9FAFB;
+  font-size: 11px; color: #6B7280;
+}
+.f-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+.f-chip .dot.veg { background: #00A651; }
+.f-chip .dot.nv  { background: #944A28; }
+.f-chip .dot.egg { background: #F59E0B; }
+
+/* gap between filter chips and content */
+.gap-block { flex-shrink: 0; }
+
+/* ── Category header ── */
+.cat-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px 4px; flex-shrink: 0;
+  border-left: 3px solid #E8622A;
+}
+.cat-header h2 { font-size: 13px; font-weight: 800; color: #1F2937; }
+.cat-header span { font-size: 11px; color: #9CA3AF; }
+
+/* ── Search meta banner ── */
+.meta-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 14px; background: #F9FAFB; border-bottom: 1px solid #F0F0F0;
+  flex-shrink: 0;
+}
+.meta-banner .count { font-size: 11px; color: #6B7280; }
+.meta-banner .clear { font-size: 11px; color: #E8622A; font-weight: 700; }
+
+/* ── Spacer between filter and results ── */
+.section-gap { height: 10px; flex-shrink: 0; }
+.section-gap.sm { height: 4px; }
+
+/* ── Item cards ── */
+.items { flex: 1; overflow: hidden; }
+
+/* BEFORE: tall cards */
+.item-tall {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #F0F0F0;
+}
+.item-tall .left { flex: 1; }
+.item-tall .veg-box {
+  width: 16px; height: 16px; border: 1.5px solid #00A651;
+  border-radius: 2px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.item-tall .veg-dot { width: 8px; height: 8px; background: #00A651; border-radius: 50%; }
+.item-tall .name { font-size: 13px; font-weight: 600; color: #1F2937; margin-bottom: 2px; }
+.item-tall .price { font-size: 13px; color: #374151; margin-bottom: 2px; }
+.item-tall .sub { font-size: 10px; color: #9CA3AF; }
+.item-tall .right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.item-tall .img { width: 0; }
+.add-btn { font-size: 11px; font-weight: 700; color: #E8622A; border: 1.5px solid #E8622A; border-radius: 6px; padding: 5px 12px; background: #fff; white-space: nowrap; }
+.add-btn.sm { padding: 4px 10px; font-size: 10px; }
+
+/* AFTER: compact cards */
+.item-compact {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 14px;
+  border-bottom: 1px solid #F0F0F0;
+}
+.item-compact .left { flex: 1; }
+.item-compact .cat-tag {
+  display: inline-block; padding: 1px 5px;
+  background: #F3F4F6; border: 1px solid #E5E7EB;
+  border-radius: 3px; font-size: 9px; color: #6B7280; margin-bottom: 2px;
+}
+.item-compact .row1 { display: flex; align-items: center; gap: 5px; }
+.item-compact .veg-box-sm {
+  width: 12px; height: 12px; border: 1.5px solid #00A651;
+  border-radius: 2px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.item-compact .veg-dot-sm { width: 6px; height: 6px; background: #00A651; border-radius: 50%; }
+.item-compact .name { font-size: 12px; font-weight: 600; color: #1F2937; }
+.item-compact .price { font-size: 11px; color: #374151; margin-top: 1px; margin-left: 17px; }
+
+/* ── Keyboard overlay ── */
+.keyboard {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 230px; /* scaled from 280px */
+  background: #D1D5DB;
+  border-top: 1px solid #9CA3AF;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-start; padding-top: 10px;
+  z-index: 10;
+}
+.kb-row { display: flex; gap: 5px; margin-bottom: 6px; }
+.kb-key {
+  width: 26px; height: 32px; background: #fff;
+  border-radius: 5px; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #374151; font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.kb-key.wide { width: 36px; }
+.kb-key.space { width: 120px; }
+.kb-key.orange { background: #E8622A; color: #fff; }
+
+/* ── Count badge ── */
+.count-badge {
+  position: absolute; bottom: 234px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.75); color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px;
+  white-space: nowrap; z-index: 11;
+}
+.count-badge.green { background: #16A34A; }
+.count-badge.red   { background: #DC2626; }
+
+/* ── Space annotations ── */
+.space-ann {
+  position: absolute; right: 4px;
+  display: flex; align-items: center;
+  font-size: 8px; font-weight: 700; color: #DC2626;
+}
+.space-ann::before {
+  content: ''; display: block; width: 3px;
+  background: #DC2626; margin-right: 2px;
+  border-radius: 1px;
+}
+
+/* ── Legend ── */
+.legend { text-align: center; margin-top: 20px; font-size: 11px; color: #6B7280; max-width: 680px; margin-left: auto; margin-right: auto; }
+.legend strong { color: #1F2937; }
+.savings { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.saving-pill { padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.saving-pill.done  { background: #DCFCE7; color: #16A34A; }
+.saving-pill.todo  { background: #FFF4ED; color: #E8622A; border: 1.5px solid #FED7C3; }
+</style>
+</head>
+<body>
+
+<h1>Search Mode — Space Density: Before vs After</h1>
+<p class="subtitle">Same phone (390×844px) · Same keyboard (~280px) · Same content · Only padding and filter chips change</p>
+
+<div class="wrap">
+
+  <!-- ═══ LEFT — CURRENT ═══ -->
+  <div class="col">
+    <div class="col-label before">Current</div>
+    <div class="col-tag before">2 items visible</div>
+
+    <div class="phone">
+      <div class="dynamic-island"></div>
+      <div class="phone-content">
+
+        <!-- Header -->
+        <div class="header">
+          <span class="back">←</span>
+          <span class="title">Miia Bella</span>
+          <div class="menu-btn"><span>≡</span></div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <div class="search-box">
+            <span class="s-icon">🔍</span>
+            <input value="Beer" readonly>
+          </div>
+        </div>
+
+        <!-- Filter chips — VISIBLE (wasted 40px) -->
+        <div class="filter-row">
+          <div class="f-chip"><div class="dot veg"></div> Veg</div>
+          <div class="f-chip"><div class="dot nv"></div> Non-Veg</div>
+          <div class="f-chip"><div class="dot egg"></div> Egg</div>
+        </div>
+
+        <!-- gap -->
+        <div class="section-gap"></div>
+
+        <!-- Category header — now removed by BUG-002 but shown here as before state -->
+        <div class="cat-header">
+          <h2>BEER</h2>
+          <span>( 18 Items)</span>
+        </div>
+
+        <!-- Items — only 2 fit -->
+        <div class="items">
+          <div class="item-tall">
+            <div class="left">
+              <div class="veg-box"><div class="veg-dot"></div></div>
+              <div class="name">Kingfisher Strong Beer</div>
+              <div class="price">₹180</div>
+              <div class="sub">Customisable</div>
+            </div>
+            <div class="right"><div class="add-btn">ADD</div></div>
+          </div>
+          <div class="item-tall">
+            <div class="left">
+              <div class="veg-box"><div class="veg-dot"></div></div>
+              <div class="name">Kingfisher Ultra Beer</div>
+              <div class="price">₹199</div>
+              <div class="sub">330 ml</div>
+            </div>
+            <div class="right"><div class="add-btn">ADD</div></div>
+          </div>
+          <!-- third item cut off -->
+          <div style="padding:12px 14px 4px; border-bottom:1px solid #F0F0F0; opacity:0.3;">
+            <div class="veg-box" style="margin-bottom:4px"><div class="veg-dot"></div></div>
+            <div class="name" style="font-size:13px;font-weight:600;color:#1F2937;">Corona Extra</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="keyboard">
+        <div class="kb-row">
+          <div class="kb-key">q</div><div class="kb-key">w</div><div class="kb-key">e</div>
+          <div class="kb-key">r</div><div class="kb-key">t</div><div class="kb-key">y</div>
+          <div class="kb-key">u</div><div class="kb-key">i</div><div class="kb-key">o</div>
+          <div class="kb-key">p</div>
+        </div>
+        <div class="kb-row">
+          <div class="kb-key">a</div><div class="kb-key">s</div><div class="kb-key">d</div>
+          <div class="kb-key">f</div><div class="kb-key">g</div><div class="kb-key">h</div>
+          <div class="kb-key">j</div><div class="kb-key">k</div><div class="kb-key">l</div>
+        </div>
+        <div class="kb-row">
+          <div class="kb-key wide">⇧</div>
+          <div class="kb-key">z</div><div class="kb-key">x</div><div class="kb-key">c</div>
+          <div class="kb-key">v</div><div class="kb-key">b</div><div class="kb-key">n</div>
+          <div class="kb-key">m</div><div class="kb-key wide">⌫</div>
+        </div>
+        <div class="kb-row">
+          <div class="kb-key wide">123</div>
+          <div class="kb-key space">Beer</div>
+          <div class="kb-key orange">→</div>
+        </div>
+      </div>
+      <div class="count-badge red">2 items visible</div>
+    </div>
+
+    <!-- Space breakdown -->
+    <div style="font-size:10px;color:#6B7280;text-align:left;width:320px;background:#fff;padding:10px 14px;border-radius:10px;border:1px solid #E5E7EB;">
+      <div style="font-weight:700;color:#374151;margin-bottom:6px;">Space breakdown</div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;"><span>Header</span><span>70px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;"><span>Search bar</span><span>52px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;color:#DC2626;font-weight:600;"><span>Filter chips row ← WASTED</span><span>48px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;color:#DC2626;font-weight:600;"><span>Category header ← WASTED</span><span>44px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;"><span>Keyboard</span><span>280px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700;color:#DC2626;"><span>Available for items</span><span>~350px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;font-weight:700;color:#DC2626;"><span>Items visible</span><span>2</span></div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT — OPTIMISED ═══ -->
+  <div class="col">
+    <div class="col-label after">After fixes</div>
+    <div class="col-tag after">5 items visible</div>
+
+    <div class="phone">
+      <div class="dynamic-island"></div>
+      <div class="phone-content">
+
+        <!-- Header — identical -->
+        <div class="header">
+          <span class="back">←</span>
+          <span class="title">Miia Bella</span>
+          <div class="menu-btn"><span>≡</span></div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <div class="search-box">
+            <span class="s-icon">🔍</span>
+            <input value="Beer" readonly>
+          </div>
+        </div>
+
+        <!-- Filter chips — HIDDEN during search -->
+        <!-- (not rendered) -->
+
+        <!-- Meta banner (already implemented in BUG-002) -->
+        <div class="meta-banner" style="margin-top:6px;">
+          <span class="count">18 results for "Beer"</span>
+          <span class="clear">✕ Clear</span>
+        </div>
+
+        <!-- Compact items — 5 fit -->
+        <div class="items">
+          <div class="item-compact">
+            <div class="left">
+              <div class="cat-tag">BEER</div>
+              <div class="row1">
+                <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
+                <span class="name">Kingfisher Strong Beer</span>
+              </div>
+              <div class="price">₹180 · Customisable</div>
+            </div>
+            <div class="add-btn sm">ADD</div>
+          </div>
+          <div class="item-compact">
+            <div class="left">
+              <div class="cat-tag">BEER</div>
+              <div class="row1">
+                <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
+                <span class="name">Kingfisher Ultra Beer</span>
+              </div>
+              <div class="price">₹199 · 330 ml</div>
+            </div>
+            <div class="add-btn sm">ADD</div>
+          </div>
+          <div class="item-compact">
+            <div class="left">
+              <div class="cat-tag">BEER</div>
+              <div class="row1">
+                <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
+                <span class="name">Corona Extra</span>
+              </div>
+              <div class="price">₹380</div>
+            </div>
+            <div class="add-btn sm">ADD</div>
+          </div>
+          <div class="item-compact">
+            <div class="left">
+              <div class="cat-tag">BEER</div>
+              <div class="row1">
+                <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
+                <span class="name">Budweiser Magnum</span>
+              </div>
+              <div class="price">₹280</div>
+            </div>
+            <div class="add-btn sm">ADD</div>
+          </div>
+          <div class="item-compact">
+            <div class="left">
+              <div class="cat-tag">BEER</div>
+              <div class="row1">
+                <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
+                <span class="name">Heineken Silver</span>
+              </div>
+              <div class="price">₹320</div>
+            </div>
+            <div class="add-btn sm">ADD</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="keyboard">
+        <div class="kb-row">
+          <div class="kb-key">q</div><div class="kb-key">w</div><div class="kb-key">e</div>
+          <div class="kb-key">r</div><div class="kb-key">t</div><div class="kb-key">y</div>
+          <div class="kb-key">u</div><div class="kb-key">i</div><div class="kb-key">o</div>
+          <div class="kb-key">p</div>
+        </div>
+        <div class="kb-row">
+          <div class="kb-key">a</div><div class="kb-key">s</div><div class="kb-key">d</div>
+          <div class="kb-key">f</div><div class="kb-key">g</div><div class="kb-key">h</div>
+          <div class="kb-key">j</div><div class="kb-key">k</div><div class="kb-key">l</div>
+        </div>
+        <div class="kb-row">
+          <div class="kb-key wide">⇧</div>
+          <div class="kb-key">z</div><div class="kb-key">x</div><div class="kb-key">c</div>
+          <div class="kb-key">v</div><div class="kb-key">b</div><div class="kb-key">n</div>
+          <div class="kb-key">m</div><div class="kb-key wide">⌫</div>
+        </div>
+        <div class="kb-row">
+          <div class="kb-key wide">123</div>
+          <div class="kb-key space">Beer</div>
+          <div class="kb-key orange">→</div>
+        </div>
+      </div>
+      <div class="count-badge green">5 items visible</div>
+    </div>
+
+    <!-- Space breakdown -->
+    <div style="font-size:10px;color:#6B7280;text-align:left;width:320px;background:#fff;padding:10px 14px;border-radius:10px;border:1px solid #E5E7EB;">
+      <div style="font-weight:700;color:#374151;margin-bottom:6px;">Space breakdown</div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;"><span>Header</span><span>70px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;"><span>Search bar</span><span>52px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;color:#16A34A;font-weight:600;"><span>Filter chips ← HIDDEN ✓</span><span>0px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;color:#16A34A;font-weight:600;"><span>Category header ← GONE ✓</span><span>0px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;"><span>Search meta banner</span><span>32px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #F3F4F6;"><span>Keyboard</span><span>280px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700;color:#16A34A;"><span>Available for items</span><span>~410px</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0;font-weight:700;color:#16A34A;"><span>Items visible</span><span>5</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Summary -->
+<div style="max-width:680px;margin:28px auto 0;background:#fff;border-radius:12px;padding:16px 20px;border:1px solid #E5E7EB;">
+  <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:12px;">What changes — search mode only, everything else untouched</div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;align-items:center;gap:10px;font-size:11px;">
+      <span style="background:#DCFCE7;color:#16A34A;padding:2px 8px;border-radius:999px;font-weight:700;white-space:nowrap;">Done ✓</span>
+      <span><strong>Category header "BEER · 18 Items"</strong> — removed in search mode (BUG-002, already shipped)</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:11px;">
+      <span style="background:#DCFCE7;color:#16A34A;padding:2px 8px;border-radius:999px;font-weight:700;white-space:nowrap;">Done ✓</span>
+      <span><strong>Promo banner + category nav pills</strong> — hidden during search (BUG-001, already shipped)</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:11px;">
+      <span style="background:#FFF4ED;color:#E8622A;padding:2px 8px;border-radius:999px;font-weight:700;border:1.5px solid #FED7C3;white-space:nowrap;">Fix A</span>
+      <span><strong>Hide filter chips (Veg/Non-Veg/Egg)</strong> during search — 1-line guard, same pattern as BUG-001. Saves 48px.</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:11px;">
+      <span style="background:#FFF4ED;color:#E8622A;padding:2px 8px;border-radius:999px;font-weight:700;border:1.5px solid #FED7C3;white-space:nowrap;">Fix B</span>
+      <span><strong>Compact card padding in search mode</strong> — reduce from 12px→7px top/bottom. Content (name, price, ADD button) unchanged. Saves ~20px per card slot.</span>
+    </div>
+  </div>
+  <div style="margin-top:12px;font-size:10px;color:#9CA3AF;text-align:center;">Normal browse mode (no search): 100% unchanged — full item card, full padding, filters visible</div>
+</div>
+
+</body>
+</html>
