@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Preview — BUG-002 + CR-002</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F3F4F6; padding: 24px 16px; }
+
+  h1 { text-align: center; font-size: 15px; color: #374151; margin-bottom: 20px; font-weight: 700; letter-spacing: 0.3px; }
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; text-align: center; padding: 6px 0 10px; }
+  .label.before { color: #9CA3AF; }
+  .label.after  { color: #E8622A; }
+
+  /* ── Layout ── */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 820px; margin: 0 auto; }
+  .col  { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Phone shell ── */
+  .phone { background: #fff; border-radius: 20px; overflow: hidden; border: 1.5px solid #E5E7EB; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .phone-header { background: #E8622A; padding: 10px 14px 8px; display: flex; align-items: center; gap: 8px; }
+  .phone-header .back { color: #fff; font-size: 16px; }
+  .phone-header .title { color: #fff; font-weight: 700; font-size: 13px; flex: 1; }
+  .phone-header .icons { display: flex; gap: 10px; }
+  .phone-header .icon-dot { width: 24px; height: 24px; background: rgba(255,255,255,0.25); border-radius: 50%; }
+
+  /* ── Search bar ── */
+  .search-bar { margin: 10px 12px 0; display: flex; align-items: center; gap: 8px; background: #F9FAFB; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 8px 12px; }
+  .search-bar input { border: none; background: transparent; font-size: 12px; color: #374151; outline: none; flex: 1; }
+  .search-bar .search-icon { color: #9CA3AF; font-size: 13px; }
+  .filter-row { display: flex; gap: 8px; padding: 8px 12px 0; }
+  .filter-chip { font-size: 10px; padding: 3px 10px; border-radius: 999px; border: 1.5px solid #E5E7EB; color: #6B7280; display: flex; align-items: center; gap: 4px; }
+  .filter-chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .filter-chip .dot.veg { background: #00A651; }
+  .filter-chip .dot.nonveg { background: #944A28; }
+  .filter-chip .dot.egg { background: #F59E0B; }
+
+  /* ── Category nav ── */
+  .category-nav { display: flex; gap: 8px; padding: 10px 12px 4px; overflow: hidden; }
+  .cat-pill { font-size: 10px; padding: 4px 10px; border-radius: 999px; background: #F3F4F6; color: #6B7280; white-space: nowrap; border: 1.5px solid #E5E7EB; }
+  .cat-pill.active { background: #FFF4ED; color: #E8622A; border-color: #FED7C3; font-weight: 700; }
+
+  /* ── Banner ── */
+  .promo-banner { margin: 8px 12px; height: 60px; background: linear-gradient(135deg, #E8622A, #F97316); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
+
+  /* ── Category header ── */
+  .category-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px 4px; }
+  .category-header h2 { font-size: 12px; font-weight: 700; color: #1F2937; }
+  .category-header span { font-size: 10px; color: #9CA3AF; }
+
+  /* ── Menu item card ── */
+  .item-card { margin: 4px 12px; background: #FAFAFA; border-radius: 10px; padding: 10px 12px; border: 1px solid #F0F0F0; display: flex; align-items: flex-start; gap: 10px; }
+  .item-left { flex: 1; }
+  .item-veg-row { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+  .veg-dot-wrap { width: 13px; height: 13px; border: 1.5px solid #00A651; border-radius: 2px; display: flex; align-items: center; justify-content: center; }
+  .veg-dot-inner { width: 7px; height: 7px; background: #00A651; border-radius: 50%; }
+  .item-name { font-size: 12px; font-weight: 600; color: #1F2937; }
+  .item-price { font-size: 12px; color: #374151; margin-top: 2px; }
+  .item-desc { font-size: 10px; color: #9CA3AF; margin-top: 3px; line-height: 1.4; }
+  .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .item-img { width: 56px; height: 50px; background: #F3F4F6; border-radius: 8px; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .add-btn { font-size: 11px; font-weight: 700; color: #E8622A; border: 1.5px solid #E8622A; border-radius: 6px; padding: 3px 10px; background: #fff; }
+
+  /* ── APS badge (NEW) ── */
+  .aps-badge { display: inline-flex; align-items: center; gap-0.5; padding: 2px 7px; background: #FFF4ED; border: 1.5px solid #FED7C3; border-radius: 6px; }
+  .aps-badge .aps-text { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #E8622A; text-transform: uppercase; }
+  .aps-badge .aps-sub { font-size: 9px; color: #9CA3AF; font-style: italic; margin-left: 3px; }
+
+  /* ── Category tag in search (NEW) ── */
+  .category-tag { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 4px; font-size: 10px; color: #6B7280; font-weight: 500; margin-bottom: 2px; }
+
+  /* ── Search meta banner (NEW) ── */
+  .search-meta { padding: 7px 14px; background: #F9FAFB; border-bottom: 1px solid #F0F0F0; display: flex; align-items: center; justify-content: space-between; }
+  .search-meta .count { font-size: 11px; color: #6B7280; }
+  .search-meta .clear { font-size: 11px; color: #E8622A; font-weight: 600; }
+
+  /* ── Score tier badge ── */
+  .tier { font-size: 9px; padding: 1px 5px; border-radius: 999px; font-weight: 700; margin-left: 4px; }
+  .tier-0 { background: #DCFCE7; color: #16A34A; }
+  .tier-2 { background: #FEF9C3; color: #A16207; }
+
+  /* ── OrderItemCard ── */
+  .order-card { margin: 4px 12px; background: #FAFAFA; border-radius: 10px; padding: 10px 12px; border: 1px solid #F0F0F0; display: flex; justify-content: space-between; align-items: center; }
+  .order-left .order-name { font-size: 12px; font-weight: 600; color: #1F2937; }
+  .order-left .order-qty { font-size: 11px; color: #9CA3AF; margin-top: 2px; }
+  .order-price { font-size: 12px; color: #374151; font-weight: 600; }
+
+  /* APS notice */
+  .aps-notice { margin: 4px 12px 8px; padding: 8px 10px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; font-size: 10px; color: #92400E; display: flex; gap: 6px; align-items: flex-start; }
+  .aps-notice .notice-icon { font-size: 12px; }
+
+  /* Section label */
+  .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #9CA3AF; padding: 10px 14px 2px; }
+
+  .change-tag { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .change-tag.new { background: #DCFCE7; color: #16A34A; margin-left: 6px; }
+  .change-tag.removed { background: #FEE2E2; color: #DC2626; margin-left: 6px; }
+
+  .arrow-row { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 11px; color: #6B7280; padding: 4px 0; }
+  .arrow-row .arrow { font-size: 20px; color: #E8622A; }
+
+  .bottom-nav { background: #fff; border-top: 1px solid #F0F0F0; padding: 8px 14px; display: flex; justify-content: flex-end; }
+  .bottom-nav .menu-btn { background: #E8622A; color: #fff; border-radius: 20px; padding: 6px 16px; font-size: 11px; font-weight: 700; border: none; }
+</style>
+</head>
+<body>
+
+<h1>Design Preview — BUG-002 (Search Ranking) + CR-002 (APS Badge)</h1>
+
+<!-- ───────────────────── ROW 1: SEARCH RANKING ───────────────────── -->
+<div style="text-align:center; font-size:13px; font-weight:700; color:#1F2937; margin-bottom:4px;">BUG-002 — Search Result Ranking</div>
+<div style="text-align:center; font-size:11px; color:#6B7280; margin-bottom:16px;">Searching "Tea" — exact match was last, now it's first</div>
+
+<div class="grid">
+  <div class="col">
+    <div class="label before">BEFORE — Grouped by category</div>
+    <div class="phone">
+      <div class="phone-header">
+        <span class="back">←</span>
+        <span class="title">Menu</span>
+        <div class="icons"><div class="icon-dot"></div><div class="icon-dot"></div></div>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input value="Tea" readonly>
+      </div>
+      <div class="filter-row">
+        <div class="filter-chip"><div class="dot veg"></div> Veg</div>
+        <div class="filter-chip"><div class="dot nonveg"></div> Non-Veg</div>
+      </div>
+
+      <!-- Banner still visible — THE BUG (already fixed by BUG-001) -->
+      <div class="promo-banner" style="opacity:0.35; position:relative;">
+        🎉 Weekend Special
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:9px;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">HIDDEN by BUG-001 ✓</span>
+      </div>
+
+      <!-- Category nav still visible — THE BUG (already fixed by BUG-001) -->
+      <div class="category-nav" style="opacity:0.35; position:relative;">
+        <div class="cat-pill active">Drinks</div>
+        <div class="cat-pill">Cocktails</div>
+        <div class="cat-pill">Breakfast</div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:9px;background:rgba(0,0,0,0.3);color:#fff;padding:2px 6px;border-radius:4px;">HIDDEN ✓</span>
+      </div>
+
+      <!-- Results in POS category order — THE BUG-002 -->
+      <div class="category-header"><h2>DRINKS</h2><span>2 Items</span></div>
+      <div class="item-card">
+        <div class="item-left">
+          <div class="item-veg-row"><div class="veg-dot-wrap"><div class="veg-dot-inner"></div></div></div>
+          <div class="item-name">Lemon Ice Tea</div>
+          <div class="item-price">₹449</div>
+          <div class="item-desc">name partial match</div>
+        </div>
+        <div class="item-right"><div class="item-img">🍋</div><div class="add-btn">ADD</div></div>
+      </div>
+
+      <div class="category-header"><h2>COCKTAILS</h2><span>1 Item</span></div>
+      <div class="item-card">
+        <div class="item-left">
+          <div class="item-veg-row"><div class="veg-dot-wrap" style="border-color:#944A28"><div class="veg-dot-inner" style="background:#944A28"></div></div></div>
+          <div class="item-name">Long Island Ice Tea</div>
+          <div class="item-price">₹749</div>
+          <div class="item-desc">name partial match</div>
+        </div>
+        <div class="item-right"><div class="item-img">🍹</div><div class="add-btn">ADD</div></div>
+      </div>
+
+      <div class="category-header"><h2>BREAKFAST</h2><span>1 Item</span></div>
+      <div class="item-card" style="border-color:#E5E7EB; background:#FFF9F7;">
+        <div class="item-left">
+          <div class="item-veg-row"><div class="veg-dot-wrap"><div class="veg-dot-inner"></div></div></div>
+          <div class="item-name" style="color:#DC2626;">Tea ← should be FIRST</div>
+          <div class="item-price">₹50</div>
+          <div class="item-desc">exact match — buried last</div>
+        </div>
+        <div class="item-right"><div class="item-img">☕</div><div class="add-btn">ADD</div></div>
+      </div>
+      <div class="bottom-nav"><button class="menu-btn">Menu</button></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="label after">AFTER — Flat ranked list</div>
+    <div class="phone">
+      <div class="phone-header">
+        <span class="back">←</span>
+        <span class="title">Menu</span>
+        <div class="icons"><div class="icon-dot"></div><div class="icon-dot"></div></div>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input value="Tea" readonly>
+      </div>
+      <div class="filter-row">
+        <div class="filter-chip"><div class="dot veg"></div> Veg</div>
+        <div class="filter-chip"><div class="dot nonveg"></div> Non-Veg</div>
+      </div>
+
+      <!-- Search meta banner — NEW -->
+      <div class="search-meta">
+        <span class="count">3 results for "Tea"</span>
+        <span class="clear">✕ Clear</span>
+      </div>
+
+      <!-- Flat ranked results -->
+      <div class="item-card" style="border-color:#D1FAE5; background:#F0FDF4;">
+        <div class="item-left">
+          <div class="category-tag">☕ BREAKFAST</div>
+          <div class="item-veg-row"><div class="veg-dot-wrap"><div class="veg-dot-inner"></div></div>
+            <span class="tier tier-0">Exact match</span>
+          </div>
+          <div class="item-name" style="color:#16A34A;">Tea</div>
+          <div class="item-price">₹50</div>
+        </div>
+        <div class="item-right"><div class="item-img">☕</div><div class="add-btn">ADD</div></div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-left">
+          <div class="category-tag">🍹 DRINKS</div>
+          <div class="item-veg-row"><div class="veg-dot-wrap"><div class="veg-dot-inner"></div></div>
+            <span class="tier tier-2">Partial match</span>
+          </div>
+          <div class="item-name">Lemon Ice Tea</div>
+          <div class="item-price">₹449</div>
+        </div>
+        <div class="item-right"><div class="item-img">🍋</div><div class="add-btn">ADD</div></div>
+      </div>
+
+      <div class="item-card">
+        <div class="item-left">
+          <div class="category-tag">🍸 COCKTAILS</div>
+          <div class="item-veg-row"><div class="veg-dot-wrap" style="border-color:#944A28"><div class="veg-dot-inner" style="background:#944A28"></div></div>
+            <span class="tier tier-2">Partial match</span>
+          </div>
+          <div class="item-name">Long Island Ice Tea</div>
+          <div class="item-price">₹749</div>
+        </div>
+        <div class="item-right"><div class="item-img">🍹</div><div class="add-btn">ADD</div></div>
+      </div>
+      <div style="height:20px"></div>
+      <div class="bottom-nav"><button class="menu-btn">Menu</button></div>
+    </div>
+  </div>
+</div>
+
+<div style="margin: 28px 0 8px; text-align:center; font-size:13px; font-weight:700; color:#1F2937;">CR-002 — APS (As Per Size) Badge</div>
+<div style="text-align:center; font-size:11px; color:#6B7280; margin-bottom:16px;">Variable-price items — replace ₹1 with APS badge on card and in review order</div>
+
+<div class="grid">
+  <div class="col">
+    <div class="label before">BEFORE — Shows ₹1 (looks broken)</div>
+    <div class="phone">
+      <div class="phone-header">
+        <span class="back">←</span><span class="title">Menu</span>
+        <div class="icons"><div class="icon-dot"></div><div class="icon-dot"></div></div>
+      </div>
+      <div class="section-title">SEAFOOD</div>
+      <div class="item-card">
+        <div class="item-left">
+          <div class="item-veg-row"><div class="veg-dot-wrap" style="border-color:#944A28"><div class="veg-dot-inner" style="background:#944A28"></div></div></div>
+          <div class="item-name">Whole Red Snapper</div>
+          <div class="item-price" style="color:#DC2626;">₹1 &nbsp;←&nbsp; looks like a glitch</div>
+          <div class="item-desc">Fresh catch of the day, grilled to order</div>
+        </div>
+        <div class="item-right"><div class="item-img">🐟</div><div class="add-btn">ADD</div></div>
+      </div>
+      <div class="item-card">
+        <div class="item-left">
+          <div class="item-veg-row"><div class="veg-dot-wrap" style="border-color:#944A28"><div class="veg-dot-inner" style="background:#944A28"></div></div></div>
+          <div class="item-name">Tiger Prawns</div>
+          <div class="item-price" style="color:#DC2626;">₹1</div>
+          <div class="item-desc">Market price, confirmed at counter</div>
+        </div>
+        <div class="item-right"><div class="item-img">🦐</div><div class="add-btn">ADD</div></div>
+      </div>
+
+      <div style="margin-top:16px; border-top:1px solid #F0F0F0; padding-top:12px;">
+        <div class="section-title">ORDER REVIEW</div>
+        <div class="order-card">
+          <div class="order-left"><div class="order-name">Whole Red Snapper × 1</div><div class="order-qty">1 pc</div></div>
+          <div class="order-price" style="color:#DC2626;">₹1.00</div>
+        </div>
+        <div class="order-card">
+          <div class="order-left"><div class="order-name">Butter Chicken × 2</div><div class="order-qty">2 pcs</div></div>
+          <div class="order-price">₹460.00</div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="label after">AFTER — Clear APS badge</div>
+    <div class="phone">
+      <div class="phone-header">
+        <span class="back">←</span><span class="title">Menu</span>
+        <div class="icons"><div class="icon-dot"></div><div class="icon-dot"></div></div>
+      </div>
+      <div class="section-title">SEAFOOD</div>
+      <div class="item-card">
+        <div class="item-left">
+          <div class="item-veg-row"><div class="veg-dot-wrap" style="border-color:#944A28"><div class="veg-dot-inner" style="background:#944A28"></div></div></div>
+          <div class="item-name">Whole Red Snapper</div>
+          <div style="margin-top:3px;">
+            <div class="aps-badge"><span class="aps-text">APS</span><span class="aps-sub">As Per Size</span></div>
+          </div>
+          <div class="item-desc">Fresh catch of the day, grilled to order</div>
+        </div>
+        <div class="item-right"><div class="item-img">🐟</div><div class="add-btn">ADD</div></div>
+      </div>
+      <div class="item-card">
+        <div class="item-left">
+          <div class="item-veg-row"><div class="veg-dot-wrap" style="border-color:#944A28"><div class="veg-dot-inner" style="background:#944A28"></div></div></div>
+          <div class="item-name">Tiger Prawns</div>
+          <div style="margin-top:3px;">
+            <div class="aps-badge"><span class="aps-text">APS</span><span class="aps-sub">As Per Size</span></div>
+          </div>
+          <div class="item-desc">Market price, confirmed at counter</div>
+        </div>
+        <div class="item-right"><div class="item-img">🦐</div><div class="add-btn">ADD</div></div>
+      </div>
+
+      <div style="margin-top:16px; border-top:1px solid #F0F0F0; padding-top:12px;">
+        <div class="section-title">ORDER REVIEW</div>
+        <div class="aps-notice">
+          <span class="notice-icon">ℹ️</span>
+          <span>1 item has variable pricing (APS). Price confirmed at counter.</span>
+        </div>
+        <div class="order-card">
+          <div class="order-left"><div class="order-name">Whole Red Snapper × 1</div><div class="order-qty">1 pc</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+            <div class="aps-badge"><span class="aps-text">APS</span></div>
+            <div style="font-size:9px;color:#9CA3AF;font-style:italic;">As Per Size</div>
+          </div>
+        </div>
+        <div class="order-card">
+          <div class="order-left"><div class="order-name">Butter Chicken × 2</div><div class="order-qty">2 pcs</div></div>
+          <div class="order-price">₹460.00</div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center; margin-top:24px; font-size:10px; color:#9CA3AF;">
+  Design Preview · BUG-002 + CR-002 · Planning Gate · Not yet implemented
+</div>
+
+</body>
+</html>
