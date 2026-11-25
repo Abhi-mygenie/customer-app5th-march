@@ -150,7 +150,13 @@ h1 { text-align: center; font-size: 15px; font-weight: 700; color: #374151; marg
 }
 .item-compact .veg-dot-sm { width: 6px; height: 6px; background: #00A651; border-radius: 50%; }
 .item-compact .name { font-size: 12px; font-weight: 600; color: #1F2937; }
-.item-compact .price { font-size: 11px; color: #374151; margin-top: 1px; margin-left: 17px; }
+.item-compact .price { font-size: 11px; color: #374151; margin-top: 1px; }
+.item-compact .price-row { display: flex; align-items: center; gap: 5px; margin-top: 1px; margin-left: 17px; }
+.item-compact .cat-tag-inline {
+  display: inline-block; padding: 1px 5px;
+  background: #F3F4F6; border: 1px solid #E5E7EB;
+  border-radius: 3px; font-size: 9px; color: #6B7280; font-weight: 500;
+}
 
 /* ── Keyboard overlay ── */
 .keyboard {
@@ -356,58 +362,54 @@ h1 { text-align: center; font-size: 15px; font-weight: 700; color: #374151; marg
 
         <!-- Compact items — 5 fit -->
         <div class="items">
+          <!-- Category tag now INLINE with price — saves ~20px per card -->
           <div class="item-compact">
             <div class="left">
-              <div class="cat-tag">BEER</div>
               <div class="row1">
                 <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
                 <span class="name">Kingfisher Strong Beer</span>
               </div>
-              <div class="price">₹180 · Customisable</div>
+              <div class="price-row"><span class="price">₹180</span><span class="cat-tag-inline">BEER</span></div>
             </div>
             <div class="add-btn sm">ADD</div>
           </div>
           <div class="item-compact">
             <div class="left">
-              <div class="cat-tag">BEER</div>
               <div class="row1">
                 <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
                 <span class="name">Kingfisher Ultra Beer</span>
               </div>
-              <div class="price">₹199 · 330 ml</div>
+              <div class="price-row"><span class="price">₹199</span><span class="cat-tag-inline">BEER</span></div>
             </div>
             <div class="add-btn sm">ADD</div>
           </div>
           <div class="item-compact">
             <div class="left">
-              <div class="cat-tag">BEER</div>
               <div class="row1">
                 <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
                 <span class="name">Corona Extra</span>
               </div>
-              <div class="price">₹380</div>
+              <div class="price-row"><span class="price">₹380</span><span class="cat-tag-inline">BEER</span></div>
             </div>
             <div class="add-btn sm">ADD</div>
           </div>
           <div class="item-compact">
             <div class="left">
-              <div class="cat-tag">BEER</div>
               <div class="row1">
                 <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
                 <span class="name">Budweiser Magnum</span>
               </div>
-              <div class="price">₹280</div>
+              <div class="price-row"><span class="price">₹280</span><span class="cat-tag-inline">BEER</span></div>
             </div>
             <div class="add-btn sm">ADD</div>
           </div>
           <div class="item-compact">
             <div class="left">
-              <div class="cat-tag">BEER</div>
               <div class="row1">
                 <div class="veg-box-sm"><div class="veg-dot-sm"></div></div>
                 <span class="name">Heineken Silver</span>
               </div>
-              <div class="price">₹320</div>
+              <div class="price-row"><span class="price">₹320</span><span class="cat-tag-inline">BEER</span></div>
             </div>
             <div class="add-btn sm">ADD</div>
           </div>

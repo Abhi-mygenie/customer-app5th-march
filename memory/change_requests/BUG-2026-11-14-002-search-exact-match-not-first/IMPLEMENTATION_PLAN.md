@@ -236,7 +236,15 @@ Insert AFTER `const sectionsToDisplay = ...` (line 834), BEFORE `return (` (line
 
 ---
 
-### Edit E2-b: Replace price div with APS-aware render + category tag (lines 73–81)
+### Edit E2-b: Replace price div with APS-aware render + category tag inline with price (lines 73–81)
+
+**OWNER DECISION 2026-11-25:** Category tag is rendered INLINE on the same line as the price — NOT on its own row above the item name. This saves ~20px per card in search mode (the full row height of a standalone tag).
+
+**Visual layout in search mode:**
+```
+[veg dot]  Item Name
+₹180  ·  Beer          ← price and category on ONE line
+```
 
 **Current lines 73–81:**
 ```jsx
@@ -258,29 +266,43 @@ Insert AFTER `const sectionsToDisplay = ...` (line 834), BEFORE `return (` (line
   // ─── Reusable JSX blocks ──────────────────────────────────────────────────
   // Veg/Name/Price header — used in BOTH image and no-image layouts.
   // CR-2026-11-14-002: APS badge replaces ₹1 for variable-price items (price===1)
-  // BUG-2026-11-14-002: category tag shown when categoryName prop is set (search mode)
+  // BUG-2026-11-14-002: category tag shown INLINE with price when categoryName prop is set
+  //   OWNER DECISION 2026-11-25: tag on same line as price, not own row (saves ~20px/card)
   const isAPS = parseFloat(item.price) === 1;
   const headerBlock = (
     <>
-      {categoryName && (
-        <span className="item-category-tag" data-testid="search-item-category-tag">
-          {categoryName}
-        </span>
-      )}
       <span className={`veg-label ${item.isEgg ? 'egg' : item.isVeg ? 'veg' : 'non-veg'}`}>
         <span className="veg-dot"></span>
       </span>
       <h3 className="item-name">{item.name}</h3>
-      {isAPS ? (
-        <div className="item-aps-badge" data-testid="menu-item-aps-badge">
-          <span className="aps-badge-text">APS</span>
-          <span className="aps-badge-sub">As Per Size</span>
-        </div>
-      ) : (
-        <div className="item-price">₹{item.price}</div>
-      )}
+      <div className="item-price-row">
+        {isAPS ? (
+          <div className="item-aps-badge" data-testid="menu-item-aps-badge">
+            <span className="aps-badge-text">APS</span>
+            <span className="aps-badge-sub">As Per Size</span>
+          </div>
+        ) : (
+          <div className="item-price">₹{item.price}</div>
+        )}
+        {categoryName && (
+          <span className="item-category-tag" data-testid="search-item-category-tag">
+            {categoryName}
+          </span>
+        )}
+      </div>
     </>
   );
+```
+
+**CSS addition for `.item-price-row`** (append to E6):
+```css
+/* BUG-2026-11-14-002: price + category tag on same line */
+.item-price-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
 ```
 
 ---
