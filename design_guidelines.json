@@ -1,152 +1,169 @@
 {
-  "project_name": "MyGenie Customer App - Search Mode Space Optimization Redesign",
-  "version": "1.0.0",
-  "app_type": "mobile_web_app",
-  "target_audience": "Restaurant dine-in and takeout customers on mobile devices searching for specific dishes or drinks with active on-screen keyboard",
-  "brand_identity": {
-    "brand_name": "MyGenie",
-    "brand_color": "#E8622A",
-    "brand_color_dark": "#CF4E1B",
-    "brand_color_light": "#FFF4ED",
-    "brand_border_light": "#FED7C3",
-    "theme": "Light theme restaurant menu with high-contrast tactical food ordering clarity"
-  },
-  "core_design_problem": {
-    "summary": "In search mode on mobile (with virtual keyboard taking ~280px of 844px height), the app currently shows only 2 items compared to Swiggy showing 5 items. The filter chips row and generous top/bottom card paddings waste critical vertical space.",
-    "strict_constraints": [
-      "Normal browse mode (when searchQuery is empty) MUST NOT CHANGE at all.",
-      "Item card content MUST stay intact: veg indicator dot, dish name, price/APS, ADD button/quantity selector, customizable indicator, allergens/desc remain available.",
-      "Changes are SEARCH MODE ONLY (active when searchQuery.trim().length > 0).",
-      "Brand color is orange #E8622A."
-    ]
-  },
-  "audit_comparison": {
-    "current_search_mode_breakdown": {
-      "header_bar_height": "70px (orange top bar with brand & back/phone)",
-      "search_and_filter_container": "92px total (search input + 40px veg/non-veg/egg filter chips + 8px gap)",
-      "filter_chips_status": "VISIBLE (wasting ~48px of vertical viewport height)",
-      "category_header": "Removed in search mode by BUG-002",
-      "item_card_padding": "12px top + 12px bottom (24px padding + ~66px content = ~90-100px total height per card)",
-      "keyboard_height": "~280px on standard mobile screens (iPhone 14/15 844px)",
-      "items_visible": "Only 2 items visible above keyboard boundary"
-    },
-    "optimized_search_mode_breakdown": {
-      "header_bar_height": "70px (identical, unchanged)",
-      "search_bar_height": "52px (search input with active query e.g. 'Beer', filter chips row HIDDEN)",
-      "filter_chips_status": "HIDDEN during search mode (saves 40px chips + 8px gaps = ~48px vertical space)",
-      "search_meta_banner": "32px ('18 results for \"Beer\" · Clear' with instant reset CTA)",
-      "item_card_padding": "7px top + 7px bottom (14px total padding) with compact 3px text gap = ~76-80px card height",
-      "keyboard_height": "~280px keyboard indicator zone",
-      "items_visible": "5 items visible above keyboard indicator (matching Swiggy benchmark)"
-    }
-  },
-  "interactive_mockup_specification": {
-    "component_title": "Search Mode Space Optimization Comparison (Side-by-Side Phone Mockup & Live Interactive Simulator)",
-    "target_viewports": "Dual iPhone 14/15 frames (390px x 844px each) arranged side-by-side on desktop, or toggled on mobile viewports",
-    "left_phone": {
-      "label": "CURRENT SEARCH MODE",
-      "tag": "Space Inefficient (2 Items Visible)",
-      "visual_state": {
-        "header": "70px Orange #E8622A Header with back arrow & restaurant name",
-        "search_bar": "Search input with query 'Beer'",
-        "filter_chips": "VISIBLE Veg / Non-Veg / Egg chips row (40px height + 8px padding)",
-        "meta_banner": "Search results count banner",
-        "item_cards": "2 full items visible (Corona Extra, Budweiser Magnum) + cut-off top of 3rd item",
-        "keyboard_drawer": "280px iOS Virtual Keyboard overlay at bottom showing space constraint"
-      }
-    },
-    "right_phone": {
-      "label": "OPTIMISED SEARCH MODE",
-      "tag": "Swiggy Benchmark (5 Items Visible)",
-      "visual_state": {
-        "header": "70px Orange #E8622A Header (exact same)",
-        "search_bar": "Search input with query 'Beer' with tighter padding",
-        "filter_chips": "HIDDEN (smoothly collapsed with display: none or search-active state)",
-        "meta_banner": "Compact meta banner: '18 results for \"Beer\" · Clear'",
-        "item_cards": "5 items fully visible: 1. Corona Extra (₹380), 2. Budweiser Magnum (₹280), 3. Heineken Silver (₹320), 4. Bira 91 White (₹290), 5. Kingfisher Ultra (₹240)",
-        "keyboard_drawer": "Same 280px keyboard zone, but 5 full items visible above keyboard boundary"
-      }
-    }
-  },
   "typography": {
-    "font_family_body": "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    "font_family_heading": "'Big Shoulders', Montserrat, sans-serif",
-    "scales": {
-      "header_brand": "text-lg sm:text-xl font-bold tracking-wider text-white",
-      "search_input": "text-sm font-medium text-slate-800",
-      "meta_count": "text-xs font-medium text-slate-500",
-      "meta_clear": "text-xs font-semibold text-[#E8622A]",
-      "item_name": "text-sm sm:text-base font-semibold text-slate-900 leading-snug",
-      "item_price": "text-xs sm:text-sm font-semibold text-slate-800",
-      "item_category_tag": "text-[10px] font-medium text-slate-500 uppercase tracking-wide",
-      "add_button": "text-xs font-bold text-[#E8622A] tracking-wider uppercase"
+    "font_family_primary": "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    "font_family_display": "Montserrat, sans-serif",
+    "font_weight_bold": 700,
+    "font_weight_semibold": 600,
+    "font_weight_medium": 500,
+    "font_weight_normal": 400,
+    "sizes": {
+      "heading_hero": "text-2xl sm:text-3xl font-bold tracking-tight",
+      "heading_section": "text-lg sm:text-xl font-semibold tracking-tight",
+      "heading_card": "text-sm sm:text-base font-semibold",
+      "body_standard": "text-sm font-normal text-[#333333]",
+      "body_muted": "text-xs font-normal text-[#666666]",
+      "badge_text": "text-[11px] font-semibold tracking-wide uppercase",
+      "currency_large": "text-lg sm:text-xl font-bold tracking-tight"
     }
   },
   "colors": {
-    "primary": "#E8622A",
-    "primary_dark": "#CF4E1B",
-    "primary_light": "#FFF4ED",
-    "primary_border": "#FED7C3",
-    "text_primary": "#1F2937",
-    "text_secondary": "#6B7280",
-    "text_tertiary": "#9CA3AF",
-    "bg_page": "#FFFFFF",
-    "bg_subtle": "#F9FAFB",
-    "border_light": "#E5E7EB",
-    "veg_green": "#00A651",
-    "nonveg_brown": "#944A28",
-    "keyboard_bg": "#D1D5DB"
+    "brand_primary": "#E8622A",
+    "brand_primary_hover": "#C44518",
+    "brand_primary_light": "#FFF4EE",
+    "brand_primary_border": "#FFD5C2",
+    "background_canvas": "#0F172A",
+    "background_surface_dark": "#1E293B",
+    "background_phone_body": "#F8FAFC",
+    "background_card_white": "#FFFFFF",
+    "background_card_subtle": "#F1F5F9",
+    "background_collapsed_pill": "#F3F4F6",
+    "border_light": "#E2E8F0",
+    "border_strong": "#CBD5E1",
+    "border_brand": "#E8622A",
+    "text_primary": "#1E293B",
+    "text_secondary": "#475569",
+    "text_muted": "#94A3B8",
+    "text_inverse": "#FFFFFF",
+    "status_veg": "#16A34A",
+    "status_veg_bg": "#DCFCE7",
+    "status_error_red": "#EF4444",
+    "status_error_bg": "#FEE2E2",
+    "status_success_green": "#10B981",
+    "status_success_bg": "#ECFDF5",
+    "status_amber": "#F59E0B",
+    "status_amber_bg": "#FEF3C7"
   },
-  "component_modifications": {
-    "SearchAndFilterBar": {
-      "path": "/app/frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.jsx",
-      "rule": "When searchQuery.trim() is truthy, add CSS class or condition to hide the veg-toggle-group and dietary-tags-row. In normal mode (searchQuery === ''), show veg-toggle-group and dietary tags row as normal."
-    },
-    "MenuItem": {
-      "path": "/app/frontend/src/components/MenuItem/MenuItem.jsx",
-      "rule": "Accept isSearchMode prop or apply .menu-item--search-compact when rendered in search mode. Reduce padding to 7px top/bottom (14px total). Maintain veg dot, name, price, ADD button, category tag, and allergen/info icons intact."
-    },
-    "MenuItems_page": {
-      "path": "/app/frontend/src/pages/MenuItems.jsx",
-      "rule": "Pass isSearchMode={Boolean(searchQuery.trim())} to MenuItem cards rendered in the search results list."
+  "layout_and_grids": {
+    "viewport_mode": "Side-by-side desktop view with iPhone 14 frame containers (390px x 844px each)",
+    "container_desktop": "max-w-[1400px] mx-auto px-4 py-8 lg:py-12",
+    "grid_comparison": "grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start justify-center",
+    "expanded_preview_panel": "mt-12 bg-white rounded-2xl border border-slate-200 shadow-xl p-6 lg:p-8 max-w-4xl mx-auto",
+    "mobile_frame": {
+      "width": "390px",
+      "min_height": "844px",
+      "border_radius": "40px",
+      "box_shadow": "0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 12px #1E293B, 0 0 0 14px #334155"
     }
   },
-  "visual_enhancers": {
-    "side_by_side_mockup": {
-      "container_style": "flex flex-col lg:flex-row items-center justify-center gap-8 p-6 bg-slate-100 min-h-screen",
-      "device_frame": "w-[390px] h-[844px] bg-white rounded-[44px] border-[10px] border-slate-900 shadow-2xl overflow-hidden relative flex flex-col",
-      "dynamic_island": "w-32 h-6 bg-black rounded-b-2xl mx-auto absolute top-0 left-1/2 -translate-x-1/2 z-50",
-      "keyboard_indicator": "absolute bottom-0 left-0 right-0 h-[280px] bg-slate-200/95 backdrop-blur-md border-t border-slate-300 flex flex-col items-center justify-center p-4 z-40"
+  "component_structure": {
+    "current_screen": {
+      "id": "current-screen-container",
+      "title": "CURRENT — Confusing Order Edit Flow",
+      "annotation_badge": "bg-red-500/10 text-red-600 border border-red-500/30",
+      "sections": [
+        "Header Bar (Orange #E8622A with back arrow and Table 4)",
+        "Customer Details card (John Doe, +91 98765 43210)",
+        "Previously Ordered section (Expanded by default, taking 55% screen height, 3 items: Cappuccino x2 ₹320, Flat White x1 ₹160, Organic Espresso x1 ₹120, total ₹600)",
+        "Divider",
+        "New Items section (Spanish Latte x1 ₹200 buried down page)",
+        "Divider",
+        "Confusing Price Breakdown (Item Total ₹800 without split, CGST ₹20, SGST ₹20, Grand Total ₹840)",
+        "Footer button ('Update Order ₹840')"
+      ],
+      "callouts": [
+        {
+          "target": "previously-ordered-section",
+          "title": "Problem 1: Visual Monopolization",
+          "text": "Previously ordered items dominate top view. The customer already knows they ordered these.",
+          "badge": "High Friction"
+        },
+        {
+          "target": "new-items-section",
+          "title": "Problem 2: New Item Buried Below Fold",
+          "text": "The single item just added (Spanish Latte) requires scrolling to verify or edit quantity.",
+          "badge": "Buried Action"
+        },
+        {
+          "target": "price-breakdown-section",
+          "title": "Problem 3: Bill Ambiguity (₹800 Shock)",
+          "text": "Item Total shows ₹800 without attributing ₹600 to previous order. Looks like Spanish Latte alone costs ₹800!",
+          "badge": "Cognitive Dissonance"
+        }
+      ]
+    },
+    "proposed_screen": {
+      "id": "proposed-screen-container",
+      "title": "PROPOSED — Clear, Item-First Edit Flow",
+      "annotation_badge": "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30",
+      "sections": [
+        "Header Bar (Orange #E8622A with back arrow and Table 4)",
+        "Customer Details card (John Doe, +91 98765 43210)",
+        "New Items section FIRST (Green accent, Spanish Latte x1 ₹200 prominent with clear stepper)",
+        "Divider",
+        "Previously Ordered COLLAPSED Pill ('🔒 Previously Ordered · 3 items · ₹600 ▼' with interactive toggle)",
+        "Divider",
+        "Clear Price Breakdown ('New additions ₹200' + 'Previous order ₹600' + thin line + 'Item Total ₹800' + CGST ₹20 + SGST ₹20 + 'Grand Total ₹840')",
+        "Footer button ('Update Order ₹840')"
+      ],
+      "callouts": [
+        {
+          "target": "new-items-section-first",
+          "title": "Fix 1: Focus On New Additions First",
+          "text": "Immediately validates what was just clicked. Customer sees Spanish Latte at ₹200 right at the top.",
+          "badge": "Immediate Feedback"
+        },
+        {
+          "target": "previously-ordered-collapsed",
+          "title": "Fix 2: Compact Collapsed Row",
+          "text": "Condenses 3 items into a single neat row (3 items · ₹600). Tap to expand anytime.",
+          "badge": "Reduced Cognitive Load"
+        },
+        {
+          "target": "price-breakdown-split",
+          "title": "Fix 3: Transparent 2-Part Price Split",
+          "text": "Explicit breakdown: New additions ₹200 + Previous order ₹600 = Item Total ₹800. No ambiguity.",
+          "badge": "Zero Confusion"
+        }
+      ]
+    },
+    "expanded_modal_or_drawer": {
+      "id": "expanded-state-panel",
+      "title": "Interactive Inspection: Previously Ordered Section When Expanded",
+      "description": "When the customer taps the collapsed row on the Proposed design, it smoothly slides down showing all 3 locked items with item statuses, quantities, and read-only lock cues."
     }
   },
-  "image_urls": [
-    {
-      "category": "beverages_beer_sample",
-      "description": "Premium beer bottle for menu item card preview",
-      "image_url": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwzfHxyZXN0YXVyYW50JTIwZm9vZCUyMGRpc2hlc3xlbnwwfHx8fDE3OTU1OTg3Mzl8MA&ixlib=rb-4.1.0&q=85"
-    },
-    {
-      "category": "food_sample_asian",
-      "description": "Appetizer dishes for food card preview",
-      "image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHxyZXN0YXVyYW50JTIwZm9vZCUyMGRpc2hlc3xlbnwwfHx8fDE3OTU1OTg3Mzl8MA&ixlib=rb-4.1.0&q=85"
+  "interactive_features_in_html": {
+    "live_toggle_collapse": "Clicking the Previously Ordered pill in the PROPOSED phone dynamically expands/collapses the items with smooth animation",
+    "quantity_stepper_interaction": "Clicking '-' or '+' on Spanish Latte recalculates the New Additions (₹200 -> ₹400), Item Total (₹800 -> ₹1000), CGST/SGST (₹25), Grand Total (₹1050), and button label in real time",
+    "annotation_toggle": "Show/Hide Annotations toggle button on top canvas for clean presentation vs design critique mode",
+    "expanded_demo_viewer": "Dedicated section showing exact styling of expanded items inside the new clean design"
+  },
+  "accessibility_and_testing": {
+    "data_test_ids": {
+      "current_screen": "current-screen",
+      "proposed_screen": "proposed-screen",
+      "current_prev_items": "current-prev-items-list",
+      "current_new_items": "current-new-items-list",
+      "current_price_card": "current-price-breakdown-card",
+      "proposed_new_items": "proposed-new-items-first",
+      "proposed_prev_collapsed_pill": "proposed-prev-collapsed-pill",
+      "proposed_prev_expanded_list": "proposed-prev-expanded-list",
+      "proposed_price_breakdown": "proposed-price-breakdown-clear",
+      "proposed_update_order_btn": "proposed-update-order-footer-btn",
+      "qty_minus_btn": "quantity-minus-btn",
+      "qty_plus_btn": "quantity-plus-btn",
+      "qty_count_display": "quantity-count-display",
+      "toggle_annotations_btn": "toggle-annotations-btn",
+      "toggle_collapsed_row_btn": "toggle-collapsed-row-btn"
     }
-  ],
-  "testing_attributes": {
-    "search_input": "data-testid=\"menu-search-input\"",
-    "veg_toggle_group": "data-testid=\"veg-toggle-group\"",
-    "search_meta_banner": "data-testid=\"search-results-count-banner\"",
-    "search_meta_clear_btn": "data-testid=\"search-meta-clear-btn\"",
-    "menu_item_card": "data-testid=\"menu-item-card\"",
-    "menu_item_add_btn": "data-testid=\"menu-item-add-btn\"",
-    "search_mode_phone_left": "data-testid=\"mockup-current-search-mode\"",
-    "search_mode_phone_right": "data-testid=\"mockup-optimised-search-mode\"",
-    "keyboard_overlay": "data-testid=\"virtual-keyboard-overlay\""
   },
   "instructions_to_main_agent": [
-    "1. Render the requested high-fidelity side-by-side phone mockup displaying the CURRENT search mode on the left and the OPTIMISED search mode on the right.",
-    "2. On the LEFT (Current): Show the 70px orange header, 60px search bar with 'Beer', visible 40px filter chips row with gaps, taller items (~90-100px), 2 items visible above the 280px keyboard indicator.",
-    "3. On the RIGHT (Optimised): Show the same 70px orange header, tighter search bar with 'Beer', filter chips row completely HIDDEN, 32px search meta banner ('18 results for \"Beer\" · Clear'), compact items with 7px top/bottom padding (~80px height), exactly 5 items visible above the 280px keyboard indicator.",
-    "4. Ensure normal browse mode (no search query) remains 100% unchanged.",
-    "5. Include interactive controls allowing reviewers to toggle keyboard visibility, adjust search queries (e.g. 'Beer', 'Burger', 'Paneer'), toggle between comparison view and direct live app view, and inspect pixel heights."
+    "Generate /app/frontend/public/review-order-comparison.html as a self-contained, responsive, pixel-accurate static HTML presentation using modern Tailwind CSS via CDN, Google Fonts (Montserrat), and SVG icons.",
+    "Render TWO exact 390px mobile screens side by side: LEFT = CURRENT (with red critique markers and callouts) and RIGHT = PROPOSED (with green enhancement badges and callouts).",
+    "Implement real working JavaScript inside the HTML: toggling the collapsed pill in the Proposed screen smoothly opens and closes the previously ordered items; tapping +/- stepper adjusts prices dynamically so reviewers can test edge cases.",
+    "Below the side-by-side phones, provide a high-res 'Expanded State Component Spec' with design tokens, exact margin/padding dimensions, font weights, and accessibility notes.",
+    "Ensure contrast complies with WCAG AA and APCA standards. Brand orange #E8622A must use crisp white text #FFFFFF for buttons and headers.",
+    "Add annotations pointing directly from the outer margins to the corresponding UI cards on both phones.",
+    "Verify the file is created at /app/frontend/public/review-order-comparison.html and accessible."
   ]
 }
