@@ -3054,18 +3054,19 @@
   title: 'Review Order edit mode — new items first, previously ordered collapsed by
     default, price breakdown split (new additions + previous order)'
   status: INTAKE
-  status_note: 'IMPACT ANALYSIS COMPLETE 2026-11-25 (Planning role). Code reality
-    FULL — exact lines verified. 3 files, ~60 lines total. Zero calc logic change.
-    No conflicts. 13-point verification matrix written. Ready for Implementation
-    Plan on owner approval.'
+  status_note: 'PLANNING COMPLETE 2026-11-25. Impact Analysis + Implementation Plan
+    written. 6 exact edits (E-1 to E-6) across 3 files, ~60 lines total. Zero calc
+    logic change. No conflicts. 7-point exit gate + 13-point QA matrix. Ready for
+    Implementation on owner approval.'
   priority: P1
   risk: MEDIUM
-  owner_action: 'Approve Implementation Plan → Implementation'
+  owner_action: 'Approve Implementation — say "go ahead" or "implement CR-2026-11-25-003"'
   blocked_on: []
   sprint: null
   files: pages/ReviewOrder.jsx · components/PreviousOrderItems/PreviousOrderItems.jsx
     · components/PreviousOrderItems/PreviousOrderItems.css
-  artefacts: INTAKE_DOC · INVESTIGATION_REPORT · INVESTIGATION_REPORT_DEEP · design comparison HTML
+  artefacts: INTAKE_DOC · INVESTIGATION_REPORT · INVESTIGATION_REPORT_DEEP · IMPACT_ANALYSIS
+    · IMPLEMENTATION_PLAN · design comparison HTML
   registered: '2026-11-25'
   last_updated: '2026-11-25'
   related:
