@@ -3052,24 +3052,60 @@
 - id: BUG-2026-11-25-003
   type: BUG
   title: 'Menu/restaurant info often fail to load in preview: POS restaurant-product
-    and restaurant-info take 8-13s vs apiReadClient timeout 8s'
+    and restaurant-info take 8-13s vs apiReadClient timeout 8s. Root cause: 830KB
+    payload (40% waste — add_ons repeated 1652x, 50 unused fields). Fix track: CR-2026-11-25-002
+    (backend proxy+cache) + POS team brief.'
   status: INTAKE
-  status_note: 'INTAKE COMPLETE 2026-11-25. Found by testing agent iteration_31. Existed
-    before; not caused by this session. Needs owner decision (measure prod, then per-endpoint
-    timeout / retry / payload reduction) before Planning.'
+  status_note: 'INVESTIGATION COMPLETE 2026-11-25 (deep payload analysis). 830KB for
+    541 (408 items): add_ons 32 unique sent 1652x = 142KB waste; 50 unused fields =
+    154KB waste; variations repeated = 35KB waste. Total removable: 331KB (40%).
+    Owner decisions captured 2026-11-25: stale-while-revalidate cache approved, 5-min
+    TTL approved. CR-2026-11-25-002 registered for backend proxy+cache. POS_TEAM_BRIEF.md
+    written for POS team. Per-endpoint timeout (Option A) deferred — owner staying at gate.'
   priority: P1
   risk: MEDIUM
-  owner_action: 'Decide: measure prod latency; pick option A (per-endpoint timeout),
-    B (retry) or C (POS payload)'
+  owner_action: 'Confirm: (1) field stripping in CR-2026-11-25-002 scope? (2) restaurant-info
+    in proxy scope? (3) approve Planning for CR-2026-11-25-002'
   blocked_on: []
   sprint: null
   files: frontend/src/api/config/axios.js · frontend/src/api/config/endpoints.js
-  artefacts: INTAKE_DOC
+    · frontend/src/api/services/restaurantService.js · backend/server.py (new proxy)
+  artefacts: INTAKE_DOC · INVESTIGATION_REPORT · INVESTIGATION_REPORT_PAYLOAD · POS_TEAM_BRIEF
   registered: '2026-11-25'
   last_updated: '2026-11-25'
   related:
   - CR-2026-07-03-004
+  - CR-2026-11-25-002
   code_markers: false
   money_path: null
   closed: null
-  notes: 'Do not change global apiReadClient timeout without reviewing CR-2026-07-03-004 D-01.'
+  notes: 'Do not change global apiReadClient timeout without reviewing CR-2026-07-03-004
+    D-01. Owner confirmed 5-min staleness acceptable. POS brief ready to send.
+    Payload: restaurant-info 1.7-3.9s (safe today). restaurant-product 5.5-13s (risk).'
+
+- id: CR-2026-11-25-002
+  type: CR
+  title: 'Backend menu proxy + stale-while-revalidate cache (5-min TTL) for restaurant-product'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-25. Registered from BUG-2026-11-25-003 investigation.
+    Owner approved stale-while-revalidate + 5-min TTL. Two owner decisions still open
+    before Planning: (1) include field stripping? (2) restaurant-info in scope?'
+  priority: P1
+  risk: MEDIUM
+  owner_action: 'Approve Planning. Answer: (1) include field stripping in this CR?
+    (2) include restaurant-info proxy too?'
+  blocked_on: []
+  sprint: null
+  files: backend/server.py · frontend/src/api/services/restaurantService.js
+    · frontend/src/api/config/endpoints.js
+  artefacts: INTAKE_DOC
+  registered: '2026-11-25'
+  last_updated: '2026-11-25'
+  related:
+  - BUG-2026-11-25-003
+  - CR-2026-07-03-004
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'Cache option A (in-process dict, 1 worker) recommended. No new infra deps.
+    Field stripping saves additional ~130KB. 5-min TTL owner-approved 2026-11-25.'
