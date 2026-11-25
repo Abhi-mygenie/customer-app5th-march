@@ -1,5 +1,5 @@
-import React from 'react';
-import { IoLockClosedOutline, IoTimeOutline, IoCheckmarkOutline, IoCheckmarkDoneOutline } from 'react-icons/io5';
+import React, { useState } from 'react';
+import { IoLockClosedOutline, IoTimeOutline, IoCheckmarkOutline, IoCheckmarkDoneOutline, IoChevronDownOutline } from 'react-icons/io5';
 import { useRestaurantConfig } from '../../context/RestaurantConfigContext';
 // Import centralized transformers - SINGLE SOURCE OF TRUTH for label formatting
 import { getVariationLabels, getAddonLabels } from '../../api/transformers/helpers';
@@ -87,7 +87,13 @@ const mapFoodOrderStatus = (item) => {
  */
 const PreviousOrderItems = ({ items, orderId }) => {
   const { showFoodStatus } = useRestaurantConfig();
+
+  // CR-2026-11-25-003: collapsed by default — hooks must be before any early return
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!items || items.length === 0) return null;
+
+  const itemCount = items.filter(i => (i.status ?? i.foodStatus) !== 3).length;
 
   // Calculate subtotal using fullPrice from transformer (already includes variations + addons)
   const subtotal = items.reduce((total, item) => {
@@ -100,63 +106,68 @@ const PreviousOrderItems = ({ items, orderId }) => {
 
   return (
     <div className="previous-order-section" data-testid="previous-order-section">
-      {/* Section Header */}
-      <div className="previous-order-header">
+
+      {/* CR-2026-11-25-003: Collapsed/Expanded header */}
+      <div
+        className="previous-order-collapsed-header"
+        data-testid="previous-order-collapsed-header"
+        onClick={() => setIsExpanded(prev => !prev)}
+        role="button"
+        aria-expanded={isExpanded}
+      >
         <div className="previous-order-title-row">
           <IoLockClosedOutline className="previous-order-lock-icon" />
           <h3 className="previous-order-title">Previously Ordered</h3>
         </div>
+        <div className="previous-order-collapsed-meta">
+          <span className="previous-order-meta-text">
+            {itemCount} {itemCount === 1 ? 'item' : 'items'} · ₹{subtotal.toFixed(2)}
+          </span>
+          <IoChevronDownOutline
+            className={`previous-order-chevron ${isExpanded ? 'previous-order-chevron--open' : ''}`}
+          />
+        </div>
       </div>
 
-      {/* Items List */}
-      <div className="previous-order-items-list">
-        {items.map((item, index) => {
-          // Use fullPrice from transformer (already calculated)
-          const fullPrice = item.fullPrice ?? item.price ?? 0;
-          
-          // Use transformer's getVariationLabels with transformed variations
-          const variationLabels = getVariationLabels(item.variations || []);
-          
-          // Use transformer's getAddonLabels with transformed addons
-          const addonLabels = getAddonLabels(item.addons || []);
-          
-          return (
-            <div 
-              key={item.id || index} 
-              className="previous-order-item"
-              data-testid={`previous-order-item-${item.id || index}`}
-            >
-              <div className="previous-order-item-info">
-                {/* Item name - use name directly from transformer */}
-                <span className="previous-order-item-name">{item.name || item.item?.name || 'Unknown Item'}</span>
-                
-                {/* Variations */}
-                {variationLabels && (
-                  <span className="previous-order-item-customization" data-testid={`prev-item-variants-${index}`}>
-                    Variants: {variationLabels}
+      {/* Expandable items list */}
+      {isExpanded && (
+        <div className="previous-order-items-list previous-order-items-expanded" data-testid="previous-order-expanded-list">
+          {items.map((item, index) => {
+            const fullPrice = item.fullPrice ?? item.price ?? 0;
+            const variationLabels = getVariationLabels(item.variations || []);
+            const addonLabels = getAddonLabels(item.addons || []);
+
+            return (
+              <div
+                key={item.id || index}
+                className="previous-order-item"
+                data-testid={`previous-order-item-${item.id || index}`}
+              >
+                <div className="previous-order-item-info">
+                  <span className="previous-order-item-name">{item.name || item.item?.name || 'Unknown Item'}</span>
+                  {variationLabels && (
+                    <span className="previous-order-item-customization" data-testid={`prev-item-variants-${index}`}>
+                      Variants: {variationLabels}
+                    </span>
+                  )}
+                  {addonLabels && (
+                    <span className="previous-order-item-customization" data-testid={`prev-item-addons-${index}`}>
+                      Addons: {addonLabels}
+                    </span>
+                  )}
+                </div>
+                <div className="previous-order-item-right">
+                  <span className="previous-order-item-quantity">x{item.quantity || 1}</span>
+                  <span className="previous-order-item-price">
+                    ₹{(fullPrice * (item.quantity || 1)).toFixed(2)}
                   </span>
-                )}
-                
-                {/* Add-ons */}
-                {addonLabels && (
-                  <span className="previous-order-item-customization" data-testid={`prev-item-addons-${index}`}>
-                    Addons: {addonLabels}
-                  </span>
-                )}
+                  {showFoodStatus && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
+                </div>
               </div>
-              
-              {/* Quantity, Price and Status - all inline */}
-              <div className="previous-order-item-right">
-                <span className="previous-order-item-quantity">x{item.quantity || 1}</span>
-                <span className="previous-order-item-price">
-                  ₹{(fullPrice * (item.quantity || 1)).toFixed(2)}
-                </span>
-                {showFoodStatus && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

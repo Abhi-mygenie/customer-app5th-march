@@ -1105,3 +1105,22 @@
   flex-shrink: 0;
   margin-top: 1px;
 }
+
+/* CR-2026-11-25-003: Edit mode price split rows */
+.price-row-new-additions .price-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.price-value-new {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--brand-primary, #E8622A);
+}
+
+.price-row-separator {
+  height: 1px;
+  background: var(--border-light, #eee);
+  margin: 4px 0 6px;
+}

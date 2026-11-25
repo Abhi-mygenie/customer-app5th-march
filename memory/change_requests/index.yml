@@ -3053,25 +3053,26 @@
   type: CR
   title: 'Review Order edit mode — new items first, previously ordered collapsed by
     default, price breakdown split (new additions + previous order)'
-  status: INTAKE
-  status_note: 'PLANNING COMPLETE 2026-11-25. Impact Analysis + Implementation Plan
-    written. 6 exact edits (E-1 to E-6) across 3 files, ~60 lines total. Zero calc
-    logic change. No conflicts. 7-point exit gate + 13-point QA matrix. Ready for
-    Implementation on owner approval.'
+  status: IMPLEMENTED
+  status_note: 'IMPLEMENTED 2026-11-25 (Role 3). E-1 to E-6 applied across 3 files.
+    Webpack 0 errors. Testing agent iteration_32: non-edit regression PASS (5/5),
+    edit mode code checks PASS (section order, useState, data-testids, price guard
+    all confirmed). Live edit mode requires real open order for full smoke.'
   priority: P1
   risk: MEDIUM
-  owner_action: 'Approve Implementation — say "go ahead" or "implement CR-2026-11-25-003"'
+  owner_action: 'Owner smoke: place an order at a table, add new items via edit mode,
+    verify new items appear first and previously ordered is collapsed'
   blocked_on: []
   sprint: null
   files: pages/ReviewOrder.jsx · components/PreviousOrderItems/PreviousOrderItems.jsx
     · components/PreviousOrderItems/PreviousOrderItems.css
   artefacts: INTAKE_DOC · INVESTIGATION_REPORT · INVESTIGATION_REPORT_DEEP · IMPACT_ANALYSIS
-    · IMPLEMENTATION_PLAN · design comparison HTML
+    · IMPLEMENTATION_PLAN · QA_HANDOVER · design comparison HTML
   registered: '2026-11-25'
   last_updated: '2026-11-25'
   related:
   - CR-2026-09-12-012
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
   notes: 'Owner confirmed 2026-11-25: new items first, collapsed prev by default,

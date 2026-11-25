@@ -1993,17 +1993,6 @@ const ReviewOrder = () => {
           {/* Divider after Customer Details */}
           {/* <div className="review-order-divider"></div> */}
 
-          {/* Previous Order Items - Show only in edit mode */}
-          {isEditMode && previousOrderItems && previousOrderItems.length > 0 && (
-            <>
-              <PreviousOrderItems 
-                items={previousOrderItems} 
-                orderId={editingOrderId}
-              />
-              <div className="review-order-divider"></div>
-            </>
-          )}
-
           {/* Order Items - New items (editable) */}
           <div className="review-order-section">
             <div className="review-order-section-header">
@@ -2037,6 +2026,17 @@ const ReviewOrder = () => {
           {/* Divider after Order Items */}
           <div className="review-order-divider"></div>
 
+          {/* CR-2026-11-25-003: Previously Ordered — collapsed by default in edit mode */}
+          {isEditMode && previousOrderItems && previousOrderItems.length > 0 && (
+            <>
+              <PreviousOrderItems
+                items={previousOrderItems}
+                orderId={editingOrderId}
+              />
+              <div className="review-order-divider"></div>
+            </>
+          )}
+
           {/* Price Breakdown - with integrated Coupon & Loyalty */}
           {showPriceBreakdown && (
           <div className="review-order-section">
@@ -2059,6 +2059,20 @@ const ReviewOrder = () => {
             )}
 
             <div className="review-order-price-card">
+              {/* CR-2026-11-25-003: Split price rows — edit mode only, display only, zero calc change */}
+              {isEditMode && previousSubtotal > 0 && (
+                <>
+                  <div className="price-row price-row-new-additions" data-testid="row-new-additions">
+                    <span className="price-label">New additions</span>
+                    <span className="price-value price-value-new">₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="price-row price-row-sub" data-testid="row-previous-order">
+                    <span className="price-label-sub">Previous order</span>
+                    <span className="price-value-sub">₹{previousSubtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="price-row-separator" />
+                </>
+              )}
               {/* Item Total */}
               <div className="price-row">
                 <span className="price-label">Item Total</span>
