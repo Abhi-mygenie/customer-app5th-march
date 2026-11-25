@@ -214,7 +214,15 @@ const OrderItemCard = ({ cartItem, showCookingInstructions = true, inventoryEnfo
             </button>
           )} */}
           
-          <div className="order-item-price">₹{itemPrice.toFixed(2)}</div>
+          {/* CR-2026-11-14-002: APS badge for variable-price items (base price===1) */}
+          {parseFloat(cartItem.item?.price) === 1 ? (
+            <div className="order-item-aps-badge" data-testid="order-item-aps-badge">
+              <span className="order-aps-text">APS</span>
+              <span className="order-aps-sub">As Per Size</span>
+            </div>
+          ) : (
+            <div className="order-item-price">₹{itemPrice.toFixed(2)}</div>
+          )}
         </div>
       </div>
       

@@ -2045,6 +2045,19 @@ const ReviewOrder = () => {
               <h2 className="review-order-section-title">Price Breakdown</h2>
             </div>
             
+            {/* CR-2026-11-14-002: APS notice — display only, shown when cart has variable-price items */}
+            {cartItems.some(ci => parseFloat(ci.item?.price) === 1) && (
+              <div className="review-aps-notice" data-testid="review-order-aps-notice">
+                <span className="review-aps-notice-icon">ℹ</span>
+                <span>
+                  {cartItems.filter(ci => parseFloat(ci.item?.price) === 1).length === 1
+                    ? 'One item has'
+                    : `${cartItems.filter(ci => parseFloat(ci.item?.price) === 1).length} items have`
+                  } variable pricing (APS). Final price confirmed at the counter.
+                </span>
+              </div>
+            )}
+
             <div className="review-order-price-card">
               {/* Item Total */}
               <div className="price-row">

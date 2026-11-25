@@ -833,6 +833,152 @@ const MenuItems = () => {
               ? menuSections.filter(section => section.sectionName === selectedCategory)
               : menuSections;
 
+            // BUG-2026-11-14-002: Flat ranked search — when search active, bypass per-section render
+            if (searchQuery.trim()) {
+              // Step 1: Flatten — per section apply admin ordering, then filterItems (all 5 filter layers)
+              const flatItems = menuSections.flatMap(section => {
+                const categoryId = section.categoryId;
+                const itemOrderKey = stationId ? `${stationId}__${categoryId}` : categoryId;
+                const itemOrder = stationId
+                  ? (menuOrder?.stationItemOrder?.[itemOrderKey] || [])
+                  : (menuOrder?.itemOrder?.[categoryId] || []);
+                const itemVis = stationId
+                  ? (menuOrder?.stationItemVisibility?.[itemOrderKey] || {})
+                  : (menuOrder?.itemVisibility?.[categoryId] || {});
+
+                let orderedItems = section.items;
+                if (itemOrder.length > 0) {
+                  const ordered = [];
+                  const seen = new Set();
+                  for (const o of itemOrder) {
+                    const item = section.items.find(i => String(i.id) === String(o.id));
+                    if (item) {
+                      if (itemVis[o.id] !== false) ordered.push(item);
+                      seen.add(String(item.id));
+                    }
+                  }
+                  for (const item of section.items) {
+                    if (!seen.has(String(item.id))) ordered.push(item);
+                  }
+                  orderedItems = ordered;
+                } else {
+                  const hasFoodOrder = orderedItems.some(i => (i.food_order || 0) > 0);
+                  if (hasFoodOrder) {
+                    orderedItems = [...orderedItems].sort((a, b) => {
+                      const fa = a.food_order || 0;
+                      const fb = b.food_order || 0;
+                      if (fa === 0 && fb === 0) return 0;
+                      if (fa === 0) return 1;
+                      if (fb === 0) return -1;
+                      return fa - fb;
+                    });
+                  }
+                }
+
+                return filterItems(orderedItems, categoryId).map(item => ({
+                  ...item,
+                  _sectionName: section.sectionName,
+                  _categoryId: categoryId,
+                }));
+              });
+
+              // Step 2: Score by relevance — INTERNAL ONLY, never shown to customer
+              const q = searchQuery.trim().toLowerCase();
+              const scoreItem = (item) => {
+                const name = (item.name || '').toLowerCase();
+                const desc = (item.description || '').toLowerCase();
+                if (name === q)         return 0;
+                if (name.startsWith(q)) return 1;
+                if (name.includes(q))   return 2;
+                if (desc.includes(q))   return 3;
+                return 99;
+              };
+
+              // Step 3: Sort by score, then reorder cart items within tiers
+              const sorted = flatItems
+                .filter(i => scoreItem(i) < 99)
+                .sort((a, b) => scoreItem(a) - scoreItem(b));
+              const ranked = reorderItemsByCart(sorted);
+
+              // Step 4: Render flat list
+              return (
+                <>
+                  {ranked.length > 0 && (
+                    <>
+                      <div className="search-meta-banner" data-testid="search-results-count-banner">
+                        <span className="search-meta-count">
+                          {ranked.length} {ranked.length === 1 ? 'result' : 'results'} for &quot;{searchQuery}&quot;
+                        </span>
+                        <button
+                          className="search-meta-clear"
+                          data-testid="search-meta-clear-btn"
+                          onClick={() => setSearchQuery('')}
+                        >
+                          ✕ Clear
+                        </button>
+                      </div>
+                      <div id="items-section">
+                        <div className="menu-section">
+                          <div className="items-list">
+                            {ranked.map((item) => {
+                              const itemQuantity = getTotalQuantityForItem(item.id);
+                              const inCart = itemQuantity > 0;
+                              return (
+                                <MenuItem
+                                  key={item.id}
+                                  item={item}
+                                  categoryName={item._sectionName}
+                                  isExpanded={expandedDescriptions[item.id]}
+                                  descriptionLimit={descriptionLimit}
+                                  onToggleDescription={toggleDescription}
+                                  getAllergenIcon={getAllergenIcon}
+                                  quantity={itemQuantity}
+                                  isInCart={inCart}
+                                  onAddToCart={() => handleAddToCart(item)}
+                                  onIncrement={() => handleIncrement(item)}
+                                  onDecrement={() => handleDecrement(item)}
+                                  currentTimeInSeconds={currentTimeInSeconds}
+                                  isOnlineOrderEnabled={isOnlineOrderEnabled}
+                                  categoryTiming={categoryTimings?.[item._categoryId]}
+                                  itemTiming={itemTimings?.[String(item.id)]}
+                                  orderType={scannedOrderType}
+                                  inventoryEnforced={inventoryEnforced}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {ranked.length === 0 && (
+                    <div className="empty-search-state" data-testid="empty-search-state">
+                      <div className="empty-search-icon" data-testid="empty-search-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none"
+                          viewBox="0 0 24 24" stroke="#E8622A" strokeWidth="1.8">
+                          <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="m21 21-4.35-4.35"/>
+                        </svg>
+                      </div>
+                      <h3 className="empty-search-title" data-testid="empty-search-title">
+                        No matching dishes found
+                      </h3>
+                      <p className="empty-search-desc" data-testid="empty-search-description">
+                        We couldn&apos;t find anything matching &quot;{searchQuery}&quot;. Try another dish or ingredient.
+                      </p>
+                      <button
+                        className="empty-search-clear-btn"
+                        data-testid="empty-search-clear-btn"
+                        onClick={() => setSearchQuery('')}
+                      >
+                        Clear Search
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            }
+            // ── END BUG-2026-11-14-002 flat search block ──
+
             return (
               <>
                 {sectionsToDisplay.length > 0 && (

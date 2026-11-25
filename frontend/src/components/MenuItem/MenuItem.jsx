@@ -23,6 +23,7 @@ const MenuItem = ({
   itemTiming = null,
   orderType = null,
   inventoryEnforced = true, // BUG-2026-10-14-001: default true preserves existing behaviour
+  categoryName = null,       // BUG-2026-11-14-002: set when rendered in flat search mode
 }) => {
   const shouldTruncate = item.description && item.description.length > descriptionLimit;
   const displayDescription = isExpanded || !shouldTruncate
@@ -70,13 +71,28 @@ const MenuItem = ({
 
   // ─── Reusable JSX blocks ──────────────────────────────────────────────────
   // Veg/Name/Price header — used in BOTH image and no-image layouts.
+  // CR-2026-11-14-002: APS badge replaces ₹{price} when price===1 (variable-price items)
+  // BUG-2026-11-14-002: category tag shown when categoryName prop is set (search mode only)
+  const isAPS = parseFloat(item.price) === 1;
   const headerBlock = (
     <>
+      {categoryName && (
+        <span className="item-category-tag" data-testid="search-item-category-tag">
+          {categoryName}
+        </span>
+      )}
       <span className={`veg-label ${item.isEgg ? 'egg' : item.isVeg ? 'veg' : 'non-veg'}`}>
         <span className="veg-dot"></span>
       </span>
       <h3 className="item-name">{item.name}</h3>
-      <div className="item-price">₹{item.price}</div>
+      {isAPS ? (
+        <div className="item-aps-badge" data-testid="menu-item-aps-badge">
+          <span className="aps-badge-text">APS</span>
+          <span className="aps-badge-sub">As Per Size</span>
+        </div>
+      ) : (
+        <div className="item-price">₹{item.price}</div>
+      )}
     </>
   );
 
