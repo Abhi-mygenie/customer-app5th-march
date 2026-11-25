@@ -2805,11 +2805,8 @@
   title: 'Search ranking — exact item match not shown first; cross-category render
     order buries exact matches from late POS categories below partial matches from
     early categories'
-  status: INTAKE
+  status: IMPLEMENTED
   status_note: 'IMPLEMENTED 2026-11-25 (Role 3). E1: MenuItems.jsx flat-search block. E2: MenuItem.jsx categoryName+APS. CSS E5+E6. Testing agent iteration_29: 100% pass, retest=false.'
-    scope). Root cause confirmed by INV-2026-11-14-001. Requires Planning: flatten
-    all sections into ranked list when searchQuery active. MEDIUM risk (render path
-    change, existing no-search path untouched).'
   priority: P0
   risk: MEDIUM
   owner_action: null
@@ -2862,11 +2859,8 @@
   type: CR
   title: 'APS (As Per Size) label for items with price=1 — show "APS" badge instead
     of ₹1 on MenuItem and in ReviewOrder summary until POS updates final price'
-  status: INTAKE
+  status: IMPLEMENTED
   status_note: 'IMPLEMENTED 2026-11-25 (Role 3). E3: OrderItemCard.jsx APS badge. E4: ReviewOrder.jsx APS notice. CSS E7+E8. Testing agent iteration_29: 100% pass, retest=false.'
-    detection = price===1; ADD button unchanged; cart/order/payment flow unchanged;
-    mixed cart allowed. Display-only change in 2 files. Risk downgraded HIGH→MEDIUM
-    (normal flow confirmed). Ready for Planning.'
   priority: P0
   risk: MEDIUM
   owner_action: null
@@ -2989,3 +2983,32 @@
   notes: 'Fix: pass hideFilters={!!searchQuery.trim()} to SearchAndFilterBar.
     Wrap veg-toggle-group + dietary-tags-row in {!hideFilters && ...}.
     Filter logic (filterItems) unaffected — applied filter state preserved.'
+
+- id: CR-2026-11-25-001
+  type: CR
+  title: 'Compact the top app header while a menu search is active so more
+    results fit above the mobile keyboard (remaining gap from INV-2026-11-25-001)'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-25. Header is shared by MenuItems,
+    DiningMenu and OrderSuccess; change must be opt-in (compact prop) on MenuItems
+    only. Design decision needed on how compact. Ready for Planning.'
+  priority: P2
+  risk: LOW
+  owner_action: 'Approve Planning for CR-2026-11-25-001'
+  blocked_on: []
+  sprint: null
+  files: frontend/src/pages/MenuItems.jsx · frontend/src/components/Header/Header.jsx
+    · frontend/src/components/Header/Header.css
+  artefacts: INTAKE_DOC
+  registered: '2026-11-25'
+  last_updated: '2026-11-25'
+  related:
+  - BUG-2026-11-14-001
+  - BUG-2026-11-25-001
+  - BUG-2026-11-25-002
+  - INV-2026-11-25-001
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'Estimated gain ~20-30px on mobile. Header currently ~55-60px, sticky
+    top:0 (same as SearchAndFilterBar). DiningMenu and OrderSuccess must be unchanged.'
