@@ -4,7 +4,7 @@
 **Type:** CR — UI layout / space optimisation
 **Title:** Make the top app header smaller while a menu search is active, so more results fit above the mobile keyboard
 **Registered:** 2026-11-25
-**Status:** INTAKE → READY FOR PLANNING
+**Status:** INTAKE → READY FOR PLANNING (Owner decision: Option C)
 **Priority:** P2
 **Risk:** LOW
 **Blast radius:** SMALL (if limited to the MenuItems page)
@@ -56,7 +56,7 @@ While `searchQuery.trim()` is not empty on the MenuItems page:
 
 Recommended approach for Planning: an opt-in prop (e.g. `compact`) that defaults to `false`, so the other pages are unaffected.
 
-Likely files: `MenuItems.jsx` (pass prop) · `Header.jsx` (modifier class) · `Header.css` (compact styles).
+Likely files (updated for Option C): `MenuItems.jsx` (hide `<Header>` while searching) · `SearchAndFilterBar.jsx` + `.css` (optional back arrow that clears the search). `Header.jsx` probably needs no change.
 No backend, data, cart or payment impact. `money_path: null`.
 
 ## 6. Risks / Open Questions for Planning & Design
@@ -88,7 +88,23 @@ No backend, data, cart or payment impact. `money_path: null`.
 | B. Slim header | Thinner orange bar with a smaller name | ~25–30px |
 | C. Search takes over the top (Swiggy/Zomato pattern) **RECOMMENDED** | Orange bar hidden; the search row gets a back arrow that clears the search | ~73px |
 
-Recommendation: C. It uses the most space, is a familiar search pattern and keeps the top uncluttered. The back arrow must **clear the search** (go back to the full menu), not leave the page. Hamburger and phone are hidden only while typing. Pending owner decision.
+Recommendation: C. It uses the most space, is a familiar search pattern and keeps the top uncluttered. The back arrow must **clear the search** (go back to the full menu), not leave the page. Hamburger and phone are hidden only while typing.
+
+## 7c. OWNER DECISION (2026-11-25)
+
+> "option C update docs and decsion"
+
+**Decision: Option C — search takes over the top while a search is active.**
+
+Agreed behaviour:
+1. While `searchQuery.trim()` is not empty on the MenuItems page, the app header (back button, restaurant name, hamburger) is hidden.
+2. The search row shows a back arrow on its left.
+3. Tapping that back arrow **clears the search** and returns to the full menu (header, banner, category nav and filters come back). It does **not** leave the page.
+4. When the search is cleared by any route (back arrow, clear "x", deleting the text, or the "Clear Search" button), the header returns.
+5. DiningMenu and OrderSuccess headers stay unchanged.
+6. Option A (reuse Review header) was rejected (~0px gain). Option B (slim header) was not chosen.
+
+Open points for Planning/Design: keep the search input focused after the header hides (no keyboard drop), avoid a layout jump on the first and last character, and check the sticky offset of the search bar once the header is gone.
 
 ## 8. Duplicate Check
 
