@@ -622,3 +622,11 @@
   padding: 7px 15px;
   gap: 10px;
 }
+
+/* BUG-2026-11-25-001: price row — category tag + price on same line */
+.item-price-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
