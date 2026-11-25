@@ -3054,13 +3054,13 @@
   title: 'Review Order edit mode — new items first, previously ordered collapsed by
     default, price breakdown split (new additions + previous order)'
   status: INTAKE
-  status_note: 'INTAKE COMPLETE 2026-11-25. Full investigation done (2 reports).
-    Backend support confirmed — no API or BE changes needed. Design comparison
-    built at /public/review-order-comparison.html. All owner decisions captured.
-    Ready for Planning.'
+  status_note: 'IMPACT ANALYSIS COMPLETE 2026-11-25 (Planning role). Code reality
+    FULL — exact lines verified. 3 files, ~60 lines total. Zero calc logic change.
+    No conflicts. 13-point verification matrix written. Ready for Implementation
+    Plan on owner approval.'
   priority: P1
   risk: MEDIUM
-  owner_action: 'Approve Planning'
+  owner_action: 'Approve Implementation Plan → Implementation'
   blocked_on: []
   sprint: null
   files: pages/ReviewOrder.jsx · components/PreviousOrderItems/PreviousOrderItems.jsx
