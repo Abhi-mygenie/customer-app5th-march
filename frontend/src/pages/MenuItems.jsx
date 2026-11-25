@@ -694,6 +694,7 @@ const MenuItems = () => {
           )}
 
           {/* Search + Filter Bar (top) */}
+          {/* BUG-2026-11-25-002: hideFilters hides veg/dietary chips during active search */}
           <SearchAndFilterBar
             searchQuery={searchQuery}
             onSearchChange={(e) => setSearchQuery(e.target.value)}
@@ -702,6 +703,7 @@ const MenuItems = () => {
             activeDietaryTags={activeDietaryTags}
             onDietaryTagChange={setActiveDietaryTags}
             availableDietaryTags={availableDietaryTags}
+            hideFilters={!!searchQuery.trim()}
           />
 
           {/* Edit Order Mode Banner */}

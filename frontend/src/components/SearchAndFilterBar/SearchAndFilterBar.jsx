@@ -10,6 +10,7 @@ const SearchAndFilterBar = ({
   activeDietaryTags = [],
   onDietaryTagChange,
   availableDietaryTags = [],
+  hideFilters = false,  // BUG-2026-11-25-002: hide chips during active search
 }) => {
   // Handle veg toggle click (single select for veg/non-veg/egg)
   const handleVegToggle = (filter) => {
@@ -58,7 +59,8 @@ const SearchAndFilterBar = ({
           </div>
         </div>
 
-        {/* Veg/Non-Veg/Egg Toggle */}
+        {/* Veg/Non-Veg/Egg Toggle — BUG-2026-11-25-002: hidden during active search */}
+        {!hideFilters && (
         <div className="veg-toggle-group" data-testid="veg-toggle-group">
           <button
             className={`veg-toggle-btn veg ${activeFilter === 'veg' ? 'active' : ''}`}
@@ -85,10 +87,12 @@ const SearchAndFilterBar = ({
             Egg
           </button>
         </div>
+        )}
       </div>
 
       {/* Row 2: Dietary Tags Chips (only show if there are available tags) */}
-      {availableDietaryTags.length > 0 && (
+      {/* BUG-2026-11-25-002: also hide dietary tag chips during search */}
+      {!hideFilters && availableDietaryTags.length > 0 && (
         <div className="dietary-tags-row" data-testid="dietary-tags-row">
           <div className="dietary-tags-scroll">
             {/* All chip */}

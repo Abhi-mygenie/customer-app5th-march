@@ -613,3 +613,12 @@
   color: #9CA3AF;
   font-style: italic;
 }
+
+/* BUG-2026-11-25-001: compact card padding in search mode — search only, normal browse unchanged */
+.menu-item.menu-item--compact {
+  padding: 7px 15px;
+}
+.menu-item.menu-item--no-image.menu-item--compact {
+  padding: 7px 15px;
+  gap: 10px;
+}

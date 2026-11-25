@@ -80,7 +80,13 @@ const MenuItem = ({
         <span className="veg-dot"></span>
       </span>
       <h3 className="item-name">{item.name}</h3>
+      {/* BUG-2026-11-25-001: category tag BEFORE price (owner decision 2026-11-25) */}
       <div className="item-price-row">
+        {categoryName && (
+          <span className="item-category-tag" data-testid="search-item-category-tag">
+            {categoryName}
+          </span>
+        )}
         {isAPS ? (
           <div className="item-aps-badge" data-testid="menu-item-aps-badge">
             <span className="aps-badge-text">APS</span>
@@ -88,11 +94,6 @@ const MenuItem = ({
           </div>
         ) : (
           <div className="item-price">₹{item.price}</div>
-        )}
-        {categoryName && (
-          <span className="item-category-tag" data-testid="search-item-category-tag">
-            {categoryName}
-          </span>
         )}
       </div>
     </>
@@ -201,7 +202,7 @@ const MenuItem = ({
   );
 
   return (
-    <div className={`menu-item ${!hasImage ? 'menu-item--no-image' : ''}`}>
+    <div className={`menu-item ${!hasImage ? 'menu-item--no-image' : ''} ${categoryName ? 'menu-item--compact' : ''}`}>{/* BUG-2026-11-25-001: compact class in search mode */}
       {hasImage ? (
         <>
           {/* IMAGE-PRESENT LAYOUT — UNCHANGED from prior version */}
