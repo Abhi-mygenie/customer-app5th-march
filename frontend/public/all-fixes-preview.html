@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Fixes — Before & After</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F1F5F9; padding: 24px 16px 48px; }
+
+/* ── Page heading ── */
+.page-title { text-align: center; font-size: 18px; font-weight: 800; color: #1F2937; margin-bottom: 4px; }
+.page-sub   { text-align: center; font-size: 12px; color: #6B7280; margin-bottom: 36px; }
+
+/* ── Fix section ── */
+.fix-section { margin-bottom: 44px; }
+.fix-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; padding: 0 4px;
+}
+.fix-id   { background: #1F2937; color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+.fix-title{ font-size: 13px; font-weight: 700; color: #1F2937; }
+.fix-desc { font-size: 11px; color: #6B7280; margin-top: 1px; }
+
+/* ── Side by side ── */
+.pair { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.side { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.side-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.side-label.b { color: #DC2626; }
+.side-label.a { color: #16A34A; }
+
+/* ── Phone ── */
+.phone {
+  width: 240px; background: #fff;
+  border-radius: 24px; border: 6px solid #1F2937;
+  overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  position: relative;
+}
+.di { width: 60px; height: 14px; background: #1F2937; border-radius: 0 0 8px 8px; margin: 0 auto; flex-shrink: 0; }
+.phone-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── Common UI pieces ── */
+.hdr { background: #E8622A; padding: 8px 10px; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.hdr .back { color: #fff; font-size: 13px; }
+.hdr .name { color: #fff; font-weight: 700; font-size: 11px; flex: 1; }
+.hdr .menu { width: 20px; height: 20px; background: rgba(255,255,255,.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.hdr .menu span { color: #fff; font-size: 9px; }
+
+.search-wrap { padding: 7px 10px 0; flex-shrink: 0; }
+.search-box { display: flex; align-items: center; gap: 6px; border: 2px solid #E8622A; border-radius: 8px; padding: 5px 8px; }
+.search-box span { color: #E8622A; font-size: 11px; }
+.search-box p { font-size: 11px; color: #374151; }
+
+.filter-row { display: flex; gap: 5px; padding: 6px 10px 0; flex-shrink: 0; }
+.fc { display: flex; align-items: center; gap: 3px; padding: 3px 7px; border: 1.5px solid #E5E7EB; border-radius: 999px; font-size: 9px; color: #6B7280; }
+.dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot.v { background: #00A651; }
+.dot.n { background: #944A28; }
+.dot.e { background: #F59E0B; }
+
+.banner { margin: 6px 10px; height: 36px; background: linear-gradient(135deg,#E8622A,#F97316); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 9px; font-weight: 600; flex-shrink: 0; }
+.cat-nav { display: flex; gap: 4px; padding: 5px 10px 0; overflow: hidden; flex-shrink: 0; }
+.cp { font-size: 9px; padding: 3px 7px; border-radius: 999px; background: #F3F4F6; color: #6B7280; border: 1px solid #E5E7EB; white-space: nowrap; }
+.cp.active { background: #FFF4ED; color: #E8622A; border-color: #FED7C3; font-weight: 700; }
+
+.cat-hdr { display: flex; justify-content: space-between; padding: 7px 10px 2px; flex-shrink: 0; border-left: 2px solid #E8622A; margin: 4px 0 0; }
+.cat-hdr h2 { font-size: 10px; font-weight: 800; color: #1F2937; }
+.cat-hdr span { font-size: 9px; color: #9CA3AF; }
+
+.meta-banner { display: flex; justify-content: space-between; padding: 5px 10px; background: #F9FAFB; border-bottom: 1px solid #F0F0F0; flex-shrink: 0; }
+.meta-banner .cnt { font-size: 9px; color: #6B7280; }
+.meta-banner .clr { font-size: 9px; color: #E8622A; font-weight: 700; }
+
+/* Item cards */
+.item-tall { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #F3F4F6; align-items: flex-start; }
+.item-tall .il { flex: 1; }
+.item-tall .vb { width: 13px; height: 13px; border: 1.5px solid #00A651; border-radius: 2px; display: flex; align-items: center; justify-content: center; margin-bottom: 3px; }
+.item-tall .vb-nv { border-color: #944A28; }
+.item-tall .vd { width: 7px; height: 7px; border-radius: 50%; background: #00A651; }
+.item-tall .vd-nv { background: #944A28; }
+.item-tall .n { font-size: 11px; font-weight: 600; color: #1F2937; margin-bottom: 1px; }
+.item-tall .p { font-size: 11px; color: #374151; margin-bottom: 2px; }
+.item-tall .sub { font-size: 9px; color: #9CA3AF; }
+.add { font-size: 9px; font-weight: 700; color: #E8622A; border: 1.5px solid #E8622A; border-radius: 5px; padding: 3px 8px; background: #fff; white-space: nowrap; }
+
+/* Compact item */
+.item-cmp { display: flex; justify-content: space-between; padding: 7px 10px; border-bottom: 1px solid #F3F4F6; align-items: center; }
+.item-cmp .il { flex: 1; }
+.item-cmp .vb-sm { width: 10px; height: 10px; border: 1.5px solid #00A651; border-radius: 2px; display: flex; align-items: center; justify-content: center; }
+.item-cmp .vd-sm { width: 5px; height: 5px; border-radius: 50%; background: #00A651; }
+.item-cmp .r1 { display: flex; align-items: center; gap: 4px; }
+.item-cmp .n { font-size: 11px; font-weight: 600; color: #1F2937; }
+.item-cmp .pr { display: flex; align-items: center; gap: 4px; margin-top: 1px; }
+.cat-chip { font-size: 8px; padding: 1px 5px; background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 3px; color: #6B7280; font-weight: 500; }
+.price-txt { font-size: 11px; color: #374151; font-weight: 500; }
+
+/* APS */
+.aps-b { display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; background: #FFF4ED; border: 1.5px solid #FED7C3; border-radius: 5px; }
+.aps-b .at { font-size: 9px; font-weight: 800; color: #E8622A; }
+.aps-b .as { font-size: 8px; color: #9CA3AF; font-style: italic; }
+
+/* Keyboard */
+.kb { background: #D1D5DB; padding: 8px 6px 4px; flex-shrink: 0; }
+.kb-row { display: flex; gap: 3px; justify-content: center; margin-bottom: 3px; }
+.key { width: 18px; height: 22px; background: #fff; border-radius: 3px; font-size: 8px; display: flex; align-items: center; justify-content: center; color: #374151; box-shadow: 0 1px 1px rgba(0,0,0,.2); }
+.key.w  { width: 26px; }
+.key.sp { width: 80px; }
+.key.or { background: #E8622A; color: #fff; width: 22px; }
+
+.spacer { height: 6px; flex-shrink: 0; }
+.spacer.sm { height: 3px; }
+
+/* Change tag */
+.chg { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 700; display: inline-block; }
+.chg.rm  { background: #FEE2E2; color: #DC2626; }
+.chg.add { background: #DCFCE7; color: #16A34A; }
+.chg.mod { background: #FFF4ED; color: #E8622A; }
+
+/* Change arrows */
+.arrow { font-size: 20px; color: #E8622A; display: flex; align-items: center; padding-top: 40px; }
+
+/* Item with price=1 (before APS) */
+.p1 { color: #DC2626; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">All Bugs Fixed — Before & After</div>
+<p class="page-sub">5 fixes shipped this session · Search mode · Search ranking · APS badge · Card layout · Filter chips</p>
+
+<!-- ════════════════════════════════════════════════
+     BUG-001 — Banner + category nav hidden in search
+     ════════════════════════════════════════════════ -->
+<div class="fix-section">
+  <div class="fix-header">
+    <div class="fix-id">BUG-2026-11-14-001</div>
+    <div>
+      <div class="fix-title">Search results hidden by keyboard</div>
+      <div class="fix-desc">Banner &amp; category nav stayed visible during search, pushing results off-screen</div>
+    </div>
+  </div>
+  <div class="pair">
+    <div class="side">
+      <div class="side-label b">Before</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="search-wrap"><div class="search-box"><span>🔍</span><p>Tea</p></div></div>
+          <div class="filter-row"><div class="fc"><div class="dot v"></div>Veg</div><div class="fc"><div class="dot n"></div>Non-Veg</div></div>
+          <!-- Banner still visible — takes space -->
+          <div class="banner" style="position:relative;">🎉 Weekend Special
+            <span style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:7px;background:rgba(0,0,0,.4);padding:1px 4px;border-radius:3px;">takes 36px</span>
+          </div>
+          <!-- Category nav still visible -->
+          <div class="cat-nav" style="position:relative;">
+            <div class="cp active">Drinks</div><div class="cp">Cocktails</div><div class="cp">Breakfast</div>
+            <span style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:7px;background:rgba(0,0,0,.4);color:#fff;padding:1px 4px;border-radius:3px;">takes 32px</span>
+          </div>
+          <div class="cat-hdr"><h2>DRINKS</h2><span>18 Items</span></div>
+          <div class="item-tall"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n">Lemon Ice Tea</div><div class="p">₹449</div></div><div class="add">ADD</div></div>
+          <div class="item-tall" style="opacity:.5;"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n">Long Island Ice Tea</div><div class="p">₹749</div></div><div class="add">ADD</div></div>
+          <div class="kb">
+            <div class="kb-row"><div class="key">q</div><div class="key">w</div><div class="key">e</div><div class="key">r</div><div class="key">t</div><div class="key">y</div><div class="key">u</div><div class="key">i</div><div class="key">o</div><div class="key">p</div></div>
+            <div class="kb-row"><div class="key">a</div><div class="key">s</div><div class="key">d</div><div class="key">f</div><div class="key">g</div><div class="key">h</div><div class="key">j</div><div class="key">k</div><div class="key">l</div></div>
+            <div class="kb-row"><div class="key w">⇧</div><div class="key">z</div><div class="key">x</div><div class="key">c</div><div class="key">v</div><div class="key">b</div><div class="key">n</div><div class="key">m</div><div class="key w">⌫</div></div>
+            <div class="kb-row"><div class="key w">123</div><div class="key sp">Tea</div><div class="key or">→</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#DC2626;font-weight:600;">2 items visible</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="side">
+      <div class="side-label a">After ✓</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="search-wrap"><div class="search-box"><span>🔍</span><p>Tea</p></div></div>
+          <div class="filter-row"><div class="fc"><div class="dot v"></div>Veg</div><div class="fc"><div class="dot n"></div>Non-Veg</div></div>
+          <!-- Banner GONE -->
+          <!-- Category nav GONE -->
+          <div class="meta-banner"><span class="cnt">3 results for "Tea"</span><span class="clr">✕ Clear</span></div>
+          <div class="item-tall"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n">Tea</div><div class="p">₹50</div></div><div class="add">ADD</div></div>
+          <div class="item-tall"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n">Lemon Ice Tea</div><div class="p">₹449</div></div><div class="add">ADD</div></div>
+          <div class="item-tall"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n">Long Island Ice Tea</div><div class="p">₹749</div></div><div class="add">ADD</div></div>
+          <div class="spacer"></div>
+          <div class="kb">
+            <div class="kb-row"><div class="key">q</div><div class="key">w</div><div class="key">e</div><div class="key">r</div><div class="key">t</div><div class="key">y</div><div class="key">u</div><div class="key">i</div><div class="key">o</div><div class="key">p</div></div>
+            <div class="kb-row"><div class="key">a</div><div class="key">s</div><div class="key">d</div><div class="key">f</div><div class="key">g</div><div class="key">h</div><div class="key">j</div><div class="key">k</div><div class="key">l</div></div>
+            <div class="kb-row"><div class="key w">⇧</div><div class="key">z</div><div class="key">x</div><div class="key">c</div><div class="key">v</div><div class="key">b</div><div class="key">n</div><div class="key">m</div><div class="key w">⌫</div></div>
+            <div class="kb-row"><div class="key w">123</div><div class="key sp">Tea</div><div class="key or">→</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#16A34A;font-weight:600;">3 items visible ✓</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     BUG-002 — Search ranking (exact match first)
+     ════════════════════════════════════════════════ -->
+<div class="fix-section">
+  <div class="fix-header">
+    <div class="fix-id">BUG-2026-11-14-002</div>
+    <div>
+      <div class="fix-title">Exact match buried — now ranked first</div>
+      <div class="fix-desc">Search "Tea" showed partial matches first. Now flat ranked list: exact → starts-with → partial → description</div>
+    </div>
+  </div>
+  <div class="pair">
+    <div class="side">
+      <div class="side-label b">Before</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="search-wrap"><div class="search-box"><span>🔍</span><p>Tea</p></div></div>
+          <div class="spacer sm"></div>
+          <div class="cat-hdr"><h2>DRINKS</h2><span>2 Items</span></div>
+          <div class="item-tall"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n">Lemon Ice Tea</div><div class="p" style="color:#374151;">₹449</div><div class="sub">partial match</div></div><div class="add">ADD</div></div>
+          <div class="cat-hdr" style="margin-top:4px;"><h2>COCKTAILS</h2><span>1 Item</span></div>
+          <div class="item-tall"><div class="il"><div class="vb vb-nv"><div class="vd vd-nv"></div></div><div class="n">Long Island Ice Tea</div><div class="p">₹749</div><div class="sub">partial match</div></div><div class="add">ADD</div></div>
+          <div class="cat-hdr" style="margin-top:4px;"><h2>BREAKFAST</h2><span>1 Item</span></div>
+          <div class="item-tall" style="background:#FEF2F2;"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n" style="color:#DC2626;">Tea ← should be 1st</div><div class="p">₹50</div><div class="sub">exact match</div></div><div class="add">ADD</div></div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="side">
+      <div class="side-label a">After ✓</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="search-wrap"><div class="search-box"><span>🔍</span><p>Tea</p></div></div>
+          <div class="meta-banner"><span class="cnt">3 results for "Tea"</span><span class="clr">✕ Clear</span></div>
+          <!-- Flat ranked list — exact first -->
+          <div class="item-cmp" style="background:#F0FDF4;border-left:3px solid #16A34A;">
+            <div class="il">
+              <div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n" style="color:#16A34A;">Tea</span></div>
+              <div class="pr"><span class="cat-chip">BREAKFAST</span><span class="price-txt">₹50</span></div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-cmp">
+            <div class="il">
+              <div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n">Lemon Ice Tea</span></div>
+              <div class="pr"><span class="cat-chip">DRINKS</span><span class="price-txt">₹449</span></div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-cmp">
+            <div class="il">
+              <div class="r1"><div class="vb-sm" style="border-color:#944A28;"><div class="vd-sm" style="background:#944A28;"></div></div><span class="n">Long Island Ice Tea</span></div>
+              <div class="pr"><span class="cat-chip">COCKTAILS</span><span class="price-txt">₹749</span></div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     CR-002 — APS badge for price=1 items
+     ════════════════════════════════════════════════ -->
+<div class="fix-section">
+  <div class="fix-header">
+    <div class="fix-id">CR-2026-11-14-002</div>
+    <div>
+      <div class="fix-title">APS badge replaces ₹1 on variable-price items</div>
+      <div class="fix-desc">Items with price=1 (fish, seafood) showed "₹1" which looked broken. Now shows "APS · As Per Size"</div>
+    </div>
+  </div>
+  <div class="pair">
+    <div class="side">
+      <div class="side-label b">Before</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="spacer"></div>
+          <div style="padding:4px 10px;font-size:9px;font-weight:700;color:#9CA3AF;text-transform:uppercase;">SEAFOOD</div>
+          <div class="item-tall">
+            <div class="il">
+              <div class="vb vb-nv"><div class="vd vd-nv"></div></div>
+              <div class="n">Whole Red Snapper</div>
+              <div class="p1">₹1 ← looks like a glitch</div>
+              <div class="sub">Fresh catch of the day</div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-tall">
+            <div class="il">
+              <div class="vb vb-nv"><div class="vd vd-nv"></div></div>
+              <div class="n">Tiger Prawns</div>
+              <div class="p1">₹1</div>
+              <div class="sub">Market price</div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-tall">
+            <div class="il">
+              <div class="vb"><div class="vd"></div></div>
+              <div class="n">Paneer Tikka</div>
+              <div class="p">₹320</div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="side">
+      <div class="side-label a">After ✓</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="spacer"></div>
+          <div style="padding:4px 10px;font-size:9px;font-weight:700;color:#9CA3AF;text-transform:uppercase;">SEAFOOD</div>
+          <div class="item-tall">
+            <div class="il">
+              <div class="vb vb-nv"><div class="vd vd-nv"></div></div>
+              <div class="n">Whole Red Snapper</div>
+              <div class="aps-b" style="margin-top:2px;"><span class="at">APS</span><span class="as">As Per Size</span></div>
+              <div class="sub">Fresh catch of the day</div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-tall">
+            <div class="il">
+              <div class="vb vb-nv"><div class="vd vd-nv"></div></div>
+              <div class="n">Tiger Prawns</div>
+              <div class="aps-b" style="margin-top:2px;"><span class="at">APS</span><span class="as">As Per Size</span></div>
+              <div class="sub">Market price</div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-tall">
+            <div class="il">
+              <div class="vb"><div class="vd"></div></div>
+              <div class="n">Paneer Tikka</div>
+              <div class="p">₹320 — unchanged</div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     BUG-25-001 — Category inline before price + compact
+     ════════════════════════════════════════════════ -->
+<div class="fix-section">
+  <div class="fix-header">
+    <div class="fix-id">BUG-2026-11-25-001</div>
+    <div>
+      <div class="fix-title">Category tag inline before price + compact padding</div>
+      <div class="fix-desc">Category was on its own row. Now inline before price: "BEER ₹180". Card padding 12px→7px in search mode.</div>
+    </div>
+  </div>
+  <div class="pair">
+    <div class="side">
+      <div class="side-label b">Before</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="search-wrap"><div class="search-box"><span>🔍</span><p>Beer</p></div></div>
+          <div class="meta-banner"><span class="cnt">18 results</span><span class="clr">✕ Clear</span></div>
+          <!-- Category on its own row -->
+          <div class="item-tall" style="padding:10px 10px 6px;">
+            <div class="il">
+              <div class="vb"><div class="vd"></div></div>
+              <div class="n">Kingfisher Strong Beer</div>
+              <div style="margin:3px 0;"><span style="display:inline-block;padding:2px 8px;border:1px solid #E5E7EB;border-radius:12px;font-size:9px;color:#6B7280;background:#F3F4F6;">Beer</span></div>
+              <div class="p" style="margin-top:2px;">₹180</div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-tall" style="padding:10px 10px 6px;">
+            <div class="il">
+              <div class="vb"><div class="vd"></div></div>
+              <div class="n">Kingfisher Ultra Beer</div>
+              <div style="margin:3px 0;"><span style="display:inline-block;padding:2px 8px;border:1px solid #E5E7EB;border-radius:12px;font-size:9px;color:#6B7280;background:#F3F4F6;">Beer</span></div>
+              <div class="p" style="margin-top:2px;">₹199</div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="side">
+      <div class="side-label a">After ✓</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="search-wrap"><div class="search-box"><span>🔍</span><p>Beer</p></div></div>
+          <div class="meta-banner"><span class="cnt">18 results</span><span class="clr">✕ Clear</span></div>
+          <!-- Category inline before price, compact padding -->
+          <div class="item-cmp">
+            <div class="il">
+              <div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n">Kingfisher Strong Beer</span></div>
+              <div class="pr"><span class="cat-chip">Beer</span><span class="price-txt">₹180</span></div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-cmp">
+            <div class="il">
+              <div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n">Kingfisher Ultra Beer</span></div>
+              <div class="pr"><span class="cat-chip">Beer</span><span class="price-txt">₹199</span></div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="item-cmp">
+            <div class="il">
+              <div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n">Corona Extra</span></div>
+              <div class="pr"><span class="cat-chip">Beer</span><span class="price-txt">₹380</span></div>
+            </div>
+            <div class="add">ADD</div>
+          </div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     BUG-25-002 — Filter chips hidden during search
+     ════════════════════════════════════════════════ -->
+<div class="fix-section">
+  <div class="fix-header">
+    <div class="fix-id">BUG-2026-11-25-002</div>
+    <div>
+      <div class="fix-title">Veg / Non-Veg / Egg chips hidden during search</div>
+      <div class="fix-desc">Filter chips wasted ~48px during search. Now hidden when typing. Reappear when search cleared.</div>
+    </div>
+  </div>
+  <div class="pair">
+    <div class="side">
+      <div class="side-label b">Before</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="search-wrap"><div class="search-box"><span>🔍</span><p>Beer</p></div></div>
+          <!-- Chips still visible — wasting 40px -->
+          <div class="filter-row" style="border:1.5px dashed #DC2626;border-radius:6px;margin:4px 10px 0;padding:4px 6px;position:relative;">
+            <div class="fc"><div class="dot v"></div>Veg</div>
+            <div class="fc"><div class="dot n"></div>Non-Veg</div>
+            <div class="fc"><div class="dot e"></div>Egg</div>
+            <span style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:7px;color:#DC2626;font-weight:700;">~48px wasted</span>
+          </div>
+          <div class="meta-banner" style="margin-top:4px;"><span class="cnt">18 results</span><span class="clr">✕ Clear</span></div>
+          <div class="item-tall"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n">Kingfisher Strong Beer</div><div class="p">₹180</div></div><div class="add">ADD</div></div>
+          <div class="item-tall"><div class="il"><div class="vb"><div class="vd"></div></div><div class="n">Kingfisher Ultra Beer</div><div class="p">₹199</div></div><div class="add">ADD</div></div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="side">
+      <div class="side-label a">After ✓</div>
+      <div class="phone">
+        <div class="di"></div>
+        <div class="phone-body">
+          <div class="hdr"><span class="back">←</span><span class="name">Menu</span><div class="menu"><span>≡</span></div></div>
+          <div class="search-wrap"><div class="search-box"><span>🔍</span><p>Beer</p></div></div>
+          <!-- No filter chips — saved 48px -->
+          <div class="meta-banner" style="margin-top:4px;"><span class="cnt">18 results</span><span class="clr">✕ Clear</span></div>
+          <div class="item-cmp"><div class="il"><div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n">Kingfisher Strong Beer</span></div><div class="pr"><span class="cat-chip">Beer</span><span class="price-txt">₹180</span></div></div><div class="add">ADD</div></div>
+          <div class="item-cmp"><div class="il"><div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n">Kingfisher Ultra Beer</span></div><div class="pr"><span class="cat-chip">Beer</span><span class="price-txt">₹199</span></div></div><div class="add">ADD</div></div>
+          <div class="item-cmp"><div class="il"><div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n">Corona Extra</span></div><div class="pr"><span class="cat-chip">Beer</span><span class="price-txt">₹380</span></div></div><div class="add">ADD</div></div>
+          <div class="item-cmp"><div class="il"><div class="r1"><div class="vb-sm"><div class="vd-sm"></div></div><span class="n">Budweiser Magnum</span></div><div class="pr"><span class="cat-chip">Beer</span><span class="price-txt">₹280</span></div></div><div class="add">ADD</div></div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary -->
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;padding:16px 20px;border:1px solid #E5E7EB;">
+  <div style="font-size:12px;font-weight:800;color:#1F2937;margin-bottom:10px;">All 5 fixes summary</div>
+  <div style="display:flex;flex-direction:column;gap:7px;font-size:11px;">
+    <div style="display:flex;align-items:center;gap:8px;"><span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-weight:700;font-size:9px;white-space:nowrap;">BUG-11-14-001</span><span>Banner + category nav hidden during search → results visible with keyboard</span></div>
+    <div style="display:flex;align-items:center;gap:8px;"><span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-weight:700;font-size:9px;white-space:nowrap;">BUG-11-14-002</span><span>Flat ranked list — exact match always first across all categories</span></div>
+    <div style="display:flex;align-items:center;gap:8px;"><span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-weight:700;font-size:9px;white-space:nowrap;">CR-11-14-002</span><span>APS badge replaces ₹1 on variable-price items everywhere (menu + review order)</span></div>
+    <div style="display:flex;align-items:center;gap:8px;"><span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-weight:700;font-size:9px;white-space:nowrap;">BUG-11-25-001</span><span>Category chip inline before price (Beer ₹180), compact 7px padding in search mode</span></div>
+    <div style="display:flex;align-items:center;gap:8px;"><span style="background:#DCFCE7;color:#16A34A;padding:2px 6px;border-radius:4px;font-weight:700;font-size:9px;white-space:nowrap;">BUG-11-25-002</span><span>Filter chips hidden during search, reappear on clear — saves 48px for item results</span></div>
+  </div>
+</div>
+
+</body>
+</html>
