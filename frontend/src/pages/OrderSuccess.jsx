@@ -289,6 +289,7 @@ const OrderSuccess = () => {
           name: item.name || item.item?.name || 'Item',
           // Use fullPrice from transformer (already includes variations + addons)
           price: item.fullPrice ?? item.price ?? 0,
+          unitPrice: item.unitPrice ?? item.price ?? 0,  // BUG-2026-11-26-001-RC2: basePrice=api.unit_price (1 when unconfirmed APS)
           quantity: item.quantity || 1,
           veg: item.veg ?? (item.item?.veg === true || item.item?.veg === 1),
           // Use status from transformer, fallback to foodStatus
@@ -679,8 +680,7 @@ const OrderSuccess = () => {
                       <span className="order-success-item-price">
                         {/* BUG-2026-11-26-001: APS price display mask */}
                         {(apsSuccessFoodIds.has(String(item.foodId || item.food_id || item.id || ''))
-                          && parseFloat(item.price) <=
-                              (apsItemUnitPrices[String(item.foodId || item.food_id || item.id || '')] || 1) + 0.5)
+                          && parseFloat(item.unitPrice ?? item.price) <= 1 + 0.5)
                           ? 'APS'
                           : `₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`}
                       </span>

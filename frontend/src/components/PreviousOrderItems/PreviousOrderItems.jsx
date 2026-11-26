@@ -99,6 +99,7 @@ const PreviousOrderItems = ({ items, orderId }) => {
   const subtotal = items.reduce((total, item) => {
     const status = item.status ?? item.foodStatus;
     if (status === 3) return total; // Skip cancelled items
+    if (parseFloat(item.unitPrice ?? item.price) <= 1) return total; // BUG-2026-11-26-001-RC3: skip APS items (unconfirmed price)
     // Use fullPrice from transformer, fallback to price for backward compatibility
     const itemPrice = item.fullPrice ?? item.price ?? 0;
     return total + (itemPrice * (item.quantity || 1));
@@ -159,7 +160,10 @@ const PreviousOrderItems = ({ items, orderId }) => {
                 <div className="previous-order-item-right">
                   <span className="previous-order-item-quantity">x{item.quantity || 1}</span>
                   <span className="previous-order-item-price">
-                    ₹{(fullPrice * (item.quantity || 1)).toFixed(2)}
+                    {/* BUG-2026-11-26-001-RC3: APS mask — unit_price=1 means unconfirmed APS */}
+                    {parseFloat(item.unitPrice ?? item.price) <= 1
+                      ? 'APS'
+                      : `₹${(fullPrice * (item.quantity || 1)).toFixed(2)}`}
                   </span>
                   {showFoodStatus && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
                 </div>
