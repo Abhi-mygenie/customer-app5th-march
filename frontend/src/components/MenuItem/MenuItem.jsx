@@ -1,4 +1,5 @@
 import React from 'react';
+import { isAPS as _isAPS } from '../../utils/apsUtils'; // BUG-2026-11-26-001-P2
 import { IoFlameOutline, IoNutritionOutline, IoWarningOutline, IoInformationCircleOutline } from 'react-icons/io5';
 import QuantitySelector from '../QuantitySelector/QuantitySelector';
 import { isItemAvailable } from '../../utils/itemAvailability';
@@ -73,7 +74,8 @@ const MenuItem = ({
   // Veg/Name/Price header — used in BOTH image and no-image layouts.
   // CR-2026-11-14-002: APS badge replaces ₹{price} when price===1 (variable-price items)
   // BUG-2026-11-14-002: category tag inline with price (search mode only) — saves one row per card
-  const isAPS = parseFloat(item.price) === 1;
+  // BUG-2026-11-26-001-P2: use POS aps tag; price===1 fallback for cached items
+  const isAPS = _isAPS(item);
   const headerBlock = (
     <>
       <span className={`veg-label ${item.isEgg ? 'egg' : item.isVeg ? 'veg' : 'non-veg'}`}>

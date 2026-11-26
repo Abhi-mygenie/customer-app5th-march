@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import { useCart } from '../context/CartContext';
+import { isAPS } from '../utils/apsUtils'; // BUG-2026-11-26-001-P2
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantDetails, useTableConfig, useStations } from '../hooks/useMenuData';
 import { useQueryClient } from '@tanstack/react-query'; // CR-2026-06-17-003 APP-12
@@ -730,6 +731,26 @@ const ReviewOrder = () => {
     return result;
   }, [cartItems, previousOrderItems, restaurant?.gst_status]);
 
+  // BUG-2026-11-26-001-P2: display-only tax breakdown (APS items use fullPrice=0)
+  const taxBreakdownDisplay = useMemo(() => {
+    const isGstEnabled = restaurant?.gst_status === true || restaurant?.gst_status === 'Yes';
+    const newItems = cartItems.map(cartItem => ({
+      fullPrice: isAPS(cartItem.item) ? 0 : calculateCartItemPrice(cartItem),
+      quantity: cartItem.quantity,
+      taxPercent: parseFloat(cartItem.item.tax) || 0,
+      taxType: cartItem.item.tax_type || 'GST',
+      isCancelled: false,
+    }));
+    const prevItems = (previousOrderItems || []).map(prevItem => ({
+      fullPrice: prevItem.fullPrice ?? prevItem.price ?? 0,
+      quantity: prevItem.quantity || 1,
+      taxPercent: parseFloat(prevItem.item?.tax) || 0,
+      taxType: prevItem.item?.tax_type || 'GST',
+      isCancelled: prevItem.foodStatus === 3,
+    }));
+    return calculateTaxBreakdown([...newItems, ...prevItems], isGstEnabled);
+  }, [cartItems, previousOrderItems, restaurant?.gst_status]);
+
   const { cgst, sgst, totalGst, vat, totalTax } = taxBreakdown;
 
   // ─── Final totals ──────────────────────────────────────────────
@@ -822,6 +843,32 @@ const ReviewOrder = () => {
   const roundUpAmount = isRoundingEnabled
     ? Math.max(0, parseFloat((roundedTotal - totalToPay).toFixed(2)))
     : 0;
+
+  // ─── BUG-2026-11-26-001-P2: APS display-only derived chain ───────────────
+  const apsCartItems       = cartItems.filter(ci => isAPS(ci.item));
+  const hasCartAPS         = apsCartItems.length > 0;
+  const apsUnitTotal       = apsCartItems.reduce((s, ci) => s + (ci.quantity || 1), 0);
+
+  const itemTotalDisplay          = itemTotal - apsUnitTotal;
+  const subtotalAfterDiscountDisp = Math.max(0, itemTotalDisplay - pointsDiscount - couponDiscount);
+  const discountRatioDisp         = itemTotalDisplay > 0 ? subtotalAfterDiscountDisp / itemTotalDisplay : 1;
+  const serviceChargeDisplay      = applyServiceCharge
+                                    ? parseFloat((subtotalAfterDiscountDisp * scPct / 100).toFixed(2))
+                                    : 0;
+  const gstOnScDisplay            = (applyServiceCharge && isGstEnabledForSc && scGstRate > 0)
+                                    ? serviceChargeDisplay * scGstRate / 100 : 0;
+  const scCgstDisplay             = parseFloat((gstOnScDisplay / 2).toFixed(2));
+  const scSgstDisplay             = parseFloat((gstOnScDisplay / 2).toFixed(2));
+  const itemCgstDisplay           = parseFloat((taxBreakdownDisplay.cgst * discountRatioDisp).toFixed(2));
+  const itemSgstDisplay           = parseFloat((taxBreakdownDisplay.sgst * discountRatioDisp).toFixed(2));
+  const finalVatDisplay           = parseFloat((taxBreakdownDisplay.vat * discountRatioDisp).toFixed(2));
+  const finalCgstDisplay          = parseFloat((itemCgstDisplay + scCgstDisplay + deliveryCgst).toFixed(2));
+  const finalSgstDisplay          = parseFloat((itemSgstDisplay + scSgstDisplay + deliverySgst).toFixed(2));
+  const finalSubtotalDisplay      = parseFloat((subtotalAfterDiscountDisp + serviceChargeDisplay + effectiveDeliveryCharge).toFixed(2));
+  const finalTotalTaxDisplay      = parseFloat((finalCgstDisplay + finalSgstDisplay + finalVatDisplay).toFixed(2));
+  const totalToPayDisplay         = parseFloat((finalSubtotalDisplay + finalTotalTaxDisplay).toFixed(2));
+  const roundedTotalDisplay       = isRoundingEnabled ? Math.ceil(totalToPayDisplay) : totalToPayDisplay;
+  // ─────────────────────────────────────────────────────────────────────────
 
   // console.log('totalTax', totalTax);
   // console.log('totalGst', totalGst);
@@ -1245,15 +1292,13 @@ const ReviewOrder = () => {
     isPlacingOrderRef.current = true;
     orderDispatchedRef.current = false; // Reset dispatch tracker for this attempt
 
-    // BUG-2026-11-26-001: APS price display mask — capture before clearCart()
-    // cartItems is closed over from component scope; must be read here, before any
-    // clearCart() call, to guarantee the pre-clear value is used in all 4 navigate paths.
+    // BUG-2026-11-26-001-P2: APS capture — use isAPS helper (before clearCart())
     const apsPassFoodIds = cartItems
-      .filter(ci => parseFloat(ci.item?.price) === 1)
+      .filter(ci => isAPS(ci.item))
       .map(ci => String(ci.item?.id || ci.item?.food_id || ''))
       .filter(Boolean);
     const apsPassCount = cartItems
-      .filter(ci => parseFloat(ci.item?.price) === 1)
+      .filter(ci => isAPS(ci.item))
       .reduce((s, ci) => s + (ci.quantity || 1), 0);
 
     // Clear phone error if phone is empty (optional)
@@ -1333,8 +1378,10 @@ const ReviewOrder = () => {
                 isPaid: true,
                 isEditedOrder: isEditMode,
                 billSummary,
-                apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001: APS price display mask
+                apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001
                 apsCount: apsPassCount,
+                displayTotal: roundedTotalDisplay,          // BUG-2026-11-26-001-P2
+                displayBillSummary: hasCartAPS ? { itemTotal: itemTotalDisplay, subtotal: finalSubtotalDisplay, grandTotal: roundedTotalDisplay, serviceCharge: serviceChargeDisplay, cgst: itemCgstDisplay, sgst: itemSgstDisplay, scCgst: scCgstDisplay, scSgst: scSgstDisplay } : null,
               }
             }
           });
@@ -1657,8 +1704,10 @@ const ReviewOrder = () => {
             items: buildOrderItems(cartItems),
             previousItems: buildPreviousItems(previousOrderItems, isEditMode),
             billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, couponDiscount, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay }),
-            apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001: APS price display mask
+            apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001
             apsCount: apsPassCount,
+            displayTotal: roundedTotalDisplay,          // BUG-2026-11-26-001-P2
+            displayBillSummary: hasCartAPS ? { itemTotal: itemTotalDisplay, subtotal: finalSubtotalDisplay, grandTotal: roundedTotalDisplay, serviceCharge: serviceChargeDisplay, cgst: itemCgstDisplay, sgst: itemSgstDisplay, scCgst: scCgstDisplay, scSgst: scSgstDisplay } : null,
           }
         }
       });
@@ -1836,8 +1885,10 @@ const ReviewOrder = () => {
                 items: buildOrderItems(cartItems),
                 previousItems: buildPreviousItems(previousOrderItems, isEditMode),
                 billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, couponDiscount, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay }),
-                apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001: APS price display mask
+                apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001
                 apsCount: apsPassCount,
+                displayTotal: roundedTotalDisplay,          // BUG-2026-11-26-001-P2
+                displayBillSummary: hasCartAPS ? { itemTotal: itemTotalDisplay, subtotal: finalSubtotalDisplay, grandTotal: roundedTotalDisplay, serviceCharge: serviceChargeDisplay, cgst: itemCgstDisplay, sgst: itemSgstDisplay, scCgst: scCgstDisplay, scSgst: scSgstDisplay } : null,
               }
             }
           });
@@ -1883,8 +1934,10 @@ const ReviewOrder = () => {
                 isEditedOrder: isEditMode,
                 items: buildOrderItems(cartItems),
                 previousItems: buildPreviousItems(previousOrderItems, isEditMode),
-                apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001: APS price display mask
+                apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001
                 apsCount: apsPassCount,
+                displayTotal: roundedTotalDisplay,          // BUG-2026-11-26-001-P2
+                displayBillSummary: hasCartAPS ? { itemTotal: itemTotalDisplay, subtotal: finalSubtotalDisplay, grandTotal: roundedTotalDisplay, serviceCharge: serviceChargeDisplay, cgst: itemCgstDisplay, sgst: itemSgstDisplay, scCgst: scCgstDisplay, scSgst: scSgstDisplay } : null,
               }
             }
           });
@@ -2065,32 +2118,34 @@ const ReviewOrder = () => {
             </div>
             
             {/* CR-2026-11-14-002: APS notice — display only, shown when cart has variable-price items */}
-            {cartItems.some(ci => parseFloat(ci.item?.price) === 1) && (
+            {/* BUG-2026-11-26-001-P2: use hasCartAPS + apsCartItems */}
+            {hasCartAPS && (
               <div className="review-aps-notice" data-testid="review-order-aps-notice">
                 <span className="review-aps-notice-icon">ℹ</span>
                 <span>
-                  {cartItems.filter(ci => parseFloat(ci.item?.price) === 1).length === 1
+                  {apsCartItems.length === 1
                     ? 'One item has'
-                    : `${cartItems.filter(ci => parseFloat(ci.item?.price) === 1).length} items have`
+                    : `${apsCartItems.length} items have`
                   } variable pricing (APS). Final price confirmed at the counter.
                 </span>
               </div>
             )}
 
-            {/* BUG-2026-11-26-001: APS price display mask — derived display-only vars */}
-            {(() => {
-              // These are assigned to the outer scope via side-effect-free IIFE.
-              // Real values (itemTotal, finalSubtotal, roundedTotal) are UNCHANGED
-              // and still flow into the POS order payload.
-              return null;
-            })()}
+            {/* BUG-2026-11-26-001-P2: placeholder removed — display vars computed above */}
             <div className="review-order-price-card">
               {/* CR-2026-11-25-003: Split price rows — edit mode only, display only, zero calc change */}
               {isEditMode && previousSubtotal > 0 && (
                 <>
                   <div className="price-row price-row-new-additions" data-testid="row-new-additions">
                     <span className="price-label">New additions</span>
-                    <span className="price-value price-value-new">₹{subtotal.toFixed(2)}</span>
+                    <span className="price-value price-value-new">
+                      {/* BUG-2026-11-26-001-P2: APS price=0 display */}
+                      {hasCartAPS
+                        ? ((subtotal - apsUnitTotal) > 0
+                            ? `₹${(subtotal - apsUnitTotal).toFixed(2)} + APS`
+                            : 'APS')
+                        : `₹${subtotal.toFixed(2)}`}
+                    </span>
                   </div>
                   <div className="price-row price-row-sub" data-testid="row-previous-order">
                     <span className="price-label-sub">Previous order</span>
@@ -2102,19 +2157,12 @@ const ReviewOrder = () => {
               {/* Item Total */}
               <div className="price-row">
                 <span className="price-label">Item Total</span>
-                {/* BUG-2026-11-26-001: APS price display mask */}
-                {(() => {
-                  const apsCount = cartItems.reduce((s, ci) => s + (parseFloat(ci.item?.price) === 1 ? (ci.quantity || 1) : 0), 0);
-                  const hasApsDisp = apsCount > 0;
-                  const real = itemTotal - apsCount;
-                  return (
-                    <span className="price-value">
-                      {hasApsDisp
-                        ? (real > 0 ? `₹${real.toFixed(2)} + APS` : 'APS')
-                        : `₹${itemTotal.toFixed(2)}`}
-                    </span>
-                  );
-                })()}
+                {/* BUG-2026-11-26-001-P2: APS price=0 display */}
+                <span className="price-value">
+                  {hasCartAPS
+                    ? (itemTotalDisplay > 0 ? `₹${itemTotalDisplay.toFixed(2)} + APS` : 'APS')
+                    : `₹${itemTotal.toFixed(2)}`}
+                </span>
               </div>
 
               {/* Service Charge (SERVICE_CHARGE_MAPPING CR) */}
@@ -2326,49 +2374,44 @@ const ReviewOrder = () => {
               {/* Subtotal (before taxes) */}
               <div className="price-row price-row-subtotal">
                 <span className="price-label">Subtotal</span>
-                {/* BUG-2026-11-26-001: APS price display mask */}
-                {(() => {
-                  const apsCount = cartItems.reduce((s, ci) => s + (parseFloat(ci.item?.price) === 1 ? (ci.quantity || 1) : 0), 0);
-                  const hasApsDisp = apsCount > 0;
-                  const real = finalSubtotal - apsCount;
-                  return (
-                    <span className="price-value">
-                      {hasApsDisp
-                        ? (real > 0 ? `₹${real.toFixed(2)} + APS` : 'APS')
-                        : `₹${finalSubtotal.toFixed(2)}`}
-                    </span>
-                  );
-                })()}
+                {/* BUG-2026-11-26-001-P2: APS price=0 display */}
+                <span className="price-value">
+                  {hasCartAPS
+                    ? (finalSubtotalDisplay > 0 ? `₹${finalSubtotalDisplay.toFixed(2)} + APS` : 'APS')
+                    : `₹${finalSubtotal.toFixed(2)}`}
+                </span>
               </div>
 
               {/* GST/VAT breakdown — Variant 2 (SERVICE_CHARGE_MAPPING CR): split item-tax and SC-tax rows, each with % suffix for compliance */}
-              {itemCgst > 0 && (
+              {/* BUG-2026-11-26-001-P2: D-1A — hide CGST/SGST rows when cgstDisplay===0 */}
+              {itemCgstDisplay > 0 && (
                 <>
                   <div className="price-row price-row-sub">
                     <span className="price-label-sub">CGST{gstRate ? ` ${(gstRate / 2).toFixed(gstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
-                    <span className="price-value-sub">₹{itemCgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{itemCgstDisplay.toFixed(2)}</span>
                   </div>
                   <div className="price-row price-row-sub">
                     <span className="price-label-sub">SGST{gstRate ? ` ${(gstRate / 2).toFixed(gstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
-                    <span className="price-value-sub">₹{itemSgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{itemSgstDisplay.toFixed(2)}</span>
                   </div>
                 </>
               )}
-              {vat > 0 && (
+              {/* BUG-2026-11-26-001-P2: D-1A — use display values; hide when 0 */}
+              {finalVatDisplay > 0 && (
                 <div className="price-row price-row-sub">
                   <span className="price-label-sub">VAT{vatRate ? ` ${vatRate}%` : ''}</span>
-                  <span className="price-value-sub">₹{adjustedVat.toFixed(2)}</span>
+                  <span className="price-value-sub">₹{finalVatDisplay.toFixed(2)}</span>
                 </div>
               )}
-              {scCgst > 0 && (
+              {scCgstDisplay > 0 && (
                 <>
                   <div className="price-row price-row-sub" data-testid="row-sc-cgst">
                     <span className="price-label-sub">CGST on SC{scGstRate ? ` ${(scGstRate / 2).toFixed(scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
-                    <span className="price-value-sub">₹{scCgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{scCgstDisplay.toFixed(2)}</span>
                   </div>
                   <div className="price-row price-row-sub" data-testid="row-sc-sgst">
                     <span className="price-label-sub">SGST on SC{scGstRate ? ` ${(scGstRate / 2).toFixed(scGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
-                    <span className="price-value-sub">₹{scSgst.toFixed(2)}</span>
+                    <span className="price-value-sub">₹{scSgstDisplay.toFixed(2)}</span>
                   </div>
                 </>
               )}
@@ -2389,17 +2432,11 @@ const ReviewOrder = () => {
               <div className="price-row price-row-total">
                 <span className="price-label-total">Grand Total</span>
                 <span className="price-value-total">
-                  {/* BUG-2026-11-26-001: APS price display mask */}
-                  {(() => {
-                    const apsCount = cartItems.reduce((s, ci) => s + (parseFloat(ci.item?.price) === 1 ? (ci.quantity || 1) : 0), 0);
-                    const hasApsDisp = apsCount > 0;
-                    const real = roundedTotal - apsCount;
-                    if (hasApsDisp) {
-                      return real > 0 ? `₹${real.toFixed(2)} + APS` : 'APS';
-                    }
-                    return `₹${roundedTotal.toFixed(2)}`;
-                  })()}
-                  {!cartItems.some(ci => parseFloat(ci.item?.price) === 1) && hasRoundingDiff && (
+                  {/* BUG-2026-11-26-001-P2: APS price=0 display */}
+                  {hasCartAPS
+                    ? (roundedTotalDisplay > 0 ? `₹${roundedTotalDisplay.toFixed(2)} + APS` : 'APS')
+                    : `₹${roundedTotal.toFixed(2)}`}
+                  {!hasCartAPS && hasRoundingDiff && (
                     <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{totalToPay.toFixed(2)})</span>
                   )}
                 </span>
@@ -2451,17 +2488,18 @@ const ReviewOrder = () => {
                   : (roundedTotal <= 0
                       ? 'Place Order'
                       : (() => {
-                          // BUG-2026-11-26-001: APS price display mask
-                          const apsCount = cartItems.reduce((s, ci) => s + (parseFloat(ci.item?.price) === 1 ? (ci.quantity || 1) : 0), 0);
-                          const hasApsDisp = apsCount > 0;
-                          const real = roundedTotal - apsCount;
+                          // BUG-2026-11-26-001-P2: APS price=0 display
                           if (paymentMethod === 'online' && hasRazorpayKey) {
-                            return hasApsDisp
-                              ? (real > 0 ? `Pay & Proceed ₹${real.toFixed(2)} + APS` : 'Pay & Proceed (APS)')
+                            return hasCartAPS
+                              ? (roundedTotalDisplay > 0
+                                  ? `Pay & Proceed ₹${roundedTotalDisplay.toFixed(2)} + APS`
+                                  : 'Pay & Proceed (APS)')
                               : `Pay & Proceed ₹${roundedTotal.toFixed(2)}`;
                           }
-                          return hasApsDisp
-                            ? (real > 0 ? `Place Order ₹${real.toFixed(2)} + APS` : 'Place Order (APS)')
+                          return hasCartAPS
+                            ? (roundedTotalDisplay > 0
+                                ? `Place Order ₹${roundedTotalDisplay.toFixed(2)} + APS`
+                                : 'Place Order (APS)')
                             : `Place Order ₹${roundedTotal.toFixed(2)}`;
                         })()
                     )

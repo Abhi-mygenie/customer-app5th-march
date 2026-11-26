@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { isAPS } from '../../utils/apsUtils'; // BUG-2026-11-26-001-P2
 import './CartBar.css';
 
 const CartBar = () => {
@@ -47,9 +48,9 @@ const CartBar = () => {
 
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
-  // BUG-2026-11-26-001: APS price display mask
+  // BUG-2026-11-26-001-P2: use isAPS helper
   const apsCartCount = (cartItems || []).reduce(
-    (s, ci) => s + (parseFloat(ci.item?.price) === 1 ? (ci.quantity || 1) : 0), 0
+    (s, ci) => s + (isAPS(ci.item) ? (ci.quantity || 1) : 0), 0
   );
   const apsCartTotal = apsCartCount; // ₹1 × quantity
   const realCartTotal = totalPrice - apsCartTotal;
@@ -128,7 +129,10 @@ const CartBar = () => {
                   const grandDisplay = hasCbarAPS
                     ? (realGrand > 0 ? `₹${realGrand.toFixed(2)} + APS` : 'APS')
                     : `₹${grandTotal.toFixed(2)}`;
-                  return `${newDisplay} + ₹${previousItemsPrice.toFixed(2)} = ${grandDisplay}`;
+                  // BUG-2026-11-26-001-P2: suppress ₹0.00 when no previous order items
+                  return previousItemsPrice === 0
+                    ? newDisplay
+                    : `${newDisplay} + ₹${previousItemsPrice.toFixed(2)} = ${grandDisplay}`;
                 })()
               : hasCbarAPS
                 ? (realCartTotal > 0 ? `₹${realCartTotal.toFixed(2)} + APS` : 'APS')

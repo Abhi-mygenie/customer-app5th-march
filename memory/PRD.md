@@ -1,5 +1,13 @@
 # MyGenie Customer App — PRD
 
+## BUG-2026-11-26-001 — PHASE 2 IMPLEMENTED 2026-11-26 (QA PENDING)
+- Phase 2: 20 edits across 7 files (1 new: apsUtils.js). isAPS() helper from POS aps:"yes" tag.
+  taxBreakdownDisplay useMemo + full display chain (APS price=0 for display). CustomizeModal
+  button APS. CartBar edit mode fix. displayBillSummary + displayTotal to OrderSuccess.
+  D-1A/D-2A: GST rows hidden when 0. Build PASS. QA NOT YET RUN.
+- POS API confirmed: aps:"yes" on melo fish (id=248252, 5% GST) + check in (id=248234, 0% GST)
+- Phase 1 (Fix A/B/C) confirmed working via owner live screenshots 2026-11-26
+
 ## BUG-2026-11-26-001 — ALL FIXES COMPLETE 2026-11-26
 - Fix A: `foodId: item.foodId` added to updatedItems mapping (line 281) — food ID preserved through API polling
 - Fix B: `billSummary.grandTotal` row masked (line 779) — Grand Total in Bill Summary now shows APS
