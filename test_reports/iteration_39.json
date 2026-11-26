@@ -1,0 +1,47 @@
+{
+  "summary": "BUG-2026-11-26-001 GAP fixes verification. Both GAP 1 and GAP 2 code fixes are correctly implemented. All tests PASS on the webpack dev server (localhost:3000). CRITICAL FINDING: the preview URL (mygenie-guest-1--2wcycild.preview.emergentagent.com) serves a STATIC SNAPSHOT from timestamp 20261126T131642Z — before the fixes were applied — so the preview URL still shows the old behavior (₹1.00 in header). A new deployment/snapshot is needed to make fixes visible at the preview URL.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Preview URL serving",
+        "issue": "Preview URL loads static snapshot from __emergent_static/20261126T131642Z-f4ed75/static/js/main.ba8565c6.js (compiled BEFORE fixes). Both GAP 1 and GAP 2 fixes are NOT visible at preview URL. Dev server (localhost:3000) has the correct bundle with fixes.",
+        "affected_selectors": [".customize-modal-item-price"],
+        "priority": "HIGH"
+      }
+    ],
+    "design_issues": []
+  },
+  "test_results": {
+    "BUG_GAP_1_code_verified": "PASS — CustomizeItemModal.jsx line 206: {isAPS(item) ? 'APS' : `₹${...}`} is in place",
+    "BUG_GAP_1_dev_server_test": "PASS — localhost:3000/69/menu: melo fish modal header shows 'APS'",
+    "BUG_GAP_1_button_no_variation": "PASS — 'Add To Cart (APS)' shown when no paid variation",
+    "BUG_GAP_1_button_boli_variation": "PASS — 'Add To Cart APS + ₹10.00' shown when Boli (+₹10) selected",
+    "BUG_GAP_1_preview_url": "FAIL — preview URL shows '₹1.00' (old static snapshot, NOT a code bug)",
+    "BUG_GAP_2_code_verified": "PASS — OrderSuccess.jsx line 680: no price<=1 guard, uses apsSuccessFoodIds.has(...) alone",
+    "NON_REGRESSION_non_aps_modal": "PASS — moo mwwt (₹100) modal shows '₹100.00' correctly",
+    "NON_REGRESSION_non_aps_button": "PASS — 'Add To Cart ₹100.00' for non-APS item"
+  },
+  "test_report_links": [],
+  "action_items": [
+    "DEPLOY: Trigger a new deployment/snapshot so the preview URL reflects the latest code (both GAP fixes). The code is correct — only the static snapshot at the preview URL is stale.",
+    "VERIFY: After deployment, test the preview URL to confirm: (1) melo fish modal header shows 'APS', (2) OrderSuccess shows 'APS' for melo fish with Boli variation (needs an actual order placement)"
+  ],
+  "critical_code_review_comments": [
+    "isAPS fallback: `item?.aps === undefined && parseFloat(item?.price) === 1` — this fallback may be risky if any non-APS item has price=1 and no aps field. Consider whether the undefined fallback should be removed now that all items have aps field set.",
+    "OrderSuccess BUG GAP 2 fix is correct — apsSuccessFoodIds.has(foodId) alone is the correct gate. The price<=1 guard was an incorrect heuristic."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A",
+    "frontend": "100% (on dev server) / 0% on preview URL due to stale static snapshot"
+  },
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Both GAP 1 and GAP 2 fixes are code-correct. The preview URL (mygenie-guest-1--2wcycild.preview.emergentagent.com) loads from a static snapshot at __emergent_static/20261126T131642Z-f4ed75/static/js/main.ba8565c6.js which is from BEFORE the fixes. Test on localhost:3000 to see the working fixes. After E1 deploys a new snapshot, retest on preview URL. BUG GAP 2 (OrderSuccess) could not be tested end-to-end (requires placing an actual order with melo fish + Boli), but the code change is verified correct.",
+  "rca_of_issue": "Preview URL serves Emergent static snapshot from 13:16:42 UTC, but fixes were applied at 13:34 (after snapshot). The webpack dev server at localhost:3000 has the correct compiled bundle. Both fixes are code-correct: (1) CustomizeItemModal header: isAPS(item) ? 'APS' : '₹...' at line 206, (2) OrderSuccess: removed price<=1 guard at line 680."
+}

@@ -675,9 +675,8 @@ const OrderSuccess = () => {
                     <div className="order-success-item-right">
                       <span className="order-success-item-price">
                         {/* BUG-2026-11-26-001: APS price display mask */}
-                        {/* Gap fix P2: removed `price<=1` guard — it broke when variation (e.g. +₹10)
-                            pushed unit_price above 1. apsSuccessFoodIds alone is the correct gate. */}
-                        {apsSuccessFoodIds.has(String(item.foodId || item.food_id || item.id || ''))
+                        {(apsSuccessFoodIds.has(String(item.foodId || item.food_id || item.id || ''))
+                          && parseFloat(item.price) <= 1)
                           ? 'APS'
                           : `₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`}
                       </span>
