@@ -667,7 +667,7 @@ const OrderSuccess = () => {
                     <div className="order-success-item-right">
                       <span className="order-success-item-price">
                         {/* BUG-2026-11-26-001: APS price display mask */}
-                        {(apsSuccessFoodIds.has(String(item.id || item.foodId || item.food_id || ''))
+                        {(apsSuccessFoodIds.has(String(item.foodId || item.food_id || item.id || ''))
                           && parseFloat(item.price) <= 1)
                           ? 'APS'
                           : `₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`}

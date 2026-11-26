@@ -1,6 +1,10 @@
 # MyGenie Customer App — PRD
 
-## BUG-2026-11-26-001 — BUG FIX COMPLETE 2026-11-26
+## BUG-2026-11-26-001 — ALL FIXES COMPLETE 2026-11-26
+- Fix A: `foodId: item.foodId` added to updatedItems mapping (line 281) — food ID preserved through API polling
+- Fix B: `billSummary.grandTotal` row masked (line 779) — Grand Total in Bill Summary now shows APS
+- Fix C: Swapped `||` lookup order at line 670 to `foodId || food_id || id` — item.id (order-line ID, always truthy) was short-circuiting before foodId was ever reached
+- All 3 fixes code-verified (iteration_38). Build PASS. Owner live smoke pending on restaurant 69.
 - Fix A: `foodId: item.foodId` added to `updatedItems` mapping (OrderSuccess line 281) — per-item APS mask now matches food ID correctly
 - Fix B: `billSummary.grandTotal` row masked (OrderSuccess line 779) — Grand Total in Bill Summary now shows `APS` / `₹X + APS`
 - Build PASS · CartBar + ReviewOrder regressions PASS (iteration_37) · OrderSuccess live smoke pending owner device test on restaurant 69

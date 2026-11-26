@@ -3154,9 +3154,10 @@
   title: 'APS price (₹1) still shows in CartBar, ReviewOrder price breakdown rows,
     and Order Success — scope gap from CR-2026-11-14-002 which only fixed the menu card'
   status: QA
-  status_note: 'BUG-FIX 2026-11-26. 14 edits total. Fix A: added foodId to updatedItems
-    mapping (OrderSuccess line 281) — per-item mask now matches food ID. Fix B: masked
-    billSummary.grandTotal row (OrderSuccess line 779). Build PASS. Ready for owner smoke.'
+  status_note: 'BUG-FIX-2 2026-11-26. Fix C: swapped || lookup order at OrderSuccess
+    line 670 — foodId before id. item.id (order-line ID, always truthy) was
+    short-circuiting before item.foodId (food ID, correct) was ever reached.
+    Build PASS. Ready for owner smoke.'
   priority: P1
   risk: LOW
   owner_action: null
