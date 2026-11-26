@@ -1,13 +1,15 @@
 # MyGenie Customer App — PRD
 
-## Deployment: 2026-11-26
-- Synced repo `Abhi-mygenie/customer-app5th-march` (main → `f4d9dd4`) into `/app` via `git reset --hard origin/main`
+## Deployment: 2026-11-26 (Latest)
+- Synced repo `Abhi-mygenie/customer-app5th-march` (main → `23c9886`) into `/app` via `git reset --hard origin/main`
 - Platform files preserved: `.emergent/emergent.yml`, `.emergent/cron/`, supervisor configs
-- Installed missing pip pkg: `slowapi`; installed missing npm pkg: `react-icons`
+- Installed missing pip pkg: `slowapi`; downgraded `typescript` from 7.x → 4.9.5 (react-scripts compat)
 - Backend running on :8001 (FastAPI + Motor/MongoDB); Frontend on :3000 (CRA + CRACO)
 - Health: `GET /api/healthz` → `{"ok":true,"mongo":"up"}`
-- Secrets set: JWT_SECRET, GOOGLE_MAPS_API_KEY, REACT_APP_GOOGLE_MAPS_API_KEY
-- Memory dir: fully synced with remote (pod-specific cron/webhook-crons differs — expected)
+- Secrets set: GOOGLE_MAPS_API_KEY, REACT_APP_GOOGLE_MAPS_API_KEY (via secrets panel)
+- JWT_SECRET: auto-generated temp secret in backend/.env (replace via secrets panel when needed)
+- CORS_ORIGINS: set to preview URL `https://mygenie-guest-1--2wcycild.preview.emergentagent.com`
+- Memory dir: fully synced with remote — 623 tracked files match remote exactly
 
 ## Original Problem Statement
 Deploy the existing React frontend repo directly into `/app` and run it as-is, with no code edits.
