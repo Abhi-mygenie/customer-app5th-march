@@ -3148,3 +3148,62 @@
   closed: null
   notes: 'Owner decision 2026-11-25: no separate CR. POS team brief is the answer.
     Parked — revisit only if POS team cannot act and timeout remains a problem.'
+
+- id: BUG-2026-11-26-001
+  type: BUG
+  title: 'APS price (₹1) still shows in CartBar, ReviewOrder price breakdown rows,
+    and Order Success — scope gap from CR-2026-11-14-002 which only fixed the menu card'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-26. Investigation confirmed 3 surfaces:
+    CartBar line 114, ReviewOrder lines 2079/2291/2342/2396, OrderSuccess lines
+    560/651/689/712. Order Success requires apsItemFoodIds handoff from ReviewOrder
+    since POS only knows unit_price=1. Display only — zero payload/math change.
+    Ready for Planning.'
+  priority: P1
+  risk: LOW
+  owner_action: null
+  blocked_on: []
+  sprint: null
+  files: 'frontend/src/components/CartBar/CartBar.jsx · frontend/src/pages/ReviewOrder.jsx
+    · frontend/src/pages/OrderSuccess.jsx'
+  artefacts: INTAKE_DOC
+  registered: '2026-11-26'
+  last_updated: '2026-11-26'
+  related:
+  - CR-2026-11-14-002
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: 'Parent CR-2026-11-14-002 (SMOKE) only fixed menu card APS badge. This BUG
+    covers CartBar + ReviewOrder rows + Order Success. Order Success APS detection
+    requires passing apsItemFoodIds from ReviewOrder navigate() calls (4 spots) since
+    cart is cleared before OrderSuccess loads. Polling will naturally correct
+    liveOrderAmount when waiter adjusts price in POS.'
+
+- id: CR-2026-11-26-001
+  type: CR
+  title: 'Banner tap destination — extend picker to support specific menu category
+    or specific menu item (deep-link), not just the 5 static pages'
+  status: INTAKE
+  status_note: 'INTAKE COMPLETE 2026-11-26. Owner confirmed scope: add category and
+    item as tap destinations. 5 owner decisions needed before Planning (category UX,
+    item UX, admin picker UX, ?section= support, POS data source). No code change
+    in this session.'
+  priority: P2
+  risk: MEDIUM
+  owner_action: 'Answer Q1-Q5 in INTAKE_DOC.md to unblock Planning'
+  blocked_on: []
+  sprint: null
+  files: 'frontend/src/pages/admin/AdminBannersPage.jsx · frontend/src/pages/MenuItems.jsx'
+  artefacts: INTAKE_DOC
+  registered: '2026-11-26'
+  last_updated: '2026-11-26'
+  related:
+  - CR-2026-11-14-003
+  code_markers: false
+  money_path: null
+  closed: null
+  notes: 'PromoBanner.jsx already navigates to promo.link via React Router — no change
+    needed there. Main work: (1) admin picker fetches live POS category/item list,
+    (2) MenuItems.jsx must handle ?section= or ?item= URL params for scroll/filter.
+    ?section= confirmed NOT supported in MenuItems today (CR-2026-11-14-003 planning).'
