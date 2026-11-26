@@ -201,7 +201,10 @@ const CustomizeItemModal = ({
           <div className="customize-modal-header">
             <div className="customize-modal-header-info">
               <h2 className="customize-modal-title">{item.name}</h2>
-              <span className="customize-modal-item-price">₹{parseFloat(item.price || 0).toFixed(2)}</span>
+              {/* BUG-2026-11-26-001-P2 gap H: header price — APS items show 'APS', not ₹1.00 */}
+              <span className="customize-modal-item-price">
+                {isAPS(item) ? 'APS' : `₹${parseFloat(item.price || 0).toFixed(2)}`}
+              </span>
             </div>
             <button className="customize-modal-close" onClick={onClose} aria-label="Close">
               <span>×</span>
