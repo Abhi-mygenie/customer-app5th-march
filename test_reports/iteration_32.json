@@ -1,0 +1,55 @@
+{
+  "summary": "CR-2026-11-25-003 testing: Review Order edit mode UX fix. Code inspection + UI tests for non-edit mode regression. Edit mode could not be triggered live (requires real open order), but code inspection confirmed correct implementation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "ReviewOrder edit mode Price Breakdown",
+        "issues": [
+          "Spec HTML shows 'New additions' value color as #059669 (green), but implementation uses var(--brand-primary, #E8622A) (orange). Problem statement says '(orange)' — implementation matches problem statement. Minor discrepancy in comparison.html spec vs problem statement text; orange is intentional."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "All 4 required data-testids present: previous-order-collapsed-header, previous-order-expanded-list, row-new-additions, row-previous-order",
+    "Section order in ReviewOrder.jsx: New Items (line 1996) → PreviousOrderItems collapsed (line 2029) → Price Breakdown (line 2041) — correct",
+    "PreviousOrderItems.jsx: useState(false) for collapse, collapsed header with lock icon + item count + subtotal + chevron, expand-on-tap working, chevron CSS rotation on --open class",
+    "Price breakdown split rows guarded by: isEditMode && previousSubtotal > 0 — correct condition"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A",
+    "frontend": "90% (non-edit mode: 100% all checks pass; edit mode: code-only verification, live trigger not possible without real open order)"
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-2026-11-25-003 implementation verified via code inspection. Non-edit mode regression confirmed clean via Playwright (restaurant 716). Edit mode requires a real open order at a table (CartContext.isEditMode = true + previousOrderItems populated). To test edit mode live: use admin panel or POS to place an order, then scan the table QR and add new items — this will trigger the edit flow. All data-testids and JSX section order confirmed correct.",
+  "test_credentials": "REACT_APP_LOGIN_PHONE=+919579504871, REACT_APP_LOGIN_PASSWORD=Qplazm@10",
+  "V1_non_edit_mode_checks": {
+    "Order Items label shown": "PASS",
+    "New Items label NOT shown": "PASS",
+    "previous-order-collapsed-header NOT present": "PASS",
+    "row-new-additions NOT present": "PASS",
+    "row-previous-order NOT present": "PASS"
+  },
+  "V2_edit_mode_code_checks": {
+    "New Items section renders BEFORE PreviousOrderItems": "PASS (line 1996 vs 2029)",
+    "PreviousOrderItems has useState(false) collapsed by default": "PASS",
+    "collapsed header data-testid present": "PASS",
+    "expanded list data-testid present": "PASS",
+    "chevron rotates 180deg on expand": "PASS (CSS .previous-order-chevron--open)",
+    "row-new-additions data-testid": "PASS (line 2065)",
+    "row-previous-order data-testid": "PASS (line 2069)",
+    "Item Total unchanged (subtotal + previousSubtotal)": "PASS (line 2079: itemTotal = previousSubtotal + subtotal)",
+    "Edit mode section guarded by isEditMode && previousOrderItems.length > 0": "PASS (line 2030)"
+  }
+}

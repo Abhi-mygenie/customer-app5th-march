@@ -1,0 +1,37 @@
+/* CR-2026-10-12-002: coupon discovery strip — design spec DESIGN_GUIDELINES_coupon_strip.json */
+.cdl-wrap { padding: 6px 0 2px; }
+.cdl-label { font-size: 11px; color: #6B7280; margin-bottom: 8px; padding-left: 2px; }
+.cdl-strip { display: flex; gap: 12px; overflow-x: auto; padding: 10px 2px 8px; margin: 0 -2px;
+  scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none; }
+.cdl-strip::-webkit-scrollbar { display: none; }
+.cdl-skel { min-width: 160px; height: 72px; border-radius: 8px; background: #F3F4F6; flex-shrink: 0; }
+
+.cdl-card { width: 148px; min-height: 76px; flex-shrink: 0; scroll-snap-align: start; position: relative;
+  border-radius: 8px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between;
+  gap: 4px; text-align: left; font: inherit; background: #FFFBF5; border: 1.5px dashed #E5800A;
+  cursor: pointer; transition: transform .12s ease; }
+.cdl-card:active { transform: scale(.95); }
+.cdl-card--best { border-style: solid; box-shadow: 0 0 0 2px rgba(232,83,30,.12); }
+.cdl-card--off { background: #F3F4F6; border: 1.5px solid #E5E7EB; opacity: .8; filter: grayscale(20%);
+  pointer-events: none; cursor: default; }
+
+.cdl-title { font-size: 12px; font-weight: 600; color: #1F2937; line-height: 1.25; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cdl-card--off .cdl-title { color: #9CA3AF; font-weight: 500; }
+.cdl-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 2px; }
+.cdl-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700;
+  color: #E5800A; background: #FFEDD5; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.cdl-chip--mystery { font-size: 10px; color: #E8531E; background: rgba(232,83,30,.10); animation: cdl-pulse 1.6s ease-in-out infinite; }
+.cdl-chip--time { font-size: 10px; color: #6B7280; background: #E5E7EB; }
+.cdl-hint { font-size: 10px; color: #9CA3AF; white-space: nowrap; }
+.cdl-code { font-size: 10px; font-weight: 700; color: #D1D5DB; letter-spacing: .02em; }
+.cdl-badge { position: absolute; top: -8px; right: -4px; background: #E8531E; color: #fff; font-size: 9px;
+  font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.18); display: inline-flex; align-items: center; gap: 3px; z-index: 2; }
+
+/* applied-row cue (rendered by ReviewOrder) */
+.cdl-applied-cue { font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #E8531E;
+  background: rgba(232,83,30,.10); padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center;
+  gap: 4px; width: fit-content; margin-top: 3px; }
+
+@keyframes cdl-pulse { 0%,100% { opacity: 1 } 50% { opacity: .55 } }

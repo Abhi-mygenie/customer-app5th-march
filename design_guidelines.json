@@ -1,0 +1,133 @@
+{
+  "project_context": {
+    "ticket_id": "CR-2026-11-14-003",
+    "feature_title": "Banner click redirects to internal app page & Admin Destination Picker",
+    "app_type": "mobile_web_app",
+    "target_platforms": ["mobile_browser", "desktop_admin_dashboard"],
+    "brand_name": "MyGenie QR Ordering",
+    "primary_brand_color": "#E8531E",
+    "font_family": "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  },
+  "typography": {
+    "font_family_primary": "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    "font_family_display": "Montserrat, sans-serif",
+    "font_family_mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    "hierarchy": {
+      "admin_page_title": "text-2xl sm:text-3xl font-bold tracking-tight text-[#1E293B]",
+      "admin_section_title": "text-lg sm:text-xl font-semibold tracking-tight text-[#1E293B]",
+      "admin_label": "text-xs sm:text-sm font-semibold text-[#475569] tracking-normal",
+      "admin_hint": "text-xs font-normal text-[#94A3B8]",
+      "banner_overlay_title": "text-xs font-semibold tracking-wider text-white",
+      "badge_caption": "text-[11px] font-medium tracking-wide uppercase"
+    }
+  },
+  "colors": {
+    "brand": {
+      "primary": "#E8531E",
+      "primary_hover": "#C74212",
+      "primary_light": "#FFF3EE",
+      "primary_border": "#FDBDA7"
+    },
+    "admin_theme": {
+      "accent_blue": "#3B82F6",
+      "accent_blue_hover": "#2563EB",
+      "accent_blue_subtle": "#EFF6FF",
+      "border_default": "#E2E8F0",
+      "border_focus": "#3B82F6",
+      "bg_card": "#F8FAFC",
+      "bg_input": "#FFFFFF",
+      "text_main": "#1E293B",
+      "text_muted": "#64748B",
+      "text_hint": "#94A3B8"
+    },
+    "affordance_pills": {
+      "tap_pill_bg": "rgba(0, 0, 0, 0.45)",
+      "tap_pill_bg_hover": "rgba(232, 83, 30, 0.85)",
+      "tap_pill_text": "#FFFFFF",
+      "tap_pill_border": "rgba(255, 255, 255, 0.25)"
+    }
+  },
+  "design_decisions": {
+    "customer_carousel_affordance": {
+      "rule": "Banners with links must have a visible affordance that does NOT obstruct the banner art or bottom title gradient",
+      "cursor": "cursor: pointer on slides with promo.link; cursor: default on unlinked slides",
+      "tap_badge": "Subtle top-right micro-pill: 'Tap to view ↗' with backdrop blur (12px), semi-transparent dark pill (rgba(0,0,0,0.42)), 1px white border (rgba(255,255,255,0.25)), micro-arrow icon, font size 11px, hidden when promo.link is falsy",
+      "touch_interaction": "Touch-swipe left/right (>40px diff) triggers slide advance and SUPPRESSES navigation. Touch-tap (diff <= 40px) triggers internal navigation if promo.link exists. suppressNextClick ref prevents duplicate 300ms synthetic click events",
+      "title_overlay_harmony": "Bottom overlay stays pure gradient linear-gradient(transparent, rgba(0,0,0,0.65)) with white text. Top-right badge balances the composition diagonally without visual collision."
+    },
+    "admin_destination_picker": {
+      "rule": "Replace free-text URL input with a standard 5-option dropdown matching existing admin form styles (admin-form-select)",
+      "options": [
+        { "label": "No link", "value": "" },
+        { "label": "Full Menu", "value": "/{restaurantId}/menu" },
+        { "label": "Dining Stations", "value": "/{restaurantId}/stations" },
+        { "label": "About Us", "value": "/{restaurantId}/about" },
+        { "label": "Contact", "value": "/{restaurantId}/contact" }
+      ],
+      "legacy_fallback": "If existing banner has a non-matching custom URL, display read-only option 'Custom: {bannerLink}' so previous data is not lost",
+      "resolved_path_preview": "Show small, clear destination path hint directly below dropdown: '→ /{restaurantId}/menu' in monospace font with muted blue-gray color (#64748B) and high legibility"
+    }
+  },
+  "component_specs": {
+    "PromoBanner": {
+      "file_path": "/app/frontend/src/components/PromoBanner/PromoBanner.jsx",
+      "css_path": "/app/frontend/src/components/PromoBanner/PromoBanner.css",
+      "key_elements": {
+        "container": "promo-banner (overflow hidden, border-radius 16px, box-shadow 0 2px 12px rgba(0,0,0,0.08))",
+        "slide": "promo-slide (16:9 ratio, relative positioning, role=button when linked, aria-label indicating destination)",
+        "tap_indicator": "promo-tap-indicator (absolute top-2.5 right-2.5, px-2.5 py-1, rounded-full, text-white text-[11px] font-medium, flex items-center gap-1, backdrop-blur-md, pointer-events-none)",
+        "track": "promo-track (flex, transform translateX, transition 0.45s cubic-bezier(.4,0,.2,1))",
+        "dots": "promo-dots (flex, gap 6px, absolute bottom 8px)"
+      },
+      "accessibility": {
+        "role": "button on interactive slides with link, none on unlinked slides",
+        "tabIndex": 0,
+        "onKeyDown": "Enter and Space trigger navigation to promo.link",
+        "aria_label": "Title + 'Tap to open destination' when link is set"
+      }
+    },
+    "AdminBannersPage": {
+      "file_path": "/app/frontend/src/pages/admin/AdminBannersPage.jsx",
+      "key_elements": {
+        "select": "admin-form-select (data-testid='select-bannerLink', full-width, clean border, matches admin-form-input height)",
+        "preview_line": "admin-link-preview (data-testid='banner-link-preview', text-xs font-mono text-slate-500 mt-1 flex items-center gap-1)",
+        "form_group": "admin-form-group (label: 'Tap Destination (optional)')"
+      }
+    }
+  },
+  "testing_attributes": {
+    "customer": {
+      "promo_banner": "promo-banner",
+      "promo_slide_prefix": "promo-slide-",
+      "promo_tap_badge_prefix": "promo-tap-badge-",
+      "promo_dot_prefix": "promo-dot-"
+    },
+    "admin": {
+      "select_banner_link": "select-bannerLink",
+      "preview_banner_link": "banner-link-preview",
+      "input_banner_title": "input-bannerTitle",
+      "input_banner_image": "input-bannerImage",
+      "add_banner_btn": "add-banner-btn",
+      "update_banner_btn": "update-banner-btn"
+    }
+  },
+  "instructions_to_main_agent": [
+    "In /app/frontend/src/components/PromoBanner/PromoBanner.jsx: import { useNavigate } from 'react-router-dom'. Implement suppressNextClick ref (default false).",
+    "In onTouchEnd: if Math.abs(diff) <= 40 and active item has a link, set suppressNextClick.current = true and navigate(items[activeIndex].link).",
+    "In slide div: add onClick handler that navigates if promo.link exists and suppressNextClick is false. Reset suppressNextClick if true. Add onKeyDown for Enter/Space accessibility.",
+    "Add visual affordance: render a delicate pill badge in top-right corner of slide when promo.link exists with text 'Explore ↗' or 'View ↗' and cursor: pointer.",
+    "Update /app/frontend/src/components/PromoBanner/PromoBanner.css with .promo-slide-interactive, .promo-tap-pill, and hover micro-animations.",
+    "In /app/frontend/src/pages/admin/AdminBannersPage.jsx: import { useAuth } from '../../context/AuthContext'. Retrieve user restaurant_id (fallback to user.id).",
+    "Define LINK_OPTIONS: No link (''), Full Menu ('/{rid}/menu'), Dining Stations ('/{rid}/stations'), About Us ('/{rid}/about'), Contact ('/{rid}/contact').",
+    "Replace input-bannerLink with <select className='admin-form-select' data-testid='select-bannerLink'> containing LINK_OPTIONS plus Custom option for legacy external links.",
+    "Render path preview line <span className='admin-form-hint font-mono' data-testid='banner-link-preview'>→ {newBanner.bannerLink}</span> when newBanner.bannerLink is non-empty.",
+    "Verify no console warnings and clean React build."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Do not break existing swipe mechanics: diff threshold Math.abs(diff) > 40 MUST remain the swipe threshold.",
+    "Prevent synthetic double-clicks using suppressNextClick ref on touch devices.",
+    "Never apply universal transition (transition: all) to carousel track or slides. Keep explicit transform transitions.",
+    "Do not use complete transparent backgrounds for badges or overlays. Use semi-transparent dark backgrounds with backdrop blur.",
+    "Ensure all test IDs (data-testid) are strictly present as documented."
+  ]
+}

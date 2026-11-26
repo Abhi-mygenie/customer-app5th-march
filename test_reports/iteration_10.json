@@ -1,0 +1,22 @@
+{
+  "summary": "Bug fix verification for loyalty points on ReviewOrder page. All 4 test scenarios passed. The fix in AuthContext.jsx (crmGetProfile async call inside setCrmAuth) works correctly.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/test_reports/iteration_10.json"],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "test_results": {
+    "name_autofill": "PASS - Phone 9035133228 auto-fills name='saurav' with Welcome back message",
+    "browse_menu": "PASS - Browse Menu navigates to /689/menu without errors",
+    "add_to_cart": "PASS - Items can be added to cart",
+    "loyalty_points_display": "PASS - Review Order shows '2000 points (Worth ₹6000)' — NOT 0 points",
+    "use_button_enabled": "PASS - Use button is visible and enabled next to 2000 points",
+    "bug_fix_confirmed": "CONFIRMED - crmGetProfile async call in setCrmAuth enriches user profile with total_points and tier"
+  },
+  "context_for_next_testing_agent": "Loyalty points bug fixed. AuthContext.jsx setCrmAuth now calls crmGetProfile asynchronously after skip-otp login. Customer 9035133228 (saurav) on restaurant 689 correctly shows 2000 points (Worth ₹6000) on ReviewOrder page."
+}

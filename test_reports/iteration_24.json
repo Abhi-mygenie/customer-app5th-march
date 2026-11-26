@@ -1,0 +1,71 @@
+{
+  "summary": "BUG-2026-10-12-006 visual-only verification on mobile (390x844) for coupon discovery strip overflow on Review Order page. All 3 LAYOUT CHECKS + REGRESSION PASSED. CSS fix in CouponDiscoveryList.css (.cdl-wrap width:100%; .cdl-strip min-width:0;max-width:100%;overflow-x:auto) correctly contains the horizontal carousel inside the Price Breakdown card. Page no longer pans sideways.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "measurements": {
+    "viewport_width": 390,
+    "LAYOUT_CHECK_1_page_overflow": {
+      "html_scrollWidth": 390,
+      "html_clientWidth": 390,
+      "delta_px": 0,
+      "body_scrollWidth": 390,
+      "body_clientWidth": 390,
+      "pass_criterion": "scrollWidth - clientWidth <= 2px",
+      "result": "PASS"
+    },
+    "LAYOUT_CHECK_2_strip_contained": {
+      "strip_testid": "coupon-strip-container",
+      "strip_class": "cdl-strip",
+      "strip_left_x": 31,
+      "strip_right_x": 355,
+      "strip_width": 324,
+      "first_card_left_x": 31,
+      "first_card_width": 148,
+      "wrap_left_x": 33,
+      "wrap_width": 324,
+      "cards_count": 7,
+      "pass_criterion": "strip.left >= ~12 (not <=0) AND strip.width <= 390",
+      "result": "PASS (left=31, right=355, width=324 <= 390)"
+    },
+    "LAYOUT_CHECK_3_internal_scroll": {
+      "strip_scrollWidth": 1113,
+      "strip_clientWidth": 324,
+      "strip_scrollLeft_before": 2,
+      "strip_scrollLeft_after_setting_300": 322,
+      "page_scrollLeft_before": 0,
+      "page_scrollLeft_after": 0,
+      "result": "PASS - strip scrolled internally by 320px; page scrollLeft stayed at 0 (no sideways page pan)"
+    },
+    "REGRESSION_functional": {
+      "normal_coupon_cards_detected": ["coupon-card-normal-GYAN", "coupon-card-normal-STO-GENERIC-10", "coupon-card-normal-STO-GENERIC-MIN"],
+      "clicked": "coupon-card-normal-GYAN",
+      "applied_toast": "Coupon applied — \u20b945 off",
+      "coupon_applied_row_rendered": true,
+      "coupon_remove_button_works": true,
+      "strip_returns_after_remove": true,
+      "no_crash": true,
+      "result": "PASS"
+    }
+  },
+  "test_report_links": [
+    "/app/.screenshots/review_strip_final.png",
+    "/app/.screenshots/applied.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fix is CSS-only, minimal and well-scoped. Comments in CSS clearly reference BUG-2026-10-12-006. .cdl-wrap{width:100%} + .cdl-strip{min-width:0;max-width:100%;overflow-x:auto} is the correct idiomatic fix for a horizontally scrolling child inside a flex parent with align-items:center (which otherwise sizes to intrinsic content width).",
+    "Transient 429 from /scan/auth/lookup (Too many lookups) seen during run; auto-apply still worked afterward. Not related to this CR but worth noting for CRM rate-limit tolerance."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100% (3/3 layout checks + regression pass)"},
+  "test_credentials": "Saurav / 9035133228 (skip-OTP preprod)",
+  "seed_data_creation": "None. Added 3 cart items (~\u20b9448 subtotal) using existing menu.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Flow: open /689 landing, enter phone 9035133228 + name, Browse Menu, scroll to Chocolates section (first 3 ADD buttons add Hazelnut Kunafa Luxe Chocolate Bar \u20b9349, Hazelnut Kunafa Luxe Mini Bar \u20b989, st edc \u20b910). Click 'View Cart' to reach /689/review-order. CRM auto-applies STO-GENERIC-MIN; click Remove to see the discovery strip with cards GYAN / STO-GENERIC-10 / STO-GENERIC-MIN plus mystery/disabled cards (7 total). Use data-testid=coupon-strip-container to find the scroller. Preprod CRM occasionally 429s; retry.",
+  "rca of the issue": "Parent row (.price-row-input in ReviewOrder.jsx L2079) uses column flex with inherited align-items:center. Before fix, .cdl-strip had no width constraint, so overflow-x:auto could not contain content; the flex child grew to its intrinsic (scrollWidth=1113px) size, overflowing the 390px viewport. Adding width:100% on .cdl-wrap and min-width:0;max-width:100% on .cdl-strip forces the scroller to clamp to its parent and clip overflow internally. Verified: html.scrollWidth==clientWidth==390, strip.scrollWidth=1113 but strip.clientWidth=324 (contained), strip.scrollLeft advances independently of document.scrollLeft."
+}

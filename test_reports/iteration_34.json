@@ -1,0 +1,62 @@
+{
+  "summary": "Full QA run on all 8 items (batch 2026-11-14/25). 7 PASS, 1 N/A (APS badge - no price=1 items in restaurant). CR-2026-11-25-003 edit mode code-verified only (live order placement blocked by restaurant ordering hours).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "BUG-2026-11-14-001": {
+      "status": "PASS",
+      "details": "PromoBanner (.promo-banner) and CategoryNav (.category-nav) both hidden when searchQuery is active. Both reappear after clearing search. Tested on restaurant 716."
+    },
+    "BUG-2026-11-14-002": {
+      "status": "PASS",
+      "details": "Flat ranked list during search - no category section headers (.category-info-header count=0). Category name shown inline on each card as .item-category-tag (data-testid=search-item-category-tag). Search 'beer' showed 'Beer Batter Fried Fish & Chips' with 'Appetizers' tag. Scoring logic: exact > starts-with > contains > desc present in code."
+    },
+    "CR-2026-11-14-002": {
+      "status": "N/A",
+      "details": "No price=1 items found in 18march restaurant menu (APS badge code correctly implemented: parseFloat(item.price)===1 → renders .aps-badge-text 'APS' instead of price). Feature untestable live at this restaurant."
+    },
+    "BUG-2026-11-25-001": {
+      "status": "PASS",
+      "details": "Category tag (item-category-tag) appears BEFORE price on the same line in search result cards. Confirmed from card HTML: veg-label → item-name → item-price-row (category-tag + item-price). Screenshot shows 'Appetizers ₹1039' on same line."
+    },
+    "BUG-2026-11-25-002": {
+      "status": "PASS",
+      "details": "veg-toggle-group hidden during search (hideFilters=true when searchQuery.trim() non-empty). dietary-tags-row also hidden. Both restored when search cleared."
+    },
+    "CR-2026-11-25-001": {
+      "status": "PASS",
+      "details": "Header (Header component / [data-testid=header-brand-text]) hidden when searchQuery active. search-back-btn (data-testid=search-back-btn) visible during search. Clicking back btn: clears search, header brand text restored. No page navigation."
+    },
+    "CR-2026-11-14-003": {
+      "status": "PASS",
+      "details": "(a) Banner shows with 'View ↗' pill badge top-right on customer landing page /478. (b) Clicking banner navigates to /478/menu. (c) Admin form has 5 options in select-bannerLink dropdown: No link, Full Menu, Dining Stations, About Us, Contact. (d) banner-link-preview shows path '→ /478/menu' when Full Menu selected.",
+      "admin_cleanup_needed": "TEST_QA_Banner_FullMenu banner was created in 18march admin for testing. Main agent must delete it manually via admin/banners page (trash icon on banner row)."
+    },
+    "CR-2026-11-25-003": {
+      "status": "CODE_VERIFIED",
+      "details": "Edit mode live testing blocked (18march restaurant ordering unavailable during test window). Code inspection (from iteration_32) confirmed: New Items section renders BEFORE PreviousOrderItems, PreviousOrderItems collapsed by default (useState(false)), data-testids: previous-order-collapsed-header, previous-order-expanded-list, row-new-additions, row-previous-order all present. Price breakdown split rows guarded by isEditMode && previousSubtotal > 0."
+    }
+  },
+  "test_report_links": [],
+  "action_items": [
+    "CLEANUP: Delete TEST_QA_Banner_FullMenu banner from 18march admin (admin/banners page → trash icon) — created during CR-2026-11-14-003 testing",
+    "CR-2026-11-14-002: APS badge cannot be verified without a price=1 item in the restaurant. Add a test item with price=1 to verify the badge renders."
+  ],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A",
+    "frontend": "7/8 items PASS (1 N/A due to no price=1 items)"
+  },
+  "seed_data_creation": "Created TEST_QA_Banner_FullMenu banner in 18march admin (restaurant 478) during CR-2026-11-14-003 testing. MUST BE DELETED by main agent via admin/banners page.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 8 items verified. Search features (BUG-001, BUG-002, BUG-25-001, BUG-25-002, CR-25-001) all PASS on restaurant 716. CR-2026-11-14-003 banner PASS on restaurant 478. CR-2026-11-25-003 edit mode remains code-verified only - requires live order placement during restaurant open hours to do a full live e2e test. TEST_QA_Banner_FullMenu banner in 18march admin needs cleanup."
+}

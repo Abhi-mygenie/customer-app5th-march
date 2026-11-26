@@ -1,0 +1,48 @@
+{
+  "summary": "QA for CR-2026-09-15-004: Admin login via POS direct (two-step). All 5 CR-specific backend tests PASS. Admin login UI works end-to-end (owner@kunafamahal.com → restaurant_id=689, Kunafa Mahal dashboard). AuthContext.login() deletion confirmed (comment on line 131). Critical bug found and fixed: login was still referenced in AuthContext value object (line 189) causing ReferenceError — removed from value. db.users check: 0 active code lines (only comments on lines 262, 281, 289, 370).",
+  "test_results": {
+    "T1_admin_login_200": "PASS: owner@kunafamahal.com → 200, user_type=restaurant, token, pos_token, restaurant_id=689, restaurant_name=Kunafa Mahal",
+    "T2_wrong_password_401": "PASS: Wrong password → 401",
+    "T3_unknown_email_401": "PASS: Unknown email → 401",
+    "T4_auth_me_jwt_claims": "PASS: /api/auth/me reads JWT claims only, returns restaurant_id=689",
+    "T5_old_jwt_no_restaurant_id_401": "PASS: Old JWT without restaurant_id claim → 401 Session expired",
+    "T6_admin_login_ui": "PASS: Login form works, POST /api/auth/login called, navigates to /admin/settings with Kunafa Mahal dashboard",
+    "T7_admin_dashboard_loads": "PASS: Admin panel shows 'Kunafa Mahal' in sidebar, Settings/Branding/Visibility/Banners/Content/Menu Order/Dietary Tags/QR Codes tabs visible",
+    "T8_db_users_grep": "PASS: grep 'db.users' server.py — 0 active code lines (4 comment lines only)",
+    "T9_auth_context_login_deleted": "PASS: login() function deleted (comment on line 131-133). Fixed: stale login reference removed from value object",
+    "backend_smoke_contract_full_suite": "60 passed 1 skipped (when not rate-limited). Rate limit (5/min) causes cascade failures on repeated runs — not a code issue"
+  },
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/login", "issue": "Rate limit 5/min causes test cascade failures on repeated runs (expected, not a code bug)", "priority": "LOW"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/smoke/test_cr_2026_09_15_004.py",
+    "/app/test_reports/pytest/pytest_results_iter17.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FIXED: AuthContext.jsx line 189 had stale `login` reference in value object after login() was deleted — removed. Would have caused ReferenceError at runtime.",
+    "db.users is never read in active code — confirmed (only comments remain)",
+    "get_current_user reads ALL user data from JWT claims (restaurant_id, restaurant_name, email, phone, pos_id, pos_name, mygenie_token)",
+    "Old JWTs without restaurant_id correctly return 401 'Session expired' (D4 forced re-login)"
+  ],
+  "updated_files": [
+    "/app/frontend/src/context/AuthContext.jsx",
+    "/app/backend/tests/smoke/test_cr_2026_09_15_004.py"
+  ],
+  "success_rate": {"backend": "100% (5/5 CR tests pass, full suite 60/60 when not rate-limited)", "frontend": "100% (login flow + dashboard verified)"},
+  "test_credentials": "Admin: owner@kunafamahal.com / Qplazm@10, restaurant_id=689 (Kunafa Mahal)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CR-2026-09-15-004 fully verified. POS direct login (two-step) works. JWT carries all user data. No db.users reads. AuthContext login() deleted + stale reference fixed. Rate limit 5/min — wait 65s between test suites.",
+  "rca_of_issues": "AuthContext.jsx had `login` in value object on line 189 after the function was deleted (comment on line 131). This would cause `ReferenceError: login is not defined` at React render time. Fixed by removing `login` from the value object."
+}

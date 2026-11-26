@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Review Order Edit Mode — Design Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',sans-serif;background:#0F172A;color:#1E293B;min-height:100vh}
+
+/* ── Canvas ── */
+.canvas{max-width:1300px;margin:0 auto;padding:32px 16px 60px}
+.canvas-title{text-align:center;color:#F8FAFC;font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-0.3px}
+.canvas-sub{text-align:center;color:#94A3B8;font-size:13px;margin-bottom:28px}
+
+/* ── Toggle bar ── */
+.toolbar{display:flex;justify-content:center;gap:12px;margin-bottom:28px;flex-wrap:wrap}
+.toggle-btn{background:#1E293B;color:#CBD5E1;border:1px solid #334155;padding:8px 18px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.toggle-btn.active{background:#E8622A;color:#fff;border-color:#E8622A}
+.toggle-btn:hover:not(.active){background:#334155}
+
+/* ── Comparison grid ── */
+.comparison-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+@media(max-width:860px){.comparison-grid{grid-template-columns:1fr}}
+
+/* ── Phone wrapper ── */
+.phone-col{display:flex;flex-direction:column;align-items:center}
+.col-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;padding:5px 14px;border-radius:999px}
+.col-label.current{background:rgba(239,68,68,.12);color:#EF4444;border:1px solid rgba(239,68,68,.3)}
+.col-label.proposed{background:rgba(16,185,129,.12);color:#10B981;border:1px solid rgba(16,185,129,.3)}
+
+.phone-frame{width:360px;min-height:720px;background:#F8FAFC;border-radius:36px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5),0 0 0 10px #1E293B,0 0 0 12px #334155;position:relative;flex-shrink:0}
+
+/* ── Phone inner scroll ── */
+.phone-inner{height:720px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.phone-inner::-webkit-scrollbar{display:none}
+
+/* ── App header ── */
+.app-header{background:#E8622A;padding:14px 16px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.header-back{color:#fff;font-size:18px;cursor:pointer}
+.header-title{color:#fff;font-size:15px;font-weight:700;flex:1}
+.header-sub{color:rgba(255,255,255,.8);font-size:11px}
+
+/* ── Sections ── */
+.page-content{padding:12px 12px 100px}
+
+.section-card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.section-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.section-icon.orange{background:#FFF4EE}
+.section-icon.green{background:#ECFDF5}
+.section-icon.grey{background:#F1F5F9}
+.section-title{font-size:13px;font-weight:700;color:#1E293B;flex:1}
+.items-badge{background:#F1F5F9;color:#475569;font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px}
+.items-badge.green{background:#ECFDF5;color:#059669}
+
+/* ── Customer details ── */
+.customer-row{display:flex;align-items:center;gap:8px}
+.customer-avatar{width:32px;height:32px;border-radius:50%;background:#FFF4EE;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.customer-name{font-size:12px;font-weight:600;color:#1E293B}
+.customer-phone{font-size:11px;color:#94A3B8}
+
+/* ── Order items ── */
+.order-item{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #F1F5F9}
+.order-item:last-child{border-bottom:none}
+.item-left{flex:1}
+.item-name{font-size:12px;font-weight:600;color:#1E293B;margin-bottom:2px;display:flex;align-items:center;gap:5px}
+.veg-dot{width:10px;height:10px;border-radius:2px;border:1.5px solid #16A34A;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.veg-dot::after{content:'';width:5px;height:5px;border-radius:50%;background:#16A34A}
+.item-customization{font-size:10px;color:#94A3B8;margin-bottom:2px}
+.item-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.item-price{font-size:12px;font-weight:700;color:#1E293B}
+.item-qty{font-size:11px;color:#94A3B8}
+
+/* ── Status badge ── */
+.status-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.status-preparing{background:#FEF3C7;color:#D97706}
+.status-served{background:#ECFDF5;color:#059669}
+
+/* ── Lock header for previously ordered ── */
+.lock-header{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.lock-icon{font-size:13px;color:#94A3B8}
+.lock-title{font-size:13px;font-weight:700;color:#475569}
+
+/* ── Quantity stepper ── */
+.qty-stepper{display:flex;align-items:center;gap:0;border:1.5px solid #E8622A;border-radius:8px;overflow:hidden}
+.qty-btn{width:28px;height:28px;background:#FFF4EE;color:#E8622A;border:none;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.qty-btn:active{background:#FFE4D6}
+.qty-num{width:28px;height:28px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#E8622A;border-left:1.5px solid #E8622A;border-right:1.5px solid #E8622A}
+
+/* ── New item card — subtle, no green ── */
+.new-item-highlight{background:#FAFAFA;border:1px solid #E8622A33;border-radius:10px;padding:10px 12px}
+.new-item-row{display:flex;justify-content:space-between;align-items:center}
+.new-item-name{font-size:13px;font-weight:700;color:#1E293B;display:flex;align-items:center;gap:6px}
+.new-item-price{font-size:14px;font-weight:800;color:#E8622A}
+
+/* ── Collapsed pill ── */
+.collapsed-pill{background:#F3F4F6;border:1.5px solid #E2E8F0;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;transition:all .2s}
+.collapsed-pill:hover{background:#E8E8E8;border-color:#CBD5E1}
+.collapsed-pill:active{background:#E2E8F0}
+.pill-lock{font-size:13px;color:#94A3B8}
+.pill-label{font-size:12px;font-weight:700;color:#475569;flex:1}
+.pill-meta{font-size:11px;color:#94A3B8;font-weight:600}
+.pill-chevron{font-size:12px;color:#94A3B8;transition:transform .3s;font-weight:700}
+.pill-chevron.open{transform:rotate(180deg)}
+
+/* ── Expanded previously ordered ── */
+.prev-expanded{background:#F9FAFB;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;animation:slideDown .25s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Divider ── */
+.divider{height:1px;background:#F1F5F9;margin:4px 0}
+
+/* ── Price breakdown ── */
+.price-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #E2E8F0}
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0}
+.price-label{font-size:12px;color:#475569;font-weight:500}
+.price-value{font-size:12px;color:#1E293B;font-weight:700}
+.price-row.sub .price-label,.price-row.sub .price-value{font-size:11px;color:#94A3B8;font-weight:500}
+.price-row.total-row{padding-top:8px;border-top:2px solid #F1F5F9;margin-top:4px}
+.price-row.total-row .price-label{font-size:14px;font-weight:800;color:#1E293B}
+.price-row.total-row .price-value{font-size:14px;font-weight:800;color:#E8622A}
+.price-thin-sep{height:1px;background:#E2E8F0;margin:6px 0}
+
+/* NEW: split rows */
+.price-row.new-additions .price-label{font-size:12px;font-weight:600;color:#059669}
+.price-row.new-additions .price-value{font-size:12px;font-weight:700;color:#059669}
+.price-row.prev-order .price-label,.price-row.prev-order .price-value{font-size:11px;color:#94A3B8;font-weight:500}
+
+/* ── Footer ── */
+.phone-footer{position:sticky;bottom:0;background:#fff;border-top:1px solid #E2E8F0;padding:12px 14px;z-index:10}
+.update-btn{width:100%;background:#E8622A;color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+.update-btn:hover{background:#C44518}
+
+/* ── Problem highlight ── */
+.problem-box{background:rgba(239,68,68,.06);border:1.5px dashed rgba(239,68,68,.4);border-radius:10px;padding:2px}
+.problem-box-inner{padding:10px 12px}
+
+/* ── Annotations ── */
+.annotations{display:flex;flex-direction:column;gap:8px;margin-top:14px;width:360px}
+.annotation{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:8px;font-size:11px}
+.annotation.problem{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)}
+.annotation.fix{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+.annotation-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.annotation-text strong{display:block;font-weight:700;margin-bottom:1px}
+.annotation.problem .annotation-text strong{color:#DC2626}
+.annotation.fix .annotation-text strong{color:#059669}
+.annotation-text{color:#475569;line-height:1.4}
+
+/* ── Expanded state panel ── */
+.expanded-panel{margin-top:40px;background:#1E293B;border-radius:16px;padding:24px;border:1px solid #334155}
+.expanded-panel-title{color:#F8FAFC;font-size:16px;font-weight:700;margin-bottom:6px}
+.expanded-panel-sub{color:#94A3B8;font-size:12px;margin-bottom:20px}
+.expanded-demo{background:#F9FAFB;border-radius:10px;overflow:hidden;border:1px solid #E2E8F0;max-width:360px;margin:0 auto}
+.expanded-demo-header{background:#F3F4F6;padding:11px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #E2E8F0;cursor:pointer}
+.expanded-demo-items{padding:0 14px}
+
+/* ── Item count label ── */
+.section-title-row{display:flex;align-items:center;gap:6px;width:100%}
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="canvas-title">Review Order — Edit Mode Design Comparison</div>
+  <div class="canvas-sub">MyGenie Customer App · CR-2026-11-25-003 · Investigation 2026-11-25</div>
+
+  <div class="toolbar">
+    <button class="toggle-btn active" id="toggle-ann" onclick="toggleAnnotations()">Hide Annotations</button>
+    <button class="toggle-btn" onclick="document.querySelector('#proposed-phone .phone-inner').scrollTop=0">Reset Scroll</button>
+  </div>
+
+  <div class="comparison-grid">
+
+    <!-- ═══════════════════════════════════════════
+         LEFT — CURRENT (broken)
+    ════════════════════════════════════════════ -->
+    <div class="phone-col">
+      <div class="col-label current">⚠ Current — Confusing</div>
+      <div class="phone-frame" data-testid="current-screen">
+        <!-- sticky footer trick: use flex column -->
+        <div style="display:flex;flex-direction:column;height:720px">
+          <div class="phone-inner" style="flex:1" id="current-phone">
+            <!-- Header -->
+            <div class="app-header">
+              <span class="header-back">←</span>
+              <div>
+                <div class="header-title">Review Order</div>
+                <div class="header-sub">Table 4 · Edit Mode</div>
+              </div>
+            </div>
+
+            <div class="page-content">
+              <!-- Customer Details -->
+              <div class="section-card">
+                <div class="section-header">
+                  <div class="section-icon orange">👤</div>
+                  <span class="section-title">Customer Details</span>
+                </div>
+                <div class="customer-row">
+                  <div class="customer-avatar">👤</div>
+                  <div>
+                    <div class="customer-name">John Doe</div>
+                    <div class="customer-phone">+91 98765 43210</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PREVIOUSLY ORDERED — FIRST, FULLY EXPANDED -->
+              <div class="problem-box" data-testid="current-prev-items-list">
+                <div class="problem-box-inner section-card" style="margin:0;border:none;border-radius:0">
+                  <div class="lock-header">
+                    <span class="lock-icon">🔒</span>
+                    <span class="lock-title">Previously Ordered</span>
+                  </div>
+                  <div class="order-item">
+                    <div class="item-left">
+                      <div class="item-name"><span class="veg-dot"></span>Cappuccino</div>
+                      <div class="item-customization">Oat Milk, Extra Shot</div>
+                      <span class="status-badge status-preparing">Preparing</span>
+                    </div>
+                    <div class="item-right">
+                      <div class="item-price">₹320.00</div>
+                      <div class="item-qty">x2</div>
+                    </div>
+                  </div>
+                  <div class="order-item">
+                    <div class="item-left">
+                      <div class="item-name"><span class="veg-dot"></span>Flat White</div>
+                      <div class="item-customization">Almond Milk</div>
+                      <span class="status-badge status-served">Served</span>
+                    </div>
+                    <div class="item-right">
+                      <div class="item-price">₹160.00</div>
+                      <div class="item-qty">x1</div>
+                    </div>
+                  </div>
+                  <div class="order-item">
+                    <div class="item-left">
+                      <div class="item-name"><span class="veg-dot"></span>Organic Espresso</div>
+                      <span class="status-badge status-served">Served</span>
+                    </div>
+                    <div class="item-right">
+                      <div class="item-price">₹120.00</div>
+                      <div class="item-qty">x1</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider" style="margin:10px 0"></div>
+
+              <!-- NEW ITEMS — BURIED BELOW -->
+              <div class="problem-box" data-testid="current-new-items-list">
+                <div class="problem-box-inner section-card" style="margin:0;border:none;border-radius:0">
+                  <div class="section-header">
+                    <div class="section-icon orange">🛍</div>
+                    <div class="section-title-row">
+                      <span class="section-title">New Items</span>
+                      <span class="items-badge">1 item</span>
+                    </div>
+                  </div>
+                  <div class="order-item" style="border:none">
+                    <div class="item-left">
+                      <div class="item-name"><span class="veg-dot"></span>Spanish Latte</div>
+                      <div class="item-customization">Regular Size</div>
+                    </div>
+                    <div class="item-right">
+                      <div class="item-price">₹200.00</div>
+                      <div class="qty-stepper">
+                        <button class="qty-btn">−</button>
+                        <div class="qty-num">1</div>
+                        <button class="qty-btn">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider" style="margin:10px 0"></div>
+
+              <!-- PRICE BREAKDOWN — CONFUSING -->
+              <div class="problem-box" data-testid="current-price-breakdown-card">
+                <div class="price-card" style="border:none;margin:0;border-radius:0">
+                  <div class="section-header" style="margin-bottom:10px">
+                    <div class="section-icon grey">📋</div>
+                    <span class="section-title">Price Breakdown</span>
+                  </div>
+                  <!-- No split — just the combined total -->
+                  <div class="price-row">
+                    <span class="price-label">Item Total</span>
+                    <span class="price-value">₹800.00</span>
+                  </div>
+                  <div class="price-thin-sep"></div>
+                  <div class="price-row sub">
+                    <span class="price-label">CGST 2.5%</span>
+                    <span class="price-value">₹20.00</span>
+                  </div>
+                  <div class="price-row sub">
+                    <span class="price-label">SGST 2.5%</span>
+                    <span class="price-value">₹20.00</span>
+                  </div>
+                  <div class="price-row total-row">
+                    <span class="price-label">Grand Total</span>
+                    <span class="price-value">₹840.00</span>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /page-content -->
+          </div><!-- /phone-inner -->
+
+          <!-- Footer -->
+          <div class="phone-footer">
+            <button class="update-btn">Update Order ₹840.00</button>
+          </div>
+        </div>
+      </div><!-- /phone-frame -->
+
+      <!-- Annotations -->
+      <div class="annotations" id="annotations-left">
+        <div class="annotation problem">
+          <span class="annotation-icon">🔴</span>
+          <div class="annotation-text">
+            <strong>Previously ordered items dominate top view</strong>
+            3 locked, uneditable items take up ~55% of the screen before the customer even sees what they just added
+          </div>
+        </div>
+        <div class="annotation problem">
+          <span class="annotation-icon">🔴</span>
+          <div class="annotation-text">
+            <strong>New item buried — requires scrolling</strong>
+            Spanish Latte (the reason they're on this page) is hidden below the fold
+          </div>
+        </div>
+        <div class="annotation problem">
+          <span class="annotation-icon">🔴</span>
+          <div class="annotation-text">
+            <strong>"Item Total ₹800" — ₹800 shock</strong>
+            No split shown. Customer added a ₹200 coffee but sees ₹800 as the item total. Looks like the coffee costs ₹800
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         RIGHT — PROPOSED (fixed)
+    ════════════════════════════════════════════ -->
+    <div class="phone-col">
+      <div class="col-label proposed">✓ Proposed — Clear</div>
+      <div class="phone-frame" data-testid="proposed-screen">
+        <div style="display:flex;flex-direction:column;height:720px">
+          <div class="phone-inner" style="flex:1" id="proposed-phone">
+            <!-- Header -->
+            <div class="app-header">
+              <span class="header-back">←</span>
+              <div>
+                <div class="header-title">Review Order</div>
+                <div class="header-sub">Table 4 · Edit Mode</div>
+              </div>
+            </div>
+
+            <div class="page-content">
+              <!-- Customer Details -->
+              <div class="section-card">
+                <div class="section-header">
+                  <div class="section-icon orange">👤</div>
+                  <span class="section-title">Customer Details</span>
+                </div>
+                <div class="customer-row">
+                  <div class="customer-avatar">👤</div>
+                  <div>
+                    <div class="customer-name">John Doe</div>
+                    <div class="customer-phone">+91 98765 43210</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NEW ITEMS — FIRST, SUBTLE STYLING -->
+              <div class="section-card" data-testid="proposed-new-items-first" style="border-color:#E2E8F0">
+                <div class="section-header">
+                  <div class="section-icon orange">🛍</div>
+                  <div class="section-title-row">
+                    <span class="section-title">New Items</span>
+                    <span class="items-badge" style="background:#FFF4EE;color:#E8622A">1 item</span>
+                  </div>
+                </div>
+                <div class="new-item-highlight">
+                  <div class="new-item-row">
+                    <div>
+                      <div class="new-item-name"><span class="veg-dot"></span>Spanish Latte</div>
+                      <div style="font-size:10px;color:#94A3B8;margin-top:2px">Regular Size</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                      <div class="new-item-price" id="prop-item-price">₹200.00</div>
+                      <div class="qty-stepper" data-testid="quantity-stepper">
+                        <button class="qty-btn" data-testid="quantity-minus-btn" onclick="changeQty(-1)">−</button>
+                        <div class="qty-num" data-testid="quantity-count-display" id="prop-qty">1</div>
+                        <button class="qty-btn" data-testid="quantity-plus-btn" onclick="changeQty(1)">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider" style="margin:4px 0"></div>
+
+              <!-- PREVIOUSLY ORDERED — COLLAPSED BY DEFAULT -->
+              <div class="section-card" style="padding:0;overflow:hidden">
+                <div class="collapsed-pill" data-testid="toggle-collapsed-row-btn" onclick="togglePrev()" id="prev-pill">
+                  <span class="pill-lock">🔒</span>
+                  <span class="pill-label">Previously Ordered</span>
+                  <span class="pill-meta">3 items · ₹600</span>
+                  <span class="pill-chevron" id="prev-chevron">▼</span>
+                </div>
+                <!-- Expandable content -->
+                <div id="prev-expanded-content" data-testid="proposed-prev-expanded-list" style="display:none">
+                  <div class="prev-expanded" style="border-radius:0;border:none">
+                    <div class="expanded-demo-items">
+                      <div class="order-item">
+                        <div class="item-left">
+                          <div class="item-name"><span class="veg-dot"></span>Cappuccino</div>
+                          <div class="item-customization">Oat Milk, Extra Shot</div>
+                          <span class="status-badge status-preparing">Preparing</span>
+                        </div>
+                        <div class="item-right">
+                          <div class="item-price">₹320.00</div>
+                          <div class="item-qty">x2 · 🔒</div>
+                        </div>
+                      </div>
+                      <div class="order-item">
+                        <div class="item-left">
+                          <div class="item-name"><span class="veg-dot"></span>Flat White</div>
+                          <div class="item-customization">Almond Milk</div>
+                          <span class="status-badge status-served">Served</span>
+                        </div>
+                        <div class="item-right">
+                          <div class="item-price">₹160.00</div>
+                          <div class="item-qty">x1 · 🔒</div>
+                        </div>
+                      </div>
+                      <div class="order-item" style="border:none">
+                        <div class="item-left">
+                          <div class="item-name"><span class="veg-dot"></span>Organic Espresso</div>
+                          <span class="status-badge status-served">Served</span>
+                        </div>
+                        <div class="item-right">
+                          <div class="item-price">₹120.00</div>
+                          <div class="item-qty">x1 · 🔒</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider" style="margin:4px 0"></div>
+
+              <!-- PRICE BREAKDOWN — CLEAR SPLIT -->
+              <div class="price-card" data-testid="proposed-price-breakdown-clear">
+                <div class="section-header" style="margin-bottom:10px">
+                  <div class="section-icon grey">📋</div>
+                  <span class="section-title">Price Breakdown</span>
+                </div>
+
+                <!-- NEW: split rows -->
+                <div class="price-row new-additions">
+                  <span class="price-label">New additions</span>
+                  <span class="price-value" id="prop-new-total">₹200.00</span>
+                </div>
+                <div class="price-row prev-order">
+                  <span class="price-label">Previous order</span>
+                  <span class="price-value">₹600.00</span>
+                </div>
+
+                <div class="price-thin-sep"></div>
+
+                <!-- Combined — same logic as before -->
+                <div class="price-row">
+                  <span class="price-label">Item Total</span>
+                  <span class="price-value" id="prop-item-total">₹800.00</span>
+                </div>
+                <div class="price-row sub">
+                  <span class="price-label">CGST 2.5%</span>
+                  <span class="price-value" id="prop-cgst">₹20.00</span>
+                </div>
+                <div class="price-row sub">
+                  <span class="price-label">SGST 2.5%</span>
+                  <span class="price-value" id="prop-sgst">₹20.00</span>
+                </div>
+                <div class="price-row total-row">
+                  <span class="price-label">Grand Total</span>
+                  <span class="price-value" id="prop-grand">₹840.00</span>
+                </div>
+              </div>
+
+            </div><!-- /page-content -->
+          </div><!-- /phone-inner -->
+
+          <!-- Footer -->
+          <div class="phone-footer">
+            <button class="update-btn" data-testid="proposed-update-order-footer-btn" id="prop-footer-btn">Update Order ₹840.00</button>
+          </div>
+        </div>
+      </div><!-- /phone-frame -->
+
+      <!-- Annotations -->
+      <div class="annotations" id="annotations-right">
+        <div class="annotation fix">
+          <span class="annotation-icon">🟢</span>
+          <div class="annotation-text">
+            <strong>New item first — instant confirmation</strong>
+            Spanish Latte at ₹200 is the first thing the customer sees. No scrolling needed to verify or change quantity
+          </div>
+        </div>
+        <div class="annotation fix">
+          <span class="annotation-icon">🟢</span>
+          <div class="annotation-text">
+            <strong>Previous order neatly collapsed</strong>
+            "3 items · ₹600 ▼" — customer knows what's there at a glance. Tap once to expand. Zero visual clutter
+          </div>
+        </div>
+        <div class="annotation fix">
+          <span class="annotation-icon">🟢</span>
+          <div class="annotation-text">
+            <strong>Clear split — ₹200 new, ₹600 previous</strong>
+            Two transparent rows before "Item Total". Customer immediately understands the ₹200 coffee is their new addition
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /comparison-grid -->
+
+  <!-- ══════════════════════════════════════════════════
+       EXPANDED STATE PREVIEW
+  ═══════════════════════════════════════════════════ -->
+  <div class="expanded-panel">
+    <div class="expanded-panel-title">Expanded State — "Previously Ordered" Component Spec</div>
+    <div class="expanded-panel-sub">When the customer taps the collapsed pill ▼, it animates open and shows all locked items.</div>
+
+    <div class="expanded-demo" style="font-family:'Montserrat',sans-serif">
+      <!-- Collapsed → Expanded header -->
+      <div class="expanded-demo-header" onclick="toggleExpandedDemo()" style="user-select:none">
+        <span style="font-size:13px;color:#94A3B8">🔒</span>
+        <span style="font-size:12px;font-weight:700;color:#475569;flex:1">Previously Ordered</span>
+        <span style="font-size:11px;color:#94A3B8;font-weight:600;margin-right:8px">3 items · ₹600</span>
+        <span style="font-size:12px;color:#94A3B8;font-weight:700;transition:transform .3s" id="demo-chevron">▲</span>
+      </div>
+      <div id="demo-expanded-items" class="expanded-demo-items">
+        <div class="order-item">
+          <div class="item-left">
+            <div class="item-name" style="font-size:12px"><span class="veg-dot"></span>Cappuccino</div>
+            <div class="item-customization">Oat Milk, Extra Shot</div>
+            <span class="status-badge status-preparing">Preparing</span>
+          </div>
+          <div class="item-right">
+            <div class="item-price">₹320.00</div>
+            <div class="item-qty">x2</div>
+            <div style="font-size:9px;color:#94A3B8;font-weight:600">🔒 Locked</div>
+          </div>
+        </div>
+        <div class="order-item">
+          <div class="item-left">
+            <div class="item-name" style="font-size:12px"><span class="veg-dot"></span>Flat White</div>
+            <div class="item-customization">Almond Milk</div>
+            <span class="status-badge status-served">Served</span>
+          </div>
+          <div class="item-right">
+            <div class="item-price">₹160.00</div>
+            <div class="item-qty">x1</div>
+            <div style="font-size:9px;color:#94A3B8;font-weight:600">🔒 Locked</div>
+          </div>
+        </div>
+        <div class="order-item" style="border:none">
+          <div class="item-left">
+            <div class="item-name" style="font-size:12px"><span class="veg-dot"></span>Organic Espresso</div>
+            <span class="status-badge status-served">Served</span>
+          </div>
+          <div class="item-right">
+            <div class="item-price">₹120.00</div>
+            <div class="item-qty">x1</div>
+            <div style="font-size:9px;color:#94A3B8;font-weight:600">🔒 Locked</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Design token notes -->
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <div style="background:#0F172A;border:1px solid #334155;border-radius:8px;padding:12px">
+        <div style="color:#94A3B8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Collapsed Pill</div>
+        <div style="color:#E2E8F0;font-size:11px;line-height:1.6">bg: #F3F4F6<br/>border: #E2E8F0 · 1.5px<br/>border-radius: 10px<br/>padding: 11px 14px<br/>font: 12px · 700 · #475569</div>
+      </div>
+      <div style="background:#0F172A;border:1px solid #334155;border-radius:8px;padding:12px">
+        <div style="color:#94A3B8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">New Additions Row</div>
+        <div style="color:#E2E8F0;font-size:11px;line-height:1.6">label: #059669 · 12px · 600<br/>value: #059669 · 12px · 700<br/>Shows only in isEditMode<br/>= cartItems subtotal</div>
+      </div>
+      <div style="background:#0F172A;border:1px solid #334155;border-radius:8px;padding:12px">
+        <div style="color:#94A3B8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Previous Order Row</div>
+        <div style="color:#E2E8F0;font-size:11px;line-height:1.6">label: #94A3B8 · 11px · 500<br/>value: #94A3B8 · 11px · 500<br/>Shows only in isEditMode<br/>= getPreviousOrderTotal()</div>
+      </div>
+      <div style="background:#0F172A;border:1px solid #334155;border-radius:8px;padding:12px">
+        <div style="color:#94A3B8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Expand Animation</div>
+        <div style="color:#E2E8F0;font-size:11px;line-height:1.6">slideDown keyframe<br/>duration: 250ms · ease<br/>opacity 0→1<br/>translateY −8px→0</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /canvas -->
+
+<script>
+// ── Annotation toggle ──
+var annotationsVisible = true;
+function toggleAnnotations() {
+  annotationsVisible = !annotationsVisible;
+  var els = document.querySelectorAll('.annotations');
+  els.forEach(function(el){ el.style.display = annotationsVisible ? 'flex' : 'none'; });
+  var btn = document.getElementById('toggle-ann');
+  btn.textContent = annotationsVisible ? 'Hide Annotations' : 'Show Annotations';
+  btn.classList.toggle('active', annotationsVisible);
+}
+
+// ── Previously ordered collapse toggle (Proposed phone) ──
+var prevExpanded = false;
+function togglePrev() {
+  prevExpanded = !prevExpanded;
+  var content = document.getElementById('prev-expanded-content');
+  var chevron = document.getElementById('prev-chevron');
+  if (prevExpanded) {
+    content.style.display = 'block';
+    chevron.textContent = '▲';
+    chevron.classList.add('open');
+  } else {
+    content.style.display = 'none';
+    chevron.textContent = '▼';
+    chevron.classList.remove('open');
+  }
+}
+
+// ── Demo expanded state toggle ──
+function toggleExpandedDemo() {
+  var items = document.getElementById('demo-expanded-items');
+  var chev = document.getElementById('demo-chevron');
+  var showing = items.style.display !== 'none';
+  items.style.display = showing ? 'none' : 'block';
+  chev.textContent = showing ? '▼' : '▲';
+}
+
+// ── Quantity stepper (Proposed phone) — recalculates prices live ──
+var qty = 1;
+var itemUnitPrice = 200;
+var prevTotal = 600;
+var gstRate = 0.05; // 5% = CGST 2.5% + SGST 2.5%
+
+function fmt(n) { return '₹' + n.toFixed(2); }
+
+function changeQty(delta) {
+  qty = Math.max(1, qty + delta);
+  var newAdds = qty * itemUnitPrice;
+  var itemTotal = prevTotal + newAdds;
+  var cgst = parseFloat((itemTotal * gstRate / 2).toFixed(2));
+  var sgst = parseFloat((itemTotal * gstRate / 2).toFixed(2));
+  var grand = parseFloat((itemTotal + cgst + sgst).toFixed(2));
+
+  document.getElementById('prop-qty').textContent = qty;
+  document.getElementById('prop-item-price').textContent = fmt(newAdds);
+  document.getElementById('prop-new-total').textContent = fmt(newAdds);
+  document.getElementById('prop-item-total').textContent = fmt(itemTotal);
+  document.getElementById('prop-cgst').textContent = fmt(cgst);
+  document.getElementById('prop-sgst').textContent = fmt(sgst);
+  document.getElementById('prop-grand').textContent = fmt(grand);
+  document.getElementById('prop-footer-btn').textContent = 'Update Order ' + fmt(grand);
+}
+</script>
+</body>
+</html>
