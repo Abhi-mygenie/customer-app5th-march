@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import QuantitySelector from '../QuantitySelector/QuantitySelector';
 import PriceBreakdown from '../PriceBreakdown/PriceBreakdown';
 import { createPortal } from "react-dom";
+import { isAPS } from '../../utils/apsUtils'; // BUG-2026-11-26-001-P2
 import './CustomizeItemModal.css';
 
 const CustomizeItemModal = ({
@@ -49,7 +50,8 @@ const CustomizeItemModal = ({
   const priceCalculation = useMemo(() => {
     if (!item) return { basePrice: 0, variationsTotal: 0, addonsTotal: 0, total: 0 };
 
-    const basePrice = parseFloat(item.price) || 0;
+    // BUG-2026-11-26-001-P2: APS base price = 0 for display only
+    const basePrice = isAPS(item) ? 0 : (parseFloat(item.price) || 0);
 
     // Calculate variations total
     let variationsTotal = 0;
@@ -321,7 +323,12 @@ const CustomizeItemModal = ({
               onClick={handleAddToCartClick}
               disabled={!isRequiredVariationsSelected}
             >
-              Add To Cart ₹{priceCalculation.total.toFixed(2)}
+              {/* BUG-2026-11-26-001-P2: APS price=0 display on button */}
+              {isAPS(item)
+                ? (priceCalculation.variationsTotal + priceCalculation.addonsTotal) > 0
+                    ? `Add To Cart APS + ₹${(priceCalculation.variationsTotal + priceCalculation.addonsTotal).toFixed(2)}`
+                    : 'Add To Cart (APS)'
+                : `Add To Cart ₹${priceCalculation.total.toFixed(2)}`}
             </button>
           </div>
         </div>

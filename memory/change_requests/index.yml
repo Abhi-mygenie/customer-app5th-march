@@ -3153,32 +3153,42 @@
   type: BUG
   title: 'APS price (₹1) still shows in CartBar, ReviewOrder price breakdown rows,
     and Order Success — scope gap from CR-2026-11-14-002 which only fixed the menu card'
-  status: INTAKE
-  status_note: 'INTAKE COMPLETE 2026-11-26. Investigation confirmed 3 surfaces:
-    CartBar line 114, ReviewOrder lines 2079/2291/2342/2396, OrderSuccess lines
-    560/651/689/712. Order Success requires apsItemFoodIds handoff from ReviewOrder
-    since POS only knows unit_price=1. Display only — zero payload/math change.
-    Ready for Planning.'
+  status: QA
+  status_note: >
+    PHASE 1 (Fixes A/B/C) + PHASE 2 (APS price=0 redesign) implemented 2026-11-26.
+    Phase 1: Fix A foodId in updatedItems, Fix B grandTotal row, Fix C ||order swap.
+    Tested iter_36 12/12 PASS, iter_37 code-verified, iter_38 PASS. Owner live smoke
+    confirmed per-item APS, Grand Total, top total working.
+    Phase 2: 20 edits 7 files (1 new apsUtils.js). isAPS() helper from POS aps tag.
+    taxBreakdownDisplay useMemo + full display chain (price=0 for APS items).
+    CustomizeModal button, CartBar edit mode, DisplayBillSummary to OrderSuccess.
+    D-1A/D-2A: GST rows hidden when 0. Build PASS. PHASE 2 QA NOT YET RUN.
   priority: P1
-  risk: LOW
+  risk: MEDIUM
   owner_action: null
   blocked_on: []
   sprint: null
-  files: 'frontend/src/components/CartBar/CartBar.jsx · frontend/src/pages/ReviewOrder.jsx
-    · frontend/src/pages/OrderSuccess.jsx'
-  artefacts: INTAKE_DOC
+  files: >
+    frontend/src/utils/apsUtils.js (NEW) · frontend/src/hooks/useMenuData.js ·
+    frontend/src/components/MenuItem/MenuItem.jsx ·
+    frontend/src/components/CustomizeItemModal/CustomizeItemModal.jsx ·
+    frontend/src/components/CartBar/CartBar.jsx ·
+    frontend/src/pages/ReviewOrder.jsx · frontend/src/pages/OrderSuccess.jsx
+  artefacts: >
+    INTAKE_DOC · QA_HANDOVER · INVESTIGATION_REPORT_P2 ·
+    IMPLEMENTATION_PLAN_P2 · SESSION_HANDOVER_2026-11-26-P2
   registered: '2026-11-26'
   last_updated: '2026-11-26'
   related:
   - CR-2026-11-14-002
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
-  notes: 'Parent CR-2026-11-14-002 (SMOKE) only fixed menu card APS badge. This BUG
-    covers CartBar + ReviewOrder rows + Order Success. Order Success APS detection
-    requires passing apsItemFoodIds from ReviewOrder navigate() calls (4 spots) since
-    cart is cleared before OrderSuccess loads. Polling will naturally correct
-    liveOrderAmount when waiter adjusts price in POS.'
+  notes: >
+    POS API confirmed aps:"yes" field on melo fish (id=248252) and check in (id=248234).
+    Field NOT extracted in useMenuData.js until Phase 2. Phase 2 adds aps field to
+    transformer + isAPS() helper + full price=0 display chain. Phase 2 QA required
+    before SMOKE. Owner live screenshots 2026-11-26 confirmed Phase 1 working.
 
 - id: CR-2026-11-26-001
   type: CR

@@ -152,6 +152,17 @@ const OrderSuccess = () => {
   // Use billSummary from location.state (passed from ReviewOrder) as primary source
   const passedBillSummary = orderData?.billSummary || null;
 
+  // BUG-2026-11-26-001: APS price display mask — read from navigate state
+  const apsSuccessFoodIds = new Set(
+    (orderData?.apsItemFoodIds || []).map(String)
+  );
+  const apsSuccessCount = orderData?.apsCount || 0;
+  const hasSuccessAPS = apsSuccessCount > 0;
+
+  // BUG-2026-11-26-001-P2: display-only totals (computed with APS=0 in ReviewOrder)
+  const displayTotal       = orderData?.displayTotal       ?? null;
+  const displayBillSummary = orderData?.displayBillSummary ?? null;
+
   // ─── SC-GST LABEL SOURCE FIX ─────────────────────────────────────────────
   // billSummary.scGstRate (returned by getOrderDetails transform) can be
   // derived from rounded amounts when the order details API response does not
@@ -271,6 +282,7 @@ const OrderSuccess = () => {
         // Use transformer properties directly - no manual re-mapping needed
         const updatedItems = orderDetails.previousItems.map(item => ({
           id: item.id,
+          foodId: item.foodId, // BUG-2026-11-26-001: preserve food ID for APS price display mask
           name: item.name || item.item?.name || 'Item',
           // Use fullPrice from transformer (already includes variations + addons)
           price: item.fullPrice ?? item.price ?? 0,
@@ -557,7 +569,21 @@ const OrderSuccess = () => {
                 {SHOW_INTERNAL_ORDER_ID && restaurantOrderId && <span> ({orderData.orderId})</span>}
               </span>
             </div>
-            <span className="order-success-total">₹{liveOrderAmount || orderData.totalToPay || '0.00'}</span>
+            <span className="order-success-total">
+              {/* BUG-2026-11-26-001-P2: use displayTotal (APS=0 calculated in ReviewOrder) */}
+              {hasSuccessAPS && displayTotal != null
+                ? (parseFloat(displayTotal) > 0
+                    ? `₹${parseFloat(displayTotal).toFixed(2)} + APS`
+                    : 'APS')
+                : hasSuccessAPS
+                  ? (() => {
+                      const raw = parseFloat(liveOrderAmount || orderData.totalToPay || 0);
+                      const real = raw - apsSuccessCount;
+                      return real > 0 ? `₹${real.toFixed(2)} + APS` : 'APS';
+                    })()
+                  : `₹${parseFloat(liveOrderAmount || orderData.totalToPay || 0) || '0.00'}`
+              }
+            </span>
           </div>
 
           {/* Payment Status - Only show for Razorpay payments */}
@@ -648,7 +674,11 @@ const OrderSuccess = () => {
                     </div>
                     <div className="order-success-item-right">
                       <span className="order-success-item-price">
-                        ₹{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                        {/* BUG-2026-11-26-001: APS price display mask */}
+                        {(apsSuccessFoodIds.has(String(item.foodId || item.food_id || item.id || ''))
+                          && parseFloat(item.price) <= 1)
+                          ? 'APS'
+                          : `₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`}
                       </span>
                       {showFoodStatus && fOrderStatus !== 7 && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
                     </div>
@@ -684,9 +714,16 @@ const OrderSuccess = () => {
             </div>
             {showBillSummary && (
               <div className="order-success-bill-content">
+                {/* BUG-2026-11-26-001-P2: use displayBillSummary (APS=0) when available */}
+                {(() => { const effBS = displayBillSummary || billSummary; return (
+                <>
                 <div className="bill-row">
                   <span className="bill-label">Item Total</span>
-                  <span className="bill-value">₹{billSummary.itemTotal.toFixed(2)}</span>
+                  <span className="bill-value">
+                    {hasSuccessAPS
+                      ? (effBS.itemTotal > 0 ? `₹${effBS.itemTotal.toFixed(2)} + APS` : 'APS')
+                      : `₹${billSummary.itemTotal.toFixed(2)}`}
+                  </span>
                 </div>
                 {(billSummary.pointsDiscount > 0 || billSummary.discount > 0) && (
                   <div className="bill-row bill-row-discount">
@@ -701,26 +738,31 @@ const OrderSuccess = () => {
                   </div>
                 )}
                 {/* Service Charge (SERVICE_CHARGE_MAPPING CR) */}
-                {billSummary.serviceCharge > 0 && (
+                {effBS.serviceCharge > 0 && (
                   <div className="bill-row" data-testid="bill-row-service-charge">
                     <span className="bill-label">Service Charge (Optional)</span>
-                    <span className="bill-value">₹{billSummary.serviceCharge.toFixed(2)}</span>
+                    <span className="bill-value">₹{effBS.serviceCharge.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="bill-row bill-row-subtotal">
                   <span className="bill-label">Subtotal</span>
-                  <span className="bill-value">₹{billSummary.subtotal.toFixed(2)}</span>
+                  <span className="bill-value">
+                    {hasSuccessAPS
+                      ? (effBS.subtotal > 0 ? `₹${effBS.subtotal.toFixed(2)} + APS` : 'APS')
+                      : `₹${billSummary.subtotal.toFixed(2)}`}
+                  </span>
                 </div>
-                {billSummary.cgst > 0 && (
+                {/* BUG-2026-11-26-001-P2: D-2A — hide GST rows when APS-only (effBS.cgst===0) */}
+                {effBS.cgst > 0 && (
                   <div className="bill-row bill-row-tax">
                     <span className="bill-label-sub">CGST{billSummary.gstRate ? ` ${(billSummary.gstRate / 2).toFixed(billSummary.gstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
-                    <span className="bill-value-sub">₹{billSummary.cgst.toFixed(2)}</span>
+                    <span className="bill-value-sub">₹{effBS.cgst.toFixed(2)}</span>
                   </div>
                 )}
-                {billSummary.sgst > 0 && (
+                {effBS.sgst > 0 && (
                   <div className="bill-row bill-row-tax">
                     <span className="bill-label-sub">SGST{billSummary.gstRate ? ` ${(billSummary.gstRate / 2).toFixed(billSummary.gstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
-                    <span className="bill-value-sub">₹{billSummary.sgst.toFixed(2)}</span>
+                    <span className="bill-value-sub">₹{effBS.sgst.toFixed(2)}</span>
                   </div>
                 )}
                 {billSummary.vat > 0 && (
@@ -730,27 +772,32 @@ const OrderSuccess = () => {
                   </div>
                 )}
                 {/* CGST/SGST on Service Charge — compliance rows (SERVICE_CHARGE_MAPPING CR) */}
-                {billSummary.scCgst > 0 && (
+                {effBS.scCgst > 0 && (
                   <div className="bill-row bill-row-tax" data-testid="bill-row-sc-cgst">
                     <span className="bill-label-sub">CGST on SC{displayScGstRate ? ` ${(displayScGstRate / 2).toFixed(displayScGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
-                    <span className="bill-value-sub">₹{billSummary.scCgst.toFixed(2)}</span>
+                    <span className="bill-value-sub">₹{effBS.scCgst.toFixed(2)}</span>
                   </div>
                 )}
-                {billSummary.scSgst > 0 && (
+                {effBS.scSgst > 0 && (
                   <div className="bill-row bill-row-tax" data-testid="bill-row-sc-sgst">
                     <span className="bill-label-sub">SGST on SC{displayScGstRate ? ` ${(displayScGstRate / 2).toFixed(displayScGstRate % 2 === 0 ? 0 : 2)}%` : ''}</span>
-                    <span className="bill-value-sub">₹{billSummary.scSgst.toFixed(2)}</span>
+                    <span className="bill-value-sub">₹{effBS.scSgst.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="bill-row bill-row-total">
                   <span className="bill-label-total">Grand Total</span>
                   <span className="bill-value-total">
-                    ₹{billSummary.grandTotal.toFixed(2)}
-                    {SHOW_PRE_ROUND_BRACKET && billSummary.originalTotal != null && (
+                    {/* BUG-2026-11-26-001-P2 */}
+                    {hasSuccessAPS
+                      ? (effBS.grandTotal > 0 ? `₹${effBS.grandTotal.toFixed(2)} + APS` : 'APS')
+                      : `₹${billSummary.grandTotal.toFixed(2)}`}
+                    {!hasSuccessAPS && SHOW_PRE_ROUND_BRACKET && billSummary.originalTotal != null && (
                       <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{billSummary.originalTotal.toFixed(2)})</span>
                     )}
                   </span>
                 </div>
+                </>
+                ); })()}
               </div>
             )}
           </div>

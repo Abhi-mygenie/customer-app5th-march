@@ -127,6 +127,8 @@ const fetchMenuSections = async (finalRestaurantId, stationId) => {
             serve_time_in_min:   Number(item.serve_time_in_min   || 0),
             // Stringified JSON metadata; intent unknown (BACKEND CONFIRMATION NEEDED).
             attributes: item.attributes || '[]',
+            // BUG-2026-11-26-001-P2: APS tag from POS API — primary APS signal
+            aps: item.aps || 'no',
           };
         });
 

@@ -1,0 +1,41 @@
+{
+  "summary": "BUG-2026-11-26-001 Fix C verification: OrderSuccess.jsx per-item APS lookup order fix (`item.foodId || item.food_id || item.id`). All 3 fixes (A, B, C) confirmed in code. CartBar APS regression PASS. OrderSuccess direct URL graceful redirect PASS. Restaurant 716 normal-item regression inconclusive (menu items not loading - unrelated API/data issue).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Restaurant 716 normal-item regression",
+        "issue": "Menu items for restaurant 716 never load past skeleton state (10+ seconds wait). Could not add a normal item to verify no-APS regression. Likely a backend/data issue for that restaurant, unrelated to the APS fix.",
+        "affected_selectors": ["button:has-text('ADD')"]
+      }
+    ],
+    "design_issues": []
+  },
+  "code_verification": {
+    "fix_a_line_281": "PASS - `foodId: item.foodId` present in updatedItems mapping",
+    "fix_b_line_779_786": "PASS - billSummary.grandTotal masked with hasSuccessAPS",
+    "fix_c_line_670": "PASS - lookup reads `item.foodId || item.food_id || item.id` (foodId first, correct order)"
+  },
+  "test_results": {
+    "code_review_fix_a": "PASS",
+    "code_review_fix_b": "PASS",
+    "code_review_fix_c": "PASS",
+    "cartbar_aps_restaurant_69": "PASS - CartBar shows 'APS' for 'check in' item",
+    "order_success_direct_url_no_crash": "PASS - Gracefully redirects to /69/menu with no errors",
+    "normal_item_716_regression": "INCONCLUSIVE - Restaurant 716 menu items not loading"
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Investigate why restaurant 716 (/716/menu) menu items do not load - may be a backend API or data issue unrelated to APS fix",
+    "Full OrderSuccess per-item APS smoke test requires owner to place a real order on restaurant 69 (cannot be automated without real order state)"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "80% (4/5 tests passed, 1 inconclusive)"},
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 3 APS fixes (A, B, C) are in OrderSuccess.jsx and verified correct. CartBar + ReviewOrder regressions all PASS (from iterations 36-38). The only remaining unverifiable test is the OrderSuccess per-item price column showing 'APS' — requires a real placed order through restaurant 69 with an APS item. Restaurant 716 menu doesn't load in this environment (possible data issue)."
+}

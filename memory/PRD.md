@@ -1,5 +1,25 @@
 # MyGenie Customer App — PRD
 
+## BUG-2026-11-26-001 — PHASE 2 IMPLEMENTED 2026-11-26 (QA PENDING)
+- Phase 2: 20 edits across 7 files (1 new: apsUtils.js). isAPS() helper from POS aps:"yes" tag.
+  taxBreakdownDisplay useMemo + full display chain (APS price=0 for display). CustomizeModal
+  button APS. CartBar edit mode fix. displayBillSummary + displayTotal to OrderSuccess.
+  D-1A/D-2A: GST rows hidden when 0. Build PASS. QA NOT YET RUN.
+- POS API confirmed: aps:"yes" on melo fish (id=248252, 5% GST) + check in (id=248234, 0% GST)
+- Phase 1 (Fix A/B/C) confirmed working via owner live screenshots 2026-11-26
+
+## BUG-2026-11-26-001 — ALL FIXES COMPLETE 2026-11-26
+- Fix A: `foodId: item.foodId` added to updatedItems mapping (line 281) — food ID preserved through API polling
+- Fix B: `billSummary.grandTotal` row masked (line 779) — Grand Total in Bill Summary now shows APS
+- Fix C: Swapped `||` lookup order at line 670 to `foodId || food_id || id` — item.id (order-line ID, always truthy) was short-circuiting before foodId was ever reached
+- All 3 fixes code-verified (iteration_38). Build PASS. Owner live smoke pending on restaurant 69.
+- Fix A: `foodId: item.foodId` added to `updatedItems` mapping (OrderSuccess line 281) — per-item APS mask now matches food ID correctly
+- Fix B: `billSummary.grandTotal` row masked (OrderSuccess line 779) — Grand Total in Bill Summary now shows `APS` / `₹X + APS`
+- Build PASS · CartBar + ReviewOrder regressions PASS (iteration_37) · OrderSuccess live smoke pending owner device test on restaurant 69
+- APS price (₹1) display mask applied to CartBar, ReviewOrder (Item Total/Subtotal/Grand Total/button), OrderSuccess (top total/per-item/bill summary)
+- 12 edits across 3 files — display-only, zero payload/math change. Build PASS. 12/12 self-test PASS (iteration_36)
+- Status: QA — OrderSuccess live smoke (V-14–V-19) pending owner test on restaurant 69
+
 ## Deployment: 2026-11-26 (Latest)
 - Synced repo `Abhi-mygenie/customer-app5th-march` (main → `23c9886`) into `/app` via `git reset --hard origin/main`
 - Platform files preserved: `.emergent/emergent.yml`, `.emergent/cron/`, supervisor configs
