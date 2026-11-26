@@ -2779,34 +2779,35 @@
   type: BUG
   title: 'Search results hidden by mobile keyboard — PromoBanner and category nav
     not hidden when searchQuery is active (MenuItems.jsx lines 741, 754)'
-  status: IMPLEMENTED
-  status_note: 'IMPLEMENTED 2026-11-25. Fast Lane fix applied. 2 lines changed in MenuItems.jsx (lines 742, 756). Testing agent iteration_28: 100% pass, retest_needed=false. Banner and CategoryBox nav hide correctly during search, reappear on clear.'
+  status: SMOKE
+  status_note: 'QA PASS 2026-11-26 iteration_34 (live, restaurant 716). PromoBanner
+    and CategoryNav hidden during search, reappear on clear. SMOKE: owner to verify
+    on real phone.'
   priority: P0
   risk: LOW
-  owner_action: 'Approve Fast Lane for BUG-2026-11-14-001 to implement the 2-line
-    fix immediately'
+  owner_action: null
   blocked_on: []
   sprint: null
   files: frontend/src/pages/MenuItems.jsx:741,754
   artefacts: INTAKE_DOC, BUG_FIX_REPORT
   registered: '2026-11-14'
-  last_updated: '2026-11-14'
+  last_updated: '2026-11-26'
   related:
   - INV-2026-11-14-001
   code_markers: false
   money_path: null
   closed: null
-  notes: 'Fix: add && !searchQuery to PromoBanner condition (line 741) and CategoryBox
-    condition (line 754). Effect: banner + category nav disappear while search is
-    active, full screen height available for results.'
+  notes: 'Fix: && !searchQuery guard on PromoBanner and CategoryBox conditions.'
 
 - id: BUG-2026-11-14-002
   type: BUG
   title: 'Search ranking — exact item match not shown first; cross-category render
     order buries exact matches from late POS categories below partial matches from
     early categories'
-  status: IMPLEMENTED
-  status_note: 'IMPLEMENTED 2026-11-25 (Role 3). E1: MenuItems.jsx flat-search block. E2: MenuItem.jsx categoryName+APS. CSS E5+E6. Testing agent iteration_29: 100% pass, retest=false.'
+  status: SMOKE
+  status_note: 'QA PASS 2026-11-26 iteration_34 (live, restaurant 716). Flat ranked
+    list during search confirmed, inline category tag confirmed, scoring logic verified.
+    SMOKE: owner to verify on real phone.'
   priority: P0
   risk: MEDIUM
   owner_action: null
@@ -2859,8 +2860,10 @@
   type: CR
   title: 'APS (As Per Size) label for items with price=1 — show "APS" badge instead
     of ₹1 on MenuItem and in ReviewOrder summary until POS updates final price'
-  status: IMPLEMENTED
-  status_note: 'IMPLEMENTED 2026-11-25 (Role 3). E3: OrderItemCard.jsx APS badge. E4: ReviewOrder.jsx APS notice. CSS E7+E8. Testing agent iteration_29: 100% pass, retest=false.'
+  status: QA
+  status_note: 'QA N/A (live) 2026-11-26 iteration_34 — no price=1 items in 18march
+    restaurant. Code review PASS: parseFloat(item.price)===1 guard renders APS badge
+    correctly. Needs owner to confirm a restaurant with price=1 items for live smoke.'
   priority: P0
   risk: MEDIUM
   owner_action: null
@@ -2881,11 +2884,11 @@
   type: CR
   title: 'Banner click on PromoBanner redirects to internal app page — PromoBanner
     onClick uses existing bannerLink field via React Router navigate()'
-  status: IMPLEMENTED
-  status_note: 'IMPLEMENTED 2026-11-26 (Role 3). E-1 to E-7 applied across 2 files.
-    Webpack 0 errors. Code review iteration_33: all 10 checks PASS. suppressNextClick
-    ref prevents touch double-fire. Admin picker with 5 options + path preview. .promo-tap-pill
-    CSS badge. Login.jsx type fixed (email→text, pre-existing). QA handover written.'
+  status: SMOKE
+  status_note: 'QA PASS 2026-11-26 iteration_34 (live, restaurant 478). Banner
+    created, View pill visible, click navigates to /478/menu. Admin picker 5 options
+    confirmed, path preview confirmed. Test banner cleaned up. SMOKE: owner to verify
+    on real phone.'
   priority: P0
   risk: MEDIUM
   owner_action: null
@@ -2938,13 +2941,13 @@
   title: 'Search mode item card wastes vertical space — category tag on standalone
     row + excess padding. Category tag must be inline BEFORE price on same line
     (BEER ₹180). Card padding reduce from 12px to 7px in search mode only.'
-  status: IMPLEMENTED
-  status_note: 'IMPLEMENTED 2026-11-25; testing iteration_30 pass + iteration_31 inline category-before-price pass. INTAKE COMPLETE 2026-11-25. Owner decisions locked: category before
-    price inline (BEER ₹180), compact padding 7px, normal browse unchanged.
-    Fast Lane eligible: 2 files, LOW risk, search-mode only.'
+  status: SMOKE
+  status_note: 'QA PASS 2026-11-26 iteration_34 (live, restaurant 716). Category
+    tag inline before price confirmed. Compact padding in search mode confirmed.
+    SMOKE: owner to verify on real phone.'
   priority: P1
   risk: LOW
-  owner_action: 'Approve Fast Lane for BUG-2026-11-25-001'
+  owner_action: null
   blocked_on: []
   sprint: null
   files: frontend/src/components/MenuItem/MenuItem.jsx · frontend/src/components/MenuItem/MenuItem.css
@@ -2965,13 +2968,13 @@
   type: BUG
   title: 'Filter chips (Veg/Non-Veg/Egg) remain visible during active search —
     wastes ~48px of viewport height that could show item results'
-  status: IMPLEMENTED
-  status_note: 'IMPLEMENTED 2026-11-25; testing iteration_30 pass. INTAKE COMPLETE 2026-11-25. Same fix pattern as BUG-2026-11-14-001
-    (banner + nav hidden). Pass hideFilters prop to SearchAndFilterBar, wrap
-    veg-toggle-group in !hideFilters guard. Fast Lane eligible.'
+  status: SMOKE
+  status_note: 'QA PASS 2026-11-26 iteration_34 (live, restaurant 716). veg-toggle-group
+    and dietary tags hidden during search, restored on clear. SMOKE: owner to verify
+    on real phone.'
   priority: P1
   risk: LOW
-  owner_action: 'Approve Fast Lane for BUG-2026-11-25-002'
+  owner_action: null
   blocked_on: []
   sprint: null
   files: frontend/src/pages/MenuItems.jsx · frontend/src/components/SearchAndFilterBar/SearchAndFilterBar.jsx
@@ -2992,13 +2995,11 @@
   type: CR
   title: 'Compact the top app header while a menu search is active so more
     results fit above the mobile keyboard (remaining gap from INV-2026-11-25-001)'
-  status: IMPLEMENTED
-  status_note: 'INTAKE COMPLETE 2026-11-25. OWNER DECISION 2026-11-25: Option C
-    (search takes over top). While searching, the app header is hidden and the search
-    row shows a back arrow that clears the search (does not leave the page). Measured
-    header 73px on 390px viewport, so the gain is ~73px. Options A (reuse Review header,
-    ~0px) and B (slim header) not chosen. MenuItems only; DiningMenu and OrderSuccess
-    unchanged. Ready for Planning.'
+  status: SMOKE
+  status_note: 'QA PASS 2026-11-26 iteration_34 (live, restaurant 716). Header hides
+    during search confirmed, back arrow (data-testid=search-back-btn) visible,
+    clears search and restores header without navigation. SMOKE: owner to verify
+    on real phone.'
   priority: P2
   risk: LOW
   owner_action: 'Owner QA on device; then SMOKE/CLOSE'
@@ -3057,11 +3058,11 @@
   type: CR
   title: 'Review Order edit mode — new items first, previously ordered collapsed by
     default, price breakdown split (new additions + previous order)'
-  status: IMPLEMENTED
-  status_note: 'IMPLEMENTED 2026-11-25 (Role 3). E-1 to E-6 applied across 3 files.
-    Webpack 0 errors. Testing agent iteration_32: non-edit regression PASS (5/5),
-    edit mode code checks PASS (section order, useState, data-testids, price guard
-    all confirmed). Live edit mode requires real open order for full smoke.'
+  status: QA
+  status_note: 'QA CODE-VERIFIED 2026-11-26 iteration_34 — live edit mode blocked
+    (restaurant ordering unavailable during test window). Code checks PASS: new items
+    first, PreviousOrderItems collapsed useState(false), all data-testids present,
+    price split rows guarded by isEditMode. Needs live order placement for full smoke.'
   priority: P1
   risk: MEDIUM
   owner_action: 'Owner smoke: place an order at a table, add new items via edit mode,
