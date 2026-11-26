@@ -1,0 +1,37 @@
+{
+  "summary": "CR-2026-11-14-002 APS badge QA for Restaurant 69 (The Goan Kitchen). APS badge renders correctly on menu card for price=1 items. Cart/Review Order flow could not be tested because the restaurant was closed (ordering unavailable, opens at 6:00 AM).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Add APS item to cart → Review Order",
+        "issue": "Could not test: restaurant ordering unavailable at time of test (opens at 6:00 AM). Add buttons not shown when ordering is closed.",
+        "affected_selectors": ["button:has-text('ADD')"]
+      }
+    ],
+    "design_issues": []
+  },
+  "aps_badge_test_results": {
+    "menu_card_aps_badge": "PASS",
+    "aps_items_found": ["check in", "melo fish"],
+    "aps_badge_color": "rgb(232, 98, 42) — orange ✅",
+    "aps_badge_text": "APS ✅",
+    "normal_items_no_aps": "PASS — moo duudh ₹100, moo mwwt ₹100, open item ₹100, mko ₹101, mkop ₹99 all show prices normally",
+    "review_order_aps_notice": "CANNOT TEST — ordering unavailable",
+    "cart_total_with_aps": "CANNOT TEST — ordering unavailable"
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Re-test cart and Review Order APS flow when restaurant 69 is open for ordering (after 6:00 AM)"
+  ],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "50% (menu card PASS, Review Order untested)"},
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "APS badge on menu card is confirmed working for restaurant 69. 'check in' and 'melo fish' show orange APS badge. Normal items show prices. Review Order APS notice ('Final price set at counter') and cart total test must be done when restaurant is open for ordering."
+}

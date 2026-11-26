@@ -2860,10 +2860,13 @@
   type: CR
   title: 'APS (As Per Size) label for items with price=1 — show "APS" badge instead
     of ₹1 on MenuItem and in ReviewOrder summary until POS updates final price'
-  status: QA
-  status_note: 'QA N/A (live) 2026-11-26 iteration_34 — no price=1 items in 18march
-    restaurant. Code review PASS: parseFloat(item.price)===1 guard renders APS badge
-    correctly. Needs owner to confirm a restaurant with price=1 items for live smoke.'
+  status: SMOKE
+  status_note: 'QA PASS 2026-11-26 iteration_35 (live, restaurant 69 — The Goan Kitchen).
+    Menu card APS badge LIVE PASS: items "check in" and "melo fish" show orange APS
+    badge (rgb(232,98,42)), text "APS". Normal-priced items unchanged. Review Order
+    APS notice untested (restaurant closed during test, opens 6AM). Owner smoke:
+    add APS item to cart and verify "Final price set at counter" notice on Review Order.'
+  last_updated: '2026-11-26'
   priority: P0
   risk: MEDIUM
   owner_action: null
