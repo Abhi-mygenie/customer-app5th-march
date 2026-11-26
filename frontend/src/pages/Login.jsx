@@ -118,9 +118,9 @@ const Login = () => {
           <div className="input-group">
             <span className="input-icon"><IoMailOutline /></span>
             <input
-              type="email"
+              type="text"
               className="login-input"
-              placeholder="Admin email"
+              placeholder="Phone or email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               data-testid="login-email-input"

@@ -1,10 +1,21 @@
 import React, { useState, useRef } from 'react';
 import { useAdminConfig } from '../../context/AdminConfigContext';
+import { useAuth } from '../../context/AuthContext';
 import { IoImagesOutline, IoAddOutline, IoCreateOutline, IoTrashOutline, IoCloseOutline, IoCloudUploadOutline } from 'react-icons/io5';
 import './AdminPages.css';
 
 const AdminBannersPage = () => {
   const { config, addBanner, updateBanner, deleteBanner, uploadImage, loading } = useAdminConfig();
+  const { user } = useAuth();
+  // CR-2026-11-14-003: internal destination options
+  const rid = user?.restaurant_id || user?.id || '';
+  const LINK_OPTIONS = [
+    { label: 'No link', value: '' },
+    { label: 'Full Menu', value: `/${rid}/menu` },
+    { label: 'Dining Stations', value: `/${rid}/stations` },
+    { label: 'About Us', value: `/${rid}/about` },
+    { label: 'Contact', value: `/${rid}/contact` },
+  ];
   const bannerInputRef = useRef(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState(null);
@@ -218,16 +229,33 @@ const AdminBannersPage = () => {
               />
             </div>
 
+            {/* CR-2026-11-14-003: destination picker */}
             <div className="admin-form-group">
-              <label className="admin-form-label">Link URL (optional)</label>
-              <input
-                type="url"
-                className="admin-form-input"
-                placeholder="https://example.com/promo"
-                value={newBanner.bannerLink}
-                onChange={(e) => setNewBanner(prev => ({ ...prev, bannerLink: e.target.value }))}
-                data-testid="input-bannerLink"
-              />
+              <label className="admin-form-label">Tap Destination (optional)</label>
+              <select
+                className="admin-form-select"
+                value={LINK_OPTIONS.some(o => o.value === newBanner.bannerLink)
+                  ? newBanner.bannerLink
+                  : '__custom__'}
+                onChange={(e) => {
+                  if (e.target.value !== '__custom__') {
+                    setNewBanner(prev => ({ ...prev, bannerLink: e.target.value }));
+                  }
+                }}
+                data-testid="select-bannerLink"
+              >
+                {LINK_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+                {!LINK_OPTIONS.some(o => o.value === newBanner.bannerLink) && newBanner.bannerLink && (
+                  <option value="__custom__">Custom: {newBanner.bannerLink}</option>
+                )}
+              </select>
+              {newBanner.bannerLink && (
+                <span className="admin-form-hint" data-testid="banner-link-preview">
+                  → {newBanner.bannerLink}
+                </span>
+              )}
             </div>
 
             <div className="admin-form-group">

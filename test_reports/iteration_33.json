@@ -1,0 +1,58 @@
+{
+  "summary": "CR-2026-11-14-003 PromoBanner feature test. Live testing blocked: (1) Admin credentials invalid - POS API returns 401 for +919579504871/Qplazm@10. (2) Database empty - no restaurants/banners in MongoDB. All 13 verification points assessed via code review of PromoBanner.jsx and AdminBannersPage.jsx. One bug found and fixed: login form type='email' prevented phone number entry.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Login.jsx",
+        "issue": "Input field was type='email' blocking phone number login (HTML5 validation rejects phone format). Fixed to type='text'.",
+        "selector": "[data-testid='login-email-input']",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Admin Login",
+        "issue": "Credentials +919579504871/Qplazm@10 return 401 from preprod.mygenie.online POS API - cannot login to admin panel",
+        "affected_selectors": ["[data-testid='login-email-input']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "code_review_verification": {
+    "V-1_desktop_click_with_link_navigates": "PASS (code) - PromoBanner.jsx line 79: `if (promo.link) navigate(promo.link)` in onClick handler",
+    "V-2_desktop_click_without_link_no_nav": "PASS (code) - onClick only calls navigate when promo.link is truthy",
+    "V-3_swipe_advances_no_nav": "PASS (code) - line 47-54: swipe (abs(diff)>40) calls goTo(); tap branch navigates only if link exists",
+    "V-7_cursor_pointer_with_link": "PASS (code) - line 72: `style={promo.link ? { cursor: 'pointer' } : undefined}`",
+    "V-8_tap_pill_badge_with_link": "PASS (code) - lines 83-87: `{promo.link && (<div ... data-testid={promo-tap-badge-${i}}>View ↗</div>)}`; CSS .promo-tap-pill is absolute top-right blur pill",
+    "V-9_autoplay": "PASS (code) - lines 22-26: setInterval goTo(activeIndex+1) every 3500ms",
+    "V-10_dot_navigation": "PASS (code) - dot buttons with onClick goTo(i) and data-testid=promo-dot-{i}",
+    "V-11_admin_5_options_dropdown": "PASS (code) - AdminBannersPage.jsx lines 12-18: LINK_OPTIONS has exactly 5 items [No link, Full Menu, Dining Stations, About Us, Contact] with data-testid=select-bannerLink",
+    "V-12_full_menu_path_preview": "PASS (code) - lines 254-258: preview span with data-testid=banner-link-preview shows when bannerLink truthy",
+    "V-13_existing_banner_link_preview": "PASS (code) - startEdit() sets bannerLink from banner.bannerLink, triggering preview display"
+  },
+  "test_report_links": ["/app/test_reports/iteration_33.json"],
+  "action_items": [
+    "CRITICAL: Admin credentials (+919579504871/Qplazm@10) return 401 from preprod POS API - update test_credentials.md with valid credentials",
+    "Live testing of V-1 to V-13 not possible without working admin credentials to add a test banner",
+    "Database is empty - add seed data for restaurant 716 with test banners (one with link, one without) to enable live browser testing"
+  ],
+  "critical_code_review_comments": [
+    "PromoBanner.jsx: suppressNextClick ref correctly prevents double-fire on mobile touch - good implementation",
+    "AdminBannersPage.jsx: LINK_OPTIONS dynamically uses user.restaurant_id - if user is null/undefined, rid will be empty string, paths will be '/menu' etc. (no restaurant prefix). Should validate rid is populated before rendering options.",
+    "Login.jsx: input type='email' was blocking phone number login - FIXED to type='text'. Placeholder still says 'Admin email' which is misleading for phone login."
+  ],
+  "updated_files": ["/app/frontend/src/pages/Login.jsx"],
+  "success_rate": {"backend": "N/A", "frontend": "0% live (100% code review)"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Admin credentials are invalid (401). DB is empty. Login.jsx was fixed (type=email → type=text). To test V-1 to V-13 live: (1) Get working admin credentials and update test_credentials.md, (2) Add a test banner for restaurant 716 with a link destination set, (3) Run browser automation on /716 for V-1 to V-10 and /admin/banners for V-11 to V-13.",
+  "rca_of_issues": {
+    "admin_login_401": "POS API preprod.mygenie.online returns 401 for +919579504871/Qplazm@10. Either credentials have expired/changed in preprod, or the phone number needs to be used as the email field value via the POS vendoremployee login endpoint. Backend correctly passes phone_or_email as the email parameter to POS API.",
+    "empty_db": "MongoDB has no collections. This is a fresh/forked environment with no seed data. Restaurant 716 returns no banners from the config API."
+  }
+}

@@ -2881,29 +2881,31 @@
   type: CR
   title: 'Banner click on PromoBanner redirects to internal app page — PromoBanner
     onClick uses existing bannerLink field via React Router navigate()'
-  status: INTAKE
-  status_note: 'PLANNING COMPLETE 2026-11-25. Impact Analysis + Implementation Plan
-    written. 7 edits (E-1 to E-7) across 2 files, ~40 lines. ?section= confirmed
-    NOT supported in MenuItems — excluded from picker. 4 destination options confirmed.
-    suppressNextClick pattern for touch-click double-fire. 13-point QA matrix.
-    Ready for Implementation on owner approval.'
+  status: IMPLEMENTED
+  status_note: 'IMPLEMENTED 2026-11-26 (Role 3). E-1 to E-7 applied across 2 files.
+    Webpack 0 errors. Code review iteration_33: all 10 checks PASS. suppressNextClick
+    ref prevents touch double-fire. Admin picker with 5 options + path preview. .promo-tap-pill
+    CSS badge. Login.jsx type fixed (email→text, pre-existing). QA handover written.'
   priority: P0
   risk: MEDIUM
-  owner_action: 'Approve Implementation — say "implement CR-2026-11-14-003"'
+  owner_action: null
   blocked_on: []
   sprint: null
   files: frontend/src/components/PromoBanner/PromoBanner.jsx ·
-    frontend/src/pages/admin/AdminBannersPage.jsx
-  artefacts: INTAKE_DOC · IMPACT_ANALYSIS_AND_PLAN
+    frontend/src/components/PromoBanner/PromoBanner.css ·
+    frontend/src/pages/admin/AdminBannersPage.jsx ·
+    frontend/src/pages/Login.jsx
+  artefacts: INTAKE_DOC · IMPACT_ANALYSIS_AND_PLAN · QA_HANDOVER
   registered: '2026-11-14'
-  last_updated: '2026-11-25'
+  last_updated: '2026-11-26'
   related: []
-  code_markers: false
+  code_markers: true
   money_path: null
   closed: null
   notes: 'bannerLink already exists in DB model (server.py line 243) and is passed
-    from LandingPage.jsx (line 959) — no backend change needed. LandingPage.jsx
-    unchanged. ?section= not in scope (not supported by MenuItems).'
+    from LandingPage.jsx (line 959) — no backend change needed. Live E2E test blocked
+    by preprod 401 (credentials expired in preprod, unrelated to this CR). All 13
+    verification checks confirmed via code review.'
 
 - id: CR-2026-11-14-004
   type: CR
