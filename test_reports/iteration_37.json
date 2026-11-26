@@ -1,0 +1,31 @@
+{
+  "summary": "Tested BUG-2026-11-26-001 residual fixes: Fix A (foodId preservation in updatedItems) and Fix B (Grand Total APS mask) in OrderSuccess.jsx. Also verified CartBar and ReviewOrder APS masking regressions.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "cartbar_aps_mask": "PASS - CartBar shows 'APS' (not ₹1.00) when check in item added at /69/menu",
+    "review_order_aps_mask": "PASS - Item Total, Subtotal, Grand Total all show 'APS'; Place Order button shows 'Place Order (APS)'",
+    "order_success_no_crash": "PASS - /69/order-success gracefully redirects to menu (no live order available); no JS crash",
+    "code_fix_a_line_281": "VERIFIED - foodId: item.foodId present at line 281 with BUG-2026-11-26-001 comment",
+    "code_fix_b_line_780": "VERIFIED - hasSuccessAPS guard on Grand Total row at lines 781-783 with BUG-2026-11-26-001 comment",
+    "normal_restaurant_716": "INFO - Restaurant 716 loaded but menu items still loading at time of capture; no APS shown (correct)"
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Owner should test OrderSuccess per-item and Grand Total APS mask with a live placed order on device (cannot be automated without placing real order)"
+  ],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "95%"},
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "CartBar and ReviewOrder APS masking confirmed working (iteration 36 and 37). OrderSuccess fixes at lines 281 and 780 are code-verified. Full OrderSuccess APS mask test requires a live placed order at restaurant 69."
+}

@@ -278,6 +278,7 @@ const OrderSuccess = () => {
         // Use transformer properties directly - no manual re-mapping needed
         const updatedItems = orderDetails.previousItems.map(item => ({
           id: item.id,
+          foodId: item.foodId, // BUG-2026-11-26-001: preserve food ID for APS price display mask
           name: item.name || item.item?.name || 'Item',
           // Use fullPrice from transformer (already includes variations + addons)
           price: item.fullPrice ?? item.price ?? 0,
@@ -776,8 +777,11 @@ const OrderSuccess = () => {
                 <div className="bill-row bill-row-total">
                   <span className="bill-label-total">Grand Total</span>
                   <span className="bill-value-total">
-                    ₹{billSummary.grandTotal.toFixed(2)}
-                    {SHOW_PRE_ROUND_BRACKET && billSummary.originalTotal != null && (
+                    {/* BUG-2026-11-26-001: APS price display mask */}
+                    {hasSuccessAPS
+                      ? (() => { const r = billSummary.grandTotal - apsSuccessCount; return r > 0 ? `₹${r.toFixed(2)} + APS` : 'APS'; })()
+                      : `₹${billSummary.grandTotal.toFixed(2)}`}
+                    {!hasSuccessAPS && SHOW_PRE_ROUND_BRACKET && billSummary.originalTotal != null && (
                       <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{billSummary.originalTotal.toFixed(2)})</span>
                     )}
                   </span>

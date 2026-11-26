@@ -1,6 +1,9 @@
 # MyGenie Customer App — PRD
 
-## BUG-2026-11-26-001 — IMPLEMENTED 2026-11-26
+## BUG-2026-11-26-001 — BUG FIX COMPLETE 2026-11-26
+- Fix A: `foodId: item.foodId` added to `updatedItems` mapping (OrderSuccess line 281) — per-item APS mask now matches food ID correctly
+- Fix B: `billSummary.grandTotal` row masked (OrderSuccess line 779) — Grand Total in Bill Summary now shows `APS` / `₹X + APS`
+- Build PASS · CartBar + ReviewOrder regressions PASS (iteration_37) · OrderSuccess live smoke pending owner device test on restaurant 69
 - APS price (₹1) display mask applied to CartBar, ReviewOrder (Item Total/Subtotal/Grand Total/button), OrderSuccess (top total/per-item/bill summary)
 - 12 edits across 3 files — display-only, zero payload/math change. Build PASS. 12/12 self-test PASS (iteration_36)
 - Status: QA — OrderSuccess live smoke (V-14–V-19) pending owner test on restaurant 69
