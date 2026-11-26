@@ -1,5 +1,14 @@
 # MyGenie Customer App — PRD
 
+## Deployment: 2026-11-26
+- Synced repo `Abhi-mygenie/customer-app5th-march` (main → `f4d9dd4`) into `/app` via `git reset --hard origin/main`
+- Platform files preserved: `.emergent/emergent.yml`, `.emergent/cron/`, supervisor configs
+- Installed missing pip pkg: `slowapi`; installed missing npm pkg: `react-icons`
+- Backend running on :8001 (FastAPI + Motor/MongoDB); Frontend on :3000 (CRA + CRACO)
+- Health: `GET /api/healthz` → `{"ok":true,"mongo":"up"}`
+- Secrets set: JWT_SECRET, GOOGLE_MAPS_API_KEY, REACT_APP_GOOGLE_MAPS_API_KEY
+- Memory dir: fully synced with remote (pod-specific cron/webhook-crons differs — expected)
+
 ## Original Problem Statement
 Deploy the existing React frontend repo directly into `/app` and run it as-is, with no code edits.
 - Repo: https://github.com/Abhi-mygenie/customer-app5th-march (branch: main)
