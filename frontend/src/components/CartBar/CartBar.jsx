@@ -6,7 +6,8 @@ import './CartBar.css';
 const CartBar = () => {
   const { 
     getTotalItems, 
-    getTotalPrice, 
+    getTotalPrice,
+    cartItems,                        // BUG-2026-11-26-001: APS price display mask
     restaurantId: cartRestaurantId,
     isEditMode,
     previousOrderItems,
@@ -46,6 +47,13 @@ const CartBar = () => {
 
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
+  // BUG-2026-11-26-001: APS price display mask
+  const apsCartCount = (cartItems || []).reduce(
+    (s, ci) => s + (parseFloat(ci.item?.price) === 1 ? (ci.quantity || 1) : 0), 0
+  );
+  const apsCartTotal = apsCartCount; // ₹1 × quantity
+  const realCartTotal = totalPrice - apsCartTotal;
+  const hasCbarAPS = apsCartCount > 0;
   const isVisible = totalItems > 0 && !isReviewOrderPage && isMenuItemsPage;
 
   // Add/remove body class for padding when bar is visible
@@ -109,9 +117,22 @@ const CartBar = () => {
         <div className="cart-bar-info">
           <div className="cart-bar-item-count">{itemText}</div>
           <div className="cart-bar-total-price">
-            {isEditMode 
-              ? `₹${newItemsPrice.toFixed(2)} + ₹${previousItemsPrice.toFixed(2)} = ₹${grandTotal.toFixed(2)}`
-              : `₹${totalPrice.toFixed(2)}`
+            {/* BUG-2026-11-26-001: APS price display mask */}
+            {isEditMode
+              ? (() => {
+                  const realNew = newItemsPrice - apsCartCount;
+                  const realGrand = grandTotal - apsCartCount;
+                  const newDisplay = hasCbarAPS
+                    ? (realNew > 0 ? `₹${realNew.toFixed(2)} + APS` : 'APS')
+                    : `₹${newItemsPrice.toFixed(2)}`;
+                  const grandDisplay = hasCbarAPS
+                    ? (realGrand > 0 ? `₹${realGrand.toFixed(2)} + APS` : 'APS')
+                    : `₹${grandTotal.toFixed(2)}`;
+                  return `${newDisplay} + ₹${previousItemsPrice.toFixed(2)} = ${grandDisplay}`;
+                })()
+              : hasCbarAPS
+                ? (realCartTotal > 0 ? `₹${realCartTotal.toFixed(2)} + APS` : 'APS')
+                : `₹${totalPrice.toFixed(2)}`
             }
           </div>
         </div>

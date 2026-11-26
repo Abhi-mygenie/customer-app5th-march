@@ -1,5 +1,10 @@
 # MyGenie Customer App — PRD
 
+## BUG-2026-11-26-001 — IMPLEMENTED 2026-11-26
+- APS price (₹1) display mask applied to CartBar, ReviewOrder (Item Total/Subtotal/Grand Total/button), OrderSuccess (top total/per-item/bill summary)
+- 12 edits across 3 files — display-only, zero payload/math change. Build PASS. 12/12 self-test PASS (iteration_36)
+- Status: QA — OrderSuccess live smoke (V-14–V-19) pending owner test on restaurant 69
+
 ## Deployment: 2026-11-26 (Latest)
 - Synced repo `Abhi-mygenie/customer-app5th-march` (main → `23c9886`) into `/app` via `git reset --hard origin/main`
 - Platform files preserved: `.emergent/emergent.yml`, `.emergent/cron/`, supervisor configs

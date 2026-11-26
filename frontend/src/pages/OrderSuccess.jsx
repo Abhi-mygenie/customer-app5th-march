@@ -152,6 +152,13 @@ const OrderSuccess = () => {
   // Use billSummary from location.state (passed from ReviewOrder) as primary source
   const passedBillSummary = orderData?.billSummary || null;
 
+  // BUG-2026-11-26-001: APS price display mask — read from navigate state
+  const apsSuccessFoodIds = new Set(
+    (orderData?.apsItemFoodIds || []).map(String)
+  );
+  const apsSuccessCount = orderData?.apsCount || 0;
+  const hasSuccessAPS = apsSuccessCount > 0;
+
   // ─── SC-GST LABEL SOURCE FIX ─────────────────────────────────────────────
   // billSummary.scGstRate (returned by getOrderDetails transform) can be
   // derived from rounded amounts when the order details API response does not
@@ -557,7 +564,17 @@ const OrderSuccess = () => {
                 {SHOW_INTERNAL_ORDER_ID && restaurantOrderId && <span> ({orderData.orderId})</span>}
               </span>
             </div>
-            <span className="order-success-total">₹{liveOrderAmount || orderData.totalToPay || '0.00'}</span>
+            <span className="order-success-total">
+              {/* BUG-2026-11-26-001: APS price display mask */}
+              {(() => {
+                const displayAmt = parseFloat(liveOrderAmount || orderData.totalToPay || 0);
+                if (hasSuccessAPS) {
+                  const real = displayAmt - apsSuccessCount;
+                  return real > 0 ? `₹${real.toFixed(2)} + APS` : 'APS';
+                }
+                return `₹${displayAmt || '0.00'}`;
+              })()}
+            </span>
           </div>
 
           {/* Payment Status - Only show for Razorpay payments */}
@@ -648,7 +665,11 @@ const OrderSuccess = () => {
                     </div>
                     <div className="order-success-item-right">
                       <span className="order-success-item-price">
-                        ₹{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                        {/* BUG-2026-11-26-001: APS price display mask */}
+                        {(apsSuccessFoodIds.has(String(item.id || item.foodId || item.food_id || ''))
+                          && parseFloat(item.price) <= 1)
+                          ? 'APS'
+                          : `₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`}
                       </span>
                       {showFoodStatus && fOrderStatus !== 7 && <ItemStatusBadge status={mapFoodOrderStatus(item)} />}
                     </div>
@@ -686,7 +707,12 @@ const OrderSuccess = () => {
               <div className="order-success-bill-content">
                 <div className="bill-row">
                   <span className="bill-label">Item Total</span>
-                  <span className="bill-value">₹{billSummary.itemTotal.toFixed(2)}</span>
+                  {/* BUG-2026-11-26-001: APS price display mask */}
+                  <span className="bill-value">
+                    {hasSuccessAPS
+                      ? (() => { const r = billSummary.itemTotal - apsSuccessCount; return r > 0 ? `₹${r.toFixed(2)} + APS` : 'APS'; })()
+                      : `₹${billSummary.itemTotal.toFixed(2)}`}
+                  </span>
                 </div>
                 {(billSummary.pointsDiscount > 0 || billSummary.discount > 0) && (
                   <div className="bill-row bill-row-discount">
@@ -709,7 +735,12 @@ const OrderSuccess = () => {
                 )}
                 <div className="bill-row bill-row-subtotal">
                   <span className="bill-label">Subtotal</span>
-                  <span className="bill-value">₹{billSummary.subtotal.toFixed(2)}</span>
+                  {/* BUG-2026-11-26-001: APS price display mask */}
+                  <span className="bill-value">
+                    {hasSuccessAPS
+                      ? (() => { const r = billSummary.subtotal - apsSuccessCount; return r > 0 ? `₹${r.toFixed(2)} + APS` : 'APS'; })()
+                      : `₹${billSummary.subtotal.toFixed(2)}`}
+                  </span>
                 </div>
                 {billSummary.cgst > 0 && (
                   <div className="bill-row bill-row-tax">

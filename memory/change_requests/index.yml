@@ -3153,12 +3153,10 @@
   type: BUG
   title: 'APS price (₹1) still shows in CartBar, ReviewOrder price breakdown rows,
     and Order Success — scope gap from CR-2026-11-14-002 which only fixed the menu card'
-  status: INTAKE
-  status_note: 'INTAKE COMPLETE 2026-11-26. Investigation confirmed 3 surfaces:
-    CartBar line 114, ReviewOrder lines 2079/2291/2342/2396, OrderSuccess lines
-    560/651/689/712. Order Success requires apsItemFoodIds handoff from ReviewOrder
-    since POS only knows unit_price=1. Display only — zero payload/math change.
-    Ready for Planning.'
+  status: QA
+  status_note: 'IMPLEMENTED 2026-11-26. 12 edits across CartBar.jsx, ReviewOrder.jsx,
+    OrderSuccess.jsx. Display-only mask — zero payload/math change. Build PASS.
+    Self-test 12/12 PASS (iteration_36). Ready for QA / owner smoke.'
   priority: P1
   risk: LOW
   owner_action: null
@@ -3166,12 +3164,12 @@
   sprint: null
   files: 'frontend/src/components/CartBar/CartBar.jsx · frontend/src/pages/ReviewOrder.jsx
     · frontend/src/pages/OrderSuccess.jsx'
-  artefacts: INTAKE_DOC
+  artefacts: 'INTAKE_DOC · IMPACT_ANALYSIS · IMPLEMENTATION_PLAN · QA_HANDOVER'
   registered: '2026-11-26'
   last_updated: '2026-11-26'
   related:
   - CR-2026-11-14-002
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
   notes: 'Parent CR-2026-11-14-002 (SMOKE) only fixed menu card APS badge. This BUG
