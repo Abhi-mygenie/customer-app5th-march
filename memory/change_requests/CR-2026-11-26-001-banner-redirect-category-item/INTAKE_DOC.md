@@ -122,23 +122,9 @@ const LINK_OPTIONS = [
 
 ---
 
-## 8. Owner Decisions — ANSWERED 2026-11-27
+## 8. Status
 
-| Q | Decision | Detail |
-|---|---|---|
-| Q1 — Category UX | **Option A** | Open menu and scroll to that category |
-| Q2 — Item UX | **Option A** | Scroll to the item in the full menu |
-| Q3 — Admin picker UX | **Option B + searchable** | One grouped dropdown (Static Pages / Categories / Items sections) with type-to-filter search within the dropdown |
-| Q4 — URL param | **Option A** | Add `?section={categoryId}` and `?item={itemId}` URL param support in MenuItems.jsx |
-| Q5 — POS data source | **Option A** | Reuse `restaurant-product/{rid}` endpoint (already cached by MenuItems) |
-
-All 5 decisions confirmed. No blockers remain.
-
----
-
-## 9. Status
-
-**READY FOR PLANNING.**
+INTAKE COMPLETE. Waiting for owner decisions on Q1–Q5 above before Planning can begin.
 
 ---
 
@@ -148,5 +134,4 @@ Severity: P2 | Risk: MEDIUM
 Duplicate check: DISTINCT (parent: CR-2026-11-14-003)
 Evidence: screenshot + code reality check
 Blast radius: MEDIUM (AdminBannersPage.jsx + MenuItems.jsx URL param handling)
-Decisions: Q1–Q5 answered 2026-11-27
-Next: Planning (Role 2)
+Next: Owner answers Q1–Q5 → Planning (Role 2)
