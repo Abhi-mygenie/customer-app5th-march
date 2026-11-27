@@ -3285,37 +3285,33 @@
 - id: BUG-2026-11-27-002
   type: BUG
   title: 'Item banner repeat tap does nothing — first tap works, second tap from same page is a no-op'
-  status: INTAKE
+  status: IMPLEMENTED
   status_note: >
-    Registered 2026-11-27 (Intake Role 1). Two compounding root causes confirmed by
-    investigation this session.
-    Problem A: navigate() to same URL does not re-trigger useSearchParams → effect
-    deps unchanged → effect does not re-run.
-    Problem B: deepLinkAppliedKey.current set on first tap, never reset after 2s pulse
-    → guard blocks all subsequent same-URL taps.
-    Fix: (E-1) reset deepLinkAppliedKey.current='' at end of 2s pulse timer;
+    REGISTRY DRIFT CORRECTED 2026-11-27 (session 2). Item was INTAKE in registry
+    but was fully IMPLEMENTED in commit 0463499 (2026-11-27 19:38 UTC).
+    Root cause A: navigate() to same URL → useSearchParams deps unchanged → effect doesn't re-run.
+    Root cause B: deepLinkAppliedKey.current set on first tap, never reset → blocks repeat taps.
+    Fix: (E-1) useLocation + location.key in deep-link effect key (MenuItems.jsx);
     (E-2) PromoBanner navigate() with { state: { tapKey: Date.now() } };
-    (E-3) include location.key in deepLink effect key.
-    3 files, ~5 lines. LOW risk.
+    (E-3) deepLinkAppliedKey reset to '' at end of 2s pulse timer.
+    QA: iteration_42.json — 7/7 PASS. Owner smoke confirmed.
   priority: P2
   risk: LOW
-  owner_action: 'Owner approval → Implementation (Role 3) directly.'
+  owner_action: none
   blocked_on: []
   sprint: null
   files: 'frontend/src/pages/MenuItems.jsx · frontend/src/components/PromoBanner/PromoBanner.jsx'
-  artefacts: INTAKE_DOC
+  artefacts: INTAKE_DOC · IMPLEMENTATION_REPORT
   registered: '2026-11-27'
   last_updated: '2026-11-27'
   related:
   - CR-2026-11-26-001
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
   notes: >
-    Scope gap from CR-2026-11-26-001 V2. Planning doc Q3 said "re-fire on every
-    URL change" but same-URL repeated tap is not a URL change. Category deep-link
-    (prevStationIdRef fix) not affected by this bug — categories work first+repeat tap.
-    Item first tap continues to work after fix.
+    Scope gap from CR-2026-11-26-001 V2. Shipped same commit as BUG-2026-11-27-003.
+    QA iteration_42.json 7/7 PASS. Registry was incorrectly left at INTAKE.
 
 
 - id: BUG-2026-11-27-003
@@ -3384,3 +3380,61 @@
     Only 2 frontend files changed. No backend change. Amount field is final total incl. GST/SC.
     Grand Total APS masking: combinedTotal=(effBS.grandTotal||0)+transferredTotal, same branch structure.
     Design guidelines: /app/design_guidelines.json.
+
+- id: INV-2026-11-27-001
+  type: INV
+  title: 'Ordering unavailable banner — owner query: where does the app take the time from?'
+  status: CLOSED
+  status_note: >
+    Investigation complete 2026-11-27 (Role 6). Root cause: new Date() in
+    itemAvailability.js uses browser/device local clock (not server). Shift window
+    [{ start:'06:00', end:'03:00' }] stored in MongoDB for restaurant 69.
+    Banner fires between 03:00 AM and 06:00 AM IST only. No code bug.
+    Owner can change via Admin Settings → Operating Hours.
+  priority: P3
+  risk: LOW
+  owner_action: none
+  blocked_on: []
+  sprint: null
+  files: 'frontend/src/utils/itemAvailability.js · frontend/src/pages/MenuItems.jsx · frontend/src/context/RestaurantConfigContext.jsx'
+  artefacts: INVESTIGATION_REPORT
+  registered: '2026-11-27'
+  last_updated: '2026-11-27'
+  related: []
+  code_markers: false
+  money_path: false
+  closed: '2026-11-27'
+  notes: >
+    Time source confirmed: new Date() (browser local clock). restaurantShifts from
+    /api/config/69 → DB. No code change. Config change only if owner wants different hours.
+
+- id: INV-2026-11-27-002
+  type: INV
+  title: 'Transferred orders card — owner query: does it only appear when values exist?'
+  status: CLOSED
+  status_note: >
+    Investigation complete 2026-11-27 (Role 6). Code trace confirmed 3 gates:
+    Gate 1 (API→state): only set when associatedOrders.length > 0.
+    Gate 2 (card render): {associatedOrders.length > 0 && ...}.
+    Gate 3 (bill row): {transferredTotal > 0 && ...}.
+    Grand Total always renders (adds 0 when no transferred orders, no visible change).
+    One non-blocking observation: state never reset to [] on poll — practical impact zero.
+    Owner screenshot confirmed CR-2026-11-27-004 working correctly with 2 transferred orders.
+  priority: P3
+  risk: LOW
+  owner_action: none
+  blocked_on: []
+  sprint: null
+  files: 'frontend/src/pages/OrderSuccess.jsx'
+  artefacts: INVESTIGATION_REPORT
+  registered: '2026-11-27'
+  last_updated: '2026-11-27'
+  related:
+  - CR-2026-11-27-004
+  - BUG-2026-11-27-003
+  code_markers: false
+  money_path: false
+  closed: '2026-11-27'
+  notes: >
+    Owner screenshot showed Transferred Orders (2) ₹198, Grand Total ₹1598.00 + APS —
+    confirmed correct. Card and bill row conditions both guarded independently.
