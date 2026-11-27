@@ -854,43 +854,94 @@
   font-style: italic;
 }
 
-/* BUG-2026-11-27-003: Transferred F&B Orders section */
+/* CR-2026-11-27-004: Transferred F&B Orders — collapsible card, matches items card pattern */
 .order-success-transferred-card {
-  background: #fff;
+  background: var(--bg-primary, #fff);
   border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  margin: 12px 16px;
-  padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  overflow: hidden;
 }
 .order-success-transferred-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.order-success-transferred-header:hover {
+  background: var(--bg-secondary, #f7f8fa);
 }
 .order-success-transferred-title {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 15px;
   font-weight: 600;
-  font-size: 0.95rem;
-  color: #333;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.order-success-transferred-title svg {
+  font-size: 18px;
+  color: var(--color-primary, #E8531E);
+}
+.order-success-transferred-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .order-success-transferred-total {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 15px;
   color: var(--color-primary, #E8531E);
+}
+.order-success-transferred-toggle {
+  color: var(--text-secondary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+}
+.order-success-transferred-content {
+  padding: 0 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 .order-success-transferred-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
-  font-size: 0.88rem;
-  color: #555;
-  border-top: 1px solid #f0f0f0;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px dashed var(--border-light, #eee);
+}
+.order-success-transferred-row:last-child {
+  border-bottom: none;
 }
 .order-success-transferred-id {
-  color: #666;
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-weight: 500;
+  color: var(--text-primary);
 }
 .order-success-transferred-amount {
+  font-family: var(--font-body, 'Montserrat', sans-serif);
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
+}
+
+/* CR-2026-11-27-004: Transferred Total bill row */
+.bill-row-transferred {
+  padding-top: 4px;
+  padding-bottom: 2px;
+}
+.bill-row-transferred .bill-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.bill-row-transferred .bill-value {
+  color: var(--color-primary, #E8531E);
+  font-weight: 600;
 }

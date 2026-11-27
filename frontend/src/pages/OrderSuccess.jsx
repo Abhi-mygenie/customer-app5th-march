@@ -17,7 +17,7 @@ import { getVariationLabels, getAddonLabels } from '../api/transformers/helpers'
 import Header from '../components/Header/Header';
 import { IoCheckmarkCircle, IoCallOutline, IoChevronDownOutline, IoChevronUpOutline, IoTimeOutline, IoCheckmarkOutline, IoCheckmarkDoneOutline, IoCloseOutline } from 'react-icons/io5';
 import { RiBillLine } from 'react-icons/ri';
-import { MdOutlineEdit, MdOutlineRestaurantMenu, MdOutlineTableRestaurant } from 'react-icons/md';
+import { MdOutlineEdit, MdOutlineRestaurantMenu, MdOutlineTableRestaurant, MdOutlineSwapHoriz } from 'react-icons/md';
 import { FaDoorOpen } from 'react-icons/fa';
 import NotificationPopup from '../components/NotificationPopup/NotificationPopup';
 import './OrderSuccess.css';
@@ -147,6 +147,8 @@ const OrderSuccess = () => {
   const [apiTableType, setApiTableType] = useState(null);
   // BUG-2026-11-27-003: transferred F&B orders (from associated_order_list in API)
   const [associatedOrders, setAssociatedOrders] = useState([]);
+  // CR-2026-11-27-004: collapsible toggle for transferred orders card (default collapsed)
+  const [showTransferredOrders, setShowTransferredOrders] = useState(false);
 
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
@@ -195,6 +197,8 @@ const OrderSuccess = () => {
   // Use ONLY items from API (single source of truth)
   const allItems = liveOrderItems;
   const totalItemsCount = allItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  // CR-2026-11-27-004: sum of all transferred F&B order amounts (already final totals incl. GST/SC)
+  const transferredTotal = associatedOrders.reduce((s, o) => s + (parseFloat(o.amount) || 0), 0);
 
   // Initialize billSummary from passed data
   useEffect(() => {
@@ -715,6 +719,50 @@ const OrderSuccess = () => {
           </div>
         )}
 
+        {/* CR-2026-11-27-004: Transferred F&B Orders — collapsible, positioned before Bill Summary */}
+        {associatedOrders.length > 0 && (
+          <div className="order-success-transferred-card" data-testid="transferred-orders-section">
+            <div
+              className="order-success-transferred-header"
+              onClick={() => setShowTransferredOrders(!showTransferredOrders)}
+              data-testid="toggle-transferred-orders-btn"
+            >
+              <span className="order-success-transferred-title" data-testid="transferred-orders-title">
+                <MdOutlineSwapHoriz />
+                Transferred Orders ({associatedOrders.length})
+              </span>
+              <span className="order-success-transferred-header-right">
+                <span className="order-success-transferred-total" data-testid="transferred-orders-header-total">
+                  ₹{associatedOrders.reduce((s, o) => s + (o.amount || 0), 0).toFixed(0)}
+                </span>
+                <span className="order-success-transferred-toggle">
+                  {showTransferredOrders ? <IoChevronUpOutline /> : <IoChevronDownOutline />}
+                </span>
+              </span>
+            </div>
+            {showTransferredOrders && (
+              <div className="order-success-transferred-content">
+                {associatedOrders.map(o => {
+                  const d = o.date ? new Date(o.date.replace(' ', 'T')) : null;
+                  const dateStr = d && !isNaN(d)
+                    ? d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                    : '';
+                  return (
+                    <div key={o.orderId} className="order-success-transferred-row" data-testid={`transferred-order-${o.orderId}`}>
+                      <span className="order-success-transferred-id" data-testid={`transferred-order-id-${o.orderId}`}>
+                        #{o.restaurantOrderId} {dateStr}
+                      </span>
+                      <span className="order-success-transferred-amount" data-testid={`transferred-order-amount-${o.orderId}`}>
+                        ₹{(o.amount || 0).toFixed(0)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Bill Summary - Collapsible */}
         {billSummary && (
           <div className="order-success-bill-card">
@@ -803,15 +851,26 @@ const OrderSuccess = () => {
                     <span className="bill-value-sub">₹{effBS.scSgst.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="bill-row bill-row-total">
+                {/* CR-2026-11-27-004: Transferred Total row — only when transferred orders exist */}
+                {transferredTotal > 0 && (
+                  <div className="bill-row bill-row-transferred" data-testid="bill-row-transferred-total">
+                    <span className="bill-label">Transferred Total</span>
+                    <span className="bill-value">₹{transferredTotal.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="bill-row bill-row-total" data-testid="bill-row-grand-total">
                   <span className="bill-label-total">Grand Total</span>
                   <span className="bill-value-total">
-                    {/* BUG-2026-11-26-001-P5 E-4 */}
-                    {liveHasAPS
-                      ? (effBS.grandTotal > 0 ? `₹${effBS.grandTotal.toFixed(2)} + APS` : 'APS')
-                      : `₹${billSummary.grandTotal.toFixed(2)}`}
+                    {/* CR-2026-11-27-004: combinedTotal = current grandTotal + transferredTotal */}
+                    {/* BUG-2026-11-26-001-P5 E-4: APS masking preserved */}
+                    {(() => {
+                      const combinedTotal = (effBS.grandTotal || 0) + transferredTotal;
+                      return liveHasAPS
+                        ? (combinedTotal > 0 ? `₹${combinedTotal.toFixed(2)} + APS` : 'APS')
+                        : `₹${combinedTotal.toFixed(2)}`;
+                    })()}
                     {!liveHasAPS && SHOW_PRE_ROUND_BRACKET && billSummary.originalTotal != null && (
-                      <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{billSummary.originalTotal.toFixed(2)})</span>
+                      <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{(billSummary.originalTotal + transferredTotal).toFixed(2)})</span>
                     )}
                   </span>
                 </div>
@@ -819,32 +878,6 @@ const OrderSuccess = () => {
                 ); })()}
               </div>
             )}
-          </div>
-        )}
-
-        {/* BUG-2026-11-27-003: Transferred F&B Orders section */}
-        {associatedOrders.length > 0 && (
-          <div className="order-success-transferred-card" data-testid="transferred-orders-section">
-            <div className="order-success-transferred-header">
-              <span className="order-success-transferred-title">
-                Transferred Orders ({associatedOrders.length})
-              </span>
-              <span className="order-success-transferred-total">
-                ₹{associatedOrders.reduce((s, o) => s + (o.amount || 0), 0).toFixed(0)}
-              </span>
-            </div>
-            {associatedOrders.map(o => {
-              const d = o.date ? new Date(o.date.replace(' ', 'T')) : null;
-              const dateStr = d && !isNaN(d)
-                ? d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-                : '';
-              return (
-                <div key={o.orderId} className="order-success-transferred-row" data-testid={`transferred-order-${o.orderId}`}>
-                  <span className="order-success-transferred-id">#{o.restaurantOrderId}  {dateStr}</span>
-                  <span className="order-success-transferred-amount">₹{(o.amount || 0).toFixed(0)}</span>
-                </div>
-              );
-            })}
           </div>
         )}
 
