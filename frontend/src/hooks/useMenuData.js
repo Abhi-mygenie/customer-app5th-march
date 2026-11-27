@@ -304,6 +304,12 @@ export const useStations = (restaurantId) => {
 export const useAllStationsMenuSections = (restaurantId) => {
   const { stations, loading: stationsLoading } = useStations(restaurantId);
 
+  // CR-2026-11-26-001 V3: always query the default (null food_for) menu so that
+  // restaurants with only standard menus (Normal/Party/Premium/Aggregator) still
+  // expose their categories and items in the admin picker.
+  // Po/Raom on restaurant 69 are CATEGORIES from this default query, not stations.
+  const defaultQuery = useQuery(buildMenuSectionsQueryOptions(restaurantId, undefined));
+
   const queries = useQueries({
     queries: (stations || []).map(station =>
       buildMenuSectionsQueryOptions(restaurantId, station.id)
@@ -311,12 +317,23 @@ export const useAllStationsMenuSections = (restaurantId) => {
   });
 
   const queriesLoading = queries.some(q => q.isLoading || q.isPending);
-  const loading = stationsLoading || (stations && stations.length > 0 && queriesLoading);
+  const loading = stationsLoading || defaultQuery.isLoading ||
+    (stations && stations.length > 0 && queriesLoading);
 
-  const allSections = (stations || []).flatMap((station, idx) => {
+  // Named-station sections (tagged with their station id/name)
+  const stationSections = (stations || []).flatMap((station, idx) => {
     const data = queries[idx]?.data || [];
     return data.map(s => ({ ...s, stationId: station.id, stationName: station.name }));
   });
+
+  // Default sections (stationId: null) — only include categories not already
+  // covered by a named station (prevents duplicates on multi-station restaurants).
+  const stationCategoryIds = new Set(stationSections.map(s => s.categoryId));
+  const defaultSections = (defaultQuery.data || [])
+    .filter(s => !stationCategoryIds.has(s.categoryId))
+    .map(s => ({ ...s, stationId: null, stationName: '' }));
+
+  const allSections = [...defaultSections, ...stationSections];
 
   return { allSections, stations: stations || [], loading };
 };

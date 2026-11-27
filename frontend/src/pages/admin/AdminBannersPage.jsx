@@ -37,8 +37,13 @@ const AdminBannersPage = () => {
     })
   );
 
+  // CR-2026-11-26-001 V3: when stationId is null (default menu, no food_for needed),
+  // omit the station path segment → /{rid}/menu?section=… instead of
+  // /{rid}/menu/null?section=… (which would pass food_for="null" to the POS and return 0 items).
   const categoryOptions = (pickerSections || []).map(s => ({
-    value: `/${rid}/menu/${encodeURIComponent(s.stationId)}?section=${s.categoryId}`,
+    value: s.stationId
+      ? `/${rid}/menu/${encodeURIComponent(s.stationId)}?section=${s.categoryId}`
+      : `/${rid}/menu?section=${s.categoryId}`,
     label: categoryLabelCounts[s.sectionName] > 1
       ? `${s.stationName} — ${s.sectionName}`
       : s.sectionName,
@@ -46,7 +51,9 @@ const AdminBannersPage = () => {
   }));
   const itemOptions = (pickerSections || []).flatMap(s =>
     (s.items || []).map(i => ({
-      value: `/${rid}/menu/${encodeURIComponent(s.stationId)}?item=${i.id}`,
+      value: s.stationId
+        ? `/${rid}/menu/${encodeURIComponent(s.stationId)}?item=${i.id}`
+        : `/${rid}/menu?item=${i.id}`,
       label: itemLabelCounts[i.name] > 1
         ? `${s.stationName} — ${i.name}`
         : i.name,

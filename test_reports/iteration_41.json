@@ -1,0 +1,30 @@
+{
+  "summary": "Tested BUG-FIX: Category banner tap from landing page now selects correct category tab. All 7 test scenarios passed. Core bug fix verified: Raom tab selected after pushState+popstate navigate from /69 (after 4s cache warm). All regressions pass.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "BUG_FIX_category_banner_from_landing": "PASS — Navigate to /69, wait 4s for cache, pushState to /69/menu?section=11200: Raom tab selected, All tab not selected. Items shown correctly.",
+    "REGRESSION_1_category_banner_from_menu": "PASS — Navigate to /69/menu (cache warm), pushState to /69/menu?section=11200: Raom tab selected.",
+    "REGRESSION_2_station_switch_resets_category": "PASS — After deep-link to Raom, pushState to /69/menu/Po: raom NOT selected (category reset).",
+    "REGRESSION_4_static_page_banners": "PASS — Admin picker shows Static Pages group with No link / Full Menu / Dining Stations / About Us / Contact (5 entries).",
+    "REGRESSION_5_admin_picker_categories": "PASS — Admin picker Categories group shows po and raom entries.",
+    "REGRESSION_6_category_banner_url_format": "PASS — Selecting raom in picker gives bannerLink = /69/menu?section=11200 (no /null path segment).",
+    "REGRESSION_7_menu_all_tab_default": "PASS — /69/menu after cache warm shows All tab selected by default."
+  },
+  "test_report_links": ["/app/test_reports/iteration_41.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "MenuItems.jsx line 75: prevStationIdRef initialized to stationId on mount — this is the correct fix that skips the reset effect on initial mount (guards against race with deep-link effect).",
+    "AdminBannersPage.jsx lines 43-50: stationId null check correctly emits /{rid}/menu?section= instead of /{rid}/menu/null?section= — fix verified in picker.",
+    "useMenuData.js: useAllStationsMenuSections default null query enables standard-menu restaurants (no stations) to show categories in admin picker."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "N/A", "frontend": "100%" },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 3 fixes from this session verified: (1) prevStationIdRef mount-skip guard in MenuItems.jsx, (2) null stationId URL builder in AdminBannersPage.jsx, (3) useAllStationsMenuSections null-station query. Admin route is at /admin/banners (not /{rid}/admin/banners) — requires login via /login with kds@thegoankitchen.com / Qplazm@10, then client-side navigate (pushState) to /admin/banners to stay authenticated."
+}
