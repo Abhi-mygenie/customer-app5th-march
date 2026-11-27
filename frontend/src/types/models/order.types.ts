@@ -28,6 +28,7 @@ export interface OrderItem {
   image?: string;
   price: number;           // Base price
   fullPrice: number;       // Base + variations + addons
+  unitPrice?: number;      // BUG-2026-11-26-001-RC2: api.unit_price — 1 when APS unconfirmed, real price after waiter adjusts
   quantity: number;
   veg: boolean;
   status: OrderStatusType;

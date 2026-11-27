@@ -111,6 +111,7 @@ export const transformOrderItem = (api: ApiOrderDetailItem): OrderItem => {
     image: api.food_details?.image || undefined,
     price: basePrice,
     fullPrice,
+    unitPrice: basePrice,   // BUG-2026-11-26-001-RC2: expose api.unit_price for APS mask (=1 when unconfirmed, real price after waiter adjusts)
     quantity: api.quantity || 1,
     veg: api.food_details?.veg === 1 || api.food_details?.veg === true,
     status: itemStatus,

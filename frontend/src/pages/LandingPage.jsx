@@ -327,12 +327,22 @@ const LandingPage = () => {
               // Fall through to Phase 2 guest auto-populate.
             } else if (orderDetails.fOrderStatus !== 3 && orderDetails.fOrderStatus !== 6) {
               // Real food order, active — auto-redirect to OrderSuccess page
+              // BUG-2026-11-26-001-RC1: derive APS food IDs (unit_price=1 = unconfirmed APS)
+              const apsItemFoodIdsA = (orderDetails.previousItems || [])
+                .filter(item => parseFloat(item.unitPrice ?? item.price) <= 1)
+                .map(item => String(item.foodId))
+                .filter(Boolean);
+              const apsCountA = (orderDetails.previousItems || [])
+                .filter(item => parseFloat(item.unitPrice ?? item.price) <= 1)
+                .reduce((s, item) => s + (item.quantity || 1), 0);
               navigate(`/${numericRestaurantId}/order-success`, {
                 state: {
                   orderData: {
                     orderId: result.orderId,
                     totalToPay: orderDetails.billSummary?.grandTotal || 0,
                     billSummary: orderDetails.billSummary,
+                    apsItemFoodIds: apsItemFoodIdsA,   // BUG-2026-11-26-001-RC1
+                    apsCount: apsCountA,               // BUG-2026-11-26-001-RC1
                   }
                 }
               });
@@ -691,12 +701,22 @@ const LandingPage = () => {
       // CHECK: If order is "yet to be confirmed" (fOrderStatus === 7), redirect to OrderSuccess
       if (orderDetails.fOrderStatus === 7) {
         const actualRestaurantId = restaurant?.id || restaurantId;
+        // BUG-2026-11-26-001-RC1: derive APS food IDs (unit_price=1 = unconfirmed APS)
+        const apsItemFoodIdsB = (orderDetails.previousItems || [])
+          .filter(item => parseFloat(item.unitPrice ?? item.price) <= 1)
+          .map(item => String(item.foodId))
+          .filter(Boolean);
+        const apsCountB = (orderDetails.previousItems || [])
+          .filter(item => parseFloat(item.unitPrice ?? item.price) <= 1)
+          .reduce((s, item) => s + (item.quantity || 1), 0);
         navigate(`/${actualRestaurantId}/order-success`, {
           state: {
             orderData: {
               orderId: tableStatusCheck.existingOrderId,
               totalToPay: orderDetails.billSummary?.grandTotal || 0,
               billSummary: orderDetails.billSummary,
+              apsItemFoodIds: apsItemFoodIdsB,   // BUG-2026-11-26-001-RC1
+              apsCount: apsCountB,               // BUG-2026-11-26-001-RC1
             }
           }
         });

@@ -1301,6 +1301,22 @@ const ReviewOrder = () => {
       .filter(ci => isAPS(ci.item))
       .reduce((s, ci) => s + (ci.quantity || 1), 0);
 
+    // BUG-2026-11-26-001-P2 gap: expected unit price per APS food ID at order time
+    // = APS base (₹1) + customer-selected variations + customer-selected addons (per unit).
+    // Passed to OrderSuccess so it can widen the APS mask threshold beyond ₹1.
+    // MAX across same foodId handles the same item ordered with different variation/addon combos.
+    // Additive — zero existing fields changed. POS payload is unchanged.
+    const apsItemUnitPrices = {};
+    cartItems
+      .filter(ci => isAPS(ci.item))
+      .forEach(ci => {
+        const fid = String(ci.item?.id || ci.item?.food_id || '');
+        if (fid) {
+          const up = calculateCartItemPrice(ci); // base + variationsTotal + addonsTotal
+          apsItemUnitPrices[fid] = Math.max(apsItemUnitPrices[fid] || 0, up);
+        }
+      });
+
     // Clear phone error if phone is empty (optional)
     if (!customerPhone || customerPhone.trim() === '') {
       setShowPhoneError(false);
@@ -1380,6 +1396,7 @@ const ReviewOrder = () => {
                 billSummary,
                 apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001
                 apsCount: apsPassCount,
+                apsItemUnitPrices,              // BUG-2026-11-26-001-P2 gap B
                 displayTotal: roundedTotalDisplay,          // BUG-2026-11-26-001-P2
                 displayBillSummary: hasCartAPS ? { itemTotal: itemTotalDisplay, subtotal: finalSubtotalDisplay, grandTotal: roundedTotalDisplay, serviceCharge: serviceChargeDisplay, cgst: itemCgstDisplay, sgst: itemSgstDisplay, scCgst: scCgstDisplay, scSgst: scSgstDisplay } : null,
               }
@@ -1706,6 +1723,7 @@ const ReviewOrder = () => {
             billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, couponDiscount, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay }),
             apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001
             apsCount: apsPassCount,
+            apsItemUnitPrices,              // BUG-2026-11-26-001-P2 gap C
             displayTotal: roundedTotalDisplay,          // BUG-2026-11-26-001-P2
             displayBillSummary: hasCartAPS ? { itemTotal: itemTotalDisplay, subtotal: finalSubtotalDisplay, grandTotal: roundedTotalDisplay, serviceCharge: serviceChargeDisplay, cgst: itemCgstDisplay, sgst: itemSgstDisplay, scCgst: scCgstDisplay, scSgst: scSgstDisplay } : null,
           }
@@ -1887,6 +1905,7 @@ const ReviewOrder = () => {
                 billSummary: buildBillSummary({ itemTotal, pointsDiscount, pointsToRedeem, couponDiscount, subtotalAfterDiscount, serviceCharge, finalSubtotal, itemCgst, itemSgst, scCgst, scSgst, finalCgst, finalSgst, finalVat, finalTotalTax, gstRate, vatRate, scGstRate, roundedTotal, hasRoundingDiff, totalToPay }),
                 apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001
                 apsCount: apsPassCount,
+                apsItemUnitPrices,              // BUG-2026-11-26-001-P2 gap D
                 displayTotal: roundedTotalDisplay,          // BUG-2026-11-26-001-P2
                 displayBillSummary: hasCartAPS ? { itemTotal: itemTotalDisplay, subtotal: finalSubtotalDisplay, grandTotal: roundedTotalDisplay, serviceCharge: serviceChargeDisplay, cgst: itemCgstDisplay, sgst: itemSgstDisplay, scCgst: scCgstDisplay, scSgst: scSgstDisplay } : null,
               }
@@ -1936,6 +1955,7 @@ const ReviewOrder = () => {
                 previousItems: buildPreviousItems(previousOrderItems, isEditMode),
                 apsItemFoodIds: apsPassFoodIds, // BUG-2026-11-26-001
                 apsCount: apsPassCount,
+                apsItemUnitPrices,              // BUG-2026-11-26-001-P2 gap E
                 displayTotal: roundedTotalDisplay,          // BUG-2026-11-26-001-P2
                 displayBillSummary: hasCartAPS ? { itemTotal: itemTotalDisplay, subtotal: finalSubtotalDisplay, grandTotal: roundedTotalDisplay, serviceCharge: serviceChargeDisplay, cgst: itemCgstDisplay, sgst: itemSgstDisplay, scCgst: scCgstDisplay, scSgst: scSgstDisplay } : null,
               }
@@ -2484,7 +2504,7 @@ const ReviewOrder = () => {
             {isPlacingOrder 
               ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
               : (isEditMode 
-                  ? `Update Order ₹${roundedTotal.toFixed(2)}` 
+                  ? 'Update Order'  // BUG-2026-11-27-001: no price on Update Order button (APS unconfirmed)
                   : (roundedTotal <= 0
                       ? 'Place Order'
                       : (() => {
