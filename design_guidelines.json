@@ -1,133 +1,582 @@
 {
   "project_context": {
-    "ticket_id": "CR-2026-11-14-003",
-    "feature_title": "Banner click redirects to internal app page & Admin Destination Picker",
-    "app_type": "mobile_web_app",
-    "target_platforms": ["mobile_browser", "desktop_admin_dashboard"],
-    "brand_name": "MyGenie QR Ordering",
-    "primary_brand_color": "#E8531E",
-    "font_family": "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-  },
-  "typography": {
-    "font_family_primary": "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    "font_family_display": "Montserrat, sans-serif",
-    "font_family_mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-    "hierarchy": {
-      "admin_page_title": "text-2xl sm:text-3xl font-bold tracking-tight text-[#1E293B]",
-      "admin_section_title": "text-lg sm:text-xl font-semibold tracking-tight text-[#1E293B]",
-      "admin_label": "text-xs sm:text-sm font-semibold text-[#475569] tracking-normal",
-      "admin_hint": "text-xs font-normal text-[#94A3B8]",
-      "banner_overlay_title": "text-xs font-semibold tracking-wider text-white",
-      "badge_caption": "text-[11px] font-medium tracking-wide uppercase"
-    }
-  },
-  "colors": {
-    "brand": {
-      "primary": "#E8531E",
-      "primary_hover": "#C74212",
-      "primary_light": "#FFF3EE",
-      "primary_border": "#FDBDA7"
-    },
-    "admin_theme": {
-      "accent_blue": "#3B82F6",
-      "accent_blue_hover": "#2563EB",
-      "accent_blue_subtle": "#EFF6FF",
-      "border_default": "#E2E8F0",
-      "border_focus": "#3B82F6",
-      "bg_card": "#F8FAFC",
-      "bg_input": "#FFFFFF",
-      "text_main": "#1E293B",
-      "text_muted": "#64748B",
-      "text_hint": "#94A3B8"
-    },
-    "affordance_pills": {
-      "tap_pill_bg": "rgba(0, 0, 0, 0.45)",
-      "tap_pill_bg_hover": "rgba(232, 83, 30, 0.85)",
-      "tap_pill_text": "#FFFFFF",
-      "tap_pill_border": "rgba(255, 255, 255, 0.25)"
-    }
+    "component_name": "AdminDestinationPicker",
+    "feature_title": "Tap Destination Grouped Searchable Picker for Restaurant Admin Banner Form",
+    "ticket_id": "CR-2026-11-26-001-REDESIGN",
+    "app_type": "admin_form_component",
+    "target_platforms": ["mobile_phone_admin (390px)", "tablet_admin", "desktop_admin"],
+    "target_page": "/app/frontend/src/pages/admin/AdminBannersPage.jsx",
+    "target_css": "/app/frontend/src/pages/admin/AdminPages.css",
+    "design_archetype": "ARCHETYPE 4: SWISS & HIGH-CONTRAST + ARCHETYPE 2: THE PERFORMANCE PRO (Utility & Precision)"
   },
   "design_decisions": {
-    "customer_carousel_affordance": {
-      "rule": "Banners with links must have a visible affordance that does NOT obstruct the banner art or bottom title gradient",
-      "cursor": "cursor: pointer on slides with promo.link; cursor: default on unlinked slides",
-      "tap_badge": "Subtle top-right micro-pill: 'Tap to view ↗' with backdrop blur (12px), semi-transparent dark pill (rgba(0,0,0,0.42)), 1px white border (rgba(255,255,255,0.25)), micro-arrow icon, font size 11px, hidden when promo.link is falsy",
-      "touch_interaction": "Touch-swipe left/right (>40px diff) triggers slide advance and SUPPRESSES navigation. Touch-tap (diff <= 40px) triggers internal navigation if promo.link exists. suppressNextClick ref prevents duplicate 300ms synthetic click events",
-      "title_overlay_harmony": "Bottom overlay stays pure gradient linear-gradient(transparent, rgba(0,0,0,0.65)) with white text. Top-right badge balances the composition diagonally without visual collision."
+    "problem_statement_addressed": [
+      "Fix Popover / Command overlap and form pushdown that pushes 'Add Banner' / 'Update Banner' off-screen",
+      "Eliminate shadcn Command defaults (white/harsh card, green active/selected states which clash with admin and conflict with active banner status)",
+      "Make Group headers (Static Pages, Categories, Items) distinct with uppercase typography, muted slate color, and crisp micro-dividers",
+      "Ensure trigger button matches native select (.admin-form-select) identically in height, padding, font-weight, background (#f1f5f9), border (#e2e8f0), and arrow affordance",
+      "Make dropdown width match trigger width (100% of container, min 240px) with single-line truncated item labels so item names never wrap awkwardly",
+      "Cap dropdown panel height to max 260px with dedicated internal smooth scroll and clear loading/empty states"
+    ],
+    "structural_architecture": {
+      "container_positioning": "Relative wrapper (.admin-destination-picker-wrapper) with full width",
+      "dropdown_panel_positioning": "position: absolute; top: calc(100% + 4px); left: 0; right: 0; width: 100%; min-width: 240px; z-index: 60; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08); border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff;",
+      "no_reflow_guarantee": "Dropdown floats completely outside the normal document flow via absolute positioning with high z-index (z-60). Never pushes or reflows other form controls or the Add/Update Banner action button.",
+      "viewport_mobile_adaptation": "On 390px mobile screens, the dropdown occupies full form-group width, ensuring easy tap targets (min-height 38px per item) with no horizontal scroll."
     },
-    "admin_destination_picker": {
-      "rule": "Replace free-text URL input with a standard 5-option dropdown matching existing admin form styles (admin-form-select)",
-      "options": [
-        { "label": "No link", "value": "" },
-        { "label": "Full Menu", "value": "/{restaurantId}/menu" },
-        { "label": "Dining Stations", "value": "/{restaurantId}/stations" },
-        { "label": "About Us", "value": "/{restaurantId}/about" },
-        { "label": "Contact", "value": "/{restaurantId}/contact" }
-      ],
-      "legacy_fallback": "If existing banner has a non-matching custom URL, display read-only option 'Custom: {bannerLink}' so previous data is not lost",
-      "resolved_path_preview": "Show small, clear destination path hint directly below dropdown: '→ /{restaurantId}/menu' in monospace font with muted blue-gray color (#64748B) and high legibility"
+    "color_and_visual_tokens": {
+      "input_bg": "#f1f5f9",
+      "input_border": "1px solid #e2e8f0",
+      "input_border_focus": "1px solid #3b82f6",
+      "input_border_radius": "8px",
+      "text_main": "#1e293b",
+      "text_input": "#475569",
+      "text_label": "#64748b",
+      "text_hint": "#94a3b8",
+      "brand_primary": "#3b82f6",
+      "brand_primary_subtle": "#eff6ff",
+      "brand_primary_border": "#bfdbfe",
+      "hover_bg": "#f1f5f9",
+      "active_selected_bg": "#eff6ff",
+      "active_selected_text": "#1d4ed8",
+      "active_selected_border": "#93c5fd",
+      "forbidden_colors": [
+        "#10b981 (green is strictly reserved for Active Banner status badges)",
+        "#22c55e (green is strictly reserved for Active toggle switches)",
+        "#7351B7 (forbidden AI purple)"
+      ]
+    },
+    "typography": {
+      "font_family": "inherit (system default -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Montserrat)",
+      "trigger_text": "font-size: 14px; font-weight: 500; color: #475569; line-height: 1.4;",
+      "search_input": "font-size: 13px; font-weight: 400; color: #1e293b;",
+      "group_heading": "font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b;",
+      "item_text": "font-size: 13px; font-weight: 500; color: #334155;",
+      "item_text_selected": "font-weight: 600; color: #1d4ed8;",
+      "badge_count": "font-size: 10px; font-weight: 600; color: #94a3b8; background: #f1f5f9; padding: 1px 6px; border-radius: 9999px;",
+      "path_preview": "font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #94a3b8; line-height: 1.4;"
     }
   },
   "component_specs": {
-    "PromoBanner": {
-      "file_path": "/app/frontend/src/components/PromoBanner/PromoBanner.jsx",
-      "css_path": "/app/frontend/src/components/PromoBanner/PromoBanner.css",
-      "key_elements": {
-        "container": "promo-banner (overflow hidden, border-radius 16px, box-shadow 0 2px 12px rgba(0,0,0,0.08))",
-        "slide": "promo-slide (16:9 ratio, relative positioning, role=button when linked, aria-label indicating destination)",
-        "tap_indicator": "promo-tap-indicator (absolute top-2.5 right-2.5, px-2.5 py-1, rounded-full, text-white text-[11px] font-medium, flex items-center gap-1, backdrop-blur-md, pointer-events-none)",
-        "track": "promo-track (flex, transform translateX, transition 0.45s cubic-bezier(.4,0,.2,1))",
-        "dots": "promo-dots (flex, gap 6px, absolute bottom 8px)"
+    "trigger_button": {
+      "element": "button",
+      "type": "button",
+      "classes": "admin-form-select admin-picker-trigger",
+      "data_testid": "select-bannerLink",
+      "visual_states": {
+        "default": "background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; height: 42px; padding: 10px 14px; font-size: 14px; font-weight: 500; color: #475569; display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer; text-align: left;",
+        "focus_open": "border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12); outline: none;",
+        "hover": "background: #e2e8f0; border-color: #cbd5e1;"
       },
-      "accessibility": {
-        "role": "button on interactive slides with link, none on unlinked slides",
-        "tabIndex": 0,
-        "onKeyDown": "Enter and Space trigger navigation to promo.link",
-        "aria_label": "Title + 'Tap to open destination' when link is set"
+      "chevron_icon": "IoChevronDownOutline or SVG chevron rotating 180deg when dropdown is open, color #64748b, transition: transform 0.2s ease"
+    },
+    "dropdown_panel": {
+      "element": "div",
+      "classes": "admin-picker-dropdown",
+      "data_testid": "admin-picker-dropdown-panel",
+      "positioning": "absolute top-[calc(100%+4px)] left-0 right-0 w-full min-w-[240px] z-[60] bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden",
+      "max_height": "260px total for list portion with internal scrollbar"
+    },
+    "search_input_container": {
+      "element": "div",
+      "classes": "admin-picker-search-bar",
+      "styles": "padding: 8px 10px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; display: flex; align-items: center; gap: 8px;",
+      "search_icon": "IoSearchOutline, size: 16px, color: #94a3b8;",
+      "input_element": {
+        "classes": "admin-picker-search-input",
+        "data_testid": "input-picker-search",
+        "placeholder": "Search pages, categories, items…",
+        "styles": "width: 100%; border: none; background: transparent; font-size: 13px; color: #1e293b; outline: none; placeholder: #94a3b8;"
+      },
+      "clear_button": {
+        "classes": "admin-picker-search-clear",
+        "data_testid": "btn-clear-search",
+        "condition": "renders when search term is non-empty",
+        "icon": "IoCloseCircleOutline, color: #94a3b8, hover: #64748b"
       }
     },
-    "AdminBannersPage": {
-      "file_path": "/app/frontend/src/pages/admin/AdminBannersPage.jsx",
-      "key_elements": {
-        "select": "admin-form-select (data-testid='select-bannerLink', full-width, clean border, matches admin-form-input height)",
-        "preview_line": "admin-link-preview (data-testid='banner-link-preview', text-xs font-mono text-slate-500 mt-1 flex items-center gap-1)",
-        "form_group": "admin-form-group (label: 'Tap Destination (optional)')"
+    "items_scroll_list": {
+      "element": "div",
+      "classes": "admin-picker-list",
+      "data_testid": "admin-picker-list",
+      "styles": "max-height: 210px; overflow-y: auto; overscroll-behavior: contain; padding: 4px 0;"
+    },
+    "groups": [
+      {
+        "id": "static-pages",
+        "title": "Static Pages",
+        "badge": "5 items",
+        "order": 1,
+        "indicator_style": "subtle slate circle dot (w-2 h-2 rounded-full bg-slate-400)"
+      },
+      {
+        "id": "categories",
+        "title": "Categories",
+        "badge": "dynamic (5-20)",
+        "order": 2,
+        "indicator_style": "blue circle dot (w-2 h-2 rounded-full bg-blue-500)"
+      },
+      {
+        "id": "items",
+        "title": "Items",
+        "badge": "dynamic (20-100+)",
+        "order": 3,
+        "indicator_style": "amber/orange circle dot or neutral muted dot (w-2 h-2 rounded-full bg-amber-500)"
       }
+    ],
+    "group_header": {
+      "element": "div",
+      "classes": "admin-picker-group-header",
+      "data_testid_prefix": "picker-group-header-",
+      "styles": "position: sticky; top: 0; z-index: 5; background: #f8fafc; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b;"
+    },
+    "list_item": {
+      "element": "div",
+      "classes": "admin-picker-item",
+      "data_testid_prefix": "picker-item-",
+      "styles": "display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; font-size: 13px; font-weight: 500; color: #334155; transition: background 0.15s ease, color 0.15s ease; min-height: 38px;",
+      "hover_style": "background: #f1f5f9; color: #0f172a;",
+      "selected_style": "background: #eff6ff; color: #1d4ed8; font-weight: 600;",
+      "item_label_wrap": "display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;",
+      "item_label": "white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;",
+      "item_check_icon": "IoCheckmarkOutline or SVG checkmark, size 16px, color #3b82f6 (blue, never green)"
+    },
+    "feedback_states": {
+      "loading": {
+        "classes": "admin-picker-loading",
+        "data_testid": "picker-loading-state",
+        "styles": "padding: 24px 16px; text-align: center; color: #64748b; font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 8px;",
+        "spinner": "w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin",
+        "text": "Loading menu categories and items…"
+      },
+      "empty": {
+        "classes": "admin-picker-empty",
+        "data_testid": "picker-empty-state",
+        "styles": "padding: 24px 16px; text-align: center; color: #94a3b8; font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 6px;",
+        "icon": "IoSearchOutline, size 24px, opacity 0.5",
+        "text": "No matching destinations found"
+      }
+    },
+    "path_preview_hint": {
+      "classes": "admin-form-hint admin-picker-path-preview",
+      "data_testid": "banner-link-preview",
+      "styles": "display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #64748b; margin-top: 5px;",
+      "prefix": "→",
+      "highlight": "color: #3b82f6; font-weight: 500;"
     }
+  },
+  "implementation_code_guide": {
+    "file_path": "/app/frontend/src/pages/admin/AdminBannersPage.jsx",
+    "suggested_component_pattern": "Custom styled controlled dropdown or Radix Popover with custom Admin dropdown styling",
+    "sample_jsx_structure": "
+<div className=\"admin-form-group admin-picker-container\">
+  <label className=\"admin-form-label\">Tap Destination (optional)</label>
+  <div className=\"admin-picker-relative-wrap\" ref={pickerContainerRef}>
+    <button
+      type=\"button\"
+      className={`admin-form-select admin-picker-trigger ${pickerOpen ? 'open' : ''}`}
+      onClick={() => setPickerOpen(!pickerOpen)}
+      aria-expanded={pickerOpen}
+      aria-haspopup=\"listbox\"
+      data-testid=\"select-bannerLink\"
+    >
+      <span className=\"admin-picker-selected-label\">
+        {selectedOption?.label || (newBanner.bannerLink ? `Custom: ${newBanner.bannerLink}` : 'No link')}
+      </span>
+      <IoChevronDownOutline className={`admin-picker-chevron ${pickerOpen ? 'rotate' : ''}`} />
+    </button>
+    
+    {pickerOpen && (
+      <div className=\"admin-picker-dropdown\" data-testid=\"admin-picker-dropdown-panel\">
+        <div className=\"admin-picker-search-bar\">
+          <IoSearchOutline className=\"admin-picker-search-icon\" />
+          <input
+            type=\"text\"
+            className=\"admin-picker-search-input\"
+            placeholder={pickerLoading ? 'Loading…' : 'Search pages, categories, items…'}
+            value={pickerSearch}
+            onChange={(e) => setPickerSearch(e.target.value)}
+            autoFocus
+            data-testid=\"input-picker-search\"
+          />
+          {pickerSearch && (
+            <button
+              type=\"button\"
+              className=\"admin-picker-search-clear\"
+              onClick={() => setPickerSearch('')}
+              data-testid=\"btn-clear-search\"
+            >
+              <IoCloseCircleOutline />
+            </button>
+          )}
+        </div>
+        
+        <div className=\"admin-picker-list\" role=\"listbox\" data-testid=\"admin-picker-list\">
+          {pickerLoading ? (
+            <div className=\"admin-picker-loading\" data-testid=\"picker-loading-state\">
+              <div className=\"admin-picker-spinner\" />
+              <span>Loading categories & items…</span>
+            </div>
+          ) : filteredOptionsCount === 0 ? (
+            <div className=\"admin-picker-empty\" data-testid=\"picker-empty-state\">
+              <IoSearchOutline className=\"admin-picker-empty-icon\" />
+              <span>No destinations match \"{pickerSearch}\"</span>
+            </div>
+          ) : (
+            GROUP_CONFIG.map(group => {
+              const itemsInGroup = filteredOptions.filter(o => o.group === group.name);
+              if (itemsInGroup.length === 0) return null;
+              return (
+                <div key={group.name} className=\"admin-picker-group\">
+                  <div
+                    className=\"admin-picker-group-header\"
+                    data-testid={`picker-group-header-${group.slug}`}
+                  >
+                    <span>{group.name}</span>
+                    <span className=\"admin-picker-group-badge\">{itemsInGroup.length}</span>
+                  </div>
+                  {itemsInGroup.map(opt => {
+                    const isSelected = newBanner.bannerLink === opt.value;
+                    return (
+                      <div
+                        key={opt.value}
+                        role=\"option\"
+                        aria-selected={isSelected}
+                        className={`admin-picker-item ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          setNewBanner(prev => ({ ...prev, bannerLink: opt.value }));
+                          setPickerOpen(false);
+                          setPickerSearch('');
+                        }}
+                        data-testid={`picker-option-${group.slug}-${opt.id || opt.label.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                      >
+                        <div className=\"admin-picker-item-content\">
+                          <span className={`admin-picker-group-dot ${group.slug}`} />
+                          <span className=\"admin-picker-item-label\" title={opt.label}>
+                            {opt.label}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <IoCheckmarkOutline className=\"admin-picker-check-icon\" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+  {newBanner.bannerLink && (
+    <span className=\"admin-form-hint admin-picker-path-preview\" data-testid=\"banner-link-preview\">
+      <span>→</span>
+      <span className=\"admin-path-text\">{newBanner.bannerLink}</span>
+    </span>
+  )}
+</div>
+",
+    "css_rules_to_append": "
+/* Admin Grouped Searchable Destination Picker (CR-2026-11-26-001) */
+.admin-picker-container {
+  position: relative;
+}
+
+.admin-picker-relative-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.admin-picker-trigger {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100% !important;
+  height: 42px;
+  padding: 10px 14px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.admin-picker-trigger:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.admin-picker-trigger:focus,
+.admin-picker-trigger.open {
+  outline: none;
+  background: #f8fafc;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.admin-picker-selected-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 8px;
+  flex: 1;
+}
+
+.admin-picker-chevron {
+  font-size: 16px;
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.admin-picker-chevron.rotate {
+  transform: rotate(180deg);
+  color: #3b82f6;
+}
+
+.admin-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-width: 240px;
+  z-index: 60;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.admin-picker-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-picker-search-icon {
+  font-size: 16px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.admin-picker-search-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #1e293b;
+  outline: none;
+  font-family: inherit;
+}
+
+.admin-picker-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.admin-picker-search-clear {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  transition: color 0.15s ease;
+}
+
+.admin-picker-search-clear:hover {
+  color: #64748b;
+}
+
+.admin-picker-list {
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 0;
+}
+
+.admin-picker-group-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.admin-picker-group-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: #e2e8f0;
+  padding: 1px 6px;
+  border-radius: 9999px;
+}
+
+.admin-picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  min-height: 38px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-picker-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.admin-picker-item.selected {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.admin-picker-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-picker-group-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.admin-picker-group-dot.static-pages { background: #94a3b8; }
+.admin-picker-group-dot.categories { background: #3b82f6; }
+.admin-picker-group-dot.items { background: #f59e0b; }
+
+.admin-picker-item-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-picker-check-icon {
+  font-size: 16px;
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.admin-picker-loading,
+.admin-picker-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.admin-picker-empty {
+  color: #94a3b8;
+}
+
+.admin-picker-empty-icon {
+  font-size: 24px;
+  opacity: 0.5;
+}
+
+.admin-picker-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: adminPickerSpin 0.7s linear infinite;
+}
+
+@keyframes adminPickerSpin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-picker-path-preview {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #64748b;
+}
+
+.admin-path-text {
+  color: #3b82f6;
+  word-break: break-all;
+}
+"
   },
   "testing_attributes": {
-    "customer": {
-      "promo_banner": "promo-banner",
-      "promo_slide_prefix": "promo-slide-",
-      "promo_tap_badge_prefix": "promo-tap-badge-",
-      "promo_dot_prefix": "promo-dot-"
-    },
-    "admin": {
-      "select_banner_link": "select-bannerLink",
-      "preview_banner_link": "banner-link-preview",
-      "input_banner_title": "input-bannerTitle",
-      "input_banner_image": "input-bannerImage",
-      "add_banner_btn": "add-banner-btn",
-      "update_banner_btn": "update-banner-btn"
-    }
+    "trigger_button": "select-bannerLink",
+    "dropdown_panel": "admin-picker-dropdown-panel",
+    "search_input": "input-picker-search",
+    "clear_search_btn": "btn-clear-search",
+    "list_container": "admin-picker-list",
+    "group_header_static_pages": "picker-group-header-static-pages",
+    "group_header_categories": "picker-group-header-categories",
+    "group_header_items": "picker-group-header-items",
+    "option_prefix_static": "picker-option-static-pages-",
+    "option_prefix_category": "picker-option-categories-",
+    "option_prefix_item": "picker-option-items-",
+    "loading_state": "picker-loading-state",
+    "empty_state": "picker-empty-state",
+    "path_preview": "banner-link-preview"
   },
   "instructions_to_main_agent": [
-    "In /app/frontend/src/components/PromoBanner/PromoBanner.jsx: import { useNavigate } from 'react-router-dom'. Implement suppressNextClick ref (default false).",
-    "In onTouchEnd: if Math.abs(diff) <= 40 and active item has a link, set suppressNextClick.current = true and navigate(items[activeIndex].link).",
-    "In slide div: add onClick handler that navigates if promo.link exists and suppressNextClick is false. Reset suppressNextClick if true. Add onKeyDown for Enter/Space accessibility.",
-    "Add visual affordance: render a delicate pill badge in top-right corner of slide when promo.link exists with text 'Explore ↗' or 'View ↗' and cursor: pointer.",
-    "Update /app/frontend/src/components/PromoBanner/PromoBanner.css with .promo-slide-interactive, .promo-tap-pill, and hover micro-animations.",
-    "In /app/frontend/src/pages/admin/AdminBannersPage.jsx: import { useAuth } from '../../context/AuthContext'. Retrieve user restaurant_id (fallback to user.id).",
-    "Define LINK_OPTIONS: No link (''), Full Menu ('/{rid}/menu'), Dining Stations ('/{rid}/stations'), About Us ('/{rid}/about'), Contact ('/{rid}/contact').",
-    "Replace input-bannerLink with <select className='admin-form-select' data-testid='select-bannerLink'> containing LINK_OPTIONS plus Custom option for legacy external links.",
-    "Render path preview line <span className='admin-form-hint font-mono' data-testid='banner-link-preview'>→ {newBanner.bannerLink}</span> when newBanner.bannerLink is non-empty.",
-    "Verify no console warnings and clean React build."
+    "1. Replace shadcn Popover + Command implementation in /app/frontend/src/pages/admin/AdminBannersPage.jsx with the dedicated AdminDestinationPicker component pattern.",
+    "2. Ensure the trigger button uses className='admin-form-select admin-picker-trigger' so its height, background (#f1f5f9), border (#e2e8f0), font-size (14px), font-weight (500), and color (#475569) identically match other native select dropdowns like select-displayOn.",
+    "3. Set dropdown panel to position: absolute; top: calc(100% + 4px); left: 0; right: 0; width: 100%; min-width: 240px; z-index: 60; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14). This prevents reflowing the form or pushing the 'Add Banner' / 'Update Banner' button off-screen.",
+    "4. In the search input, add real-time case-insensitive filtering across label and group names. Add clear button when search input has text.",
+    "5. Render three distinct sticky group headers: 'STATIC PAGES', 'CATEGORIES', 'ITEMS' with uppercase micro-typography, muted slate (#64748b), and item count badge.",
+    "6. For selected items, apply blue-tinted background (#eff6ff), text color #1d4ed8, font-weight 600, and a blue checkmark icon (IoCheckmarkOutline). NEVER use green (#10b981 or #22c55e) because green is reserved for Active banner badges.",
+    "7. For items hover, use #f1f5f9 background and smooth transition.",
+    "8. Truncate long item names with white-space: nowrap; overflow: hidden; text-overflow: ellipsis; so names don't wrap and expand row heights awkwardly.",
+    "9. Set list container max-height: 220px with internal overflow-y: auto.",
+    "10. Add outside click handler (document.addEventListener('mousedown')) and Escape key listener to cleanly close the picker when clicking outside or pressing Escape.",
+    "11. Render loading spinner when pickerLoading is true, and empty state 'No destinations match...' when filtered options count is 0.",
+    "12. Keep path preview hint <span className='admin-form-hint admin-picker-path-preview' data-testid='banner-link-preview'>→ {newBanner.bannerLink}</span> rendered directly below the picker trigger.",
+    "13. In /app/frontend/src/pages/admin/AdminPages.css, add all corresponding CSS rules defined under css_rules_to_append.",
+    "14. Verify build passes with zero lint or JSX syntax errors."
   ],
   "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
-    "Do not break existing swipe mechanics: diff threshold Math.abs(diff) > 40 MUST remain the swipe threshold.",
-    "Prevent synthetic double-clicks using suppressNextClick ref on touch devices.",
-    "Never apply universal transition (transition: all) to carousel track or slides. Keep explicit transform transitions.",
-    "Do not use complete transparent backgrounds for badges or overlays. Use semi-transparent dark backgrounds with backdrop blur.",
-    "Ensure all test IDs (data-testid) are strictly present as documented."
+    "Never use generic full-screen gradients. Keep admin aesthetics high-contrast Swiss/clinical utility.",
+    "Do NOT apply universal transition (transition: all). Use specific properties (transition: background 0.15s ease, border-color 0.15s ease, transform 0.2s ease).",
+    "Do NOT use pure transparent backgrounds for overlays, dropdowns, or headers. Dropdown panel background MUST be solid #ffffff with 1px border #cbd5e1.",
+    "All interactive elements MUST have data-testid attributes matching the test ids specified in testing_attributes.",
+    "Ensure mobile responsiveness down to 390px viewport without horizontal scrolling or text overflow."
   ]
 }
