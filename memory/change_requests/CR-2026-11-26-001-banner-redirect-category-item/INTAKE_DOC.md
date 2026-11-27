@@ -122,9 +122,21 @@ const LINK_OPTIONS = [
 
 ---
 
-## 8. Status
+## 8. Owner Decisions — ANSWERED 2026-11-27
 
-INTAKE COMPLETE. Waiting for owner decisions on Q1–Q5 above before Planning can begin.
+| Q | Decision |
+|---|---|
+| Q1 — Category UX | **A** — scroll to that category in the full menu |
+| Q2 — Item UX | **A** — scroll to the item in the full menu |
+| Q3 — Admin picker UX | **B + searchable** — one grouped dropdown (Static Pages / Categories / Items) with type-to-filter search |
+| Q4 — URL param | **A** — `?section={categoryId}` and `?item={itemId}` in MenuItems.jsx |
+| Q5 — POS data source | **A** — reuse `restaurant-product/{rid}` via `useMenuSections` hook |
+
+---
+
+## 9. Status
+
+**PLANNING COMPLETE. See PLANNING_DOC.md. Awaiting owner approval for Implementation.**
 
 ---
 
@@ -134,4 +146,5 @@ Severity: P2 | Risk: MEDIUM
 Duplicate check: DISTINCT (parent: CR-2026-11-14-003)
 Evidence: screenshot + code reality check
 Blast radius: MEDIUM (AdminBannersPage.jsx + MenuItems.jsx URL param handling)
-Next: Owner answers Q1–Q5 → Planning (Role 2)
+Decisions: Q1–Q5 answered 2026-11-27
+Next: Owner approval → Implementation (Role 3)
