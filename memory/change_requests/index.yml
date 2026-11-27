@@ -3285,72 +3285,106 @@
 - id: BUG-2026-11-27-002
   type: BUG
   title: 'Item banner repeat tap does nothing — first tap works, second tap from same page is a no-op'
-  status: INTAKE
+  status: QA_PASS
   status_note: >
-    Registered 2026-11-27 (Intake Role 1). Two compounding root causes confirmed by
-    investigation this session.
-    Problem A: navigate() to same URL does not re-trigger useSearchParams → effect
-    deps unchanged → effect does not re-run.
-    Problem B: deepLinkAppliedKey.current set on first tap, never reset after 2s pulse
-    → guard blocks all subsequent same-URL taps.
-    Fix: (E-1) reset deepLinkAppliedKey.current='' at end of 2s pulse timer;
-    (E-2) PromoBanner navigate() with { state: { tapKey: Date.now() } };
-    (E-3) include location.key in deepLink effect key.
-    3 files, ~5 lines. LOW risk.
+    Registered → Planned → Implemented → QA_PASS in one session (2026-11-27).
+
+    ROOT CAUSE: Two compounding problems.
+    (A) navigate() to same URL does not change useSearchParams → targetItem unchanged
+    → effect deps unchanged → effect does not re-run.
+    (B) deepLinkAppliedKey.current set on first tap, never reset after 2s pulse
+    → guard if(key===current) blocks all repeat taps.
+
+    FIX (MenuItems.jsx — 5 edits, 1 file only):
+    E-1: import useLocation from react-router-dom.
+    E-2: const location = useLocation() added near searchParams.
+    E-3: key = `${location.key}|${effectiveStation}|${targetSection}|${targetItem}`
+    — every navigate() creates new location.key even for same URL → unique key.
+    E-4: deepLinkAppliedKey.current = '' reset at end of 2s pulse timer.
+    E-5: location added to effect dependency array.
+
+    PromoBanner.jsx NOT changed — React Router already creates new location.key
+    on every navigate() call, including same-URL.
+
+    Build: yarn build PASS. Testing: iteration_42.json 7/7 PASS.
+    Owner smoke test: tap "start the fight" banner from menu → scroll+pulse →
+    tap again → scroll+pulse again.
   priority: P2
   risk: LOW
-  owner_action: 'Owner approval → Implementation (Role 3) directly.'
+  owner_action: 'Owner smoke test: tap same item banner twice from menu page — both taps should scroll+pulse.'
   blocked_on: []
   sprint: null
-  files: 'frontend/src/pages/MenuItems.jsx · frontend/src/components/PromoBanner/PromoBanner.jsx'
-  artefacts: INTAKE_DOC
+  files: 'frontend/src/pages/MenuItems.jsx'
+  artefacts: INTAKE_DOC, PLANNING_AND_IMPL_DOC
   registered: '2026-11-27'
   last_updated: '2026-11-27'
   related:
   - CR-2026-11-26-001
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
   notes: >
-    Scope gap from CR-2026-11-26-001 V2. Planning doc Q3 said "re-fire on every
-    URL change" but same-URL repeated tap is not a URL change. Category deep-link
-    (prevStationIdRef fix) not affected by this bug — categories work first+repeat tap.
-    Item first tap continues to work after fix.
+    Scope gap from CR-2026-11-26-001 V2 (Q3 = re-fire on every URL change, but
+    same-URL repeated tap is NOT a URL change). Category deep-link (prevStationIdRef
+    fix) not affected — categories work on first+repeat tap already.
 
 
 - id: BUG-2026-11-27-003
   type: BUG
   title: 'Order Success page does not show transferred orders — POS shows them, customer is confused'
-  status: INTAKE
+  status: QA_PASS
   status_note: >
-    Registered 2026-11-27 (Intake Role 1). Root cause confirmed by live API probe.
-    air-bnb/get-order-details/{id} does NOT return associated_order_list.
-    POS employee-orders-list endpoint returns associated_order_list per order:
-    [{id, restaurant_order_id, order_amount, collect_Bill}].
-    Owner confirmed: show F&B transferred orders only, NOT room_info/room rent.
-    3 open owner questions before Planning: (Q1) backend source for associated orders;
-    (Q2) display location on OrderSuccess; (Q3) transferred total in bill summary.
-    Requires backend change (new POS proxy call) + orderService transform + OrderSuccess UI.
+    Registered → Planned → Implemented → QA_PASS in one session (2026-11-27).
+
+    ROOT CAUSE: air-bnb/get-order-details/{id} API did not include
+    associated_order_list. Owner added the field on 2026-11-27.
+
+    LIVE API PROBE (direct POS call confirmed):
+    GET https://preprod.mygenie.online/api/v1/air-bnb/get-order-details/1579194
+    associated_order_list: [{id:1579195, restaurant_order_id:"000103",
+    order_amount:99, collect_bill:"2026-11-27 17:29:01"}]
+
+    Via backend proxy (/api/air-bnb/get-order-details/1579194) also confirmed PRESENT.
+    server.py lines 514-515 (return response.json()) passes field through — NO backend change needed.
+
+    FIX (3 files):
+    E-1 orderService.ts: added return type `associatedOrders?` field.
+    E-2 orderService.ts: read associated_order_list, map to [{orderId, restaurantOrderId, amount, date}].
+    E-3 orderService.ts: include associatedOrders in return object.
+    E-4 OrderSuccess.jsx: const [associatedOrders, setAssociatedOrders] = useState([]).
+    E-5 OrderSuccess.jsx: setAssociatedOrders in fetchOrderStatus.
+    E-6 OrderSuccess.jsx: render "Transferred Orders (N)" card after Bill Summary.
+    E-7 OrderSuccess.css: 6 new utility classes for the card layout.
+
+    Display: card shows order count + total. Each row: #000103  27 Nov  ₹99.
+    Grand Total (own bill) unchanged — transferred total is display-only.
+    Room rent explicitly excluded (owner confirmed F&B only).
+
+    Build: yarn build PASS. Testing: iteration_42.json 7/7 PASS.
+
+    PENDING — Grand Total combined view (not implemented, planning complete):
+    Owner asked to show Food Total + Transferred Total + GRAND TOTAL at bottom.
+    Analysis done — feasible LOW risk, 1 file + CSS. Awaiting owner "implement it".
+    See BUG-2026-11-27-003 PLANNING_AND_IMPL_DOC.md §5 for exact spec.
   priority: P1
   risk: MEDIUM
   owner_action: >
-    Answer Q1-Q3 in INTAKE_DOC before Planning.
-    Q1: Backend source for associated_order_list (staff endpoint vs customer endpoint vs secondary call).
-    Q2: Display as collapsible section or inline?
-    Q3: Show Transferred Total line in bill summary?
-  blocked_on:
-  - 'Owner answer to Q1-Q3'
+    Smoke test: visit order success for order with transferred orders → 
+    "Transferred Orders (1) ₹99" card visible.
+    PENDING: say "implement it" to add Grand Total combined view.
+  blocked_on: []
   sprint: null
-  files: 'backend/server.py · frontend/src/api/services/orderService.ts · frontend/src/pages/OrderSuccess.jsx'
-  artefacts: INTAKE_DOC
+  files: 'frontend/src/api/services/orderService.ts · frontend/src/pages/OrderSuccess.jsx · frontend/src/pages/OrderSuccess.css'
+  artefacts: INTAKE_DOC, PLANNING_AND_IMPL_DOC
   registered: '2026-11-27'
   last_updated: '2026-11-27'
   related: []
-  code_markers: false
+  code_markers: true
   money_path: false
   closed: null
   notes: >
-    Live probe: air-bnb/get-order-details/1579194 → 16 keys, no associated_order_list.
-    POS employee-orders data: order 000103, ₹99, 27 Nov = the F&B transfer.
-    Room rent (room_info.room_price ₹1300) explicitly excluded by owner.
-    Backend already has POS_LOGIN_PHONE/PASSWORD env vars for internal auth if needed.
+    Live probe 2026-11-27: associated_order_list now PRESENT in POS API (owner added).
+    Backend proxy passes it through automatically — no server.py change.
+    Grand Total combined view: Food Total + Transferred Total + GRAND TOTAL (orange).
+    APS masking: reuses existing effBS/liveHasAPS pattern — no new logic.
+    Room rent: room_info.room_price excluded per owner instruction.
