@@ -3201,50 +3201,56 @@
   type: CR
   title: 'Banner tap destination — extend picker to support specific menu category
     or specific menu item (deep-link), not just the 5 static pages'
-  status: IMPLEMENTED
+  status: QA_PASS
   status_note: >
-    V2 shipped 2026-11-29. Three post-launch bugs fixed in one pack after
-    first implementation (shadcn Popover+Command) and shadcn-redesign pass.
-    Role 1 (investigation INVESTIGATION_DEEPLINK_BUGS.md): three root
-    causes confirmed — (a) item scroll uses block:center + two racing
-    smooth scrolls + no highlight ever implemented; (b) deepLinkApplied
-    useRef(false) one-shot guard never resets on URL change → repeat
-    taps on menu page are no-ops; (c) runtime menuSections is
-    station-scoped while admin picker read station-agnostic data →
-    categoryId/itemId mismatch on multi-menu restaurants.
-    Role 2 (planning PLANNING_DOC_V2.md): owner Q1=highlight-only
-    (2s orange pulse), Q2=cross-station auto-switch, Q3=re-fire on
-    every URL change.
-    Role 3 (impl) commit 9e38a0b + handover 04e1488. 4 files, 9 edits:
-    MenuItems.jsx (signature-keyed guard, direct setSelectedCategory,
-    single scroll, cross-station probe + navigate(replace:true) via
-    queryClient.fetchQuery, highlight state + cleanup);
-    MenuItems.css (.menu-item-pulse keyframe); AdminBannersPage.jsx
-    (useAllStationsMenuSections, /{rid}/menu/{station}?section|item=,
-    duplicate-label station prefix, legacy URL fallback label);
-    useMenuData.js (new useAllStationsMenuSections hook via useQueries).
-    Build: yarn build PASS, no new warnings.
-    Smoke: /69/menu?item=248247 now auto-selects Po category
-    (previously stayed on All). QA PENDING against T1–T14 matrix.
+    V3 + BUG-FIX shipped 2026-11-27. All 7 automated tests PASS (iteration_41.json).
+    Awaiting owner phone smoke test (T1-T7 in QA_HANDOVER_V3.md).
+
+    CORRECTION: Previous sessions incorrectly modelled Po/Raom as stations. They
+    are CATEGORIES from POST /web/restaurant-product (no food_for). Restaurant 69
+    has only standard menus (Normal/Party/Premium/Aggregator), all filtered by
+    useStations. Correct data: po (11187, 19 items), raom (11200, 2 items) from
+    default product query.
+
+    V3 FIX 1 (useMenuData.js): useAllStationsMenuSections now also queries the
+    default null station via useQuery(buildMenuSectionsQueryOptions(rid, undefined)).
+    Deduplicates against named-station sections by categoryId. Fixes empty picker
+    for standard-menu restaurants.
+
+    V3 FIX 2 (AdminBannersPage.jsx): URL builder emits /{rid}/menu?section=... when
+    stationId is null (not /{rid}/menu/null?section=... which passed food_for=null to POS).
+
+    BUG-FIX (MenuItems.jsx): stationId reset effect (L387) fired on every initial
+    mount, racing with deep-link effect (L177) in same React 18 batch. Last write
+    (null) won → category not selected. Fixed with prevStationIdRef = useRef(stationId)
+    guard: skip reset on initial mount, still fires on genuine station switches.
+
+    Root cause of from-landing failure: LandingPage prefetch (L221-237) warms React
+    Query cache via requestIdleCallback → menuSections populated on first render →
+    both effects (L177 deep-link + L387 reset) fire in same cycle → reset wins.
+    Without prefetch (page.goto), data loads in second cycle → deep-link fires alone.
+
+    Build: yarn build PASS. Testing: iteration_41.json 7/7 PASS.
   priority: P2
-  risk: MEDIUM
-  owner_action: 'QA (Role 4): run T1–T14 against restaurant 69 (multi-menu Po+Raom). If green → push main.'
+  risk: LOW
+  owner_action: 'Owner smoke test T1-T7 per QA_HANDOVER_V3.md. If green mark CLOSED.'
   blocked_on: []
   sprint: null
-  files: 'frontend/src/pages/admin/AdminBannersPage.jsx · frontend/src/pages/MenuItems.jsx · frontend/src/pages/MenuItems.css · frontend/src/hooks/useMenuData.js'
-  artefacts: INTAKE_DOC, PLANNING_DOC, QA_HANDOVER, QA_HANDOVER_REDESIGN, INVESTIGATION_DEEPLINK_BUGS, PLANNING_DOC_V2, QA_HANDOVER_V2
+  files: 'frontend/src/pages/admin/AdminBannersPage.jsx · frontend/src/pages/MenuItems.jsx
+    · frontend/src/pages/MenuItems.css · frontend/src/hooks/useMenuData.js'
+  artefacts: INTAKE_DOC, PLANNING_DOC, QA_HANDOVER, QA_HANDOVER_REDESIGN, INVESTIGATION_DEEPLINK_BUGS,
+    PLANNING_DOC_V2, QA_HANDOVER_V2, PLANNING_DOC_V3, BUG_FIX_REPORT_2026-11-27, QA_HANDOVER_V3
   registered: '2026-11-26'
-  last_updated: '2026-11-29'
+  last_updated: '2026-11-27'
   related:
   - CR-2026-11-14-003
   code_markers: true
   money_path: null
   closed: null
   notes: >
-    Original: Q1=A Q2=A Q3=B Q4=A Q5=A (5 owner decisions for picker/URL contract).
-    V2 owner decisions: Q1=highlight-only Q2=cross-station-auto-switch Q3=re-fire-on-every-URL.
-    Legacy station-less URLs (/{rid}/menu?section|item=…) still resolve via probe fallback.
-    Backend: no changes (reuses getRestaurantProducts POS API).
+    V3 key fact: Po and Raom are CATEGORIES (not stations). food_for=Po/Raom → 0 results.
+    Default query (no food_for) returns both. All V1/V2 station-based logic irrelevant for restaurant 69.
+    Station switch reset still works (T3 PASS in iteration_41). Item pulse/scroll unchanged.
 
 
 - id: BUG-2026-11-27-001

@@ -68,6 +68,11 @@ const MenuItems = () => {
   // CR-2026-11-26-001 V2: transient highlight (2 s orange pulse)
   const [highlightedItemId, setHighlightedItemId] = useState(null);
   const highlightTimerRef = useRef(null);
+  // BUG-FIX-2026-11-27: track previous stationId to skip reset on initial mount.
+  // The reset effect must NOT fire on mount — it races with the deep-link effect
+  // (L177) in the same React 18 batch and wins (null), clobbering category selection
+  // when the React Query cache is warm (e.g. after LandingPage idle-prefetch).
+  const prevStationIdRef = useRef(stationId);
 
 
   // Fetch restaurant details FIRST to get numeric ID
@@ -383,8 +388,13 @@ const MenuItems = () => {
     }
   }, [stationId, stationsData]);
 
-  // Reset selectedCategory when station changes
+  // Reset selectedCategory when station changes (skip initial mount).
+  // BUG-FIX-2026-11-27: guard against mount-time reset that clobbers deep-link.
+  // On initial mount prevStationIdRef.current === stationId → early return.
+  // On real station switch (e.g. /menu/Po → /menu/Raom) values differ → reset fires.
   useEffect(() => {
+    if (prevStationIdRef.current === stationId) return;
+    prevStationIdRef.current = stationId;
     setSelectedCategory(null);
   }, [stationId]);
 
