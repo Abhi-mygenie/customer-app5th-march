@@ -158,6 +158,14 @@ const OrderSuccess = () => {
   );
   const apsSuccessCount = orderData?.apsCount || 0;
   const hasSuccessAPS = apsSuccessCount > 0;
+  // BUG-2026-11-26-001-P5 E-2: live-derived APS gate — lifts when waiter adjusts all APS prices.
+  // Falls back to static hasSuccessAPS before first poll (liveOrderItems empty) — prevents flash.
+  const liveHasAPS = liveOrderItems.length > 0
+    ? liveOrderItems.some(item =>
+        apsSuccessFoodIds.has(String(item.foodId)) &&
+        parseFloat(item.unitPrice ?? item.price) <= 1.5
+      )
+    : hasSuccessAPS;
   // BUG-2026-11-26-001-P2 gap: expected unit price per APS food ID (additive — from ReviewOrder)
   // Falls back to {} when absent; threshold then defaults to 1 (original behaviour preserved).
   const apsItemUnitPrices = orderData?.apsItemUnitPrices || {};
@@ -574,12 +582,12 @@ const OrderSuccess = () => {
               </span>
             </div>
             <span className="order-success-total">
-              {/* BUG-2026-11-26-001-P2: use displayTotal (APS=0 calculated in ReviewOrder) */}
-              {hasSuccessAPS && displayTotal != null
+              {/* BUG-2026-11-26-001-P5 E-4: liveHasAPS (data-driven) replaces static hasSuccessAPS */}
+              {liveHasAPS && displayTotal != null
                 ? (parseFloat(displayTotal) > 0
                     ? `₹${parseFloat(displayTotal).toFixed(2)} + APS`
                     : 'APS')
-                : hasSuccessAPS
+                : liveHasAPS
                   ? (() => {
                       const raw = parseFloat(liveOrderAmount || orderData.totalToPay || 0);
                       const real = raw - apsSuccessCount;
@@ -718,13 +726,14 @@ const OrderSuccess = () => {
             </div>
             {showBillSummary && (
               <div className="order-success-bill-content">
-                {/* BUG-2026-11-26-001-P2: use displayBillSummary (APS=0) when available */}
-                {(() => { const effBS = displayBillSummary || billSummary; return (
+                {/* BUG-2026-11-26-001-P5 E-3: when APS confirmed (!liveHasAPS), use live billSummary
+                    (which now has real cgst/sgst from E-1). When still APS, keep displayBillSummary. */}
+                {(() => { const effBS = liveHasAPS ? (displayBillSummary || billSummary) : billSummary; return (
                 <>
                 <div className="bill-row">
                   <span className="bill-label">Item Total</span>
                   <span className="bill-value">
-                    {hasSuccessAPS
+                    {liveHasAPS
                       ? (effBS.itemTotal > 0 ? `₹${effBS.itemTotal.toFixed(2)} + APS` : 'APS')
                       : `₹${billSummary.itemTotal.toFixed(2)}`}
                   </span>
@@ -751,7 +760,7 @@ const OrderSuccess = () => {
                 <div className="bill-row bill-row-subtotal">
                   <span className="bill-label">Subtotal</span>
                   <span className="bill-value">
-                    {hasSuccessAPS
+                    {liveHasAPS
                       ? (effBS.subtotal > 0 ? `₹${effBS.subtotal.toFixed(2)} + APS` : 'APS')
                       : `₹${billSummary.subtotal.toFixed(2)}`}
                   </span>
@@ -791,11 +800,11 @@ const OrderSuccess = () => {
                 <div className="bill-row bill-row-total">
                   <span className="bill-label-total">Grand Total</span>
                   <span className="bill-value-total">
-                    {/* BUG-2026-11-26-001-P2 */}
-                    {hasSuccessAPS
+                    {/* BUG-2026-11-26-001-P5 E-4 */}
+                    {liveHasAPS
                       ? (effBS.grandTotal > 0 ? `₹${effBS.grandTotal.toFixed(2)} + APS` : 'APS')
                       : `₹${billSummary.grandTotal.toFixed(2)}`}
-                    {!hasSuccessAPS && SHOW_PRE_ROUND_BRACKET && billSummary.originalTotal != null && (
+                    {!liveHasAPS && SHOW_PRE_ROUND_BRACKET && billSummary.originalTotal != null && (
                       <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '4px' }}>(₹{billSummary.originalTotal.toFixed(2)})</span>
                     )}
                   </span>

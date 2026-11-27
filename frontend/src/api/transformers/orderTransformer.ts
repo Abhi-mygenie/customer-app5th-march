@@ -195,6 +195,18 @@ export const transformOrderDetails = (api: ApiOrderDetailsResponse): OrderDetail
   const firstItem = api.details?.[0];
   const fOrderStatus = (firstItem as any)?.food_status ?? firstItem?.foodStatus ?? ORDER_STATUS.YET_TO_CONFIRM;
 
+  // BUG-2026-11-26-001-P5 E-1: read order-level GST from POS API.
+  // total_gst_tax_amount is denormalised on every detail item — same value across all rows.
+  // Reading from firstItem (before system-item filtering) is safe; this is the same pattern
+  // used above for fOrderStatus.
+  const rawFirst = firstItem as any;
+  const totalGstAmount   = parseFloat(rawFirst?.total_gst_tax_amount   || '0') || 0;
+  const serviceGstAmount = parseFloat(rawFirst?.service_gst_tax_amount || '0') || 0;
+  const liveCgst   = parseFloat((totalGstAmount / 2).toFixed(2));
+  const liveSgst   = parseFloat((totalGstAmount - liveCgst).toFixed(2));
+  const liveScCgst = parseFloat((serviceGstAmount / 2).toFixed(2));
+  const liveScSgst = parseFloat((serviceGstAmount - liveScCgst).toFixed(2));
+
   return {
     orderId: api.order_id,
     orderAmount,
@@ -209,10 +221,12 @@ export const transformOrderDetails = (api: ApiOrderDetailsResponse): OrderDetail
     billSummary: {
       itemTotal,
       subtotal,
-      cgst: 0,  // Will be calculated in component based on restaurant settings
-      sgst: 0,
+      cgst: liveCgst,       // BUG-2026-11-26-001-P5: from total_gst_tax_amount/2
+      sgst: liveSgst,
+      scCgst: liveScCgst,
+      scSgst: liveScSgst,
       vat: 0,
-      totalTax: 0,
+      totalTax: totalGstAmount,
       discount: 0,
       grandTotal: orderAmount,
     },
