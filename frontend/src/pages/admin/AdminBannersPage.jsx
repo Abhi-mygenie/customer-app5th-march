@@ -1,12 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAdminConfig } from '../../context/AdminConfigContext';
 import { useAuth } from '../../context/AuthContext';
-import { IoImagesOutline, IoAddOutline, IoCreateOutline, IoTrashOutline, IoCloseOutline, IoCloudUploadOutline } from 'react-icons/io5';
+import { IoImagesOutline, IoAddOutline, IoCreateOutline, IoTrashOutline, IoCloseOutline, IoCloudUploadOutline, IoSearchOutline, IoChevronDownOutline, IoCheckmarkOutline, IoCloseCircleOutline } from 'react-icons/io5';
 import './AdminPages.css';
 // CR-2026-11-26-001: grouped searchable destination picker
 import { useMenuSections } from '../../hooks/useMenuData';
-import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '../../components/ui/command';
 
 const AdminBannersPage = () => {
   const { config, addBanner, updateBanner, deleteBanner, uploadImage, loading } = useAdminConfig();
@@ -41,6 +39,38 @@ const AdminBannersPage = () => {
     ...categoryOptions,
     ...itemOptions,
   ];
+  // CR-2026-11-26-001 R-E-1b: custom picker state + handlers
+  const [pickerSearch, setPickerSearch] = useState('');
+  const pickerContainerRef = useRef(null);
+  const GROUP_CONFIG = [
+    { name: 'Static Pages', slug: 'static-pages' },
+    { name: 'Categories',   slug: 'categories'   },
+    { name: 'Items',        slug: 'items'         },
+  ];
+  const filteredOptions = pickerSearch.trim()
+    ? ALL_LINK_OPTIONS.filter(o =>
+        o.label.toLowerCase().includes(pickerSearch.trim().toLowerCase())
+      )
+    : ALL_LINK_OPTIONS;
+  // Close picker on outside click or Escape
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onMouse = (e) => {
+      if (pickerContainerRef.current && !pickerContainerRef.current.contains(e.target)) {
+        setPickerOpen(false);
+        setPickerSearch('');
+      }
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { setPickerOpen(false); setPickerSearch(''); }
+    };
+    document.addEventListener('mousedown', onMouse);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onMouse);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [pickerOpen]);
   const bannerInputRef = useRef(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState(null);
@@ -254,56 +284,116 @@ const AdminBannersPage = () => {
               />
             </div>
 
-            {/* CR-2026-11-26-001 E-1c: grouped searchable destination picker */}
+            {/* CR-2026-11-26-001 R-E-1c: custom grouped searchable picker */}
             <div className="admin-form-group">
               <label className="admin-form-label">Tap Destination (optional)</label>
-              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className="admin-form-select"
-                    style={{ textAlign: 'left', cursor: 'pointer', display: 'block', width: '100%' }}
-                    data-testid="select-bannerLink"
-                  >
+              <div className="admin-picker-relative-wrap" ref={pickerContainerRef}>
+                {/* Trigger — identical height/style to other admin selects */}
+                <button
+                  type="button"
+                  className={`admin-form-select admin-picker-trigger${pickerOpen ? ' open' : ''}`}
+                  onClick={() => setPickerOpen(o => !o)}
+                  aria-expanded={pickerOpen}
+                  aria-haspopup="listbox"
+                  data-testid="select-bannerLink"
+                >
+                  <span className="admin-picker-selected-label">
                     {ALL_LINK_OPTIONS.find(o => o.value === newBanner.bannerLink)?.label
                       || (newBanner.bannerLink ? `Custom: ${newBanner.bannerLink}` : 'No link')}
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="p-0 w-72" align="start">
-                  <Command>
-                    <CommandInput
-                      placeholder={pickerLoading ? 'Loading…' : 'Search pages, categories, items…'}
-                    />
-                    <CommandList>
-                      <CommandEmpty>No results found.</CommandEmpty>
-                      {['Static Pages', 'Categories', 'Items'].map(group => {
-                        const opts = ALL_LINK_OPTIONS.filter(o => o.group === group);
-                        if (opts.length === 0) return null;
-                        return (
-                          <CommandGroup key={group} heading={group}>
-                            {opts.map(o => (
-                              <CommandItem
-                                key={o.value}
-                                value={o.label}
-                                onSelect={() => {
-                                  setNewBanner(prev => ({ ...prev, bannerLink: o.value }));
-                                  setPickerOpen(false);
-                                }}
-                                data-testid={`picker-option-${o.group.toLowerCase().replace(' ', '-')}`}
+                  </span>
+                  <IoChevronDownOutline className={`admin-picker-chevron${pickerOpen ? ' rotate' : ''}`} />
+                </button>
+                {/* Floating dropdown — position:absolute, z-60, never reflows form */}
+                {pickerOpen && (
+                  <div className="admin-picker-dropdown" data-testid="admin-picker-dropdown-panel">
+                    {/* Search bar */}
+                    <div className="admin-picker-search-bar">
+                      <IoSearchOutline className="admin-picker-search-icon" />
+                      <input
+                        type="text"
+                        className="admin-picker-search-input"
+                        placeholder={pickerLoading ? 'Loading…' : 'Search pages, categories, items…'}
+                        value={pickerSearch}
+                        onChange={e => setPickerSearch(e.target.value)}
+                        autoFocus
+                        data-testid="input-picker-search"
+                      />
+                      {pickerSearch && (
+                        <button
+                          type="button"
+                          className="admin-picker-search-clear"
+                          onClick={() => setPickerSearch('')}
+                          data-testid="btn-clear-search"
+                        >
+                          <IoCloseCircleOutline />
+                        </button>
+                      )}
+                    </div>
+                    {/* Options list */}
+                    <div className="admin-picker-list" role="listbox" data-testid="admin-picker-list">
+                      {pickerLoading ? (
+                        <div className="admin-picker-loading" data-testid="picker-loading-state">
+                          <div className="admin-picker-spinner" />
+                          <span>Loading categories &amp; items…</span>
+                        </div>
+                      ) : filteredOptions.length === 0 ? (
+                        <div className="admin-picker-empty" data-testid="picker-empty-state">
+                          <IoSearchOutline className="admin-picker-empty-icon" />
+                          <span>No destinations match &quot;{pickerSearch}&quot;</span>
+                        </div>
+                      ) : (
+                        GROUP_CONFIG.map(group => {
+                          const groupItems = filteredOptions.filter(o => o.group === group.name);
+                          if (groupItems.length === 0) return null;
+                          return (
+                            <div key={group.name} className="admin-picker-group">
+                              <div
+                                className="admin-picker-group-header"
+                                data-testid={`picker-group-header-${group.slug}`}
                               >
-                                {o.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        );
-                      })}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                                <span>{group.name}</span>
+                                <span className="admin-picker-group-badge">{groupItems.length}</span>
+                              </div>
+                              {groupItems.map(opt => {
+                                const isSelected = newBanner.bannerLink === opt.value;
+                                return (
+                                  <div
+                                    key={opt.value}
+                                    role="option"
+                                    aria-selected={isSelected}
+                                    className={`admin-picker-item${isSelected ? ' selected' : ''}`}
+                                    onClick={() => {
+                                      setNewBanner(prev => ({ ...prev, bannerLink: opt.value }));
+                                      setPickerOpen(false);
+                                      setPickerSearch('');
+                                    }}
+                                    data-testid={`picker-option-${group.slug}`}
+                                  >
+                                    <div className="admin-picker-item-content">
+                                      <span className={`admin-picker-group-dot ${group.slug}`} />
+                                      <span className="admin-picker-item-label" title={opt.label}>
+                                        {opt.label}
+                                      </span>
+                                    </div>
+                                    {isSelected && (
+                                      <IoCheckmarkOutline className="admin-picker-check-icon" />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Path preview hint */}
               {newBanner.bannerLink && (
-                <span className="admin-form-hint" data-testid="banner-link-preview">
-                  → {newBanner.bannerLink}
+                <span className="admin-form-hint admin-picker-path-preview" data-testid="banner-link-preview">
+                  <span>→</span>
+                  <span className="admin-path-text">{newBanner.bannerLink}</span>
                 </span>
               )}
             </div>
