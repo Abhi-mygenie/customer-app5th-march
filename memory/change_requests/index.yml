@@ -3279,3 +3279,78 @@
     In edit mode, roundedTotal = new additions + previous order total.
     Showing this combined price on the Update Order button is misleading
     (especially with APS items). Place Order button branches (lines 2509-2524) untouched.
+
+
+
+- id: BUG-2026-11-27-002
+  type: BUG
+  title: 'Item banner repeat tap does nothing — first tap works, second tap from same page is a no-op'
+  status: INTAKE
+  status_note: >
+    Registered 2026-11-27 (Intake Role 1). Two compounding root causes confirmed by
+    investigation this session.
+    Problem A: navigate() to same URL does not re-trigger useSearchParams → effect
+    deps unchanged → effect does not re-run.
+    Problem B: deepLinkAppliedKey.current set on first tap, never reset after 2s pulse
+    → guard blocks all subsequent same-URL taps.
+    Fix: (E-1) reset deepLinkAppliedKey.current='' at end of 2s pulse timer;
+    (E-2) PromoBanner navigate() with { state: { tapKey: Date.now() } };
+    (E-3) include location.key in deepLink effect key.
+    3 files, ~5 lines. LOW risk.
+  priority: P2
+  risk: LOW
+  owner_action: 'Owner approval → Implementation (Role 3) directly.'
+  blocked_on: []
+  sprint: null
+  files: 'frontend/src/pages/MenuItems.jsx · frontend/src/components/PromoBanner/PromoBanner.jsx'
+  artefacts: INTAKE_DOC
+  registered: '2026-11-27'
+  last_updated: '2026-11-27'
+  related:
+  - CR-2026-11-26-001
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: >
+    Scope gap from CR-2026-11-26-001 V2. Planning doc Q3 said "re-fire on every
+    URL change" but same-URL repeated tap is not a URL change. Category deep-link
+    (prevStationIdRef fix) not affected by this bug — categories work first+repeat tap.
+    Item first tap continues to work after fix.
+
+
+- id: BUG-2026-11-27-003
+  type: BUG
+  title: 'Order Success page does not show transferred orders — POS shows them, customer is confused'
+  status: INTAKE
+  status_note: >
+    Registered 2026-11-27 (Intake Role 1). Root cause confirmed by live API probe.
+    air-bnb/get-order-details/{id} does NOT return associated_order_list.
+    POS employee-orders-list endpoint returns associated_order_list per order:
+    [{id, restaurant_order_id, order_amount, collect_Bill}].
+    Owner confirmed: show F&B transferred orders only, NOT room_info/room rent.
+    3 open owner questions before Planning: (Q1) backend source for associated orders;
+    (Q2) display location on OrderSuccess; (Q3) transferred total in bill summary.
+    Requires backend change (new POS proxy call) + orderService transform + OrderSuccess UI.
+  priority: P1
+  risk: MEDIUM
+  owner_action: >
+    Answer Q1-Q3 in INTAKE_DOC before Planning.
+    Q1: Backend source for associated_order_list (staff endpoint vs customer endpoint vs secondary call).
+    Q2: Display as collapsible section or inline?
+    Q3: Show Transferred Total line in bill summary?
+  blocked_on:
+  - 'Owner answer to Q1-Q3'
+  sprint: null
+  files: 'backend/server.py · frontend/src/api/services/orderService.ts · frontend/src/pages/OrderSuccess.jsx'
+  artefacts: INTAKE_DOC
+  registered: '2026-11-27'
+  last_updated: '2026-11-27'
+  related: []
+  code_markers: false
+  money_path: false
+  closed: null
+  notes: >
+    Live probe: air-bnb/get-order-details/1579194 → 16 keys, no associated_order_list.
+    POS employee-orders data: order 000103, ₹99, 27 Nov = the F&B transfer.
+    Room rent (room_info.room_price ₹1300) explicitly excluded by owner.
+    Backend already has POS_LOGIN_PHONE/PASSWORD env vars for internal auth if needed.
