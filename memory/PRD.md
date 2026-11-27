@@ -1,59 +1,56 @@
-# MyGenie Customer App — Deployment Record
+# MyGenie Customer App — PRD & Session Memory
 
-## Source
-- Repo: https://github.com/Abhi-mygenie/customer-app5th-march
-- Branch: main
-- Deployed: 2026-11-26
+**Last updated:** 2026-11-27
+
+## Original Problem Statement
+Deploy the existing React frontend repo directly into `/app` and run as-is, with no code edits.
+- Repo: https://github.com/Abhi-mygenie/customer-app5th-march (branch: main)
+- Destination: `/app` (repo contents pulled directly, not a subfolder)
 
 ## Architecture
-- **Frontend**: React (CRA + CRACO), runs on port 3000 via supervisor
-- **Backend**: FastAPI (Python), runs on port 8001 via supervisor
-- **Database**: MongoDB (local), DB name: `mygenie`
+- **Frontend:** React (CRA + CRACO) on port 3000 — customer-facing QR scan-and-order app
+- **Backend:** FastAPI on port 8001 — proxies to MyGenie POS (preprod.mygenie.online/api/v1)
+- **Database:** MongoDB (local `mygenie` DB) + remote MyGenie API
+- **Supervisor:** manages both frontend & backend processes
 
-## What Was Done
-- Cloned repo (branch: main) directly into `/app` via rsync (no nested subfolder)
-- Preserved platform files: `.git`, `.emergent/emergent.yml` (pod-specific image name)
-- Memory dir fully synced from remote (57 files)
-- Backend `.env` configured with all required keys
-- Frontend `.env` configured with all required keys
-- `CORS_ORIGINS` set to explicit preview URL (wildcard blocked when credentials=true)
-- `JWT_SECRET` auto-generated + user-updated via secrets panel
-- Google Maps API keys set via secrets panel (`GOOGLE_MAPS_API_KEY`, `REACT_APP_GOOGLE_MAPS_API_KEY`)
-- Frontend dependencies installed via `yarn install`
-- Backend dependencies installed via `pip install -r requirements.txt`
-- Both services running healthy
+## What's Been Implemented
+
+### 2026-11-27 — Repo Deployment & Sync
+- Pulled `Abhi-mygenie/customer-app5th-march` (main branch, 74 commits) into `/app` via `git reset --hard origin/main`
+- Preserved platform files: `.emergent/cron/`, `.emergent/markers/`, `emergent.yml`
+- Installed missing dependencies: `slowapi` (backend), `typescript@4.9.5` (frontend, downgraded from 7.0.2 for react-scripts 5.0.1 compatibility)
+- Configured `backend/.env`: DB_NAME=mygenie, CORS_ORIGINS=preview URL, all MyGenie API credentials
+- Configured `frontend/.env`: REACT_APP_BACKEND_URL, all REACT_APP_* env vars
+- Both services running: backend healthz `{"ok":true,"mongo":"up"}`, frontend renders login/browse page
+- Memory dir: 62 root files + 145 change_request directories — fully in sync with remote
 
 ## Environment Variables
 
-### Backend (`/app/backend/.env`)
-| Key | Value |
-|-----|-------|
-| MONGO_URL | mongodb://localhost:27017 |
-| DB_NAME | mygenie |
-| CORS_ORIGINS | https://mygenie-customer-2--36818awr.preview.emergentagent.com |
-| MYGENIE_API_URL | https://preprod.mygenie.online/api/v1 |
-| GOOGLE_MAPS_API_KEY | (set via secrets panel) |
-| JWT_SECRET | (set via secrets panel) |
-| MYGENIE_POS_LOGIN_PHONE | +919579504871 |
-| MYGENIE_POS_LOGIN_PASSWORD | Qplazm@10 |
+### backend/.env
+- MONGO_URL: mongodb://localhost:27017
+- DB_NAME: mygenie
+- CORS_ORIGINS: https://genie-customer-app-3--3g2meu64.preview.emergentagent.com
+- MYGENIE_API_URL: https://preprod.mygenie.online/api/v1
+- GOOGLE_MAPS_API_KEY: (needs to be set via secrets panel)
+- JWT_SECRET: (needs to be set via secrets panel)
+- MYGENIE_POS_LOGIN_PHONE: +919579504871
+- MYGENIE_POS_LOGIN_PASSWORD: Qplazm@10
 
-### Frontend (`/app/frontend/.env`)
-| Key | Value |
-|-----|-------|
-| REACT_APP_BACKEND_URL | https://mygenie-customer-2--36818awr.preview.emergentagent.com |
-| WDS_SOCKET_PORT | 443 |
-| ENABLE_HEALTH_CHECK | false |
-| REACT_APP_IMAGE_BASE_URL | https://preprod.mygenie.online |
-| REACT_APP_API_BASE_URL | https://preprod.mygenie.online/api/v1 |
-| REACT_APP_LOGIN_PHONE | +919579504871 |
-| REACT_APP_LOGIN_PASSWORD | Qplazm@10 |
-| REACT_APP_CRM_URL | https://crm.mygenie.online/api |
-| REACT_APP_GOOGLE_MAPS_API_KEY | (set via secrets panel) |
-| REACT_APP_CRM_API_VERSION | v2 |
-| MYGENIE_POS_LOGIN_PHONE | 9579504871 |
-| MYGENIE_POS_LOGIN_PASSWORD | Qplazm@10 |
+### frontend/.env
+- REACT_APP_BACKEND_URL: https://genie-customer-app-3--3g2meu64.preview.emergentagent.com
+- REACT_APP_IMAGE_BASE_URL: https://preprod.mygenie.online
+- REACT_APP_API_BASE_URL: https://preprod.mygenie.online/api/v1
+- REACT_APP_LOGIN_PHONE: +919579504871
+- REACT_APP_LOGIN_PASSWORD: Qplazm@10
+- REACT_APP_CRM_URL: https://crm.mygenie.online/api
+- REACT_APP_GOOGLE_MAPS_API_KEY: (needs to be set via secrets panel)
+- REACT_APP_CRM_API_VERSION: v2
 
-## Notes
-- No code edits were made — deployed as-is from repo
-- Backend requires explicit CORS_ORIGINS (wildcard blocked due to allow_credentials=True)
-- Frontend compiles with lint warnings only (no errors)
+## Active Change Requests (from memory/change_requests/)
+- **BUG-2026-11-26-001**: APS price shows ₹1 in CartBar, ReviewOrder, OrderSuccess — INVESTIGATION COMPLETE, awaiting implementation approval
+- **CR-2026-11-26-001**: Banner redirect to specific category/item — PLANNING V2 COMPLETE, awaiting owner answers to 5 open questions
+
+## Backlog / P0 Items
+- Set real JWT_SECRET and GOOGLE_MAPS_API_KEY via secrets panel
+- BUG-2026-11-26-001: Fix APS price display (3 files, display-only change)
+- CR-2026-11-26-001 V2: Banner deep-link to category/item
