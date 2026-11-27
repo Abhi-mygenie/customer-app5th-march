@@ -4,7 +4,7 @@
  * Now uses React Query for caching and state management
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { getRestaurantDetails, getRestaurantProducts, getMenuMaster } from '../api/services/restaurantService';
 import logger from '../utils/logger';
@@ -286,6 +286,42 @@ export const useStations = (restaurantId) => {
     refetch,
   };
 };
+
+/**
+ * CR-2026-11-26-001: Fetch menu sections across ALL stations of a restaurant.
+ * Used by admin banner picker (list every category/item regardless of station)
+ * and as a lookup source for cross-station deep-link resolution.
+ *
+ * Returns a flat array where each section carries its owning `stationId`
+ * (= station.id = menu_name) and `stationName`.
+ *
+ * Reuses the SAME React Query cache slots that `useMenuSections(stationId, rid)`
+ * consumes — no duplicate network calls when both are mounted.
+ *
+ * @param {string} restaurantId
+ * @returns {{ allSections: Array, stations: Array, loading: boolean }}
+ */
+export const useAllStationsMenuSections = (restaurantId) => {
+  const { stations, loading: stationsLoading } = useStations(restaurantId);
+
+  const queries = useQueries({
+    queries: (stations || []).map(station =>
+      buildMenuSectionsQueryOptions(restaurantId, station.id)
+    ),
+  });
+
+  const queriesLoading = queries.some(q => q.isLoading || q.isPending);
+  const loading = stationsLoading || (stations && stations.length > 0 && queriesLoading);
+
+  const allSections = (stations || []).flatMap((station, idx) => {
+    const data = queries[idx]?.data || [];
+    return data.map(s => ({ ...s, stationId: station.id, stationName: station.name }));
+  });
+
+  return { allSections, stations: stations || [], loading };
+};
+
+
 
 /**
  * Hook to fetch restaurant details

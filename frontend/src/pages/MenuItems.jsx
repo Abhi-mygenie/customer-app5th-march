@@ -12,12 +12,13 @@ import CustomizeItemModal from '../components/CustomizeItemModal/CustomizeItemMo
 import RepeatItemModal from '../components/RepeatItemModal/RepeatItemModal';
 import { MenuItemSkeleton, HeaderSkeleton, CategoryBoxSkeleton } from '../components/SkeletonLoaders';
 import PromoBanner from '../components/PromoBanner/PromoBanner';
-import { useMenuSections, useStations, useRestaurantDetails, useDietaryTags } from '../hooks/useMenuData';
+import { useMenuSections, useStations, useRestaurantDetails, useDietaryTags, buildMenuSectionsQueryOptions } from '../hooks/useMenuData';
 import { useScannedTable } from '../hooks/useScannedTable';
 import { useRestaurantId } from '../utils/useRestaurantId';
 import { useRestaurantConfig } from '../context/RestaurantConfigContext';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext'; // BUG-2026-10-06-001 D6
+import { useQueryClient } from '@tanstack/react-query';
 import { getAllergenIcon } from '../utils/allergenIcons';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { isRestaurantOpen, isItemAvailable, isChannelOpen, getChannelNextOpenTime } from '../utils/itemAvailability'; // CR-2026-06-17-003 APP-11 | CR-2026-08-06-001
@@ -57,7 +58,16 @@ const MenuItems = () => {
   const [searchParams] = useSearchParams();
   const targetSection = searchParams.get('section');
   const targetItem    = searchParams.get('item');
-  const deepLinkApplied = useRef(false); // one-shot guard — do not re-fire on re-renders
+  // CR-2026-11-26-001 V2: signature-based guard (re-fires on every URL change,
+  // but never double-applies the same key). Keyed by station|section|item.
+  const deepLinkAppliedKey = useRef('');
+  // Cross-station probe guard: when the current station doesn't own the target
+  // we probe other stations once per signature and navigate; this ref prevents
+  // the probe from running on every render while it's in flight.
+  const deepLinkProbeKey = useRef('');
+  // CR-2026-11-26-001 V2: transient highlight (2 s orange pulse)
+  const [highlightedItemId, setHighlightedItemId] = useState(null);
+  const highlightTimerRef = useRef(null);
 
 
   // Fetch restaurant details FIRST to get numeric ID
@@ -160,33 +170,103 @@ const MenuItems = () => {
     }
   }, [restaurantId, fetchConfig]);
 
-  // CR-2026-11-26-001 E-2b: apply ?section= or ?item= URL param once after menu data loads
+  // CR-2026-11-26-001 V2: signature-based deep-link effect.
+  // Re-fires on every URL / station change, applies at most once per unique key.
+  // Handles cross-station lookup with auto-navigate.
+  const queryClient = useQueryClient();
   useEffect(() => {
-    if (deepLinkApplied.current) return;
-    if (!menuSections || menuSections.length === 0) return;
     if (!targetSection && !targetItem) return;
-    deepLinkApplied.current = true;
+    if (!menuSections || menuSections.length === 0) return;
+
+    const key = `${effectiveStationId || ''}|${targetSection || ''}|${targetItem || ''}`;
+    if (deepLinkAppliedKey.current === key) return;
+
+    // --- Try current station first ---
     if (targetSection) {
-      // find section by categoryId → call existing filter+scroll
       const section = menuSections.find(s => String(s.categoryId) === String(targetSection));
-      if (section) handleCategoryClick(section.sectionName);
+      if (section) {
+        deepLinkAppliedKey.current = key;
+        setSelectedCategory(section.sectionName);
+        setTimeout(() => {
+          if (categoryHeaderRef.current) {
+            const headerRect = categoryHeaderRef.current.getBoundingClientRect();
+            const absoluteTop = headerRect.top + window.pageYOffset;
+            window.scrollTo({ top: absoluteTop - 120, behavior: 'smooth' });
+          }
+        }, 100);
+        return;
+      }
     } else if (targetItem) {
-      // find item → filter to its section → scroll to data-item-id wrapper
       for (const section of menuSections) {
         const found = (section.items || []).find(i => String(i.id) === String(targetItem));
         if (found) {
-          handleCategoryClick(section.sectionName);
+          deepLinkAppliedKey.current = key;
+          setSelectedCategory(section.sectionName);
           setTimeout(() => {
             document.querySelector(`[data-item-id="${targetItem}"]`)
               ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }, 300); // wait for category filter + render
-          break;
+            // 2 s orange pulse
+            if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+            setHighlightedItemId(String(targetItem));
+            highlightTimerRef.current = setTimeout(() => {
+              setHighlightedItemId(null);
+              highlightTimerRef.current = null;
+            }, 2000);
+          }, 350);
+          return;
         }
       }
     }
-    // handleCategoryClick omitted from deps intentionally — effect is one-shot (deepLinkApplied guard)
+
+    // --- Not found here: probe other stations and auto-switch ---
+    if (deepLinkProbeKey.current === key) return;              // probe already in flight
+    if (!stationsData || stationsData.length <= 1) return;  // nothing to probe
+    deepLinkProbeKey.current = key;
+
+    (async () => {
+      for (const station of stationsData) {
+        if (station.id === effectiveStationId) continue;        // already checked above
+        try {
+          const stationSections = await queryClient.fetchQuery(
+            buildMenuSectionsQueryOptions(numericRestaurantId, station.id)
+          );
+          if (!stationSections || stationSections.length === 0) continue;
+
+          let hit = false;
+          if (targetSection) {
+            hit = stationSections.some(s => String(s.categoryId) === String(targetSection));
+          } else if (targetItem) {
+            hit = stationSections.some(s =>
+              (s.items || []).some(i => String(i.id) === String(targetItem))
+            );
+          }
+
+          if (hit) {
+            const paramKey = targetSection ? 'section' : 'item';
+            const paramVal = targetSection || targetItem;
+            navigate(
+              `/${restaurantId}/menu/${encodeURIComponent(station.id)}?${paramKey}=${paramVal}`,
+              { replace: true }
+            );
+            return;
+          }
+        } catch (_err) {
+          // swallow — probe failure is non-fatal
+        }
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menuSections, targetSection, targetItem]);
+  }, [menuSections, targetSection, targetItem, effectiveStationId, stationsData]);
+
+  // CR-2026-11-26-001 V2: cleanup pulse timer on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // Cart functionality
   const { addToCart, updateQuantity, getTotalQuantityForItem, cartItems, isEditMode, editingOrderId, clearCart, removeFromCart } = useCart(); // CR-2026-06-17-003 APP-11: added removeFromCart
@@ -964,7 +1044,11 @@ const MenuItems = () => {
                               const inCart = itemQuantity > 0;
                               return (
                                 // CR-2026-11-26-001 E-2c: data-item-id for ?item= deep-link scroll
-                                <div key={item.id} data-item-id={item.id}>
+                                <div
+                                  key={item.id}
+                                  data-item-id={item.id}
+                                  className={highlightedItemId === String(item.id) ? 'menu-item-pulse' : undefined}
+                                >
                                   <MenuItem
                                     item={item}
                                     categoryName={item._sectionName}
@@ -1095,7 +1179,11 @@ const MenuItems = () => {
 
                                 return (
                                   // CR-2026-11-26-001 E-2d: data-item-id for ?item= deep-link scroll
-                                  <div key={item.id} data-item-id={item.id}>
+                                  <div
+                                    key={item.id}
+                                    data-item-id={item.id}
+                                    className={highlightedItemId === String(item.id) ? 'menu-item-pulse' : undefined}
+                                  >
                                     <MenuItem
                                       item={item}
                                       isExpanded={expandedDescriptions[item.id]}

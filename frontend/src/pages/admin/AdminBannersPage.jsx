@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { IoImagesOutline, IoAddOutline, IoCreateOutline, IoTrashOutline, IoCloseOutline, IoCloudUploadOutline, IoSearchOutline, IoChevronDownOutline, IoCheckmarkOutline, IoCloseCircleOutline } from 'react-icons/io5';
 import './AdminPages.css';
 // CR-2026-11-26-001: grouped searchable destination picker
-import { useMenuSections } from '../../hooks/useMenuData';
+import { useAllStationsMenuSections } from '../../hooks/useMenuData';
 
 const AdminBannersPage = () => {
   const { config, addBanner, updateBanner, deleteBanner, uploadImage, loading } = useAdminConfig();
@@ -18,19 +18,38 @@ const AdminBannersPage = () => {
     { label: 'About Us', value: `/${rid}/about` },
     { label: 'Contact', value: `/${rid}/contact` },
   ];
-  // CR-2026-11-26-001 E-1b: fetch live POS categories + items for grouped picker
+  // CR-2026-11-26-001 E-1b: fetch live POS categories + items across ALL stations
   const numericRid = rid ? parseInt(rid, 10) : null;
-  const { menuSections: pickerSections, loading: pickerLoading } = useMenuSections(null, numericRid);
+  const { allSections: pickerSections, stations: pickerStations, loading: pickerLoading } =
+    useAllStationsMenuSections(numericRid);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Count duplicates — when a category/item label appears in >1 station,
+  // we prefix with the station name to disambiguate.
+  const categoryLabelCounts = {};
+  (pickerSections || []).forEach(s => {
+    categoryLabelCounts[s.sectionName] = (categoryLabelCounts[s.sectionName] || 0) + 1;
+  });
+  const itemLabelCounts = {};
+  (pickerSections || []).forEach(s =>
+    (s.items || []).forEach(i => {
+      itemLabelCounts[i.name] = (itemLabelCounts[i.name] || 0) + 1;
+    })
+  );
+
   const categoryOptions = (pickerSections || []).map(s => ({
-    value: `/${rid}/menu?section=${s.categoryId}`,
-    label: s.sectionName,
+    value: `/${rid}/menu/${encodeURIComponent(s.stationId)}?section=${s.categoryId}`,
+    label: categoryLabelCounts[s.sectionName] > 1
+      ? `${s.stationName} — ${s.sectionName}`
+      : s.sectionName,
     group: 'Categories',
   }));
   const itemOptions = (pickerSections || []).flatMap(s =>
     (s.items || []).map(i => ({
-      value: `/${rid}/menu?item=${i.id}`,
-      label: i.name,
+      value: `/${rid}/menu/${encodeURIComponent(s.stationId)}?item=${i.id}`,
+      label: itemLabelCounts[i.name] > 1
+        ? `${s.stationName} — ${i.name}`
+        : i.name,
       group: 'Items',
     }))
   );
@@ -298,8 +317,23 @@ const AdminBannersPage = () => {
                   data-testid="select-bannerLink"
                 >
                   <span className="admin-picker-selected-label">
-                    {ALL_LINK_OPTIONS.find(o => o.value === newBanner.bannerLink)?.label
-                      || (newBanner.bannerLink ? `Custom: ${newBanner.bannerLink}` : 'No link')}
+                    {(() => {
+                      const exact = ALL_LINK_OPTIONS.find(o => o.value === newBanner.bannerLink);
+                      if (exact) return exact.label;
+                      // CR-2026-11-26-001 R-E-7: legacy schema fallback
+                      // (/{rid}/menu?section=… or ?item=…, no station segment)
+                      const link = newBanner.bannerLink || '';
+                      const legacyMatch = link.match(/\?(section|item)=([^&]+)$/);
+                      if (legacyMatch) {
+                        const kind = legacyMatch[1];
+                        const id = legacyMatch[2];
+                        const suffix = `?${kind}=${id}`;
+                        const resolved = ALL_LINK_OPTIONS.find(o => o.value.endsWith(suffix));
+                        if (resolved) return resolved.label;
+                      }
+                      if (link) return `Custom: ${link}`;
+                      return 'No link';
+                    })()}
                   </span>
                   <IoChevronDownOutline className={`admin-picker-chevron${pickerOpen ? ' rotate' : ''}`} />
                 </button>

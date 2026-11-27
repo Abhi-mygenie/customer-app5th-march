@@ -1556,3 +1556,16 @@ body.cart-bar-visible .menu-fab {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* CR-2026-11-26-001 V2: deep-link target item — 2s transient orange pulse */
+@keyframes menu-item-pulse-kf {
+  0%   { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.70); }
+  40%  { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0.25); }
+  100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+}
+.menu-item-pulse {
+  animation: menu-item-pulse-kf 2000ms ease-out 1;
+  border-radius: 10px;
+  scroll-margin-top: 140px; /* offset for sticky header while scrollIntoView */
+}
+
