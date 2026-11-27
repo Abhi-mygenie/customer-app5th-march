@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import SearchAndFilterBar from '../components/SearchAndFilterBar/SearchAndFilterBar';
 // import SearchBar from '../components/SearchBar/SearchBar'; // Commented out - using merged component
@@ -53,6 +53,11 @@ const MenuItems = () => {
   const [showNonQrBlockModal, setShowNonQrBlockModal] = useState(false);
   const [selectedItemForRepeat, setSelectedItemForRepeat] = useState(null);
   const categoryHeaderRef = useRef(null);
+  // CR-2026-11-26-001 E-2b: deep-link URL params from banner tap (?section=catId, ?item=itemId)
+  const [searchParams] = useSearchParams();
+  const targetSection = searchParams.get('section');
+  const targetItem    = searchParams.get('item');
+  const deepLinkApplied = useRef(false); // one-shot guard — do not re-fire on re-renders
 
 
   // Fetch restaurant details FIRST to get numeric ID
@@ -154,6 +159,34 @@ const MenuItems = () => {
       fetchConfig(restaurantId);
     }
   }, [restaurantId, fetchConfig]);
+
+  // CR-2026-11-26-001 E-2b: apply ?section= or ?item= URL param once after menu data loads
+  useEffect(() => {
+    if (deepLinkApplied.current) return;
+    if (!menuSections || menuSections.length === 0) return;
+    if (!targetSection && !targetItem) return;
+    deepLinkApplied.current = true;
+    if (targetSection) {
+      // find section by categoryId → call existing filter+scroll
+      const section = menuSections.find(s => String(s.categoryId) === String(targetSection));
+      if (section) handleCategoryClick(section.sectionName);
+    } else if (targetItem) {
+      // find item → filter to its section → scroll to data-item-id wrapper
+      for (const section of menuSections) {
+        const found = (section.items || []).find(i => String(i.id) === String(targetItem));
+        if (found) {
+          handleCategoryClick(section.sectionName);
+          setTimeout(() => {
+            document.querySelector(`[data-item-id="${targetItem}"]`)
+              ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 300); // wait for category filter + render
+          break;
+        }
+      }
+    }
+    // handleCategoryClick omitted from deps intentionally — effect is one-shot (deepLinkApplied guard)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menuSections, targetSection, targetItem]);
 
   // Cart functionality
   const { addToCart, updateQuantity, getTotalQuantityForItem, cartItems, isEditMode, editingOrderId, clearCart, removeFromCart } = useCart(); // CR-2026-06-17-003 APP-11: added removeFromCart
@@ -930,26 +963,28 @@ const MenuItems = () => {
                               const itemQuantity = getTotalQuantityForItem(item.id);
                               const inCart = itemQuantity > 0;
                               return (
-                                <MenuItem
-                                  key={item.id}
-                                  item={item}
-                                  categoryName={item._sectionName}
-                                  isExpanded={expandedDescriptions[item.id]}
-                                  descriptionLimit={descriptionLimit}
-                                  onToggleDescription={toggleDescription}
-                                  getAllergenIcon={getAllergenIcon}
-                                  quantity={itemQuantity}
-                                  isInCart={inCart}
-                                  onAddToCart={() => handleAddToCart(item)}
-                                  onIncrement={() => handleIncrement(item)}
-                                  onDecrement={() => handleDecrement(item)}
-                                  currentTimeInSeconds={currentTimeInSeconds}
-                                  isOnlineOrderEnabled={isOnlineOrderEnabled}
-                                  categoryTiming={categoryTimings?.[item._categoryId]}
-                                  itemTiming={itemTimings?.[String(item.id)]}
-                                  orderType={scannedOrderType}
-                                  inventoryEnforced={inventoryEnforced}
-                                />
+                                // CR-2026-11-26-001 E-2c: data-item-id for ?item= deep-link scroll
+                                <div key={item.id} data-item-id={item.id}>
+                                  <MenuItem
+                                    item={item}
+                                    categoryName={item._sectionName}
+                                    isExpanded={expandedDescriptions[item.id]}
+                                    descriptionLimit={descriptionLimit}
+                                    onToggleDescription={toggleDescription}
+                                    getAllergenIcon={getAllergenIcon}
+                                    quantity={itemQuantity}
+                                    isInCart={inCart}
+                                    onAddToCart={() => handleAddToCart(item)}
+                                    onIncrement={() => handleIncrement(item)}
+                                    onDecrement={() => handleDecrement(item)}
+                                    currentTimeInSeconds={currentTimeInSeconds}
+                                    isOnlineOrderEnabled={isOnlineOrderEnabled}
+                                    categoryTiming={categoryTimings?.[item._categoryId]}
+                                    itemTiming={itemTimings?.[String(item.id)]}
+                                    orderType={scannedOrderType}
+                                    inventoryEnforced={inventoryEnforced}
+                                  />
+                                </div>
                               );
                             })}
                           </div>
@@ -1059,25 +1094,27 @@ const MenuItems = () => {
                                 const inCart = itemQuantity > 0;
 
                                 return (
-                                  <MenuItem
-                                    key={item.id}
-                                    item={item}
-                                    isExpanded={expandedDescriptions[item.id]}
-                                    descriptionLimit={descriptionLimit}
-                                    onToggleDescription={toggleDescription}
-                                    getAllergenIcon={getAllergenIcon}
-                                    quantity={itemQuantity}
-                                    isInCart={inCart}
-                                    onAddToCart={() => handleAddToCart(item)}
-                                    onIncrement={() => handleIncrement(item)}
-                                    onDecrement={() => handleDecrement(item)}
-                                    currentTimeInSeconds={currentTimeInSeconds}
-                                    isOnlineOrderEnabled={isOnlineOrderEnabled}
-                                    categoryTiming={categoryTimings?.[categoryId]}
-                                    itemTiming={itemTimings?.[String(item.id)]}
-                                    orderType={scannedOrderType}
-                                    inventoryEnforced={inventoryEnforced}
-                                  />
+                                  // CR-2026-11-26-001 E-2d: data-item-id for ?item= deep-link scroll
+                                  <div key={item.id} data-item-id={item.id}>
+                                    <MenuItem
+                                      item={item}
+                                      isExpanded={expandedDescriptions[item.id]}
+                                      descriptionLimit={descriptionLimit}
+                                      onToggleDescription={toggleDescription}
+                                      getAllergenIcon={getAllergenIcon}
+                                      quantity={itemQuantity}
+                                      isInCart={inCart}
+                                      onAddToCart={() => handleAddToCart(item)}
+                                      onIncrement={() => handleIncrement(item)}
+                                      onDecrement={() => handleDecrement(item)}
+                                      currentTimeInSeconds={currentTimeInSeconds}
+                                      isOnlineOrderEnabled={isOnlineOrderEnabled}
+                                      categoryTiming={categoryTimings?.[categoryId]}
+                                      itemTiming={itemTimings?.[String(item.id)]}
+                                      orderType={scannedOrderType}
+                                      inventoryEnforced={inventoryEnforced}
+                                    />
+                                  </div>
                                 );
                               })}
                             </div>

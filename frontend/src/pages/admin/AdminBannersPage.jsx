@@ -3,6 +3,10 @@ import { useAdminConfig } from '../../context/AdminConfigContext';
 import { useAuth } from '../../context/AuthContext';
 import { IoImagesOutline, IoAddOutline, IoCreateOutline, IoTrashOutline, IoCloseOutline, IoCloudUploadOutline } from 'react-icons/io5';
 import './AdminPages.css';
+// CR-2026-11-26-001: grouped searchable destination picker
+import { useMenuSections } from '../../hooks/useMenuData';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '../../components/ui/command';
 
 const AdminBannersPage = () => {
   const { config, addBanner, updateBanner, deleteBanner, uploadImage, loading } = useAdminConfig();
@@ -15,6 +19,27 @@ const AdminBannersPage = () => {
     { label: 'Dining Stations', value: `/${rid}/stations` },
     { label: 'About Us', value: `/${rid}/about` },
     { label: 'Contact', value: `/${rid}/contact` },
+  ];
+  // CR-2026-11-26-001 E-1b: fetch live POS categories + items for grouped picker
+  const numericRid = rid ? parseInt(rid, 10) : null;
+  const { menuSections: pickerSections, loading: pickerLoading } = useMenuSections(null, numericRid);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const categoryOptions = (pickerSections || []).map(s => ({
+    value: `/${rid}/menu?section=${s.categoryId}`,
+    label: s.sectionName,
+    group: 'Categories',
+  }));
+  const itemOptions = (pickerSections || []).flatMap(s =>
+    (s.items || []).map(i => ({
+      value: `/${rid}/menu?item=${i.id}`,
+      label: i.name,
+      group: 'Items',
+    }))
+  );
+  const ALL_LINK_OPTIONS = [
+    ...LINK_OPTIONS.map(o => ({ ...o, group: 'Static Pages' })),
+    ...categoryOptions,
+    ...itemOptions,
   ];
   const bannerInputRef = useRef(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
@@ -229,28 +254,53 @@ const AdminBannersPage = () => {
               />
             </div>
 
-            {/* CR-2026-11-14-003: destination picker */}
+            {/* CR-2026-11-26-001 E-1c: grouped searchable destination picker */}
             <div className="admin-form-group">
               <label className="admin-form-label">Tap Destination (optional)</label>
-              <select
-                className="admin-form-select"
-                value={LINK_OPTIONS.some(o => o.value === newBanner.bannerLink)
-                  ? newBanner.bannerLink
-                  : '__custom__'}
-                onChange={(e) => {
-                  if (e.target.value !== '__custom__') {
-                    setNewBanner(prev => ({ ...prev, bannerLink: e.target.value }));
-                  }
-                }}
-                data-testid="select-bannerLink"
-              >
-                {LINK_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-                {!LINK_OPTIONS.some(o => o.value === newBanner.bannerLink) && newBanner.bannerLink && (
-                  <option value="__custom__">Custom: {newBanner.bannerLink}</option>
-                )}
-              </select>
+              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="admin-form-select"
+                    style={{ textAlign: 'left', cursor: 'pointer', display: 'block', width: '100%' }}
+                    data-testid="select-bannerLink"
+                  >
+                    {ALL_LINK_OPTIONS.find(o => o.value === newBanner.bannerLink)?.label
+                      || (newBanner.bannerLink ? `Custom: ${newBanner.bannerLink}` : 'No link')}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-72" align="start">
+                  <Command>
+                    <CommandInput
+                      placeholder={pickerLoading ? 'Loading…' : 'Search pages, categories, items…'}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No results found.</CommandEmpty>
+                      {['Static Pages', 'Categories', 'Items'].map(group => {
+                        const opts = ALL_LINK_OPTIONS.filter(o => o.group === group);
+                        if (opts.length === 0) return null;
+                        return (
+                          <CommandGroup key={group} heading={group}>
+                            {opts.map(o => (
+                              <CommandItem
+                                key={o.value}
+                                value={o.label}
+                                onSelect={() => {
+                                  setNewBanner(prev => ({ ...prev, bannerLink: o.value }));
+                                  setPickerOpen(false);
+                                }}
+                                data-testid={`picker-option-${o.group.toLowerCase().replace(' ', '-')}`}
+                              >
+                                {o.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        );
+                      })}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {newBanner.bannerLink && (
                 <span className="admin-form-hint" data-testid="banner-link-preview">
                   → {newBanner.bannerLink}
