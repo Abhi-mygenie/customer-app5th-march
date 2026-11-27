@@ -2504,7 +2504,7 @@ const ReviewOrder = () => {
             {isPlacingOrder 
               ? (isEditMode ? 'Updating Order...' : 'Placing Order...') 
               : (isEditMode 
-                  ? `Update Order ₹${roundedTotal.toFixed(2)}` 
+                  ? 'Update Order'  // BUG-2026-11-27-001: no price on Update Order button (APS unconfirmed)
                   : (roundedTotal <= 0
                       ? 'Place Order'
                       : (() => {

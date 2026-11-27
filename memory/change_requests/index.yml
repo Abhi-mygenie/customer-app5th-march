@@ -3153,19 +3153,22 @@
   type: BUG
   title: 'APS price (₹1) still shows in CartBar, ReviewOrder price breakdown rows,
     and Order Success — scope gap from CR-2026-11-14-002 which only fixed the menu card'
-  status: QA
+  status: IMPLEMENTED
   status_note: >
-    PHASE 1 (Fixes A/B/C) + PHASE 2 (APS price=0 redesign) implemented 2026-11-26.
-    Phase 1: Fix A foodId in updatedItems, Fix B grandTotal row, Fix C ||order swap.
-    Tested iter_36 12/12 PASS, iter_37 code-verified, iter_38 PASS. Owner live smoke
-    confirmed per-item APS, Grand Total, top total working.
-    Phase 2: 20 edits 7 files (1 new apsUtils.js). isAPS() helper from POS aps tag.
-    taxBreakdownDisplay useMemo + full display chain (price=0 for APS items).
-    CustomizeModal button, CartBar edit mode, DisplayBillSummary to OrderSuccess.
-    D-1A/D-2A: GST rows hidden when 0. Build PASS. PHASE 2 QA NOT YET RUN.
+    PHASE 1 ✅ PHASE 2 ✅ PHASE 3 ✅ QA-PASS (iter_40 12/12) PHASE 4 IMPLEMENTED QA-PENDING.
+    Phase 1 (2026-11-26): Fix A/B/C. iter_36-38 PASS. Owner live smoke confirmed.
+    Phase 2 (2026-11-26): 20 edits 7 files. apsUtils.js + isAPS() + display chain.
+    Phase 3 (2026-11-26): GAP-1 CustomizeItemModal header + GAP-2 apsItemUnitPrices
+    threshold. iter_40 12/12 PASS. Branch 20261126-144232.
+    Phase 4 (2026-11-27): RC-1 LandingPage 2 navigate calls now pass apsItemFoodIds.
+    RC-2 APS mask now uses unit_price (api field, always 1 until waiter adjusts) instead
+    of fullPrice. orderTransformer.ts + order.types.ts + OrderSuccess updated.
+    RC-3 PreviousOrderItems.jsx APS check added (unitPrice<=1). Build PASS. QA PENDING.
+    Live POS probe: order 1578881, 56 items. unit_price=1 ALL unconfirmed APS.
+    unit_price=89 waiter-adjusted. food_details.aps NOT in order-details response.
   priority: P1
   risk: MEDIUM
-  owner_action: null
+  owner_action: 'QA (Role 4): run testing agent for Phase 4. See SESSION_HANDOVER_2026-11-27.md verification matrix.'
   blocked_on: []
   sprint: null
   files: >
@@ -3173,22 +3176,26 @@
     frontend/src/components/MenuItem/MenuItem.jsx ·
     frontend/src/components/CustomizeItemModal/CustomizeItemModal.jsx ·
     frontend/src/components/CartBar/CartBar.jsx ·
-    frontend/src/pages/ReviewOrder.jsx · frontend/src/pages/OrderSuccess.jsx
+    frontend/src/pages/ReviewOrder.jsx · frontend/src/pages/OrderSuccess.jsx ·
+    frontend/src/pages/LandingPage.jsx · frontend/src/api/transformers/orderTransformer.ts ·
+    frontend/src/types/models/order.types.ts ·
+    frontend/src/components/PreviousOrderItems/PreviousOrderItems.jsx
   artefacts: >
-    INTAKE_DOC · QA_HANDOVER · INVESTIGATION_REPORT_P2 ·
-    IMPLEMENTATION_PLAN_P2 · SESSION_HANDOVER_2026-11-26-P2
+    INTAKE_DOC · QA_HANDOVER · INVESTIGATION_REPORT_P2 · INVESTIGATION_REPORT_P3 ·
+    INVESTIGATION_REPORT_P4 · SESSION_HANDOVER_2026-11-26-P2 · SESSION_HANDOVER_2026-11-27
   registered: '2026-11-26'
-  last_updated: '2026-11-26'
+  last_updated: '2026-11-27'
   related:
   - CR-2026-11-14-002
   code_markers: true
   money_path: false
   closed: null
   notes: >
-    POS API confirmed aps:"yes" field on melo fish (id=248252) and check in (id=248234).
-    Field NOT extracted in useMenuData.js until Phase 2. Phase 2 adds aps field to
-    transformer + isAPS() helper + full price=0 display chain. Phase 2 QA required
-    before SMOKE. Owner live screenshots 2026-11-26 confirmed Phase 1 working.
+    POS probe order 1578881 (/app/memory/order_1578881_probe.json): unit_price=1 for ALL
+    unconfirmed APS items; unit_price=89 after waiter adjusts. food_details.aps NOT in
+    order-details response. RC-2 fix: use unit_price (basePrice) not fullPrice for APS mask.
+    apsItemUnitPrices from Phase 3 preserved in navigate state but no longer used for
+    per-item mask (can clean up in future session).
 
 - id: CR-2026-11-26-001
   type: CR
@@ -3217,3 +3224,31 @@
     needed there. Main work: (1) admin picker fetches live POS category/item list,
     (2) MenuItems.jsx must handle ?section= or ?item= URL params for scroll/filter.
     ?section= confirmed NOT supported in MenuItems today (CR-2026-11-14-003 planning).'
+
+
+- id: BUG-2026-11-27-001
+  type: BUG
+  title: 'Update Order button shows price — should show no price (only Place Order shows price)'
+  status: IMPLEMENTED
+  status_note: >
+    Registered and implemented 2026-11-27. Investigation (Role 6) confirmed location:
+    ReviewOrder.jsx line 2507. Fix applied (Role 5): 1-line change, display only.
+    Build PASS. QA PENDING.
+  priority: P2
+  risk: LOW
+  owner_action: 'QA (Role 4): verify Update Order button shows no price, Place Order unchanged.'
+  blocked_on: []
+  sprint: null
+  files: 'frontend/src/pages/ReviewOrder.jsx'
+  artefacts: INTAKE_DOC
+  registered: '2026-11-27'
+  last_updated: '2026-11-27'
+  related:
+  - BUG-2026-11-26-001
+  code_markers: true
+  money_path: false
+  closed: null
+  notes: >
+    In edit mode, roundedTotal = new additions + previous order total.
+    Showing this combined price on the Update Order button is misleading
+    (especially with APS items). Place Order button branches (lines 2509-2524) untouched.
