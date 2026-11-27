@@ -3201,20 +3201,20 @@
   type: CR
   title: 'Banner tap destination — extend picker to support specific menu category
     or specific menu item (deep-link), not just the 5 static pages'
-  status: INTAKE
-  status_note: 'INTAKE COMPLETE 2026-11-26. Owner confirmed scope: add category and
-    item as tap destinations. 5 owner decisions needed before Planning (category UX,
-    item UX, admin picker UX, ?section= support, POS data source). No code change
-    in this session.'
+  status: PLANNING
+  status_note: 'INTAKE COMPLETE 2026-11-26. All 5 owner decisions answered 2026-11-27:
+    Q1=scroll-to-category, Q2=scroll-to-item, Q3=grouped-searchable-dropdown,
+    Q4=?section=/?item= URL params, Q5=reuse restaurant-product endpoint.
+    Ready for Planning (Role 2).'
   priority: P2
   risk: MEDIUM
-  owner_action: 'Answer Q1-Q5 in INTAKE_DOC.md to unblock Planning'
+  owner_action: null
   blocked_on: []
   sprint: null
   files: 'frontend/src/pages/admin/AdminBannersPage.jsx · frontend/src/pages/MenuItems.jsx'
   artefacts: INTAKE_DOC
   registered: '2026-11-26'
-  last_updated: '2026-11-26'
+  last_updated: '2026-11-27'
   related:
   - CR-2026-11-14-003
   code_markers: false
@@ -3222,8 +3222,9 @@
   closed: null
   notes: 'PromoBanner.jsx already navigates to promo.link via React Router — no change
     needed there. Main work: (1) admin picker fetches live POS category/item list,
-    (2) MenuItems.jsx must handle ?section= or ?item= URL params for scroll/filter.
-    ?section= confirmed NOT supported in MenuItems today (CR-2026-11-14-003 planning).'
+    grouped+searchable dropdown; (2) MenuItems.jsx must handle ?section={catId} and
+    ?item={itemId} URL params to scroll on load. Owner decisions: Q1=A(scroll cat),
+    Q2=A(scroll item), Q3=B+search(grouped dropdown), Q4=A(URL param), Q5=A(restaurant-product).'
 
 
 - id: BUG-2026-11-27-001
