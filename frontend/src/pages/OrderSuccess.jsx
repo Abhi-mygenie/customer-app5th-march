@@ -145,6 +145,8 @@ const OrderSuccess = () => {
   // SERVICE_CHARGE_MAPPING CR (adjacent fix) — post-order table/room from API (single source of truth)
   const [apiTableNo, setApiTableNo] = useState(null);
   const [apiTableType, setApiTableType] = useState(null);
+  // BUG-2026-11-27-003: transferred F&B orders (from associated_order_list in API)
+  const [associatedOrders, setAssociatedOrders] = useState([]);
 
   const orderData = location.state?.orderData || null;
   const orderId = orderData?.orderId;
@@ -369,6 +371,10 @@ const OrderSuccess = () => {
         }
         if (orderDetails.tableType) {
           setApiTableType(orderDetails.tableType);
+        }
+        // BUG-2026-11-27-003: set transferred F&B orders when present
+        if (orderDetails.associatedOrders?.length > 0) {
+          setAssociatedOrders(orderDetails.associatedOrders);
         }
       }
     } catch (error) {
@@ -813,6 +819,32 @@ const OrderSuccess = () => {
                 ); })()}
               </div>
             )}
+          </div>
+        )}
+
+        {/* BUG-2026-11-27-003: Transferred F&B Orders section */}
+        {associatedOrders.length > 0 && (
+          <div className="order-success-transferred-card" data-testid="transferred-orders-section">
+            <div className="order-success-transferred-header">
+              <span className="order-success-transferred-title">
+                Transferred Orders ({associatedOrders.length})
+              </span>
+              <span className="order-success-transferred-total">
+                ₹{associatedOrders.reduce((s, o) => s + (o.amount || 0), 0).toFixed(0)}
+              </span>
+            </div>
+            {associatedOrders.map(o => {
+              const d = o.date ? new Date(o.date.replace(' ', 'T')) : null;
+              const dateStr = d && !isNaN(d)
+                ? d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                : '';
+              return (
+                <div key={o.orderId} className="order-success-transferred-row" data-testid={`transferred-order-${o.orderId}`}>
+                  <span className="order-success-transferred-id">#{o.restaurantOrderId}  {dateStr}</span>
+                  <span className="order-success-transferred-amount">₹{(o.amount || 0).toFixed(0)}</span>
+                </div>
+              );
+            })}
           </div>
         )}
 

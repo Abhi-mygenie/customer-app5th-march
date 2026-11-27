@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import SearchAndFilterBar from '../components/SearchAndFilterBar/SearchAndFilterBar';
 // import SearchBar from '../components/SearchBar/SearchBar'; // Commented out - using merged component
@@ -58,6 +58,11 @@ const MenuItems = () => {
   const [searchParams] = useSearchParams();
   const targetSection = searchParams.get('section');
   const targetItem    = searchParams.get('item');
+  // BUG-2026-11-27-002: location.key changes on every navigate() call — including
+  // repeat taps to the same URL — so the effect re-runs and the guard key is unique
+  // per navigation. Solves both: (a) same-URL doesn't re-trigger targetItem change,
+  // (b) deepLinkAppliedKey would match on 2nd tap without location.key in the key.
+  const location = useLocation();
   // CR-2026-11-26-001 V2: signature-based guard (re-fires on every URL change,
   // but never double-applies the same key). Keyed by station|section|item.
   const deepLinkAppliedKey = useRef('');
@@ -183,7 +188,7 @@ const MenuItems = () => {
     if (!targetSection && !targetItem) return;
     if (!menuSections || menuSections.length === 0) return;
 
-    const key = `${effectiveStationId || ''}|${targetSection || ''}|${targetItem || ''}`;
+    const key = `${location.key}|${effectiveStationId || ''}|${targetSection || ''}|${targetItem || ''}`;
     if (deepLinkAppliedKey.current === key) return;
 
     // --- Try current station first ---
@@ -216,6 +221,7 @@ const MenuItems = () => {
             highlightTimerRef.current = setTimeout(() => {
               setHighlightedItemId(null);
               highlightTimerRef.current = null;
+              deepLinkAppliedKey.current = ''; // BUG-2026-11-27-002: allow re-tap after pulse
             }, 2000);
           }, 350);
           return;
@@ -261,7 +267,7 @@ const MenuItems = () => {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menuSections, targetSection, targetItem, effectiveStationId, stationsData]);
+  }, [menuSections, targetSection, targetItem, effectiveStationId, stationsData, location]);
 
   // CR-2026-11-26-001 V2: cleanup pulse timer on unmount
   useEffect(() => {

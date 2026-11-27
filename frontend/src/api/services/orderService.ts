@@ -157,6 +157,7 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
   tableType?: string | null;
   restaurant?: any;
   deliveryCharge?: number;
+  associatedOrders?: Array<{ orderId: number; restaurantOrderId: string; amount: number; date: string }>;
 }> => {
   try {
     const response = await apiClient.get(ENDPOINTS.GET_ORDER_DETAILS(orderId), {
@@ -177,6 +178,15 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
     const rawDetails = orderData.details || [];
     const details = filterSystemItems(rawDetails);
     const firstDetail: any = rawDetails[0] || {};
+
+    // BUG-2026-11-27-003: map transferred F&B orders from API field added by owner
+    const rawAssociated: any[] = (orderData as any).associated_order_list || [];
+    const associatedOrders = rawAssociated.map((a: any) => ({
+      orderId:           a.id,
+      restaurantOrderId: a.restaurant_order_id,
+      amount:            Number(a.order_amount) || 0,
+      date:              a.collect_bill || '',
+    }));
 
     // Transform previous items using centralized transformer (needed for UI rendering)
     const previousItems = details.map(detail => {
@@ -275,6 +285,7 @@ export const getOrderDetails = async (orderId: number | string): Promise<OrderDe
       deliveryCharge: (orderData as any).delivery_charge,
       // SERVICE_CHARGE_MAPPING CR (adjacent fix) — expose table meta for OrderSuccess to read
       tableType: firstDetail.table_type || null,
+      associatedOrders, // BUG-2026-11-27-003: transferred F&B orders
       billSummary: {
         itemTotal,
         serviceCharge,
